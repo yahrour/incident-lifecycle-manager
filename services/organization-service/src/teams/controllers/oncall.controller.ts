@@ -1,7 +1,10 @@
 import { Controller, Get, Param, ParseUUIDPipe, Headers } from "@nestjs/common";
 import { OnCallService } from "../services/oncall.service";
 
-@Controller("teams")
+@Controller({
+  path: "teams",
+  version: "1",
+})
 export class OnCallController {
   constructor(private readonly onCallService: OnCallService) {}
 
