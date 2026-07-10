@@ -1,26 +1,59 @@
-import { Injectable } from "@nestjs/common";
+import { ConflictException, Injectable } from "@nestjs/common";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
+import { PrismaService } from "src/prisma/prisma.service";
+import { BcryptService } from "../auth/bcrypt.service";
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return "This action adds a new user";
-  }
+  constructor(
+    private prisma: PrismaService,
+    private bcrypt: BcryptService
+  ) {}
 
-  findAll() {
-    return `This action returns all users`;
-  }
+  async create(data: CreateUserDto) {
+    const { password } = data;
+    const passwordHash = await this.bcrypt.hash(password);
+    const existing = await this.prisma.user.findUnique({
+      where: { email: data.email },
+    });
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
-
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+    if (existing) {
+      throw new ConflictException("Email already in use");
+    }
+    return this.prisma.user.create({
+      data: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        passwordHash: passwordHash,
+        role: data.role,
+        specialty: data.specialty ?? null,
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        role: true,
+        specialty: true,
+        isVerified: true,
+        createdAt: true,
+      },
+    });
   }
 }
+
+// needed by AuthService for login
+// async findByEmail(email: string): Promise<User | null>{
+//
+//
+// // needed by AuthService and other services
+// async findById(id: string): Promise<User | null>
+//
+// // needed by email verification flow
+// async markAsVerified(id: string): Promise<User>
+//
+// // needed by reset password flow
+// async updatePassword(id: string, passwordHash: string): Promise<User>
+//
