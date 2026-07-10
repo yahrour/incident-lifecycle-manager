@@ -1,7 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { BcryptService } from "../common/security/bcrypt.service";
-import { RegisterUserDto } from "./dto/register.dto";
+import { SignUp } from "./dto/sign-up.dto";
+import { SignIn } from "./dto/sign-in.dto";
 import { UsersService } from "../users/users.service";
 import { Role } from "@prisma/client";
 
@@ -12,11 +13,34 @@ export class AuthService {
     private bcrypt: BcryptService,
     private readonly userService: UsersService
   ) {}
-  async register(registerUserDto: RegisterUserDto) {
+  async signUp(signUp: SignUp) {
     const sreUserData = {
-      ...registerUserDto,
+      ...signUp,
       role: Role.SRE,
     };
     return this.userService.create(sreUserData);
+  }
+
+  async signIn(signIn: SignIn) {
+    const user = await this.userService.findByEmail(signIn.email);
+    if (!user) {
+      throw new UnauthorizedException("Invalid credentials");
+    }
+    const isMatch = await this.bcrypt.compare(
+      signIn.password,
+      user.passwordHash
+    );
+
+    if (!isMatch) {
+      throw new UnauthorizedException("Invalid credentials");
+    }
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      },
+      //TODO genrating jwt and send it back
+    };
   }
 }
