@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas = ["organization", "auth"]
+}
+
+model Team {
+  id                         String       @id @default(uuid())
+  owner_id                   String
+  owner                      User         @relation(fields: [owner_id], references: [id])
+  name                       String       @unique
+  description                String?
+  rotation_period_days       Int          @default(7)
+  rotation_start_date        DateTime     @default(now())
+  current_rotation_index     Int          @default(0)
+  last_rotated_at            DateTime     @default(now())
+  escalation_timeout_minutes Int          @default(5)
+  created_at                 DateTime     @default(now())
+  updated_at                 DateTime     @updatedAt
+  teamMembers                TeamMember[]
+
+  @@map("teams")
+  @@schema("organization")
+}
+
+model TeamMember {
+  id            Int            @id @default(autoincrement())
+  user_id       String
+  user          User           @relation(fields: [user_id], references: [id])
+  team_id       String
+  team          Team           @relation(fields: [team_id], references: [id], onDelete: Cascade)
+  joined_at     DateTime       @default(now())
+  dateOverrides DateOverride[]
+
+  @@unique([team_id, user_id], name: "unique_team_member")
+  @@map("team_members")
+  @@schema("organization")
+}
+
+model DateOverride {
+  id         Int        @id @default(autoincrement())
+  member_id  Int
+  teamMember TeamMember @relation(fields: [member_id], references: [id], onDelete: Cascade)
+  start_date DateTime
+  end_date   DateTime
+  reason     String?
+  created_at DateTime   @default(now())
+
+  @@map("date_overrides")
+  @@schema("organization")
+}
+
+model User {
+  id          String       @id
+  ownedTeams  Team[]
+  teamMembers TeamMember[]
+
+  @@map("users")
+  @@schema("auth")
+}
