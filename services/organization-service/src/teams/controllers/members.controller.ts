@@ -13,7 +13,10 @@ import {
 import { AddMemberDto } from "../dto";
 import { MembersService } from "../services/members.service";
 
-@Controller("teams")
+@Controller({
+  path: "teams",
+  version: "1",
+})
 export class MembersController {
   constructor(private readonly membersService: MembersService) {}
 
