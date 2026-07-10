@@ -6,13 +6,13 @@ import { AuthService } from "./auth.service";
 @Controller("auth")
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-  @Post("signup")
+  @Post("sign-up")
   signUp(@Body() signUp: SignUp) {
     return this.authService.signUp(signUp);
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post("signin")
+  @Post("sign-in")
   signIn(@Body() signIn: SignIn) {
     return this.authService.signIn(signIn);
   }
