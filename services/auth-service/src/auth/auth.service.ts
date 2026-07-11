@@ -1,17 +1,19 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { BcryptService } from "../common/security/bcrypt.service";
 import { SignUp } from "./dto/sign-up.dto";
 import { SignIn } from "./dto/sign-in.dto";
 import { UsersService } from "../users/users.service";
 import { Role } from "@prisma/client";
+import { JwtService } from "@nestjs/jwt";
+import { ConfigService } from "@nestjs/config"; //
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly configService: ConfigService,
     private bcrypt: BcryptService,
-    private readonly userService: UsersService
+    private readonly userService: UsersService,
+    private jwtService: JwtService,
+    private configService: ConfigService
   ) {}
   async signUp(signUp: SignUp) {
     const sreUserData = {
@@ -34,13 +36,12 @@ export class AuthService {
     if (!isMatch) {
       throw new UnauthorizedException("Invalid credentials");
     }
+    const payload = { sub: user.id, email: user.email, role: user.role };
+    const token = await this.jwtService.signAsync(payload);
+
     return {
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      },
-      //TODO genrating jwt and send it back
+      accessToken: token,
+      expiresIn: this.configService.get("JWT_EXPIRES_IN"),
     };
   }
 }
