@@ -21,7 +21,7 @@ export class OnCallService {
       orderBy: {
         joined_at: "asc",
       },
-      include: { dateOverrides: true },
+      include: { unavailabilities: true },
     });
 
     if (members.length === 0) {
@@ -54,7 +54,7 @@ export class OnCallService {
     // loop over the team members starting from the current on-call member till finding the first available one
     for (let offset = 0; offset < members.length; offset++) {
       const condidate = members[(baseIndex + offset) % members.length];
-      const isUnavailable = condidate.dateOverrides.some((dateOverride) => {
+      const isUnavailable = condidate.unavailabilities.some((dateOverride) => {
         now >= dateOverride.start_date.getTime() &&
           now <= dateOverride.end_date.getTime();
       });
