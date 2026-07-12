@@ -59,10 +59,11 @@ export class MembersService {
     return members;
   }
 
-  async findOne(teamId: string, memberId: string, ownerId: string) {
+  async findOne(teamId: string, memberId: number, ownerId: string) {
     const member = await this.prisma.teamMember.findUnique({
       where: {
-        unique_team_member: { teamId, userId: memberId },
+        id: memberId,
+        teamId,
         team: {
           ownerId,
         },
@@ -76,14 +77,12 @@ export class MembersService {
     return member;
   }
 
-  async removeMember(teamId: string, memberId: string, ownerId: string) {
+  async removeMember(teamId: string, memberId: number, ownerId: string) {
     try {
       await this.prisma.teamMember.delete({
         where: {
-          unique_team_member: {
-            teamId,
-            userId: memberId,
-          },
+          id: memberId,
+          teamId,
           team: {
             ownerId,
           },
