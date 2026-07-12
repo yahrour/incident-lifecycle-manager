@@ -53,13 +53,22 @@ export class OnCallService {
 
     // loop over the team members starting from the current on-call member till finding the first available one
     for (let offset = 0; offset < members.length; offset++) {
-      const condidate = members[(baseIndex + offset) % members.length];
-      const isUnavailable = condidate.unavailabilities.some((dateOverride) => {
-        now >= dateOverride.start_date.getTime() &&
-          now <= dateOverride.end_date.getTime();
-      });
-      if (!isUnavailable) {
-        return condidate;
+      const candidate = members[(baseIndex + offset) % members.length];
+      const isUnAvailable = candidate.unavailabilities.some(
+        (unavailability) => {
+          return (
+            now >= unavailability.start_date.getTime() &&
+            now <= unavailability.end_date.getTime()
+          );
+        }
+      );
+      if (!isUnAvailable) {
+        return {
+          id: candidate.id,
+          user_id: candidate.user_id,
+          team_id: candidate.team_id,
+          joined_at: candidate.joined_at,
+        };
       }
     }
 
