@@ -19,14 +19,14 @@ export class CreateTeamDto {
   @IsOptional()
   @IsNumber()
   @IsPositive()
-  rotation_period_days?: number;
+  rotationPeriodDays?: number;
 
   @IsOptional()
   @IsDate()
-  rotation_start_date?: Date;
+  rotationStartDate?: Date;
 
   @IsOptional()
   @IsNumber()
   @IsPositive()
-  escalation_timeout_minutes?: number;
+  escalationTimeoutMinutes?: number;
 }

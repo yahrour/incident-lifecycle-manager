@@ -17,7 +17,7 @@ export class UnavailabilityService {
       where: { id: teamId },
     });
 
-    if (!team || team.owner_id !== ownerId) {
+    if (!team || team.ownerId !== ownerId) {
       throw new NotFoundException("Team doesn't exist");
     }
 
@@ -27,7 +27,7 @@ export class UnavailabilityService {
   private async verifyMemberInTeam(teamId: string, memberId: number) {
     const member = await this.prisma.teamMember.findUnique({
       where: {
-        team_id: teamId,
+        teamId,
         id: memberId,
       },
     });
@@ -57,9 +57,9 @@ export class UnavailabilityService {
     try {
       const unavailability = await this.prisma.unavailability.create({
         data: {
-          member_id: memberId,
-          start_date: createUnavailabilityDto.startDate,
-          end_date: createUnavailabilityDto.endDate,
+          memberId,
+          startDate: createUnavailabilityDto.startDate,
+          endDate: createUnavailabilityDto.endDate,
           reason: createUnavailabilityDto.reason,
         },
       });
@@ -95,10 +95,10 @@ export class UnavailabilityService {
 
     try {
       const unavailability = await this.prisma.unavailability.update({
-        where: { id: unavailabilityId, member_id: memberId },
+        where: { id: unavailabilityId, memberId },
         data: {
-          start_date: updateUnavailabilityDto.startDate,
-          end_date: updateUnavailabilityDto.endDate,
+          startDate: updateUnavailabilityDto.startDate,
+          endDate: updateUnavailabilityDto.endDate,
           reason: updateUnavailabilityDto.reason,
         },
       });
@@ -125,7 +125,7 @@ export class UnavailabilityService {
     // fetch unavailabilities
     const unavailabilities = await this.prisma.unavailability.findMany({
       where: {
-        member_id: memberId,
+        memberId,
       },
     });
 
@@ -138,17 +138,17 @@ export class UnavailabilityService {
     // fetch unavailabilities
     const teamUnavailabilities = await this.prisma.teamMember.findMany({
       where: {
-        team_id: teamId,
+        teamId,
       },
       omit: {
         id: true,
-        team_id: true,
-        joined_at: true,
+        teamId: true,
+        joinedAt: true,
       },
       include: {
         unavailabilities: {
           omit: {
-            created_at: true,
+            createdAt: true,
           },
         },
       },
@@ -164,7 +164,7 @@ export class UnavailabilityService {
     // Delete member unavailabilities
     await this.prisma.unavailability.deleteMany({
       where: {
-        member_id: memberId,
+        memberId,
       },
     });
   }
@@ -183,7 +183,7 @@ export class UnavailabilityService {
       await this.prisma.unavailability.delete({
         where: {
           id: unavailabilityId,
-          member_id: memberId,
+          memberId,
         },
       });
     } catch (error) {
