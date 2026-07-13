@@ -64,9 +64,9 @@ export class OnCallService {
       if (!isUnAvailable) {
         return {
           id: candidate.id,
-          user_id: candidate.userId,
-          team_id: candidate.teamId,
-          joined_at: candidate.joinedAt,
+          userId: candidate.userId,
+          teamId: candidate.teamId,
+          joinedAt: candidate.joinedAt,
         };
       }
     }

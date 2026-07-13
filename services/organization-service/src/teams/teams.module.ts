@@ -21,5 +21,6 @@ import { UnavailabilityService } from "./services/unavailability.service";
     MembersService,
     OnCallService,
   ],
+  exports: [OnCallService],
 })
 export class TeamsModule {}
