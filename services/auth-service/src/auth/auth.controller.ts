@@ -11,6 +11,7 @@ import { SignIn } from "./dto/sign-in.dto";
 import { AuthService } from "./auth.service";
 import type { Response } from "express";
 import { Public } from "src/common/decorators/public.decorator";
+import { RefrechTokenDto } from "./dto/refresh-token.dto";
 
 @Public()
 @Controller("auth")
@@ -28,7 +29,13 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
     @Body() signIn: SignIn
   ) {
-    const accessToken = await this.authService.signIn(signIn);
+    const { accessToken, refreshToken } = await this.authService.signIn(signIn);
+    response.cookie("refreshToken", refreshToken, {
+      secure: true,
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
     response.cookie("accessToken", accessToken, {
       secure: true,
       httpOnly: true,
@@ -36,5 +43,11 @@ export class AuthController {
       maxAge: 60 * 60 * 1000,
     });
     return { message: "SignIn successful" };
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post("refresh-tokens")
+  refreshTokens(@Body() refrechTokenDto: RefrechTokenDto) {
+    return this.authService.refrechTokens(refrechTokenDto);
   }
 }
