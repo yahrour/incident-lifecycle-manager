@@ -16,17 +16,17 @@ export class TeamsService {
     try {
       const team = await this.prisma.team.create({
         data: {
-          owner_id: ownerId,
+          ownerId,
           name: createTeamDto.name,
           description: createTeamDto.description,
-          rotation_period_days: createTeamDto.rotation_period_days,
-          rotation_start_date: createTeamDto.rotation_start_date,
-          escalation_timeout_minutes: createTeamDto.escalation_timeout_minutes,
+          rotationPeriodDays: createTeamDto.rotationPeriodDays,
+          rotationStartDate: createTeamDto.rotationStartDate,
+          escalationTimeoutMinutes: createTeamDto.escalationTimeoutMinutes,
         },
         omit: {
-          owner_id: true,
-          created_at: true,
-          updated_at: true,
+          ownerId: true,
+          createdAt: true,
+          updatedAt: true,
         },
       });
 
@@ -45,12 +45,12 @@ export class TeamsService {
   async findAll(ownerId: string) {
     const teams = await this.prisma.team.findMany({
       where: {
-        owner_id: ownerId,
+        ownerId,
       },
       omit: {
-        owner_id: true,
-        created_at: true,
-        updated_at: true,
+        ownerId: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
     return teams;
@@ -60,12 +60,12 @@ export class TeamsService {
     const team = await this.prisma.team.findUnique({
       where: {
         id,
-        owner_id: ownerId,
+        ownerId,
       },
       omit: {
-        owner_id: true,
-        created_at: true,
-        updated_at: true,
+        ownerId: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
 
@@ -80,24 +80,24 @@ export class TeamsService {
     const data: Prisma.TeamUpdateInput = { ...updateTeamDto };
 
     if (
-      updateTeamDto.rotation_period_days !== undefined ||
-      updateTeamDto.rotation_start_date !== undefined
+      updateTeamDto.rotationPeriodDays !== undefined ||
+      updateTeamDto.rotationStartDate !== undefined
     ) {
-      data.current_rotation_index = 0;
-      data.last_rotated_at = new Date();
+      data.currentRotationIndex = 0;
+      data.lastRotatedAt = new Date();
     }
 
     try {
       const updatedTeam = await this.prisma.team.update({
         where: {
           id,
-          owner_id: ownerId,
+          ownerId,
         },
         data,
         omit: {
-          owner_id: true,
-          created_at: true,
-          updated_at: true,
+          ownerId: true,
+          createdAt: true,
+          updatedAt: true,
         },
       });
       return updatedTeam;
@@ -120,7 +120,7 @@ export class TeamsService {
       await this.prisma.team.delete({
         where: {
           id,
-          owner_id: ownerId,
+          ownerId,
         },
       });
     } catch (error) {

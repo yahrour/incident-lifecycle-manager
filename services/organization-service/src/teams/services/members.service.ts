@@ -21,15 +21,15 @@ export class MembersService {
       where: { id: teamId },
     });
 
-    if (!team || team.owner_id !== ownerId) {
+    if (!team || team.ownerId !== ownerId) {
       throw new NotFoundException("Team doesn't exist");
     }
 
     try {
       await this.prisma.teamMember.create({
         data: {
-          user_id: userId,
-          team_id: teamId,
+          userId,
+          teamId,
         },
       });
     } catch (error) {
@@ -49,9 +49,9 @@ export class MembersService {
   async findAll(teamId: string, ownerId: string) {
     const members = await this.prisma.teamMember.findMany({
       where: {
-        team_id: teamId,
+        teamId,
         team: {
-          owner_id: ownerId,
+          ownerId,
         },
       },
     });
@@ -59,12 +59,13 @@ export class MembersService {
     return members;
   }
 
-  async findOne(teamId: string, memberId: string, ownerId: string) {
+  async findOne(teamId: string, memberId: number, ownerId: string) {
     const member = await this.prisma.teamMember.findUnique({
       where: {
-        unique_team_member: { team_id: teamId, user_id: memberId },
+        id: memberId,
+        teamId,
         team: {
-          owner_id: ownerId,
+          ownerId,
         },
       },
     });
@@ -76,16 +77,14 @@ export class MembersService {
     return member;
   }
 
-  async removeMember(teamId: string, memberId: string, ownerId: string) {
+  async removeMember(teamId: string, memberId: number, ownerId: string) {
     try {
       await this.prisma.teamMember.delete({
         where: {
-          unique_team_member: {
-            team_id: teamId,
-            user_id: memberId,
-          },
+          id: memberId,
+          teamId,
           team: {
-            owner_id: ownerId,
+            ownerId,
           },
         },
       });
