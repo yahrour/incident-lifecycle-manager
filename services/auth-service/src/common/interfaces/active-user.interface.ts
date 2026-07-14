@@ -1,6 +1,6 @@
 import { Role } from "@prisma/client";
 export interface ActiveUserData {
-  sub: string | number;
+  sub: string;
   email: string;
   role: Role;
 }

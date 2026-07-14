@@ -3,10 +3,11 @@ import { BcryptService } from "../common/security/bcrypt.service";
 import { SignUp } from "./dto/sign-up.dto";
 import { SignIn } from "./dto/sign-in.dto";
 import { UsersService } from "../users/users.service";
-import { Role } from "@prisma/client";
+import { Role, User } from "@prisma/client";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config"; //
 import { ActiveUserData } from "src/common/interfaces/active-user.interface";
+import { RefrechTokenDto } from "./dto/refresh-token.dto";
 
 @Injectable()
 export class AuthService {
@@ -37,22 +38,73 @@ export class AuthService {
     if (!isMatch) {
       throw new UnauthorizedException("Invalid credentials");
     }
+    return this.generateTokens(user);
+  }
 
-    const token = await this.jwtService.signAsync(
+  async generateTokens(user: User) {
+    const accessTtl = this.configService.getOrThrow<number>(
+      "JWT_ACCESS_TOKEN_TTL"
+    );
+    const refreshTtl = this.configService.getOrThrow<number>(
+      "JWT_REFRESH_TOKEN_TTL"
+    );
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.signToken<Partial<ActiveUserData>>(
+        user.id,
+        accessTtl,
+        this.configService.getOrThrow<string>("JWT_SECRET"),
+        { email: user.email, role: user.role }
+      ),
+      this.signToken(
+        user.id,
+        refreshTtl,
+        this.configService.getOrThrow<string>("JWT_REFRESH_SECRET")
+      ),
+    ]);
+    console.log("Tokens generated:", { accessToken, refreshToken });
+    return {
+      accessToken,
+      refreshToken,
+    };
+  }
+  private async signToken<T>(
+    userId: string,
+    expiresIn: number,
+    secret: string,
+    payload?: T
+  ) {
+    return this.jwtService.signAsync(
       {
-        sub: user.id,
-        email: user.email,
-        role: user.role,
-      } as ActiveUserData,
+        sub: userId,
+        ...payload,
+      },
       {
         audience: this.configService.get("JWT_AUDIENCE"),
         issuer: this.configService.get("JWT_ISSUER"),
+        secret,
+        expiresIn,
       }
     );
+  }
 
-    return {
-      accessToken: token,
-      expiresIn: this.configService.get("JWT_EXPIRES_IN"),
-    };
+  async refrechTokens(refrechTokenDto: RefrechTokenDto) {
+    try {
+      const { sub } = await this.jwtService.verifyAsync<
+        Pick<ActiveUserData, "sub">
+      >(refrechTokenDto.refreshToekn, {
+        secret: this.configService.getOrThrow<string>("JWT_REFRESH_SECRET"),
+        audience: this.configService.getOrThrow<string>("JWT_AUDIENCE"),
+        issuer: this.configService.getOrThrow<string>("JWT_ISSUER"),
+      });
+
+      const user = await this.userService.findById(sub);
+      if (!user) {
+        throw new UnauthorizedException("User not found");
+      }
+      return this.generateTokens(user);
+    } catch (error) {
+      throw new UnauthorizedException("Invalid or expired refresh token");
+    }
   }
 }
