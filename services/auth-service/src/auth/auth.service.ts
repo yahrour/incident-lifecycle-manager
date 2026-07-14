@@ -6,6 +6,7 @@ import { UsersService } from "../users/users.service";
 import { Role } from "@prisma/client";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config"; //
+import { ActiveUserData } from "src/common/interfaces/active-user.interface";
 
 @Injectable()
 export class AuthService {
@@ -36,14 +37,18 @@ export class AuthService {
     if (!isMatch) {
       throw new UnauthorizedException("Invalid credentials");
     }
-    const payload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-      audiance: this.configService.get("JWT_AUDIENCE"),
-      issuer: this.configService.get("JWT_ISSUER"),
-    };
-    const token = await this.jwtService.signAsync(payload);
+
+    const token = await this.jwtService.signAsync(
+      {
+        sub: user.id,
+        email: user.email,
+        role: user.role,
+      } as ActiveUserData,
+      {
+        audience: this.configService.get("JWT_AUDIENCE"),
+        issuer: this.configService.get("JWT_ISSUER"),
+      }
+    );
 
     return {
       accessToken: token,
