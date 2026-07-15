@@ -20,6 +20,8 @@ import * as Joi from "joi";
         JWT_REFRESH_TOKEN_TTL: Joi.number().default(604800),
         JWT_AUDIENCE: Joi.string().required(),
         JWT_ISSUER: Joi.string().required(),
+        GOOGLE_CLIENT_ID: Joi.string().required(),
+        GOOGLE_CLIENT_SECRET: Joi.string().required(),
       }),
     }),
     PrismaModule,
