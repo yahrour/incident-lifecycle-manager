@@ -21,8 +21,9 @@ model User {
   firstName    String   @map("first_name")
   lastName     String   @map("last_name")
   email        String   @unique
-  passwordHash String   @map("password_hash")
+  passwordHash String?   @map("password_hash")
   role         Role
+  googleId    String?  @unique @map("google_id")
   specialty    String?
   isVerified   Boolean  @default(false) @map("is_verified")
   createdAt    DateTime @default(now()) @map("created_at")
