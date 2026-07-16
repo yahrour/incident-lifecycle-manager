@@ -6,7 +6,7 @@ import { CreateInvite } from "./dto/create-invite.dto";
 export class InviteController {
   constructor(private readonly inviteService: InviteService) {}
   @Post("create")
-  saveToeknInfo(@Body() createInvite: CreateInvite) {
+  saveTokenInfo(@Body() createInvite: CreateInvite) {
     return this.inviteService.createInvite(createInvite);
   }
 }
