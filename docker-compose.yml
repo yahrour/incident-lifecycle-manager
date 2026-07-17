@@ -12,6 +12,24 @@ services:
       - postgres_data:/var/lib/postgresql
     networks:
       - incident_network
+  postgres-backup:
+    build:
+      dockerfile: ./Dockerfile
+      context: ./services/db-backup-service
+    container_name: incident_postgres_backup
+    restart: always
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: incident_admin
+      POSTGRES_PASSWORD: super_secret_password
+      POSTGRES_DB: incident_db
+      WEBHOOK_URL: https://webhook.site/eae4ccf4-8eda-4244-97cb-491de120a0d5
+    volumes:
+      - ./backups:/backups
+    networks:
+      - incident_network
+    depends_on:
+      - postgres
 
 volumes:
   postgres_data:
