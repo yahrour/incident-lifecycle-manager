@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Post, Query } from "@nestjs/common";
 import { InviteService } from "./invite.service";
 import { CreateInvite } from "./dto/create-invite.dto";
+import { RegisterViaInviteDto } from "./dto/register-via-invite.dto";
 
 @Controller("invite")
 export class InviteController {
@@ -13,5 +14,9 @@ export class InviteController {
   @Get("validate")
   vlaidate(@Query("token") token: string) {
     this.inviteService.validateToken(token);
+  }
+  @Post("register")
+  register(@Body() registerViaInviteDto: RegisterViaInviteDto) {
+    return this.inviteService.register(registerViaInviteDto);
   }
 }
