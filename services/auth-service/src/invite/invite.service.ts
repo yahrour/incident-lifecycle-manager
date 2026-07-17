@@ -1,11 +1,20 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotAcceptableException,
+  NotFoundException,
+} from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateInvite } from "./dto/create-invite.dto";
+import { UsersService } from "src/users/users.service";
 import * as crypto from "crypto";
 
 @Injectable()
 export class InviteService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly userService: UsersService
+  ) {}
   async createInvite(createInvite: CreateInvite) {
     const existingInvite = await this.prisma.inviteToken.findFirst({
       where: {
@@ -15,10 +24,12 @@ export class InviteService {
         expiresAt: { gt: new Date() },
       },
     });
+
     if (existingInvite) {
-      throw new ConflictException(
-        "An active invite already exists for this email"
-      );
+      await this.prisma.inviteToken.update({
+        where: { id: existingInvite.id },
+        data: { used: true },
+      });
     }
     const rawToken = crypto.randomBytes(32).toString("hex");
     const hashedToken = crypto
@@ -44,5 +55,31 @@ export class InviteService {
     // );
 
     return { success: true };
+  }
+
+  async validateToken(token: string) {
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    const invite = await this.prisma.inviteToken.findFirst({
+      where: { token: hashedToken },
+    });
+
+    if (!invite) {
+      throw new NotFoundException("Invalid invite link.");
+    }
+    if (invite.expiresAt < new Date()) {
+      throw new BadRequestException(
+        "This invite link has expired. Please request a new one."
+      );
+    }
+    if (invite.used) {
+      throw new BadRequestException("This invite link has already been used.");
+    }
+
+    const user = await this.userService.findByEmail(invite.email);
+    //return the front-end to be used if foweard to login page needed
+    return {
+      email: invite.email,
+      isAlreadyRegistered: !!user,
+    };
   }
 }
