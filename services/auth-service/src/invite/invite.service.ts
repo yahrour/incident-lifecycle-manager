@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   GoneException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from "@nestjs/common";
 
@@ -55,11 +56,8 @@ export class InviteService {
         used: false,
       },
     });
-    // TODO: send email with rawToken
-    // await this.mailService.sendInviteEmail(
-    //   createInviteDto.inviteEmail,
-    //   rawToken
-    // );
+    //TODO: generate the invite link to send it back to the team service
+    // const inviteLink = `${this.configService.get('APP_URL')}/register?token=${rawToken}`;
 
     return { success: true };
   }
@@ -83,6 +81,7 @@ export class InviteService {
     }
 
     const user = await this.userService.findByEmail(invite.email);
+
     //return the front-end to be used if foweard to login page needed
     return {
       email: invite.email,
@@ -91,12 +90,6 @@ export class InviteService {
   }
 
   async register(registerViaInviteDto: RegisterViaInviteDto) {
-    const existingUser = await this.userService.findByEmail(invite.email);
-    if (existingUser) {
-      throw new ConflictException(
-        "This email is already registered. Please use the login flow."
-      );
-    }
     const hashedToken = crypto
       .createHash("sha256")
       .update(registerViaInviteDto.token)
@@ -109,13 +102,21 @@ export class InviteService {
       throw new NotFoundException("Invalid invite link.");
     }
     if (invite.expiresAt < new Date()) {
-      throw new BadRequestException(
+      throw new GoneException(
         "This invite link has expired. Please request a new one."
       );
     }
+
     if (invite.used) {
       throw new BadRequestException("This invite link has already been used.");
     }
+    const existingUser = await this.userService.findByEmail(invite.email);
+    if (existingUser) {
+      throw new ConflictException(
+        "This email is already registered. Please use the login flow."
+      );
+    }
+
     const engineerData = {
       email: invite.email,
       firstName: registerViaInviteDto.firstName,
@@ -126,7 +127,16 @@ export class InviteService {
     };
 
     const newUser = await this.userService.create(engineerData);
-    //TODO: comminicate with team service await this.teamService.addUserToTeam(newUser.id, invite.teamId);
+    try {
+      // TODO: call Team Service
+      // await this.teamServiceClient.addMember(newUser.id, invite.teamId);
+    } catch (error) {
+      // rollback user creation if team service fails
+      await this.userService.deleteUser(newUser.id);
+      throw new InternalServerErrorException(
+        "Failed to add engineer to team. Please try again."
+      );
+    }
 
     await this.prisma.inviteToken.update({
       where: { id: invite.id },
@@ -134,6 +144,7 @@ export class InviteService {
     });
     return { success: true, message: "Registration successful" };
   }
+
   async accept(token: string, activeUser: ActiveUserData) {
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
     const invite = await this.prisma.inviteToken.findUnique({
@@ -154,7 +165,30 @@ export class InviteService {
         "You can only accept invites sent to your registered email address."
       );
     }
-    //TODO: cehck if already in team to regect and put as used token
-    //TODO if not add them to a team and make the token as used
+    //TODO:
+    // ask Team Service if engineer already belongs to a team
+    // const membership = await this.httpService.axiosRef.get(
+    //   `http://team-service:3002/internal/members/check/${activeUser.id}`
+    // );
+    // if (membership.data.belongsToTeam) {
+    // do NOT touch the token
+    // leave it valid in case they leave their team
+    // throw new ConflictException(
+    //   "You already belong to a team. Please leave your current team first."
+    // );
+    //  // add engineer to team
+    // await this.httpService.axiosRef.post(
+    //   `http://team-service:3002/internal/members`,
+    //   {
+    //     userId: activeUser.id,
+    //     teamId: invite.teamId,
+    //   }
+    // );
+    // }
+    await this.prisma.inviteToken.update({
+      where: { id: invite.id },
+      data: { used: true },
+    });
+    return { success: true, message: "You have successfully joined the team." };
   }
 }
