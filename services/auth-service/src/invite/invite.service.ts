@@ -1,9 +1,12 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
+  GoneException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateInvite } from "./dto/create-invite.dto";
 import { UsersService } from "src/users/users.service";
@@ -18,6 +21,7 @@ export class InviteService {
     private prisma: PrismaService,
     private readonly userService: UsersService
   ) {}
+
   async createInvite(createInvite: CreateInvite) {
     const existingInvite = await this.prisma.inviteToken.findFirst({
       where: {
@@ -29,11 +33,11 @@ export class InviteService {
     });
 
     if (existingInvite) {
-      await this.prisma.inviteToken.update({
+      await this.prisma.inviteToken.delete({
         where: { id: existingInvite.id },
-        data: { used: true },
       });
     }
+
     const rawToken = crypto.randomBytes(32).toString("hex");
     const hashedToken = crypto
       .createHash("sha256")
@@ -62,7 +66,7 @@ export class InviteService {
 
   async validateToken(token: string) {
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-    const invite = await this.prisma.inviteToken.findFirst({
+    const invite = await this.prisma.inviteToken.findUnique({
       where: { token: hashedToken },
     });
 
@@ -70,7 +74,7 @@ export class InviteService {
       throw new NotFoundException("Invalid invite link.");
     }
     if (invite.expiresAt < new Date()) {
-      throw new BadRequestException(
+      throw new GoneException(
         "This invite link has expired. Please request a new one."
       );
     }
@@ -87,11 +91,17 @@ export class InviteService {
   }
 
   async register(registerViaInviteDto: RegisterViaInviteDto) {
+    const existingUser = await this.userService.findByEmail(invite.email);
+    if (existingUser) {
+      throw new ConflictException(
+        "This email is already registered. Please use the login flow."
+      );
+    }
     const hashedToken = crypto
       .createHash("sha256")
       .update(registerViaInviteDto.token)
       .digest("hex");
-    const invite = await this.prisma.inviteToken.findFirst({
+    const invite = await this.prisma.inviteToken.findUnique({
       where: { token: hashedToken },
     });
 
@@ -126,7 +136,7 @@ export class InviteService {
   }
   async accept(token: string, activeUser: ActiveUserData) {
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-    const invite = await this.prisma.inviteToken.findFirst({
+    const invite = await this.prisma.inviteToken.findUnique({
       where: { token: hashedToken },
     });
 

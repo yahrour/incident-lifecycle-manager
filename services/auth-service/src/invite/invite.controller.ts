@@ -4,26 +4,32 @@ import { CreateInvite } from "./dto/create-invite.dto";
 import { RegisterViaInviteDto } from "./dto/register-via-invite.dto";
 import { ActiveUser } from "src/common/decorators/active-user.decorator";
 import type { ActiveUserData } from "src/common/interfaces/active-user.interface";
+import { Public } from "src/common/decorators/public.decorator";
 
 @Controller("invite")
 export class InviteController {
   constructor(private readonly inviteService: InviteService) {}
+
+  @Public()
   @Post("create")
-  saveTokenInfo(@Body() createInvite: CreateInvite) {
+  create(@Body() createInvite: CreateInvite) {
     return this.inviteService.createInvite(createInvite);
   }
 
+  @Public()
   @Get("validate")
-  vlaidate(@Query("token") token: string) {
-    this.inviteService.validateToken(token);
+  validate(@Query("token") token: string) {
+    return this.inviteService.validateToken(token);
   }
+
+  @Public()
   @Post("register")
   register(@Body() registerViaInviteDto: RegisterViaInviteDto) {
     return this.inviteService.register(registerViaInviteDto);
   }
 
   @Post("accept")
-  async acceptInvite(
+  acceptInvite(
     @Body("token") token: string,
     @ActiveUser() activeUser: ActiveUserData
   ) {
