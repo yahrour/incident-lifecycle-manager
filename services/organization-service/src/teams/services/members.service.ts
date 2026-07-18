@@ -98,4 +98,17 @@ export class MembersService {
       throw error;
     }
   }
+
+  async checkTeamMembership(userId: string) {
+    const result = await this.prisma.teamMember.findFirst({
+      where: {
+        userId,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    return !!result;
+  }
 }
