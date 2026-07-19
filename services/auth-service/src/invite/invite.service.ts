@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ConflictException,
   ForbiddenException,
   GoneException,
@@ -7,21 +6,24 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from "@nestjs/common";
-
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateInvite } from "./dto/create-invite.dto";
 import { UsersService } from "src/users/users.service";
+import { ConfigService } from "@nestjs/config";
 import * as crypto from "crypto";
 import { RegisterViaInviteDto } from "./dto/register-via-invite.dto";
-import { Role } from "@prisma/client";
+import { Role, InviteToken } from "@prisma/client";
 import { ActiveUserData } from "src/common/interfaces/active-user.interface";
 
 @Injectable()
 export class InviteService {
   constructor(
     private prisma: PrismaService,
-    private readonly userService: UsersService
+    private readonly userService: UsersService,
+    private readonly configService: ConfigService
   ) {}
+
+  // ─── Public Methods ───────────────────────────────────────────────
 
   async createInvite(createInvite: CreateInvite) {
     const existingInvite = await this.prisma.inviteToken.findFirst({
@@ -39,11 +41,9 @@ export class InviteService {
       });
     }
 
-    const rawToken = crypto.randomBytes(32).toString("hex");
-    const hashedToken = crypto
-      .createHash("sha256")
-      .update(rawToken)
-      .digest("hex");
+    // generate new token
+    const { rawToken, hashedToken } = this.generateToken();
+
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + createInvite.expiresIn);
 
@@ -52,37 +52,18 @@ export class InviteService {
         token: hashedToken,
         email: createInvite.inviteEmail,
         teamId: createInvite.teamId,
-        expiresAt: expiresAt,
+        expiresAt,
         used: false,
       },
     });
-    //TODO: generate the invite link to send it back to the team service
-    // const inviteLink = `${this.configService.get('APP_URL')}/register?token=${rawToken}`;
 
-    return { success: true };
+    return this.buildInviteLinkResponse(rawToken);
   }
 
   async validateToken(token: string) {
-    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-    const invite = await this.prisma.inviteToken.findUnique({
-      where: { token: hashedToken },
-    });
-
-    if (!invite) {
-      throw new NotFoundException("Invalid invite link.");
-    }
-    if (invite.expiresAt < new Date()) {
-      throw new GoneException(
-        "This invite link has expired. Please request a new one."
-      );
-    }
-    if (invite.used) {
-      throw new BadRequestException("This invite link has already been used.");
-    }
-
+    const invite = await this.findAndValidateToken(token);
     const user = await this.userService.findByEmail(invite.email);
 
-    //return the front-end to be used if foweard to login page needed
     return {
       email: invite.email,
       isAlreadyRegistered: !!user,
@@ -90,10 +71,75 @@ export class InviteService {
   }
 
   async register(registerViaInviteDto: RegisterViaInviteDto) {
+    const invite = await this.findAndValidateToken(registerViaInviteDto.token);
+
+    const existingUser = await this.userService.findByEmail(invite.email);
+    if (existingUser) {
+      throw new ConflictException(
+        "This email is already registered. Please use the login flow."
+      );
+    }
+
+    const newUser = await this.userService.create({
+      email: invite.email,
+      firstName: registerViaInviteDto.firstName,
+      lastName: registerViaInviteDto.lastName,
+      password: registerViaInviteDto.password,
+      specialty: registerViaInviteDto.specialty,
+      role: Role.ENGINEER,
+    });
+
+    try {
+      // TODO: call Team Service to add member
+      // await this.httpService.axiosRef.post(
+      //   'http://team-service:3002/internal/members',
+      //   { userId: newUser.id, teamId: invite.teamId }
+      // );
+    } catch (error) {
+      await this.userService.deleteUser(newUser.id);
+      throw new InternalServerErrorException(
+        "Failed to add engineer to team. Please try again."
+      );
+    }
+    await this.markTokenAsUsed(invite.id);
+
+    return { success: true, message: "Registration successful. Please login." };
+  }
+
+  async accept(token: string, activeUser: ActiveUserData) {
+    const invite = await this.findAndValidateToken(token);
+
+    if (invite.email !== activeUser.email) {
+      throw new ForbiddenException(
+        "You can only accept invites sent to your registered email address."
+      );
+    }
+
+    // TODO: ask Team Service if engineer already belongs to a team
+    // if yes → throw ConflictException, do NOT mark token as used
+    // if no  → add to team → mark token as used
+
+    await this.markTokenAsUsed(invite.id);
+
+    return { success: true, message: "You have successfully joined the team." };
+  }
+
+  private generateToken() {
+    const rawToken = crypto.randomBytes(32).toString("hex");
     const hashedToken = crypto
       .createHash("sha256")
-      .update(registerViaInviteDto.token)
+      .update(rawToken)
       .digest("hex");
+    return { rawToken, hashedToken };
+  }
+
+  private hashToken(rawToken: string): string {
+    return crypto.createHash("sha256").update(rawToken).digest("hex");
+  }
+
+  private async findAndValidateToken(rawToken: string): Promise<InviteToken> {
+    const hashedToken = this.hashToken(rawToken);
+
     const invite = await this.prisma.inviteToken.findUnique({
       where: { token: hashedToken },
     });
@@ -106,89 +152,25 @@ export class InviteService {
         "This invite link has expired. Please request a new one."
       );
     }
-
     if (invite.used) {
-      throw new BadRequestException("This invite link has already been used.");
+      throw new ConflictException("This invite link has already been used.");
     }
-    const existingUser = await this.userService.findByEmail(invite.email);
-    if (existingUser) {
-      throw new ConflictException(
-        "This email is already registered. Please use the login flow."
-      );
-    }
-
-    const engineerData = {
-      email: invite.email,
-      firstName: registerViaInviteDto.firstName,
-      lastName: registerViaInviteDto.lastName,
-      password: registerViaInviteDto.password,
-      specialty: registerViaInviteDto.specialty,
-      role: Role.ENGINEER,
-    };
-
-    const newUser = await this.userService.create(engineerData);
-    try {
-      // TODO: call Team Service
-      // await this.teamServiceClient.addMember(newUser.id, invite.teamId);
-    } catch (error) {
-      // rollback user creation if team service fails
-      await this.userService.deleteUser(newUser.id);
-      throw new InternalServerErrorException(
-        "Failed to add engineer to team. Please try again."
-      );
-    }
-
-    await this.prisma.inviteToken.update({
-      where: { id: invite.id },
-      data: { used: true },
-    });
-    return { success: true, message: "Registration successful" };
+    return invite;
   }
 
-  async accept(token: string, activeUser: ActiveUserData) {
-    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-    const invite = await this.prisma.inviteToken.findUnique({
-      where: { token: hashedToken },
-    });
-
-    if (!invite) {
-      throw new NotFoundException("Invalid invite link.");
-    }
-    if (invite.expiresAt < new Date()) {
-      throw new BadRequestException("This invite link has expired.");
-    }
-    if (invite.used) {
-      throw new BadRequestException("This invite link has already been used.");
-    }
-    if (invite.email !== activeUser.email) {
-      throw new ForbiddenException(
-        "You can only accept invites sent to your registered email address."
-      );
-    }
-    //TODO:
-    // ask Team Service if engineer already belongs to a team
-    // const membership = await this.httpService.axiosRef.get(
-    //   `http://team-service:3002/internal/members/check/${activeUser.id}`
-    // );
-    // if (membership.data.belongsToTeam) {
-    // do NOT touch the token
-    // leave it valid in case they leave their team
-    // throw new ConflictException(
-    //   "You already belong to a team. Please leave your current team first."
-    // );
-    //  // add engineer to team
-    // await this.httpService.axiosRef.post(
-    //   `http://team-service:3002/internal/members`,
-    //   {
-    //     userId: activeUser.id,
-    //     teamId: invite.teamId,
-    //   }
-    // );
-    // }
+  private async markTokenAsUsed(inviteId: string): Promise<void> {
     await this.prisma.inviteToken.update({
-      where: { id: invite.id },
+      where: { id: inviteId },
       data: { used: true },
     });
-    return { success: true, message: "You have successfully joined the team." };
+  }
+
+  private buildInviteLinkResponse(rawToken: string) {
+    const appUrl = this.configService.get<string>("APP_URL");
+    const inviteLink = `${appUrl}/register?token=${rawToken}`;
+    return {
+      success: true,
+      inviteLink,
+    };
   }
 }
