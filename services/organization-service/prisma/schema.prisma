@@ -35,14 +35,13 @@ model Team {
 
 model TeamMember {
   id               Int              @id @default(autoincrement())
-  userId           String           @map("user_id") @db.Uuid
+  userId           String           @unique @map("user_id") @db.Uuid
   user             User             @relation(fields: [userId], references: [id])
   teamId           String           @map("team_id") @db.Uuid
   team             Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
   joinedAt         DateTime         @default(now()) @map("joined_at")
   unavailabilities Unavailability[]
 
-  @@unique([teamId, userId], name: "unique_team_member")
   @@map("team_members")
   @@schema("organization")
 }
