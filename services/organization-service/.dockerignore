@@ -4,3 +4,6 @@ test
 *.log
 *.md
 .git*
+.env
+.env.*
+*.log
