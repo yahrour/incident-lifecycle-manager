@@ -42,9 +42,8 @@ export class MembersService {
         if (error.code === "P2003") {
           throw new NotFoundException("User doesn't exist");
         }
-
-        throw error;
       }
+      throw error;
     }
   }
 
