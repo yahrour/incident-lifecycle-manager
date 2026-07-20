@@ -35,7 +35,9 @@ export class MembersService {
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === "P2002") {
-          throw new ConflictException("User is already a member of this team");
+          throw new ConflictException(
+            "This user is already a member of a team"
+          );
         }
         if (error.code === "P2003") {
           throw new NotFoundException("User doesn't exist");
