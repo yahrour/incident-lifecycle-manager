@@ -10,19 +10,19 @@ import { PrismaClientKnownRequestError } from "src/generated/prisma/internal/pri
 export class MembersService {
   constructor(private prisma: PrismaService) {}
 
-  async add(teamId: string, ownerId: string, userId: string) {
-    if (ownerId === userId) {
-      throw new ConflictException(
-        "SRE Managers are administrative owners and cannot be added to the on-call member rotation."
-      );
-    }
-
+  async add(teamId: string, userId: string) {
     const team = await this.prisma.team.findUnique({
       where: { id: teamId },
     });
 
-    if (!team || team.ownerId !== ownerId) {
+    if (!team) {
       throw new NotFoundException("Team doesn't exist");
+    }
+
+    if (team.ownerId === userId) {
+      throw new ConflictException(
+        "SRE Managers are administrative owners and cannot be added to the on-call member rotation."
+      );
     }
 
     try {
