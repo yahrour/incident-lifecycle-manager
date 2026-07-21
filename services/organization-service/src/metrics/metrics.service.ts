@@ -54,10 +54,14 @@ export class MetricsService {
           team.id,
           ownerId
         );
+        const onCallChain = [
+          { role: "PRIMARY", userId: activeMember?.chain[0].userId },
+          { role: "SECONDARY", userId: activeMember?.chain[1].userId },
+        ];
         return {
           id: team.id,
           name: team.name,
-          onCall: activeMember ? activeMember.userId : null,
+          onCall: activeMember ? onCallChain : null,
         };
       })
     );
