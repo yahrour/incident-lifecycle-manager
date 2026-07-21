@@ -67,7 +67,7 @@ export class AuthService {
         this.configService.getOrThrow<string>("JWT_REFRESH_SECRET")
       ),
     ]);
-    console.log("Tokens generated:", { accessToken, refreshToken });
+
     return {
       accessToken,
       refreshToken,
@@ -93,11 +93,11 @@ export class AuthService {
     );
   }
 
-  async refrechTokens(refrechTokenDto: RefrechTokenDto) {
+  async refrechTokens(refrechToken: string) {
     try {
       const { sub } = await this.jwtService.verifyAsync<
         Pick<ActiveUserData, "sub">
-      >(refrechTokenDto.refreshToekn, {
+      >(refrechToken, {
         secret: this.configService.getOrThrow<string>("JWT_REFRESH_SECRET"),
         audience: this.configService.getOrThrow<string>("JWT_AUDIENCE"),
         issuer: this.configService.getOrThrow<string>("JWT_ISSUER"),
@@ -108,7 +108,7 @@ export class AuthService {
         throw new UnauthorizedException("User not found");
       }
       return this.generateTokens(user);
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException("Invalid or expired refresh token");
     }
   }
