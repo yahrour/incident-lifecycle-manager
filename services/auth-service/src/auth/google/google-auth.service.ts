@@ -28,6 +28,7 @@ export class GoogleAuthService implements OnModuleInit {
 
   async authentificate(token: string) {
     const loginTicket = await this.oauthClient.verifyIdToken({
+      audience: this.configueService.getOrThrow<string>("GOOGLE_CLIENT_ID"),
       idToken: token,
     });
     const payload = loginTicket.getPayload();
@@ -47,20 +48,6 @@ export class GoogleAuthService implements OnModuleInit {
     let user = await this.usersService.findGoogleId(googleId);
     if (!user) {
       let assignedRole: Role = Role.SRE;
-      //Todo:
-      //
-      // if (inviteToken) {
-      // Assuming you have an InvitesService that checks the DB for this token
-      // const inviteRecord =
-      //   await this.invitesService.validateInvite(inviteToken);
-      //
-      // if (!inviteRecord) {
-      //   throw new UnauthorizedException("Invalid or expired invite link");
-      // }
-
-      // assignedRole = inviteRecord.role; // e.g., 'ENGINEER'
-
-      // Optional: mark the invite as used here!
       user = await this.usersService.createWithGoogle(
         email,
         googleId,

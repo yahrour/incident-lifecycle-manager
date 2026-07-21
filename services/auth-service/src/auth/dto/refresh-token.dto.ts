@@ -1,6 +1,8 @@
-import { IsNotEmpty } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class RefrechTokenDto {
+  @IsOptional()
+  @IsString()
   @IsNotEmpty()
-  refreshToekn: string;
+  refreshToken?: string;
 }
