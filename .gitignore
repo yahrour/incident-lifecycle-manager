@@ -1,0 +1,112 @@
+# ==========================================
+# Dependencies & Build Outputs
+# ==========================================
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+/build
+
+# ==========================================
+# Logs
+# ==========================================
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# ==========================================
+# Operating System files
+# ==========================================
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# Tests
+# ==========================================
+/coverage
+/.nyc_output
+
+# ==========================================
+# IDEs and Editors
+# ==========================================
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# ==========================================
+# Environment variables
+# ==========================================
+.env
+**/.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ==========================================
+# Temp directories
+# ==========================================
+.temp
+.tmp
+
+# ==========================================
+# Runtime data
+# ==========================================
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# ==========================================
+# Diagnostic reports (https://nodejs.org/api/report.html)
+# ==========================================
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# ==========================================
+# NestJS Specific
+# ==========================================
+.tscache/
+*.tsbuildinfo
+
+# ==========================================
+# Security & Infrastructure Secrets
+# ==========================================
+.vault/
+vault/data/
+
+# ==========================================
+# Docker Local Data
+# ==========================================
+postgres-data/
+
+# ==========================================
+# Prisma
+# ==========================================
+services/**/migrations
+services/**/generated
+/generated/prisma
+
+# ==========================================
+# Misc
+# ==========================================
+backups/

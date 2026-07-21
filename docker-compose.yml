@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:18
+    container_name: incident_postgres
+    environment:
+      POSTGRES_USER: incident_admin
+      POSTGRES_PASSWORD: super_secret_password
+      POSTGRES_DB: incident_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    networks:
+      - incident_network
+  postgres-backup:
+    build:
+      context: ./scripts/db-backup-service
+      dockerfile: ./Dockerfile
+    container_name: incident_postgres_backup
+    restart: always
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: incident_admin
+      POSTGRES_PASSWORD: super_secret_password
+      POSTGRES_DB: incident_db
+      WEBHOOK_URL: https://webhook.site/eae4ccf4-8eda-4244-97cb-491de120a0d5
+    volumes:
+      - ./backups:/backups
+    networks:
+      - incident_network
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+
+networks:
+  incident_network:
+    driver: bridge
