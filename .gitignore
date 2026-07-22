@@ -102,10 +102,9 @@ postgres-data/
 # ==========================================
 # Prisma
 # ==========================================
-services/**/migrations
-services/**/generated
 src/generated/**
 src/generated/prisma
+prisma/migrations
 
 # ==========================================
 # Misc
