@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { PrismaClientKnownRequestError } from "src/generated/prisma/internal/prismaNamespace";
-import { CreateTeamDto, UpdateTeamDto } from "../dto";
+import { CreateTeamDto, UpdateTeamDto } from "./dto";
 import { Prisma } from "src/generated/prisma/client";
 import { PrismaService } from "src/common/prisma/prisma.service";
 

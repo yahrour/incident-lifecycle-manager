@@ -12,9 +12,8 @@ import {
   HttpStatus,
   Patch,
 } from "@nestjs/common";
-import { UnavailabilityService } from "../services/unavailability.service";
-import { CreateUnavailabilityDto } from "../dto/create-unavailability.dto";
-import { UpdateUnavailabilityDto } from "../dto";
+import { UnavailabilityService } from "./unavailability.service";
+import { CreateUnavailabilityDto, UpdateUnavailabilityDto } from "./dto";
 
 @Controller({
   path: "teams",

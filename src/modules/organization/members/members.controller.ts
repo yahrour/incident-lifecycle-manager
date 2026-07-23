@@ -11,8 +11,8 @@ import {
   HttpStatus,
   ParseIntPipe,
 } from "@nestjs/common";
-import { AddMemberDto } from "../dto";
-import { MembersService } from "../services/members.service";
+import { AddMemberDto } from "./dto";
+import { MembersService } from "./members.service";
 
 @Controller({
   path: "teams",

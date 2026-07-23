@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/common/prisma/prisma.service";
-import { OnCallService } from "src/modules/organization/services/oncall.service";
+import { OnCallService } from "src/modules/organization/oncall/oncall.service";
 
 @Injectable()
 export class OrganizationService {

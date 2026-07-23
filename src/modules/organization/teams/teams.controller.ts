@@ -11,8 +11,8 @@ import {
   HttpCode,
   HttpStatus,
 } from "@nestjs/common";
-import { TeamsService } from "../services/teams.service";
-import { CreateTeamDto, UpdateTeamDto } from "../dto";
+import { CreateTeamDto, UpdateTeamDto } from "./dto";
+import { TeamsService } from "./teams.service";
 
 @Controller({
   path: "teams",

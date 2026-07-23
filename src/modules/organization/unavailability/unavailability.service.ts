@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { PrismaClientKnownRequestError } from "src/generated/prisma/internal/prismaNamespace";
-import { CreateUnavailabilityDto, UpdateUnavailabilityDto } from "../dto";
+import { CreateUnavailabilityDto, UpdateUnavailabilityDto } from "./dto";
 import { PrismaService } from "src/common/prisma/prisma.service";
 
 @Injectable()

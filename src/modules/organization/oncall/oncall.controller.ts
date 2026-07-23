@@ -1,5 +1,5 @@
 import { Controller, Get, Param, ParseUUIDPipe, Headers } from "@nestjs/common";
-import { OnCallService } from "../services/oncall.service";
+import { OnCallService } from "./oncall.service";
 
 @Controller({
   path: "teams",
