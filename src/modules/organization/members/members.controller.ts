@@ -58,9 +58,4 @@ export class MembersController {
     ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
     return this.membersService.removeMember(id, memberId, ownerId);
   }
-
-  @Get("members/:userId/membership")
-  async checkTeamMembership(@Param("userId", ParseUUIDPipe) userId: string) {
-    return this.membersService.checkTeamMembership(userId);
-  }
 }
