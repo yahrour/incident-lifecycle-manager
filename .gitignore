@@ -1,30 +1,22 @@
 # ==========================================
-# Dependencies & Build Outputs (Global & Services)
+# Dependencies & Build Outputs
 # ==========================================
 node_modules/
 **/node_modules/
 dist/
 **/dist/
+/build
+
+# ==========================================
+# Logs
+# ==========================================
+logs
+*.log
 npm-debug.log*
+pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# ==========================================
-# NestJS Specific
-# ==========================================
-.tscache/
-*.tsbuildinfo
-
-# ==========================================
-# IDEs and Editors
-# ==========================================
-.idea/
-.vscode/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+lerna-debug.log*
 
 # ==========================================
 # Operating System files
@@ -33,9 +25,37 @@ yarn-error.log*
 Thumbs.db
 
 # ==========================================
-# Security & Infrastructure Secrets
+# Tests
 # ==========================================
-# Local environment variables
+/coverage
+/.nyc_output
+
+# ==========================================
+# IDEs and Editors
+# ==========================================
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# ==========================================
+# Environment variables
+# ==========================================
 .env
 **/.env
 .env.local
@@ -43,23 +63,50 @@ Thumbs.db
 .env.test.local
 .env.production.local
 
-# HashiCorp Vault local data (if running local persistent storage)
+# ==========================================
+# Temp directories
+# ==========================================
+.temp
+.tmp
+
+# ==========================================
+# Runtime data
+# ==========================================
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# ==========================================
+# Diagnostic reports (https://nodejs.org/api/report.html)
+# ==========================================
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# ==========================================
+# NestJS Specific
+# ==========================================
+.tscache/
+*.tsbuildinfo
+
+# ==========================================
+# Security & Infrastructure Secrets
+# ==========================================
 .vault/
 vault/data/
 
 # ==========================================
 # Docker Local Data
 # ==========================================
-# Prevents committing local PostgreSQL database data if bound to a folder
 postgres-data/
-
 
 # ==========================================
 # Prisma
 # ==========================================
+src/generated/**
+src/generated/prisma
+prisma/migrations
 
-services/**/migrations
-services/**/generated
-
-
+# ==========================================
+# Misc
+# ==========================================
 backups/
