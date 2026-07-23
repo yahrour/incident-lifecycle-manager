@@ -8,6 +8,7 @@ import { MetricsModule } from "./modules/metrics/metrics.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { UsersModule } from "./modules/users/users.module";
 import { InviteModule } from "./modules/invite/invite.module";
+import { IngestionModule } from "./modules/ingestion/ingestion.module";
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { InviteModule } from "./modules/invite/invite.module";
     HealthModule,
     OrganizationModule,
     MetricsModule,
+    IngestionModule,
   ],
   controllers: [],
   providers: [],
