@@ -26,7 +26,7 @@ export class MembersController {
     @Param("id", ParseUUIDPipe) id: string,
     @Body() addMemberDto: AddMemberDto
   ) {
-    return this.membersService.add(id, addMemberDto.userId);
+    return this.membersService.add(undefined, id, addMemberDto.userId);
   }
 
   @Get(":id/members")
