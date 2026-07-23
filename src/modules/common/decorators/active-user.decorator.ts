@@ -9,5 +9,5 @@ export const ActiveUser = createParamDecorator(
       .getRequest<Request & { user: ActiveUserData }>();
     const user = request.user;
     return field ? user?.[field] : user;
-  },
+  }
 );

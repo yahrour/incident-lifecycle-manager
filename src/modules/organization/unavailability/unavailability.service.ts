@@ -43,14 +43,14 @@ export class UnavailabilityService {
     ownerId: string,
     teamId: string,
     memberId: number,
-    createUnavailabilityDto: CreateUnavailabilityDto,
+    createUnavailabilityDto: CreateUnavailabilityDto
   ) {
     await this.verifyTeamOwnership(teamId, ownerId);
     await this.verifyMemberInTeam(teamId, memberId);
 
     if (createUnavailabilityDto.startDate >= createUnavailabilityDto.endDate) {
       throw new BadRequestException(
-        "end date should be greater than start date",
+        "end date should be greater than start date"
       );
     }
 
@@ -82,14 +82,14 @@ export class UnavailabilityService {
     teamId: string,
     memberId: number,
     unavailabilityId: number,
-    updateUnavailabilityDto: UpdateUnavailabilityDto,
+    updateUnavailabilityDto: UpdateUnavailabilityDto
   ) {
     await this.verifyTeamOwnership(teamId, ownerId);
     await this.verifyMemberInTeam(teamId, memberId);
 
     if (updateUnavailabilityDto.startDate >= updateUnavailabilityDto.endDate) {
       throw new BadRequestException(
-        "end date should be greater than start date",
+        "end date should be greater than start date"
       );
     }
 
@@ -173,7 +173,7 @@ export class UnavailabilityService {
     ownerId: string,
     teamId: string,
     memberId: number,
-    unavailabilityId: number,
+    unavailabilityId: number
   ) {
     await this.verifyTeamOwnership(teamId, ownerId);
     await this.verifyMemberInTeam(teamId, memberId);

@@ -24,7 +24,7 @@ export class MembersController {
   @Post(":id/members")
   addMember(
     @Param("id", ParseUUIDPipe) id: string,
-    @Body() addMemberDto: AddMemberDto,
+    @Body() addMemberDto: AddMemberDto
   ) {
     return this.membersService.add(id, addMemberDto.userId);
   }
@@ -32,7 +32,7 @@ export class MembersController {
   @Get(":id/members")
   findMany(
     @Param("id", ParseUUIDPipe) id: string,
-    @Headers("x-user-id") ownerId: string,
+    @Headers("x-user-id") ownerId: string
   ) {
     ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
     return this.membersService.findAll(id, ownerId);
@@ -42,7 +42,7 @@ export class MembersController {
   findOne(
     @Param("id", ParseUUIDPipe) id: string,
     @Param("memberId", ParseIntPipe) memberId: number,
-    @Headers("x-user-id") ownerId: string,
+    @Headers("x-user-id") ownerId: string
   ) {
     ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
     return this.membersService.findOne(id, memberId, ownerId);
@@ -53,7 +53,7 @@ export class MembersController {
   removeMember(
     @Param("id", ParseUUIDPipe) id: string,
     @Param("memberId", ParseIntPipe) memberId: number,
-    @Headers("x-user-id") ownerId: string,
+    @Headers("x-user-id") ownerId: string
   ) {
     ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
     return this.membersService.removeMember(id, memberId, ownerId);

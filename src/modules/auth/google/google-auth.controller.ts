@@ -11,7 +11,7 @@ export class GoogleAuthController {
   @Post()
   async authentificate(
     @Res({ passthrough: true }) response: Response,
-    @Body() googleToken: GoogleToken,
+    @Body() googleToken: GoogleToken
   ) {
     const { accessToken, refreshToken } =
       await this.googleAuthService.authentificate(googleToken.token);

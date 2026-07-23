@@ -33,7 +33,7 @@ export class InviteController {
   @Post("accept")
   acceptInvite(
     @Body("token") token: string,
-    @ActiveUser() activeUser: ActiveUserData,
+    @ActiveUser() activeUser: ActiveUserData
   ) {
     return this.inviteService.accept(token, activeUser);
   }
