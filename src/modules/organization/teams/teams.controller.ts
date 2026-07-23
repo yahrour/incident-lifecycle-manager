@@ -24,7 +24,7 @@ export class TeamsController {
   @Post()
   create(
     @Headers("x-user-id") ownerId: string,
-    @Body() createTeamDto: CreateTeamDto,
+    @Body() createTeamDto: CreateTeamDto
   ) {
     ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
     return this.teamsService.create(ownerId, createTeamDto);
@@ -39,7 +39,7 @@ export class TeamsController {
   @Get(":id")
   findOne(
     @Param("id", ParseUUIDPipe) id: string,
-    @Headers("x-user-id") ownerId: string,
+    @Headers("x-user-id") ownerId: string
   ) {
     ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
     return this.teamsService.findOne(id, ownerId);
@@ -49,7 +49,7 @@ export class TeamsController {
   update(
     @Param("id", ParseUUIDPipe) id: string,
     @Headers("x-user-id") ownerId: string,
-    @Body() updateTeamDto: UpdateTeamDto,
+    @Body() updateTeamDto: UpdateTeamDto
   ) {
     ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
     return this.teamsService.update(id, ownerId, updateTeamDto);
@@ -59,7 +59,7 @@ export class TeamsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(
     @Param("id", ParseUUIDPipe) id: string,
-    @Headers("x-user-id") ownerId: string,
+    @Headers("x-user-id") ownerId: string
   ) {
     ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
     return this.teamsService.remove(id, ownerId);

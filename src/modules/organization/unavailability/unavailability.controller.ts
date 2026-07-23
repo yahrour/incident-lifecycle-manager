@@ -28,14 +28,14 @@ export class UnavailabilityController {
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @Body() createUnavailabilityDto: CreateUnavailabilityDto,
-    @Headers("x-user-id") ownerId: string,
+    @Headers("x-user-id") ownerId: string
   ) {
     ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
     return this.unavailabilityService.create(
       ownerId,
       teamId,
       memberId,
-      createUnavailabilityDto,
+      createUnavailabilityDto
     );
   }
 
@@ -46,7 +46,7 @@ export class UnavailabilityController {
     @Param("memberId", ParseIntPipe) memberId: number,
     @Param("unavailabilityId", ParseIntPipe) unavailabilityId: number,
     @Body() updateUnavailabilityDto: UpdateUnavailabilityDto,
-    @Headers("x-user-id") ownerId: string,
+    @Headers("x-user-id") ownerId: string
   ) {
     ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
     return this.unavailabilityService.update(
@@ -54,7 +54,7 @@ export class UnavailabilityController {
       teamId,
       memberId,
       unavailabilityId,
-      updateUnavailabilityDto,
+      updateUnavailabilityDto
     );
   }
 
@@ -63,7 +63,7 @@ export class UnavailabilityController {
   findAll(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
-    @Headers("x-user-id") ownerId: string,
+    @Headers("x-user-id") ownerId: string
   ) {
     ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
     return this.unavailabilityService.findMemberAll(ownerId, teamId, memberId);
@@ -73,7 +73,7 @@ export class UnavailabilityController {
   @Get(":teamId/unavailabilities")
   findTeamAll(
     @Param("teamId", ParseUUIDPipe) teamId: string,
-    @Headers("x-user-id") ownerId: string,
+    @Headers("x-user-id") ownerId: string
   ) {
     ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
     return this.unavailabilityService.findTeamAll(ownerId, teamId);
@@ -85,7 +85,7 @@ export class UnavailabilityController {
   removeAll(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
-    @Headers("x-user-id") ownerId: string,
+    @Headers("x-user-id") ownerId: string
   ) {
     ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
     return this.unavailabilityService.removeAll(ownerId, teamId, memberId);
@@ -98,14 +98,14 @@ export class UnavailabilityController {
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @Param("unavailabilityId", ParseIntPipe) unavailabilityId: number,
-    @Headers("x-user-id") ownerId: string,
+    @Headers("x-user-id") ownerId: string
   ) {
     ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
     return this.unavailabilityService.removeOne(
       ownerId,
       teamId,
       memberId,
-      unavailabilityId,
+      unavailabilityId
     );
   }
 }

@@ -104,7 +104,7 @@ export class OnCallService {
 
       const baseTime = Math.max(
         team.lastRotatedAt.getTime(),
-        team.rotationStartDate.getTime(),
+        team.rotationStartDate.getTime()
       );
       const daysSinceLastRotation =
         (now.getTime() - baseTime) / (1000 * 60 * 60 * 24);

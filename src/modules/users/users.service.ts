@@ -12,7 +12,7 @@ import { Role } from "src/generated/prisma/client";
 export class UsersService {
   constructor(
     private prisma: PrismaService,
-    private bcrypt: BcryptService,
+    private bcrypt: BcryptService
   ) {}
 
   async create(data: CreateUserDto) {
@@ -66,7 +66,7 @@ export class UsersService {
     googleId: string,
     firstName: string,
     lastName: string,
-    role: Role,
+    role: Role
   ) {
     return this.prisma.user.create({
       data: {

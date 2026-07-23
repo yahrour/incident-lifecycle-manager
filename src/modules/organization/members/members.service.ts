@@ -21,7 +21,7 @@ export class MembersService {
 
     if (team.ownerId === userId) {
       throw new ConflictException(
-        "SRE Managers are administrative owners and cannot be added to the on-call member rotation.",
+        "SRE Managers are administrative owners and cannot be added to the on-call member rotation."
       );
     }
 
@@ -36,7 +36,7 @@ export class MembersService {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === "P2002") {
           throw new ConflictException(
-            "This user is already a member of a team",
+            "This user is already a member of a team"
           );
         }
         if (error.code === "P2003") {
