@@ -8,6 +8,7 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { PrismaService } from "src/common/prisma/prisma.service";
 import { BcryptService } from "../common/security/bcrypt.service";
 import { Role } from "src/generated/prisma/client";
+import { Prisma } from "src/generated/prisma/client";
 @Injectable()
 export class UsersService {
   constructor(
@@ -15,17 +16,20 @@ export class UsersService {
     private bcrypt: BcryptService
   ) {}
 
-  async create(data: CreateUserDto) {
+  async create(
+    data: CreateUserDto,
+    tx: Prisma.TransactionClient = this.prisma
+  ) {
     const { password } = data;
     const passwordHash = await this.bcrypt.hash(password);
-    const existing = await this.prisma.user.findUnique({
+    const existing = await tx.user.findUnique({
       where: { email: data.email },
     });
 
     if (existing) {
       throw new ConflictException("Email already in use");
     }
-    return this.prisma.user.create({
+    return tx.user.create({
       data: {
         firstName: data.firstName,
         lastName: data.lastName,
