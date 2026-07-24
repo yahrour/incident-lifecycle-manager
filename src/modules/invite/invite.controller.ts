@@ -15,7 +15,7 @@ import { Role } from "src/generated/prisma/enums";
 export class InviteController {
   constructor(private readonly inviteService: InviteService) {}
 
-  @Roles(Role.ENGINEER)
+  @Roles(Role.SRE)
   @Post("create")
   create(@Body() createInvite: CreateInvite) {
     return this.inviteService.createInvite(createInvite);
