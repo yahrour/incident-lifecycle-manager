@@ -15,13 +15,15 @@ import * as crypto from "crypto";
 import { RegisterViaInviteDto } from "./dto/register-via-invite.dto";
 import { Role, InviteToken } from "src/generated/prisma/client";
 import { ActiveUserData } from "../common/interfaces/active-user.interface";
+import { MembersService } from "../organization/members/members.service";
 
 @Injectable()
 export class InviteService {
   constructor(
     private prisma: PrismaService,
     private readonly userService: UsersService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly membersService: MembersService
   ) {}
 
   // ─── Public Methods ───────────────────────────────────────────────
@@ -80,31 +82,41 @@ export class InviteService {
         "This email is already registered. Please use the login flow."
       );
     }
-
-    const newUser = await this.userService.create({
-      email: invite.email,
-      firstName: registerViaInviteDto.firstName,
-      lastName: registerViaInviteDto.lastName,
-      password: registerViaInviteDto.password,
-      specialty: registerViaInviteDto.specialty,
-      role: Role.ENGINEER,
-    });
-
     try {
-      // TODO: call Team Service to add member
-      // await this.httpService.axiosRef.post(
-      //   'http://team-service:3002/internal/members',
-      //   { userId: newUser.id, teamId: invite.teamId }
-      // );
+      await this.prisma.$transaction(async (tx) => {
+        // 2. Create the user (passing 'tx' as the second argument)
+        const newUser = await this.userService.create(
+          {
+            email: invite.email,
+            firstName: registerViaInviteDto.firstName,
+            lastName: registerViaInviteDto.lastName,
+            password: registerViaInviteDto.password,
+            specialty: registerViaInviteDto.specialty,
+            role: Role.SRE,
+          },
+          tx
+        );
+
+        // 3. Add the user to the team
+        await this.membersService.add(tx, invite.teamId, newUser.id);
+
+        // 4. Mark the token as used IN THE SAME TRANSACTION
+        // the user and team assignment are rolled back too!
+        await tx.inviteToken.update({
+          where: { id: invite.id },
+          data: { used: true },
+        });
+      });
+
+      return {
+        success: true,
+        message: "Registration successful. Please login.",
+      };
     } catch {
-      await this.userService.deleteUser(newUser.id);
       throw new InternalServerErrorException(
-        "Failed to add engineer to team. Please try again."
+        "Failed to complete registration and team assignment. Please try again."
       );
     }
-    await this.markTokenAsUsed(invite.id);
-
-    return { success: true, message: "Registration successful. Please login." };
   }
 
   async accept(token: string, activeUser: ActiveUserData) {
@@ -116,13 +128,25 @@ export class InviteService {
       );
     }
 
-    // TODO: ask Team Service if engineer already belongs to a team
-    // if yes → throw ConflictException, do NOT mark token as used
-    // if no  → add to team → mark token as used
+    try {
+      // OPEN THE TRANSACTION BUBBLE
+      await this.prisma.$transaction(async (tx) => {
+        // 1. Add them to the team (Pass 'tx')
+        await this.membersService.add(tx, invite.teamId, activeUser.sub);
 
-    await this.markTokenAsUsed(invite.id);
+        // 2. Mark the token as used (Use 'tx' instead of this.prisma)
+        await tx.inviteToken.update({
+          where: { id: invite.id },
+          data: { used: true },
+        });
+      });
 
-    return { success: true, message: "You have successfully joined the team." };
+      return { success: true, message: "Successfully joined the team!" };
+    } catch {
+      throw new InternalServerErrorException(
+        "Failed to join the team. Please try again."
+      );
+    }
   }
 
   private generateToken() {
@@ -157,13 +181,6 @@ export class InviteService {
       throw new ConflictException("This invite link has already been used.");
     }
     return invite;
-  }
-
-  private async markTokenAsUsed(inviteId: string): Promise<void> {
-    await this.prisma.inviteToken.update({
-      where: { id: inviteId },
-      data: { used: true },
-    });
   }
 
   private buildInviteLinkResponse(rawToken: string) {
