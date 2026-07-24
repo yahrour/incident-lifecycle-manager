@@ -1,5 +1,7 @@
-import { Controller, Get, Headers } from "@nestjs/common";
+import { Controller, Get } from "@nestjs/common";
 import { OrganizationService } from "./organization/organization.service";
+import { ActiveUser } from "../common/decorators/active-user.decorator";
+import type { ActiveUserData } from "../common/interfaces/active-user.interface";
 
 @Controller({
   path: "metrics",
@@ -8,7 +10,7 @@ import { OrganizationService } from "./organization/organization.service";
 export class MetricsController {
   constructor(private organizationService: OrganizationService) {}
   @Get()
-  collect(@Headers("x-user-id") ownerId: string) {
-    return this.organizationService.collect(ownerId);
+  collect(@ActiveUser() user: ActiveUserData) {
+    return [{ organization: this.organizationService.collect(user.sub) }];
   }
 }

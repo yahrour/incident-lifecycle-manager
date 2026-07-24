@@ -7,12 +7,15 @@ import {
   Param,
   Delete,
   ParseUUIDPipe,
-  Headers,
   HttpCode,
   HttpStatus,
 } from "@nestjs/common";
 import { CreateTeamDto, UpdateTeamDto } from "./dto";
 import { TeamsService } from "./teams.service";
+import { ActiveUser } from "src/modules/common/decorators/active-user.decorator";
+import type { ActiveUserData } from "src/modules/common/interfaces/active-user.interface";
+import { Roles } from "src/modules/common/decorators/roles.decorator";
+import { Role } from "src/generated/prisma/enums";
 
 @Controller({
   path: "teams",
@@ -22,46 +25,46 @@ export class TeamsController {
   constructor(private readonly teamsService: TeamsService) {}
 
   @Post()
+  @Roles(Role.SRE)
   create(
-    @Headers("x-user-id") ownerId: string,
-    @Body() createTeamDto: CreateTeamDto
+    @Body() createTeamDto: CreateTeamDto,
+    @ActiveUser() user: ActiveUserData
   ) {
-    ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
-    return this.teamsService.create(ownerId, createTeamDto);
+    return this.teamsService.create(user.sub, createTeamDto);
   }
 
   @Get()
-  findAll(@Headers("x-user-id") ownerId: string) {
-    ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
-    return this.teamsService.findAll(ownerId);
+  @Roles(Role.SRE)
+  findAll(@ActiveUser() user: ActiveUserData) {
+    return this.teamsService.findAll(user.sub);
   }
 
   @Get(":id")
+  @Roles(Role.SRE)
   findOne(
     @Param("id", ParseUUIDPipe) id: string,
-    @Headers("x-user-id") ownerId: string
+    @ActiveUser() user: ActiveUserData
   ) {
-    ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
-    return this.teamsService.findOne(id, ownerId);
+    return this.teamsService.findOne(id, user.sub);
   }
 
   @Patch(":id")
+  @Roles(Role.SRE)
   update(
     @Param("id", ParseUUIDPipe) id: string,
-    @Headers("x-user-id") ownerId: string,
+    @ActiveUser() user: ActiveUserData,
     @Body() updateTeamDto: UpdateTeamDto
   ) {
-    ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
-    return this.teamsService.update(id, ownerId, updateTeamDto);
+    return this.teamsService.update(id, user.sub, updateTeamDto);
   }
 
   @Delete(":id")
+  @Roles(Role.SRE)
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(
     @Param("id", ParseUUIDPipe) id: string,
-    @Headers("x-user-id") ownerId: string
+    @ActiveUser() user: ActiveUserData
   ) {
-    ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
-    return this.teamsService.remove(id, ownerId);
+    return this.teamsService.remove(id, user.sub);
   }
 }
