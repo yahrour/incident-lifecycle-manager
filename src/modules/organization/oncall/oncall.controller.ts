@@ -1,5 +1,9 @@
-import { Controller, Get, Param, ParseUUIDPipe, Headers } from "@nestjs/common";
+import { Controller, Get, Param, ParseUUIDPipe } from "@nestjs/common";
 import { OnCallService } from "./oncall.service";
+import type { ActiveUserData } from "src/modules/common/interfaces/active-user.interface";
+import { ActiveUser } from "src/modules/common/decorators/active-user.decorator";
+import { Roles } from "src/modules/common/decorators/roles.decorator";
+import { Role } from "src/generated/prisma/enums";
 
 @Controller({
   path: "teams",
@@ -9,11 +13,11 @@ export class OnCallController {
   constructor(private readonly onCallService: OnCallService) {}
 
   @Get(":id/oncall/current")
+  @Roles(Role.SRE)
   getCurrentOnCall(
     @Param("id", ParseUUIDPipe) id: string,
-    @Headers("x-user-id") ownerId: string
+    @ActiveUser() user: ActiveUserData
   ) {
-    ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
-    return this.onCallService.getCurrentOnCall(id, ownerId);
+    return this.onCallService.getCurrentOnCall(id, user.sub);
   }
 }

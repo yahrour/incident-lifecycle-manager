@@ -1,18 +1,18 @@
 import {
   Controller,
   Get,
-  Post,
-  Body,
   Param,
   Delete,
   ParseUUIDPipe,
-  Headers,
   HttpCode,
   HttpStatus,
   ParseIntPipe,
 } from "@nestjs/common";
-import { AddMemberDto } from "./dto";
 import { MembersService } from "./members.service";
+import { ActiveUser } from "src/modules/common/decorators/active-user.decorator";
+import type { ActiveUserData } from "src/modules/common/interfaces/active-user.interface";
+import { Roles } from "src/modules/common/decorators/roles.decorator";
+import { Role } from "src/generated/prisma/enums";
 
 @Controller({
   path: "teams",
@@ -21,41 +21,33 @@ import { MembersService } from "./members.service";
 export class MembersController {
   constructor(private readonly membersService: MembersService) {}
 
-  @Post(":id/members")
-  addMember(
-    @Param("id", ParseUUIDPipe) id: string,
-    @Body() addMemberDto: AddMemberDto
-  ) {
-    return this.membersService.add(undefined, id, addMemberDto.userId);
-  }
-
   @Get(":id/members")
+  @Roles(Role.SRE)
   findMany(
     @Param("id", ParseUUIDPipe) id: string,
-    @Headers("x-user-id") ownerId: string
+    @ActiveUser() user: ActiveUserData
   ) {
-    ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
-    return this.membersService.findAll(id, ownerId);
+    return this.membersService.findAll(id, user.sub);
   }
 
   @Get(":id/members/:memberId")
+  @Roles(Role.SRE)
   findOne(
     @Param("id", ParseUUIDPipe) id: string,
     @Param("memberId", ParseIntPipe) memberId: number,
-    @Headers("x-user-id") ownerId: string
+    @ActiveUser() user: ActiveUserData
   ) {
-    ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
-    return this.membersService.findOne(id, memberId, ownerId);
+    return this.membersService.findOne(id, memberId, user.sub);
   }
 
   @Delete(":id/members/:memberId")
+  @Roles(Role.SRE)
   @HttpCode(HttpStatus.NO_CONTENT)
   removeMember(
     @Param("id", ParseUUIDPipe) id: string,
     @Param("memberId", ParseIntPipe) memberId: number,
-    @Headers("x-user-id") ownerId: string
+    @ActiveUser() user: ActiveUserData
   ) {
-    ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
-    return this.membersService.removeMember(id, memberId, ownerId);
+    return this.membersService.removeMember(id, memberId, user.sub);
   }
 }

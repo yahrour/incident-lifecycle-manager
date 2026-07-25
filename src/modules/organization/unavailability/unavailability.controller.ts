@@ -7,13 +7,16 @@ import {
   Delete,
   ParseUUIDPipe,
   ParseIntPipe,
-  Headers,
   HttpCode,
   HttpStatus,
   Patch,
 } from "@nestjs/common";
 import { UnavailabilityService } from "./unavailability.service";
 import { CreateUnavailabilityDto, UpdateUnavailabilityDto } from "./dto";
+import { Roles } from "src/modules/common/decorators/roles.decorator";
+import { Role } from "src/generated/prisma/enums";
+import { ActiveUser } from "src/modules/common/decorators/active-user.decorator";
+import type { ActiveUserData } from "src/modules/common/interfaces/active-user.interface";
 
 @Controller({
   path: "teams",
@@ -24,15 +27,15 @@ export class UnavailabilityController {
 
   // POST create an unavailability
   @Post(":teamId/members/:memberId/unavailabilities")
+  @Roles(Role.SRE)
   create(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @Body() createUnavailabilityDto: CreateUnavailabilityDto,
-    @Headers("x-user-id") ownerId: string
+    @ActiveUser() user: ActiveUserData
   ) {
-    ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
     return this.unavailabilityService.create(
-      ownerId,
+      user.sub,
       teamId,
       memberId,
       createUnavailabilityDto
@@ -41,16 +44,16 @@ export class UnavailabilityController {
 
   // PATCH member unavailability
   @Patch(":teamId/members/:memberId/unavailabilities/:unavailabilityId")
+  @Roles(Role.SRE)
   update(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @Param("unavailabilityId", ParseIntPipe) unavailabilityId: number,
     @Body() updateUnavailabilityDto: UpdateUnavailabilityDto,
-    @Headers("x-user-id") ownerId: string
+    @ActiveUser() user: ActiveUserData
   ) {
-    ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
     return this.unavailabilityService.update(
-      ownerId,
+      user.sub,
       teamId,
       memberId,
       unavailabilityId,
@@ -60,49 +63,49 @@ export class UnavailabilityController {
 
   // GET member unavailabilities
   @Get(":teamId/members/:memberId/unavailabilities")
+  @Roles(Role.SRE)
   findAll(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
-    @Headers("x-user-id") ownerId: string
+    @ActiveUser() user: ActiveUserData
   ) {
-    ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
-    return this.unavailabilityService.findMemberAll(ownerId, teamId, memberId);
+    return this.unavailabilityService.findMemberAll(user.sub, teamId, memberId);
   }
 
   // GET team unavailabilities
   @Get(":teamId/unavailabilities")
+  @Roles(Role.SRE)
   findTeamAll(
     @Param("teamId", ParseUUIDPipe) teamId: string,
-    @Headers("x-user-id") ownerId: string
+    @ActiveUser() user: ActiveUserData
   ) {
-    ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
-    return this.unavailabilityService.findTeamAll(ownerId, teamId);
+    return this.unavailabilityService.findTeamAll(user.sub, teamId);
   }
 
   // DELETE member unavailabilities
   @Delete(":teamId/members/:memberId/unavailabilities")
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Roles(Role.SRE)
   removeAll(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
-    @Headers("x-user-id") ownerId: string
+    @ActiveUser() user: ActiveUserData
   ) {
-    ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
-    return this.unavailabilityService.removeAll(ownerId, teamId, memberId);
+    return this.unavailabilityService.removeAll(user.sub, teamId, memberId);
   }
 
   // DELETE member unavailability
   @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(":teamId/members/:memberId/unavailabilities/:unavailabilityId")
+  @Roles(Role.SRE)
   removeOne(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @Param("unavailabilityId", ParseIntPipe) unavailabilityId: number,
-    @Headers("x-user-id") ownerId: string
+    @ActiveUser() user: ActiveUserData
   ) {
-    ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
     return this.unavailabilityService.removeOne(
-      ownerId,
+      user.sub,
       teamId,
       memberId,
       unavailabilityId
