@@ -31,8 +31,8 @@ export class UnavailabilityController {
   create(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
-    @Body() createUnavailabilityDto: CreateUnavailabilityDto,
-    @ActiveUser() user: ActiveUserData
+    @ActiveUser() user: ActiveUserData,
+    @Body() createUnavailabilityDto: CreateUnavailabilityDto
   ) {
     return this.unavailabilityService.create(
       user.sub,
@@ -49,8 +49,8 @@ export class UnavailabilityController {
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @Param("unavailabilityId", ParseIntPipe) unavailabilityId: number,
-    @Body() updateUnavailabilityDto: UpdateUnavailabilityDto,
-    @ActiveUser() user: ActiveUserData
+    @ActiveUser() user: ActiveUserData,
+    @Body() updateUnavailabilityDto: UpdateUnavailabilityDto
   ) {
     return this.unavailabilityService.update(
       user.sub,
@@ -63,8 +63,7 @@ export class UnavailabilityController {
 
   // GET member unavailabilities
   @Get(":teamId/members/:memberId/unavailabilities")
-  @Roles(Role.SRE)
-  findAll(
+  findMemberAll(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @ActiveUser() user: ActiveUserData
@@ -82,29 +81,59 @@ export class UnavailabilityController {
     return this.unavailabilityService.findTeamAll(user.sub, teamId);
   }
 
-  // DELETE member unavailabilities
-  @Delete(":teamId/members/:memberId/unavailabilities")
-  @HttpCode(HttpStatus.NO_CONTENT)
+  // GET pending unavailabilities
+  @Get(":teamId/unavailabilities/pending")
   @Roles(Role.SRE)
-  removeAll(
+  findPending(
     @Param("teamId", ParseUUIDPipe) teamId: string,
-    @Param("memberId", ParseIntPipe) memberId: number,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.unavailabilityService.removeAll(user.sub, teamId, memberId);
+    return this.unavailabilityService.findPending(user.sub, teamId);
   }
 
-  // DELETE member unavailability
+  // POST confirm unavailability
+  @Post(":teamId/members/:memberId/unavailabilities/:unavailabilityId/confirm")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @Delete(":teamId/members/:memberId/unavailabilities/:unavailabilityId")
   @Roles(Role.SRE)
-  removeOne(
+  confirm(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @Param("unavailabilityId", ParseIntPipe) unavailabilityId: number,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.unavailabilityService.removeOne(
+    return this.unavailabilityService.confirm(
+      user.sub,
+      teamId,
+      memberId,
+      unavailabilityId
+    );
+  }
+
+  // DELETE member unavailabilities
+  @Delete(":teamId/members/:memberId/unavailabilities")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removeMemberAll(
+    @Param("teamId", ParseUUIDPipe) teamId: string,
+    @Param("memberId", ParseIntPipe) memberId: number,
+    @ActiveUser() user: ActiveUserData
+  ) {
+    return this.unavailabilityService.removeMemberAll(
+      user.sub,
+      teamId,
+      memberId
+    );
+  }
+
+  // DELETE member unavailability
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete(":teamId/members/:memberId/unavailabilities/:unavailabilityId")
+  removeMemberOne(
+    @Param("teamId", ParseUUIDPipe) teamId: string,
+    @Param("memberId", ParseIntPipe) memberId: number,
+    @Param("unavailabilityId", ParseIntPipe) unavailabilityId: number,
+    @ActiveUser() user: ActiveUserData
+  ) {
+    return this.unavailabilityService.removeMemberOne(
       user.sub,
       teamId,
       memberId,
