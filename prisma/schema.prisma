@@ -56,6 +56,7 @@ model Unavailability {
   endDate    DateTime   @map("end_date")
   reason     String?
   createdAt  DateTime   @default(now()) @map("created_at")
+  confirmed  Boolean    @default(false)
 
   @@unique([memberId, startDate, endDate], name: "unique_unavailability_window")
   @@map("unavailabilities")
