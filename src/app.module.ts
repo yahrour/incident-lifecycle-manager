@@ -12,6 +12,7 @@ import { IngestionModule } from "./modules/ingestion/ingestion.module";
 import { APP_GUARD } from "@nestjs/core";
 import { AccessTokenGuard } from "./modules/common/guards/access-token/access-token.guard";
 import { RolesGuard } from "./modules/common/guards/roles.guard";
+import { ScheduleModule } from "@nestjs/schedule";
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { RolesGuard } from "./modules/common/guards/roles.guard";
       isGlobal: true,
       validationSchema,
     }),
+    ScheduleModule.forRoot(),
     AuthModule,
     InviteModule,
     UsersModule,
