@@ -9,21 +9,9 @@ export class OrganizationService {
     private onCallService: OnCallService
   ) {}
 
-  private async getTotalTeams(ownerId: string) {
-    const totalTeams = await this.prisma.team.count({
-      where: {
-        ownerId,
-      },
-    });
-
-    return totalTeams;
-  }
-
-  private async getTeamsMemberCount(ownerId: string) {
+  private async getTeamsTotalAndMembersCount(ownerId: string) {
     const result = await this.prisma.team.findMany({
-      where: {
-        ownerId,
-      },
+      where: { ownerId },
       include: {
         _count: {
           select: {
@@ -33,20 +21,24 @@ export class OrganizationService {
       },
     });
 
-    const count = result.map((team) => ({
+    const teamsCount = result.length;
+    const teamsMembersCount = result.map((team) => ({
       id: team.id,
       name: team.name,
       count: team._count.teamMembers,
     }));
 
-    return count;
+    return { totalTeams: teamsCount, teamsMembersCounts: teamsMembersCount };
   }
 
   private async getTeamsCurrentOnCall(ownerId: string) {
-    // 1. Fetch all teams along with their ordered members
     const teams = await this.prisma.team.findMany({
       where: { ownerId },
     });
+
+    if (teams.length === 0) {
+      return [];
+    }
 
     return Promise.all(
       teams.map(async (team) => {
@@ -54,63 +46,57 @@ export class OrganizationService {
           team.id,
           ownerId
         );
-        const onCallChain = [
-          { role: "PRIMARY", userId: activeMember?.chain[0].userId },
-          { role: "SECONDARY", userId: activeMember?.chain[1].userId },
-        ];
+        const onCallChain = activeMember?.chain.length
+          ? activeMember.chain
+          : null;
         return {
           id: team.id,
           name: team.name,
-          onCall: activeMember ? onCallChain : null,
+          onCall: onCallChain,
         };
       })
     );
   }
 
-  private async getMembersUnavailabilitiesCount(ownerId: string) {
-    const memberUnavailabilitiesCount = await this.prisma.unavailability.count({
+  private async getMembersUnavailabilitiesCounts(ownerId: string) {
+    const now = new Date();
+
+    const totalUnavailabilities = await this.prisma.unavailability.count({
       where: {
         teamMember: { team: { ownerId } },
+        confirmed: true,
       },
     });
 
-    return memberUnavailabilitiesCount;
-  }
+    const activeUnavailabilities = await this.prisma.unavailability.count({
+      where: {
+        teamMember: { team: { ownerId } },
+        startDate: { lte: now },
+        endDate: { gte: now },
+        confirmed: true,
+      },
+    });
 
-  private async getMembersUnavailabilitiesActiveCount(ownerId: string) {
-    const memberUnavailabilitiesActiveCount =
-      await this.prisma.unavailability.count({
-        where: {
-          teamMember: { team: { ownerId } },
-          startDate: { lte: new Date() },
-          endDate: { gte: new Date() },
-        },
-      });
-
-    return memberUnavailabilitiesActiveCount;
+    return { totalUnavailabilities, activeUnavailabilities };
   }
 
   async collect(ownerId: string) {
     const [
-      totalTeams,
-      teamsMembersCounts,
+      { totalTeams, teamsMembersCounts },
       teamsCurrentOnCall,
-      membersUnavailabilitiesTotal,
-      membersUnavailabilitiesActiveTotal,
+      { totalUnavailabilities, activeUnavailabilities },
     ] = await Promise.all([
-      this.getTotalTeams(ownerId),
-      this.getTeamsMemberCount(ownerId),
+      this.getTeamsTotalAndMembersCount(ownerId),
       this.getTeamsCurrentOnCall(ownerId),
-      this.getMembersUnavailabilitiesCount(ownerId),
-      this.getMembersUnavailabilitiesActiveCount(ownerId),
+      this.getMembersUnavailabilitiesCounts(ownerId),
     ]);
 
     return {
       totalTeams,
       teamsMembersCounts,
       teamsCurrentOnCall,
-      membersUnavailabilitiesTotal,
-      membersUnavailabilitiesActiveTotal,
+      totalUnavailabilities,
+      activeUnavailabilities,
     };
   }
 }

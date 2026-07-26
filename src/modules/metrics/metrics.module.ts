@@ -1,11 +1,11 @@
 import { Module } from "@nestjs/common";
 import { OrganizationService } from "./organization/organization.service";
 import { MetricsController } from "./metrics.controller";
-import { OnCallService } from "../organization/oncall/oncall.service";
+import { OncallModule } from "../organization/oncall/oncall.module";
 
 @Module({
-  imports: [],
-  providers: [OrganizationService, OnCallService],
+  imports: [OncallModule],
+  providers: [OrganizationService],
   controllers: [MetricsController],
 })
 export class MetricsModule {}
