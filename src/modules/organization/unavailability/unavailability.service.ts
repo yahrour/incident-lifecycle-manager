@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -24,82 +25,133 @@ export class UnavailabilityService {
     return team;
   }
 
-  private async verifyMemberInTeam(teamId: string, memberId: number) {
-    const member = await this.prisma.teamMember.findUnique({
-      where: {
-        teamId,
-        id: memberId,
-      },
+  async create(
+    requesterUserId: string,
+    teamId: string,
+    teamMemberId: number,
+    dto: CreateUnavailabilityDto
+  ) {
+    if (dto.startDate >= dto.endDate) {
+      throw new BadRequestException("Start date must be before end date");
+    }
+
+    const targetMember = await this.prisma.teamMember.findUnique({
+      where: { id: teamMemberId, teamId },
+      include: { team: true },
     });
 
-    if (!member) {
-      throw new NotFoundException("Member doesn't belong to the team");
-    }
+    if (!targetMember) throw new NotFoundException("Team member not found");
 
-    return member;
-  }
+    const isSelf = targetMember.userId === requesterUserId;
+    const isTeamOwner = targetMember.team.ownerId === requesterUserId;
 
-  async create(
-    ownerId: string,
-    teamId: string,
-    memberId: number,
-    createUnavailabilityDto: CreateUnavailabilityDto
-  ) {
-    await this.verifyTeamOwnership(teamId, ownerId);
-    await this.verifyMemberInTeam(teamId, memberId);
-
-    if (createUnavailabilityDto.startDate >= createUnavailabilityDto.endDate) {
-      throw new BadRequestException(
-        "end date should be greater than start date"
+    // If they aren't the person taking leave, AND they aren't the owner... block it.
+    if (!isSelf && !isTeamOwner) {
+      throw new ForbiddenException(
+        "You can only log unavailability for yourself."
       );
     }
-
+    // if the requester is the team owner, allow them to create the unavailability automatically confirmed
     try {
-      const unavailability = await this.prisma.unavailability.create({
+      return this.prisma.unavailability.create({
         data: {
-          memberId,
-          startDate: createUnavailabilityDto.startDate,
-          endDate: createUnavailabilityDto.endDate,
-          reason: createUnavailabilityDto.reason,
+          memberId: teamMemberId,
+          startDate: dto.startDate,
+          endDate: dto.endDate,
+          reason: dto.reason,
+          confirmed: isTeamOwner,
         },
       });
-
-      return unavailability;
     } catch (error) {
       if (
         error instanceof PrismaClientKnownRequestError &&
         error.code === "P2002"
       ) {
-        throw new ConflictException("Unavailability window already exist");
+        throw new ConflictException("Unavailability window already exists");
       }
-
       throw error;
     }
   }
 
   async update(
-    ownerId: string,
+    requesterUserId: string,
     teamId: string,
     memberId: number,
     unavailabilityId: number,
     updateUnavailabilityDto: UpdateUnavailabilityDto
   ) {
-    await this.verifyTeamOwnership(teamId, ownerId);
-    await this.verifyMemberInTeam(teamId, memberId);
-
-    if (updateUnavailabilityDto.startDate >= updateUnavailabilityDto.endDate) {
+    if (
+      updateUnavailabilityDto.startDate &&
+      updateUnavailabilityDto.endDate &&
+      updateUnavailabilityDto.startDate >= updateUnavailabilityDto.endDate
+    ) {
       throw new BadRequestException(
         "end date should be greater than start date"
       );
     }
 
+    const targetMember = await this.prisma.teamMember.findUnique({
+      where: {
+        id: memberId,
+        teamId: teamId,
+      },
+      include: { team: true },
+    });
+
+    if (!targetMember) {
+      throw new NotFoundException("Team member not found in this team");
+    }
+
+    const isSelf = targetMember.userId === requesterUserId;
+    const isTeamOwner = targetMember.team.ownerId === requesterUserId;
+
+    if (!isSelf && !isTeamOwner) {
+      throw new ForbiddenException(
+        "You don't have permission to update this unavailability."
+      );
+    }
+
     try {
+      const currentUnavailability = await this.prisma.unavailability.findUnique(
+        {
+          where: { id: unavailabilityId, memberId },
+        }
+      );
+      if (!currentUnavailability) {
+        throw new NotFoundException("Unavailability doesn't exist");
+      }
+      // don't let the sre update an engineer unavailability if it's confirmed:false
+      if (currentUnavailability.confirmed === false && isTeamOwner) {
+        throw new ForbiddenException(
+          "Unavailability must be confirmed before updating."
+        );
+      }
+      if (!(
+        updateUnavailabilityDto.startDate && updateUnavailabilityDto.endDate
+      )) {
+        if (updateUnavailabilityDto.startDate) {
+          if (
+            updateUnavailabilityDto.startDate >= currentUnavailability.endDate
+          ) {
+            throw new BadRequestException("Start date must be before end date");
+          }
+        }
+        if (updateUnavailabilityDto.endDate) {
+          if (
+            updateUnavailabilityDto.endDate <= currentUnavailability.startDate
+          ) {
+            throw new BadRequestException("End date must be after start date");
+          }
+        }
+      }
+
       const unavailability = await this.prisma.unavailability.update({
         where: { id: unavailabilityId, memberId },
         data: {
           startDate: updateUnavailabilityDto.startDate,
           endDate: updateUnavailabilityDto.endDate,
           reason: updateUnavailabilityDto.reason,
+          confirmed: isTeamOwner,
         },
       });
 
@@ -118,11 +170,35 @@ export class UnavailabilityService {
     }
   }
 
-  async findMemberAll(ownerId: string, teamId: string, memberId: number) {
-    await this.verifyTeamOwnership(teamId, ownerId);
-    await this.verifyMemberInTeam(teamId, memberId);
+  async findMemberAll(
+    requesterUserId: string,
+    teamId: string,
+    memberId: number
+  ) {
+    // 1. Fetch the target member and their team context for authorization
+    const targetMember = await this.prisma.teamMember.findUnique({
+      where: {
+        id: memberId,
+        teamId: teamId,
+      },
+      include: { team: true },
+    });
 
-    // fetch unavailabilities
+    if (!targetMember) {
+      throw new NotFoundException("Team member not found in this team");
+    }
+
+    // 2. Core Authorization Logic (Strict)
+    const isSelf = targetMember.userId === requesterUserId;
+    const isTeamOwner = targetMember.team.ownerId === requesterUserId;
+
+    if (!isSelf && !isTeamOwner) {
+      throw new ForbiddenException(
+        "You don't have permission to view these unavailabilities."
+      );
+    }
+
+    // 3. Fetch unavailabilities
     const unavailabilities = await this.prisma.unavailability.findMany({
       where: {
         memberId,
@@ -146,22 +222,35 @@ export class UnavailabilityService {
         joinedAt: true,
       },
       include: {
-        unavailabilities: {
-          omit: {
-            createdAt: true,
-          },
-        },
+        unavailabilities: true,
       },
     });
 
     return teamUnavailabilities;
   }
 
-  async removeAll(ownerId: string, teamId: string, memberId: number) {
-    await this.verifyTeamOwnership(teamId, ownerId);
-    await this.verifyMemberInTeam(teamId, memberId);
+  async removeAll(requesterUserId: string, teamId: string, memberId: number) {
+    const targetMember = await this.prisma.teamMember.findUnique({
+      where: {
+        id: memberId,
+        teamId: teamId,
+      },
+      include: { team: true },
+    });
 
-    // Delete member unavailabilities
+    if (!targetMember) {
+      throw new NotFoundException("Team member not found in this team");
+    }
+
+    const isSelf = targetMember.userId === requesterUserId;
+    const isTeamOwner = targetMember.team.ownerId === requesterUserId;
+
+    if (!isSelf && !isTeamOwner) {
+      throw new ForbiddenException(
+        "You don't have permission to delete these unavailabilities."
+      );
+    }
+
     await this.prisma.unavailability.deleteMany({
       where: {
         memberId,
@@ -170,16 +259,33 @@ export class UnavailabilityService {
   }
 
   async removeOne(
-    ownerId: string,
+    requesterUserId: string,
     teamId: string,
     memberId: number,
     unavailabilityId: number
   ) {
-    await this.verifyTeamOwnership(teamId, ownerId);
-    await this.verifyMemberInTeam(teamId, memberId);
+    const targetMember = await this.prisma.teamMember.findUnique({
+      where: {
+        id: memberId,
+        teamId: teamId,
+      },
+      include: { team: true },
+    });
+
+    if (!targetMember) {
+      throw new NotFoundException("Team member not found in this team");
+    }
+
+    const isSelf = targetMember.userId === requesterUserId;
+    const isTeamOwner = targetMember.team.ownerId === requesterUserId;
+
+    if (!isSelf && !isTeamOwner) {
+      throw new ForbiddenException(
+        "You don't have permission to delete this unavailability."
+      );
+    }
 
     try {
-      // Delete member unavailabilities
       await this.prisma.unavailability.delete({
         where: {
           id: unavailabilityId,
@@ -196,5 +302,82 @@ export class UnavailabilityService {
 
       throw error;
     }
+  }
+
+  async findPending(ownerId: string, teamId: string) {
+    await this.verifyTeamOwnership(teamId, ownerId);
+
+    const teamMembers = await this.prisma.teamMember.findMany({
+      where: {
+        teamId,
+        team: { ownerId },
+      },
+      include: {
+        unavailabilities: {
+          where: {
+            confirmed: false,
+          },
+        },
+      },
+    });
+
+    const pendingUnavailabilities = teamMembers.flatMap(
+      (member) => member.unavailabilities ?? []
+    );
+    return pendingUnavailabilities;
+  }
+
+  async confirm(
+    requesterUserId: string,
+    teamId: string,
+    memberId: number,
+    unavailabilityId: number
+  ) {
+    const team = await this.prisma.team.findUnique({
+      where: {
+        id: teamId,
+        ownerId: requesterUserId,
+      },
+      include: {
+        teamMembers: {
+          where: {
+            id: memberId,
+          },
+        },
+      },
+    });
+
+    if (!team) {
+      throw new NotFoundException("Team doesn't exist");
+    }
+
+    if (team.teamMembers.length === 0) {
+      throw new NotFoundException("Team member not found");
+    }
+
+    const unavailability = await this.prisma.unavailability.findUnique({
+      where: {
+        id: unavailabilityId,
+        memberId,
+      },
+    });
+
+    if (!unavailability) {
+      throw new NotFoundException("Unavailability not found");
+    }
+
+    if (unavailability.confirmed) {
+      throw new BadRequestException("Unavailability is already confirmed");
+    }
+
+    await this.prisma.unavailability.update({
+      where: {
+        id: unavailabilityId,
+        memberId,
+      },
+      data: {
+        confirmed: true,
+      },
+    });
   }
 }

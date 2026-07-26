@@ -12,5 +12,5 @@ export class CreateUnavailabilityDto {
 
   @IsOptional()
   @IsString()
-  reason: string;
+  reason?: string;
 }
