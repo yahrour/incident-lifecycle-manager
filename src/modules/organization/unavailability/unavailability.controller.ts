@@ -27,6 +27,7 @@ export class UnavailabilityController {
 
   // POST create an unavailability
   @Post(":teamId/members/:memberId/unavailabilities")
+  @Roles(Role.SRE)
   create(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
@@ -43,6 +44,7 @@ export class UnavailabilityController {
 
   // PATCH member unavailability
   @Patch(":teamId/members/:memberId/unavailabilities/:unavailabilityId")
+  @Roles(Role.SRE)
   update(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
@@ -61,6 +63,7 @@ export class UnavailabilityController {
 
   // GET member unavailabilities
   @Get(":teamId/members/:memberId/unavailabilities")
+  @Roles(Role.SRE)
   findAll(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
@@ -110,6 +113,7 @@ export class UnavailabilityController {
   // DELETE member unavailabilities
   @Delete(":teamId/members/:memberId/unavailabilities")
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Roles(Role.SRE)
   removeAll(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
@@ -121,6 +125,7 @@ export class UnavailabilityController {
   // DELETE member unavailability
   @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(":teamId/members/:memberId/unavailabilities/:unavailabilityId")
+  @Roles(Role.SRE)
   removeOne(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
