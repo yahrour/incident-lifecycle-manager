@@ -14,7 +14,15 @@ export class OnCallService {
         teamMembers: {
           orderBy: { joinedAt: "asc" },
           select: {
-            userId: true,
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                specialty: true,
+              },
+            },
             unavailabilities: {
               where: {
                 startDate: { lte: now },
@@ -75,8 +83,8 @@ export class OnCallService {
       teamId: team.id,
       escalationTimeoutMinutes: team.escalationTimeoutMinutes,
       chain: [
-        { role: "PRIMARY", userId: primary.userId },
-        { role: "SECONDARY", userId: secondary.userId },
+        { role: "PRIMARY", ...primary.user },
+        { role: "SECONDARY", ...secondary.user },
       ],
     };
   }

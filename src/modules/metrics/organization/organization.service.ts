@@ -48,7 +48,7 @@ export class OrganizationService {
         );
         const onCallChain = activeMember?.chain.length
           ? activeMember.chain
-          : null;
+          : [];
         return {
           id: team.id,
           name: team.name,
