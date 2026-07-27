@@ -207,16 +207,6 @@ export class UnavailabilityService {
       },
       include: {
         unavailabilities: true,
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            specialty: true,
-            createdAt: true,
-          },
-        },
       },
     });
 
