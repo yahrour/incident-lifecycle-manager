@@ -6,6 +6,7 @@ import {
 import { PrismaService } from "src/common/prisma/prisma.service";
 import { Prisma } from "src/generated/prisma/client";
 import { PrismaClientKnownRequestError } from "src/generated/prisma/internal/prismaNamespace";
+import { PaginationSearchParams } from "./dto";
 
 @Injectable()
 export class MembersService {
@@ -48,31 +49,47 @@ export class MembersService {
     }
   }
 
-  async findAll(teamId: string, ownerId: string) {
-    const members = await this.prisma.teamMember.findMany({
-      where: {
-        teamId,
-        team: {
-          ownerId,
-        },
-      },
-      omit: {
-        userId: true,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            specialty: true,
+  async findAll(
+    teamId: string,
+    ownerId: string,
+    query: PaginationSearchParams
+  ) {
+    const [total, members] = await Promise.all([
+      this.prisma.teamMember.count({
+        where: {
+          teamId,
+          team: {
+            ownerId,
           },
         },
-      },
-    });
+      }),
+      this.prisma.teamMember.findMany({
+        take: query.limit,
+        skip: query.offset,
+        where: {
+          teamId,
+          team: {
+            ownerId,
+          },
+        },
+        omit: {
+          userId: true,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              specialty: true,
+            },
+          },
+        },
+      }),
+    ]);
 
-    return members;
+    return { data: members, total: total };
   }
 
   async findOne(teamId: string, memberId: number, ownerId: string) {
