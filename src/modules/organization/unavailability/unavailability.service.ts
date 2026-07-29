@@ -9,6 +9,7 @@ import { PrismaClientKnownRequestError } from "src/generated/prisma/internal/pri
 import { CreateUnavailabilityDto, UpdateUnavailabilityDto } from "./dto";
 import { PrismaService } from "src/common/prisma/prisma.service";
 import { Team, TeamMember } from "src/generated/prisma/client";
+import { PaginationSearchParams } from "src/common/dto";
 
 @Injectable()
 export class UnavailabilityService {
@@ -185,17 +186,30 @@ export class UnavailabilityService {
   async findMemberAll(
     requesterUserId: string,
     teamId: string,
-    memberId: number
+    memberId: number,
+    query: PaginationSearchParams
   ) {
     await this.getAuthorizedMember(memberId, teamId, requesterUserId);
 
-    const unavailabilities = await this.prisma.unavailability.findMany({
-      where: {
-        memberId,
-      },
-    });
+    const [unavailabilities, total] = await Promise.all([
+      this.prisma.unavailability.findMany({
+        where: {
+          memberId,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        skip: query.offset,
+        take: query.limit,
+      }),
+      this.prisma.unavailability.count({
+        where: {
+          memberId,
+        },
+      }),
+    ]);
 
-    return unavailabilities;
+    return { data: unavailabilities, total };
   }
 
   async findTeamAll(requesterId: string, teamId: string) {
@@ -254,20 +268,40 @@ export class UnavailabilityService {
     }
   }
 
-  async findPending(requesterId: string, teamId: string) {
+  async findPending(
+    requesterId: string,
+    teamId: string,
+    query: PaginationSearchParams
+  ) {
     await this.verifyTeamOwnership(teamId, requesterId);
 
-    const pendingUnavailabilities = await this.prisma.unavailability.findMany({
-      where: {
-        confirmed: false,
-        teamMember: {
-          teamId,
-          team: { ownerId: requesterId },
+    const [pendingUnavailabilities, total] = await Promise.all([
+      this.prisma.unavailability.findMany({
+        where: {
+          confirmed: false,
+          teamMember: {
+            teamId,
+            team: { ownerId: requesterId },
+          },
         },
-      },
-    });
+        orderBy: {
+          createdAt: "asc",
+        },
+        skip: query.offset,
+        take: query.limit,
+      }),
+      this.prisma.unavailability.count({
+        where: {
+          confirmed: false,
+          teamMember: {
+            teamId,
+            team: { ownerId: requesterId },
+          },
+        },
+      }),
+    ]);
 
-    return pendingUnavailabilities;
+    return { data: pendingUnavailabilities, total };
   }
 
   async confirm(

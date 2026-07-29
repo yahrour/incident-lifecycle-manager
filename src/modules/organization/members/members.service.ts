@@ -3,10 +3,10 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import { PaginationSearchParams } from "src/common/dto";
 import { PrismaService } from "src/common/prisma/prisma.service";
 import { Prisma } from "src/generated/prisma/client";
 import { PrismaClientKnownRequestError } from "src/generated/prisma/internal/prismaNamespace";
-import { PaginationSearchParams } from "./dto";
 
 @Injectable()
 export class MembersService {

@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   Patch,
+  Query,
 } from "@nestjs/common";
 import { UnavailabilityService } from "./unavailability.service";
 import { CreateUnavailabilityDto, UpdateUnavailabilityDto } from "./dto";
@@ -17,6 +18,7 @@ import { Roles } from "src/modules/common/decorators/roles.decorator";
 import { Role } from "src/generated/prisma/enums";
 import { ActiveUser } from "src/modules/common/decorators/active-user.decorator";
 import type { ActiveUserData } from "src/modules/common/interfaces/active-user.interface";
+import { PaginationSearchParams } from "src/common/dto";
 
 @Controller({
   path: "teams",
@@ -64,9 +66,15 @@ export class UnavailabilityController {
   findMemberAll(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
+    @Query() query: PaginationSearchParams,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.unavailabilityService.findMemberAll(user.sub, teamId, memberId);
+    return this.unavailabilityService.findMemberAll(
+      user.sub,
+      teamId,
+      memberId,
+      query
+    );
   }
 
   // GET team unavailabilities
@@ -84,9 +92,10 @@ export class UnavailabilityController {
   @Roles(Role.SRE)
   findPending(
     @Param("teamId", ParseUUIDPipe) teamId: string,
+    @Query() query: PaginationSearchParams,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.unavailabilityService.findPending(user.sub, teamId);
+    return this.unavailabilityService.findPending(user.sub, teamId, query);
   }
 
   // POST confirm unavailability
