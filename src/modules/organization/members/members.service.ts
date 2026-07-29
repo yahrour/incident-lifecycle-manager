@@ -66,6 +66,9 @@ export class MembersService {
       this.prisma.teamMember.findMany({
         take: query.limit,
         skip: query.offset,
+        orderBy: {
+          joinedAt: "desc",
+        },
         where: {
           teamId,
           team: {
