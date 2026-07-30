@@ -1,8 +1,8 @@
 import { IsInt, IsOptional, Max, Min } from "class-validator";
 import { Type } from "class-transformer";
-import { PAGINATION } from "src/modules/common/constants";
+import { PAGINATION } from "src/common/constants";
 
-export class PaginationSearchParams {
+export class OffsetPaginationSearchParams {
   @IsOptional()
   @Type(() => Number)
   @IsInt()

@@ -9,7 +9,7 @@ import { PrismaClientKnownRequestError } from "src/generated/prisma/internal/pri
 import { CreateUnavailabilityDto, UpdateUnavailabilityDto } from "./dto";
 import { PrismaService } from "src/common/prisma/prisma.service";
 import { Team, TeamMember } from "src/generated/prisma/client";
-import { PaginationSearchParams } from "src/common/dto";
+import { OffsetPaginationSearchParams } from "src/common/dto";
 
 @Injectable()
 export class UnavailabilityService {
@@ -187,7 +187,7 @@ export class UnavailabilityService {
     requesterUserId: string,
     teamId: string,
     memberId: number,
-    query: PaginationSearchParams
+    query: OffsetPaginationSearchParams
   ) {
     await this.getAuthorizedMember(memberId, teamId, requesterUserId);
 
@@ -271,7 +271,7 @@ export class UnavailabilityService {
   async findPending(
     requesterId: string,
     teamId: string,
-    query: PaginationSearchParams
+    query: OffsetPaginationSearchParams
   ) {
     await this.verifyTeamOwnership(teamId, requesterId);
 
