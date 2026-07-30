@@ -19,7 +19,7 @@ export class OffsetPaginationSearchParams {
 
   @IsOptional()
   @IsEnum(SORT_FIELD)
-  sortField?: SORT_FIELD;
+  sortField?: SORT_FIELD = SORT_FIELD.JOINED_AT;
 
   @IsOptional()
   @IsEnum(SORT_ORDER)

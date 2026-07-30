@@ -18,7 +18,7 @@ import { Roles } from "src/modules/common/decorators/roles.decorator";
 import { Role } from "src/generated/prisma/enums";
 import { ActiveUser } from "src/modules/common/decorators/active-user.decorator";
 import type { ActiveUserData } from "src/modules/common/interfaces/active-user.interface";
-import { OffsetPaginationSearchParams } from "src/common/dto";
+import { OffsetPaginationSearchParams } from "./dto";
 
 @Controller({
   path: "teams",
