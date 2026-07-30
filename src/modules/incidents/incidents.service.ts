@@ -17,7 +17,7 @@ export class IncidentsService {
     );
     const assigneeUserId = onCall?.chain.find(
       ({ role }) => role === "PRIMARY"
-    )?.userId;
+    )?.id;
 
     if (!assigneeUserId) {
       throw new ConflictException("No on-call engineer available");
