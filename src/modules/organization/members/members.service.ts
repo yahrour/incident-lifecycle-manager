@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { PaginationSearchParams } from "src/common/dto";
+import { OffsetPaginationSearchParams } from "./dto";
 import { PrismaService } from "src/common/prisma/prisma.service";
 import { Prisma } from "src/generated/prisma/client";
 import { PrismaClientKnownRequestError } from "src/generated/prisma/internal/prismaNamespace";
@@ -52,7 +52,7 @@ export class MembersService {
   async findAll(
     teamId: string,
     ownerId: string,
-    query: PaginationSearchParams
+    query: OffsetPaginationSearchParams
   ) {
     const [total, members] = await Promise.all([
       this.prisma.teamMember.count({
@@ -72,6 +72,11 @@ export class MembersService {
             ownerId,
           },
         },
+        ...(query.sortField && {
+          orderBy: {
+            [query.sortField]: query.sortOrder,
+          },
+        }),
         omit: {
           userId: true,
         },
@@ -89,7 +94,7 @@ export class MembersService {
       }),
     ]);
 
-    return { data: members, total: total };
+    return { data: members, total };
   }
 
   async findOne(teamId: string, memberId: number, ownerId: string) {
