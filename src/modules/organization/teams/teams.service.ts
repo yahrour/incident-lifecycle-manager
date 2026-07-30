@@ -12,7 +12,7 @@ import {
 } from "./dto";
 import { Prisma } from "src/generated/prisma/client";
 import { PrismaService } from "src/common/prisma/prisma.service";
-import { Cursor } from "./types";
+import { Cursor, cursorSchema } from "./types";
 
 @Injectable()
 export class TeamsService {
@@ -23,19 +23,22 @@ export class TeamsService {
   }
 
   private decodeCursor(raw: string): Cursor {
+    let parsed: unknown;
     try {
-      const cursor = JSON.parse(
-        Buffer.from(raw, "base64url").toString("utf-8")
-      ) as Cursor;
-
-      if (!cursor.sortField || !cursor.sortOrder || !cursor.id) {
-        throw new Error("Invalid cursor");
-      }
-
-      return cursor;
+      parsed = JSON.parse(Buffer.from(raw, "base64url").toString("utf-8"));
     } catch {
       throw new BadRequestException("Invalid cursor");
     }
+
+    const result = cursorSchema.validate(parsed, {
+      stripUnknown: true,
+    });
+
+    if (result.error) {
+      throw new BadRequestException("Invalid cursor");
+    }
+
+    return result.value;
   }
 
   async create(ownerId: string, createTeamDto: CreateTeamDto) {
