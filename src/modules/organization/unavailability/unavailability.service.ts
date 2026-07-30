@@ -9,7 +9,7 @@ import { PrismaClientKnownRequestError } from "src/generated/prisma/internal/pri
 import { CreateUnavailabilityDto, UpdateUnavailabilityDto } from "./dto";
 import { PrismaService } from "src/common/prisma/prisma.service";
 import { Team, TeamMember } from "src/generated/prisma/client";
-import { OffsetPaginationSearchParams } from "src/common/dto";
+import { OffsetPaginationSearchParams } from "./dto";
 
 @Injectable()
 export class UnavailabilityService {
@@ -196,9 +196,11 @@ export class UnavailabilityService {
         where: {
           memberId,
         },
-        orderBy: {
-          createdAt: "desc",
-        },
+        ...(query.sortField && {
+          orderBy: {
+            [query.sortField]: query.sortOrder,
+          },
+        }),
         skip: query.offset,
         take: query.limit,
       }),
@@ -284,9 +286,11 @@ export class UnavailabilityService {
             team: { ownerId: requesterId },
           },
         },
-        orderBy: {
-          createdAt: "asc",
-        },
+        ...(query.sortField && {
+          orderBy: {
+            [query.sortField]: query.sortOrder,
+          },
+        }),
         skip: query.offset,
         take: query.limit,
       }),
