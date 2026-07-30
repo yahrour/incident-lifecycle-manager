@@ -14,7 +14,7 @@ import { ActiveUser } from "src/modules/common/decorators/active-user.decorator"
 import type { ActiveUserData } from "src/modules/common/interfaces/active-user.interface";
 import { Roles } from "src/modules/common/decorators/roles.decorator";
 import { Role } from "src/generated/prisma/enums";
-import { PaginationSearchParams } from "./dto";
+import { PaginationSearchParams } from "src/common/dto";
 
 @Controller({
   path: "teams",
