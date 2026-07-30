@@ -11,7 +11,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["organization", "auth", "incident"]
+  schemas  = ["organization", "auth", "incident", "alert"]
 }
 
 ////////////// ORGANIZATION SCHEMA //////////////
@@ -89,6 +89,7 @@ model User {
 
   resetTokens             ResetToken[]
   emailVerificationTokens EmailVerificationToken[]
+  apiKeys                 ApiKey[]
 
   ownedTeams        Team[]
   teamMembers       TeamMember[]
@@ -163,4 +164,22 @@ model EmailVerificationToken {
 
   @@map("email_verification_tokens")
   @@schema("auth")
+}
+
+////////////// ALERT SCHEMA //////////////
+
+model ApiKey {
+  id         String    @id @default(uuid()) @db.Uuid
+  ownerId    String    @map("owner_id") @db.Uuid
+  owner      User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name       String
+  keyPrefix  String    @map("key_prefix") @db.VarChar(12)
+  keyHash    String    @unique @map("key_hash")
+  enabled    Boolean   @default(true)
+  lastUsedAt DateTime? @map("last_used_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  @@unique([ownerId, name], name: "unique_owner_name")
+  @@map("api_keys")
+  @@schema("alert")
 }
