@@ -13,7 +13,11 @@ import {
   Query,
 } from "@nestjs/common";
 import { UnavailabilityService } from "./unavailability.service";
-import { CreateUnavailabilityDto, UpdateUnavailabilityDto } from "./dto";
+import {
+  CreateUnavailabilityDto,
+  CursorPaginationSearchParams,
+  UpdateUnavailabilityDto,
+} from "./dto";
 import { Roles } from "src/modules/common/decorators/roles.decorator";
 import { Role } from "src/generated/prisma/enums";
 import { ActiveUser } from "src/modules/common/decorators/active-user.decorator";
@@ -82,9 +86,10 @@ export class UnavailabilityController {
   @Roles(Role.SRE)
   findTeamAll(
     @Param("teamId", ParseUUIDPipe) teamId: string,
+    @Query() query: CursorPaginationSearchParams,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.unavailabilityService.findTeamAll(user.sub, teamId);
+    return this.unavailabilityService.findTeamAll(user.sub, teamId, query);
   }
 
   // GET pending unavailabilities
