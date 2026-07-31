@@ -46,7 +46,7 @@ export class IncidentsService {
       throw new NotFoundException("Incident doesn't exist");
     }
 
-    if (incident.assignedToId !== userId && incident.team?.ownerId !== userId) {
+    if (incident.assignedToId !== userId) {
       throw new ForbiddenException("You cannot acknowledge this incident");
     }
 
