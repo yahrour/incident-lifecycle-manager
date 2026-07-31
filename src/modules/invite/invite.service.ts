@@ -92,7 +92,7 @@ export class InviteService {
             lastName: registerViaInviteDto.lastName,
             password: registerViaInviteDto.password,
             specialty: registerViaInviteDto.specialty,
-            role: Role.SRE,
+            role: Role.ENGINEER,
           },
           tx
         );
