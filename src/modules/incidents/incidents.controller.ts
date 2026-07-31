@@ -20,7 +20,7 @@ export class IncidentsController {
   }
 
   @Post(":id/acknowledge")
-  @Roles(Role.SRE)
+  @Roles(Role.ENGINEER)
   acknowledge(
     @Param("id", ParseUUIDPipe) id: string,
     @ActiveUser() user: ActiveUserData
