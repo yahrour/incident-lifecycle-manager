@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Param, ParseUUIDPipe, Post } from "@nestjs/common";
 import { Role } from "src/generated/prisma/enums";
 import { ActiveUser } from "src/modules/common/decorators/active-user.decorator";
 import { Roles } from "src/modules/common/decorators/roles.decorator";
@@ -17,5 +17,14 @@ export class IncidentsController {
     @ActiveUser() user: ActiveUserData
   ) {
     return this.incidentsService.create(user.sub, createIncidentDto);
+  }
+
+  @Post(":id/acknowledge")
+  @Roles(Role.ENGINEER)
+  acknowledge(
+    @Param("id", ParseUUIDPipe) id: string,
+    @ActiveUser() user: ActiveUserData
+  ) {
+    return this.incidentsService.acknowledge(user.sub, id);
   }
 }
