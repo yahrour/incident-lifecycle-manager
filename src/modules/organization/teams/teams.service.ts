@@ -71,6 +71,45 @@ export class TeamsService {
     }
   }
 
+  async update(id: string, ownerId: string, updateTeamDto: UpdateTeamDto) {
+    const data: Prisma.TeamUpdateInput = { ...updateTeamDto };
+
+    if (
+      updateTeamDto.rotationPeriodDays !== undefined ||
+      updateTeamDto.rotationStartDate !== undefined
+    ) {
+      data.currentRotationIndex = 0;
+      data.lastRotatedAt = new Date();
+    }
+
+    try {
+      const updatedTeam = await this.prisma.team.update({
+        where: {
+          id,
+          ownerId,
+        },
+        data,
+        omit: {
+          ownerId: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+      return updatedTeam;
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === "P2025") {
+          throw new NotFoundException();
+        }
+        if (error.code === "P2002") {
+          throw new ConflictException("Team already exist");
+        }
+      }
+
+      throw error;
+    }
+  }
+
   async findAll(ownerId: string, query: CursorPaginationSearchParams) {
     const cursor = query.cursor ? this.decodeCursor(query.cursor) : null;
     if (
@@ -142,46 +181,7 @@ export class TeamsService {
     return team;
   }
 
-  async update(id: string, ownerId: string, updateTeamDto: UpdateTeamDto) {
-    const data: Prisma.TeamUpdateInput = { ...updateTeamDto };
-
-    if (
-      updateTeamDto.rotationPeriodDays !== undefined ||
-      updateTeamDto.rotationStartDate !== undefined
-    ) {
-      data.currentRotationIndex = 0;
-      data.lastRotatedAt = new Date();
-    }
-
-    try {
-      const updatedTeam = await this.prisma.team.update({
-        where: {
-          id,
-          ownerId,
-        },
-        data,
-        omit: {
-          ownerId: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      });
-      return updatedTeam;
-    } catch (error) {
-      if (error instanceof PrismaClientKnownRequestError) {
-        if (error.code === "P2025") {
-          throw new NotFoundException();
-        }
-        if (error.code === "P2002") {
-          throw new ConflictException("Team already exist");
-        }
-      }
-
-      throw error;
-    }
-  }
-
-  async remove(id: string, ownerId: string) {
+  async delete(id: string, ownerId: string) {
     try {
       await this.prisma.team.delete({
         where: {
