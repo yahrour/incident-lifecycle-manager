@@ -129,7 +129,7 @@ export class MembersService {
     return member;
   }
 
-  async removeMember(teamId: string, memberId: number, ownerId: string) {
+  async remove(teamId: string, memberId: number, ownerId: string) {
     try {
       await this.prisma.teamMember.delete({
         where: {
