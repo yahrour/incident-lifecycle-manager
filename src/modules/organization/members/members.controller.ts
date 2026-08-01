@@ -25,7 +25,7 @@ export class MembersController {
 
   @Get(":id/members")
   @Roles(Role.SRE)
-  findMany(
+  findAll(
     @Param("id", ParseUUIDPipe) id: string,
     @Query() query: OffsetPaginationSearchParams,
     @ActiveUser() user: ActiveUserData
@@ -46,11 +46,11 @@ export class MembersController {
   @Delete(":id/members/:memberId")
   @Roles(Role.SRE)
   @HttpCode(HttpStatus.NO_CONTENT)
-  removeMember(
+  remove(
     @Param("id", ParseUUIDPipe) id: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.membersService.removeMember(id, memberId, user.sub);
+    return this.membersService.remove(id, memberId, user.sub);
   }
 }

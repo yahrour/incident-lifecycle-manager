@@ -14,6 +14,8 @@ export class MetricsController {
   @Get()
   @Roles(Role.SRE)
   async collect(@ActiveUser() user: ActiveUserData) {
-    return { organization: await this.organizationService.collect(user.sub) };
+    return {
+      organization: await this.organizationService.collectMetrics(user.sub),
+    };
   }
 }

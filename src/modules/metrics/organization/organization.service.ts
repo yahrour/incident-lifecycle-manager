@@ -9,7 +9,7 @@ export class OrganizationService {
     private onCallService: OnCallService
   ) {}
 
-  private async getTeamsTotalAndMembersCount(ownerId: string) {
+  private async getTeamsAndMembersCounts(ownerId: string) {
     const result = await this.prisma.team.findMany({
       where: { ownerId },
       include: {
@@ -31,7 +31,7 @@ export class OrganizationService {
     return { totalTeams: teamsCount, teamsMembersCounts: teamsMembersCount };
   }
 
-  private async getTeamsCurrentOnCall(ownerId: string) {
+  private async getCurrentOnCallForTeams(ownerId: string) {
     const teams = await this.prisma.team.findMany({
       where: { ownerId },
     });
@@ -58,7 +58,7 @@ export class OrganizationService {
     );
   }
 
-  private async getMembersUnavailabilitiesCounts(ownerId: string) {
+  private async getMembersUnavailabilityCounts(ownerId: string) {
     const now = new Date();
 
     const totalUnavailabilities = await this.prisma.unavailability.count({
@@ -80,15 +80,15 @@ export class OrganizationService {
     return { totalUnavailabilities, activeUnavailabilities };
   }
 
-  async collect(ownerId: string) {
+  async collectMetrics(ownerId: string) {
     const [
       { totalTeams, teamsMembersCounts },
       teamsCurrentOnCall,
       { totalUnavailabilities, activeUnavailabilities },
     ] = await Promise.all([
-      this.getTeamsTotalAndMembersCount(ownerId),
-      this.getTeamsCurrentOnCall(ownerId),
-      this.getMembersUnavailabilitiesCounts(ownerId),
+      this.getTeamsAndMembersCounts(ownerId),
+      this.getCurrentOnCallForTeams(ownerId),
+      this.getMembersUnavailabilityCounts(ownerId),
     ]);
 
     return {
