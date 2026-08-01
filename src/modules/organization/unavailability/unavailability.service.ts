@@ -242,6 +242,47 @@ export class UnavailabilityService {
     return { data: unavailabilities, total };
   }
 
+  async removeMemberAll(
+    requesterUserId: string,
+    teamId: string,
+    memberId: number
+  ) {
+    await this.getAuthorizedMember(memberId, teamId, requesterUserId);
+
+    await this.prisma.unavailability.deleteMany({
+      where: {
+        memberId,
+      },
+    });
+  }
+
+  async removeMemberOne(
+    requesterUserId: string,
+    teamId: string,
+    memberId: number,
+    unavailabilityId: number
+  ) {
+    await this.getAuthorizedMember(memberId, teamId, requesterUserId);
+
+    try {
+      await this.prisma.unavailability.delete({
+        where: {
+          id: unavailabilityId,
+          memberId,
+        },
+      });
+    } catch (error) {
+      if (
+        error instanceof PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        throw new NotFoundException("Unavailability doesn't exist");
+      }
+
+      throw error;
+    }
+  }
+
   async findTeamAll(
     requesterId: string,
     teamId: string,
@@ -311,47 +352,6 @@ export class UnavailabilityService {
       : null;
 
     return { data, nextCursor };
-  }
-
-  async removeMemberAll(
-    requesterUserId: string,
-    teamId: string,
-    memberId: number
-  ) {
-    await this.getAuthorizedMember(memberId, teamId, requesterUserId);
-
-    await this.prisma.unavailability.deleteMany({
-      where: {
-        memberId,
-      },
-    });
-  }
-
-  async removeMemberOne(
-    requesterUserId: string,
-    teamId: string,
-    memberId: number,
-    unavailabilityId: number
-  ) {
-    await this.getAuthorizedMember(memberId, teamId, requesterUserId);
-
-    try {
-      await this.prisma.unavailability.delete({
-        where: {
-          id: unavailabilityId,
-          memberId,
-        },
-      });
-    } catch (error) {
-      if (
-        error instanceof PrismaClientKnownRequestError &&
-        error.code === "P2025"
-      ) {
-        throw new NotFoundException("Unavailability doesn't exist");
-      }
-
-      throw error;
-    }
   }
 
   async findPending(
