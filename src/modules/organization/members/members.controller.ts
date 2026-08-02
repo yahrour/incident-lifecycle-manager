@@ -15,6 +15,7 @@ import type { ActiveUserData } from "src/modules/common/interfaces/active-user.i
 import { Roles } from "src/modules/common/decorators/roles.decorator";
 import { Role } from "src/generated/prisma/enums";
 import { OffsetPaginationSearchParams } from "./dto";
+import { apiResponse } from "src/common/utils/api-response";
 
 @Controller({
   path: "teams",
@@ -25,32 +26,38 @@ export class MembersController {
 
   @Get(":id/members")
   @Roles(Role.SRE)
-  findAll(
+  async findAll(
     @Param("id", ParseUUIDPipe) id: string,
     @Query() query: OffsetPaginationSearchParams,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.membersService.findAll(id, user.sub, query);
+    const { members, total } = await this.membersService.findAll(
+      id,
+      user.sub,
+      query
+    );
+    return apiResponse(members, { total });
   }
 
   @Get(":id/members/:memberId")
   @Roles(Role.SRE)
-  findOne(
+  async findOne(
     @Param("id", ParseUUIDPipe) id: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.membersService.findOne(id, memberId, user.sub);
+    const result = await this.membersService.findOne(id, memberId, user.sub);
+    return apiResponse(result);
   }
 
   @Delete(":id/members/:memberId")
   @Roles(Role.SRE)
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(
+  async remove(
     @Param("id", ParseUUIDPipe) id: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.membersService.remove(id, memberId, user.sub);
+    await this.membersService.remove(id, memberId, user.sub);
   }
 }

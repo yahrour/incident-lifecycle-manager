@@ -23,6 +23,7 @@ import { Role } from "src/generated/prisma/enums";
 import { ActiveUser } from "src/modules/common/decorators/active-user.decorator";
 import type { ActiveUserData } from "src/modules/common/interfaces/active-user.interface";
 import { OffsetPaginationSearchParams } from "./dto";
+import { apiResponse } from "src/common/utils/api-response";
 
 @Controller({
   path: "teams",
@@ -32,60 +33,64 @@ export class UnavailabilityController {
   constructor(private readonly unavailabilityService: UnavailabilityService) {}
 
   @Post(":teamId/members/:memberId/unavailabilities")
-  create(
+  async create(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @ActiveUser() user: ActiveUserData,
     @Body() createUnavailabilityDto: CreateUnavailabilityDto
   ) {
-    return this.unavailabilityService.create(
+    const result = await this.unavailabilityService.create(
       user.sub,
       teamId,
       memberId,
       createUnavailabilityDto
     );
+    return apiResponse(result);
   }
 
   @Patch(":teamId/members/:memberId/unavailabilities/:unavailabilityId")
-  update(
+  async update(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @Param("unavailabilityId", ParseIntPipe) unavailabilityId: number,
     @ActiveUser() user: ActiveUserData,
     @Body() updateUnavailabilityDto: UpdateUnavailabilityDto
   ) {
-    return this.unavailabilityService.update(
+    const result = await this.unavailabilityService.update(
       user.sub,
       teamId,
       memberId,
       unavailabilityId,
       updateUnavailabilityDto
     );
+    return apiResponse(result);
   }
 
   @Get(":teamId/members/:memberId/unavailabilities")
-  findMemberAll(
+  async findMemberAll(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @Query() query: OffsetPaginationSearchParams,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.unavailabilityService.findMemberAll(
-      user.sub,
-      teamId,
-      memberId,
-      query
-    );
+    const { unavailabilities, total } =
+      await this.unavailabilityService.findMemberAll(
+        user.sub,
+        teamId,
+        memberId,
+        query
+      );
+    return apiResponse(unavailabilities, { total });
   }
 
   @Delete(":teamId/members/:memberId/unavailabilities")
   @HttpCode(HttpStatus.NO_CONTENT)
-  removeMemberAll(
+  async removeMemberAll(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.unavailabilityService.removeMemberAll(
+    await this.unavailabilityService.removeMemberAll(
       user.sub,
       teamId,
       memberId
@@ -94,13 +99,13 @@ export class UnavailabilityController {
 
   @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(":teamId/members/:memberId/unavailabilities/:unavailabilityId")
-  removeMemberOne(
+  async removeMemberOne(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @Param("unavailabilityId", ParseIntPipe) unavailabilityId: number,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.unavailabilityService.removeMemberOne(
+    await this.unavailabilityService.removeMemberOne(
       user.sub,
       teamId,
       memberId,
@@ -110,34 +115,38 @@ export class UnavailabilityController {
 
   @Get(":teamId/unavailabilities")
   @Roles(Role.SRE)
-  findTeamAll(
+  async findTeamAll(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Query() query: CursorPaginationSearchParams,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.unavailabilityService.findTeamAll(user.sub, teamId, query);
+    const { unavailabilities, nextCursor } =
+      await this.unavailabilityService.findTeamAll(user.sub, teamId, query);
+    return apiResponse(unavailabilities, { nextCursor });
   }
 
   @Get(":teamId/unavailabilities/pending")
   @Roles(Role.SRE)
-  findPending(
+  async findPending(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Query() query: OffsetPaginationSearchParams,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.unavailabilityService.findPending(user.sub, teamId, query);
+    const { unavailabilities, total } =
+      await this.unavailabilityService.findPending(user.sub, teamId, query);
+    return apiResponse(unavailabilities, { total });
   }
 
   @Post(":teamId/members/:memberId/unavailabilities/:unavailabilityId/confirm")
   @HttpCode(HttpStatus.NO_CONTENT)
   @Roles(Role.SRE)
-  confirm(
+  async confirm(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @Param("unavailabilityId", ParseIntPipe) unavailabilityId: number,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.unavailabilityService.confirm(
+    await this.unavailabilityService.confirm(
       user.sub,
       teamId,
       memberId,
