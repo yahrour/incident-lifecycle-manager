@@ -94,7 +94,7 @@ export class MembersService {
       }),
     ]);
 
-    return { data: members, total };
+    return { members, total };
   }
 
   async findOne(teamId: string, memberId: number, ownerId: string) {

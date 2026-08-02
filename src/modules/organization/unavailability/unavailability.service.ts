@@ -239,7 +239,7 @@ export class UnavailabilityService {
       }),
     ]);
 
-    return { data: unavailabilities, total };
+    return { unavailabilities, total };
   }
 
   async removeMemberAll(
@@ -340,18 +340,18 @@ export class UnavailabilityService {
     });
 
     const hasNextPage = teamUnavailabilities.length > query.limit;
-    const data = hasNextPage
+    const unavailabilities = hasNextPage
       ? teamUnavailabilities.slice(0, query.limit)
       : teamUnavailabilities;
     const nextCursor = hasNextPage
       ? this.encodeCursor({
-          id: data[data.length - 1].id,
+          id: unavailabilities[unavailabilities.length - 1].id,
           sortField: query.sortField,
           sortOrder: query.sortOrder,
         })
       : null;
 
-    return { data, nextCursor };
+    return { unavailabilities, nextCursor };
   }
 
   async findPending(
@@ -361,7 +361,7 @@ export class UnavailabilityService {
   ) {
     await this.verifyTeamOwnership(teamId, requesterId);
 
-    const [pendingUnavailabilities, total] = await Promise.all([
+    const [unavailabilities, total] = await Promise.all([
       this.prisma.unavailability.findMany({
         where: {
           confirmed: false,
@@ -389,7 +389,7 @@ export class UnavailabilityService {
       }),
     ]);
 
-    return { data: pendingUnavailabilities, total };
+    return { unavailabilities, total };
   }
 
   async confirm(
