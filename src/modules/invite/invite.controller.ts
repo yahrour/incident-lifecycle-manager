@@ -2,10 +2,10 @@ import { Body, Controller, Get, Post, Query } from "@nestjs/common";
 import { InviteService } from "./invite.service";
 import { CreateInvite } from "./dto/create-invite.dto";
 import { RegisterViaInviteDto } from "./dto/register-via-invite.dto";
-import { ActiveUser } from "../common/decorators/active-user.decorator";
-import type { ActiveUserData } from "../common/interfaces/active-user.interface";
-import { Public } from "../common/decorators/public.decorator";
-import { Roles } from "../common/decorators/roles.decorator";
+import { ActiveUser } from "../../common/decorators/active-user.decorator";
+import type { ActiveUserData } from "../../common/interfaces/active-user.interface";
+import { Public } from "../../common/decorators/public.decorator";
+import { Roles } from "../../common/decorators/roles.decorator";
 import { Role } from "src/generated/prisma/enums";
 
 @Controller({
