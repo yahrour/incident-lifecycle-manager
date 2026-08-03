@@ -10,9 +10,9 @@ import {
   Query,
 } from "@nestjs/common";
 import { MembersService } from "./members.service";
-import { ActiveUser } from "src/modules/common/decorators/active-user.decorator";
-import type { ActiveUserData } from "src/modules/common/interfaces/active-user.interface";
-import { Roles } from "src/modules/common/decorators/roles.decorator";
+import { ActiveUser } from "../../../common/decorators/active-user.decorator";
+import type { ActiveUserData } from "../../../common/interfaces/active-user.interface";
+import { Roles } from "../../../common/decorators/roles.decorator";
 import { Role } from "src/generated/prisma/enums";
 import { OffsetPaginationSearchParams } from "./dto";
 import { apiResponse } from "src/common/utils/api-response";
