@@ -4,6 +4,7 @@ import type { ActiveUserData } from "src/modules/common/interfaces/active-user.i
 import { ActiveUser } from "src/modules/common/decorators/active-user.decorator";
 import { Roles } from "src/modules/common/decorators/roles.decorator";
 import { Role } from "src/generated/prisma/enums";
+import { apiResponse } from "src/common/utils/api-response";
 
 @Controller({
   path: "teams",
@@ -14,10 +15,11 @@ export class OnCallController {
 
   @Get(":id/oncall/current")
   @Roles(Role.SRE)
-  getCurrentOnCall(
+  async getCurrentOnCall(
     @Param("id", ParseUUIDPipe) id: string,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.onCallService.getCurrentOnCall(id, user.sub);
+    const result = await this.onCallService.getCurrentOnCall(id, user.sub);
+    return apiResponse(result);
   }
 }

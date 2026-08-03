@@ -122,7 +122,7 @@ export class TeamsService {
       );
     }
 
-    const teams = await this.prisma.team.findMany({
+    const teamRows = await this.prisma.team.findMany({
       where: {
         ownerId,
         ...(query.search && {
@@ -149,17 +149,17 @@ export class TeamsService {
       },
     });
 
-    const hasNextPage = teams.length > query.limit;
-    const data = hasNextPage ? teams.slice(0, query.limit) : teams;
+    const hasNextPage = teamRows.length > query.limit;
+    const teams = hasNextPage ? teamRows.slice(0, query.limit) : teamRows;
     const nextCursor = hasNextPage
       ? this.encodeCursor({
-          id: data[data.length - 1].id,
+          id: teams[teams.length - 1].id,
           sortField: query.sortField,
           sortOrder: query.sortOrder,
         })
       : null;
 
-    return { data, nextCursor };
+    return { teams, nextCursor };
   }
 
   async findOne(id: string, ownerId: string) {
