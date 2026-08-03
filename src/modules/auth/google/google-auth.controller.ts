@@ -1,6 +1,6 @@
 import { Body, Controller, Post, Res } from "@nestjs/common";
 import { GoogleAuthService } from "./google-auth.service";
-import { Public } from "../../common/decorators/public.decorator";
+import { Public } from "../../../common/decorators/public.decorator";
 import { GoogleToken } from "../dto/google-token.dto";
 import type { Response } from "express";
 

@@ -14,7 +14,7 @@ import { ConfigService } from "@nestjs/config";
 import * as crypto from "crypto";
 import { RegisterViaInviteDto } from "./dto/register-via-invite.dto";
 import { Role, InviteToken } from "src/generated/prisma/client";
-import { ActiveUserData } from "../common/interfaces/active-user.interface";
+import { ActiveUserData } from "../../common/interfaces/active-user.interface";
 import { MembersService } from "../organization/members/members.service";
 
 @Injectable()
