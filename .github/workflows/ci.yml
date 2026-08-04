@@ -36,9 +36,12 @@ jobs:
     steps:
       - name: Send Discord Notification
         run: |
-          # Determine status icon based on the 'test' job outcome
           STATUS="${{ needs.test.result }}"
-          if [ "$STATUS" = "success" ]; output="🟢 Tests Passed"; else output="🔴 Tests Failed"; fi
+          if [ "$STATUS" = "success" ]; then
+            output="🟢 Tests Passed"
+          else
+            output="🔴 Tests Failed"
+          fi
 
           curl -H "Content-Type: application/json" \
             -X POST \
