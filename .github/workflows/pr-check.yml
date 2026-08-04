@@ -31,33 +31,23 @@ jobs:
   notify:
     name: Notify Discord
     needs: test
-<<<<<<< HEAD
     if: always() && (github.event.action == 'opened' || github.event.action == 'synchronize')
-=======
-    if: always() && github.event.action == 'opened'
->>>>>>> 0d962a9 (ci(github-actions): add Discord notification workflow for PRs)
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord Notification
         run: |
-<<<<<<< HEAD
           STATUS="${{ needs.test.result }}"
           if [ "$STATUS" = "success" ]; then
             output="🟢 Tests Passed"
           else
             output="🔴 Tests Failed"
           fi
-=======
-          # Determine status icon based on the 'test' job outcome
-          STATUS="${{ needs.test.result }}"
-          if [ "$STATUS" = "success" ]; output="🟢 Tests Passed"; else output="🔴 Tests Failed"; fi
->>>>>>> 0d962a9 (ci(github-actions): add Discord notification workflow for PRs)
 
           curl -H "Content-Type: application/json" \
             -X POST \
             -d "{
               \"embeds\": [{
-                \"title\": \"🔀 New PR Opened ($output)\",
+                \"title\": \"🔀 PR Activity ($output)\",
                 \"url\": \"${{ github.event.pull_request.html_url }}\",
                 \"fields\": [
                   { \"name\": \"Title\", \"value\": \"${{ github.event.pull_request.title }}\" },
