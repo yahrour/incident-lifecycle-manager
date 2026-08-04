@@ -93,4 +93,41 @@ describe("IncidentsService", () => {
     expect(update.data.acknowledgedAt).toBeInstanceOf(Date);
     expect(update.data.mttaSeconds).toEqual(expect.any(Number));
   });
+
+  it("resolves an acknowledged incident and records MTTR", async () => {
+    const findUnique = jest
+      .fn()
+      .mockResolvedValueOnce({
+        id: "incident-id",
+        status: "acknowledged",
+        assignedToId: "engineer-id",
+        createdAt: new Date(Date.now() - 5_000),
+      })
+      .mockResolvedValueOnce({ id: "incident-id", status: "resolved" });
+    const updateMany = jest.fn().mockResolvedValue({ count: 1 });
+    const prisma = {
+      incident: { create: jest.fn(), findUnique, updateMany },
+    } as unknown as PrismaService;
+    const onCall = {} as OnCallService;
+    const service = new IncidentsService(prisma, onCall);
+
+    await service.resolve("engineer-id", "incident-id");
+
+    expect(updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          id: "incident-id",
+          status: "acknowledged",
+          assignedToId: "engineer-id",
+        },
+      })
+    );
+    expect(updateMany.mock.calls[0][0].data).toEqual(
+      expect.objectContaining({
+        status: "resolved",
+        resolvedAt: expect.any(Date),
+        mttrSeconds: expect.any(Number),
+      })
+    );
+  });
 });
