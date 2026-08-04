@@ -1,4 +1,6 @@
 import { IsIn, IsNotEmpty, IsString, IsUUID } from "class-validator";
+import { INCIDENT_SEVERITIES } from "../constants";
+import type { IncidentSeverity } from "../constants";
 
 export class CreateIncidentDto {
   @IsUUID()
@@ -12,6 +14,6 @@ export class CreateIncidentDto {
   @IsNotEmpty()
   service: string;
 
-  @IsIn(["low", "medium", "high", "critical"])
-  severity: "low" | "medium" | "high" | "critical";
+  @IsIn(INCIDENT_SEVERITIES)
+  severity: IncidentSeverity;
 }
