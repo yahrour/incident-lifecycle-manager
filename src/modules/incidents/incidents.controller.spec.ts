@@ -21,7 +21,11 @@ describe("IncidentsController", () => {
   });
 
   it("wraps one incident in data", async () => {
-    const incident = { id: "incident-id" };
+    const incident = {
+      id: "incident-id",
+      metrics: { mttaSeconds: 300, mttrSeconds: 2100 },
+      timeline: [{ type: "created", at: new Date("2026-01-01T00:00:00.000Z") }],
+    };
     const incidentsService = {
       findOne: jest.fn().mockResolvedValue(incident),
     };
