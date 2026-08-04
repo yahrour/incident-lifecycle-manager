@@ -47,7 +47,7 @@ jobs:
             -X POST \
             -d "{
               \"embeds\": [{
-                \"title\": \"🔀 New PR Opened ($output)\",
+                \"title\": \"🔀 PR Activity ($output)\",
                 \"url\": \"${{ github.event.pull_request.html_url }}\",
                 \"fields\": [
                   { \"name\": \"Title\", \"value\": \"${{ github.event.pull_request.title }}\" },
