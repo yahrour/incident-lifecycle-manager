@@ -4,12 +4,11 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { CreateUserDto } from "./dto/create-user.dto";
-// import { UpdateUserDto } from "./dto/update-user.dto";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { BcryptService } from "../security/bcrypt.service";
 import { Role } from "@/generated/prisma/client";
 import { Prisma } from "@/generated/prisma/client";
-// import { UpdateProfileDto } from "./dto/update-profile.dto";
+import { UpdateProfileDto } from "./dto/update-profile.dto";
 @Injectable()
 export class UsersService {
   constructor(
@@ -81,7 +80,6 @@ export class UsersService {
         lastName: lastName || "User",
         role,
         isVerified: true, // Google emails are already verified!
-        // Notice we do NOT pass a passwordHash here at all
       },
     });
   }
@@ -128,19 +126,37 @@ export class UsersService {
       // organizationName: org?.name ?? "My Organization",
     };
   }
-  // async updateProfile(userId: string, updateProfileDto: UpdateProfileDto) {}
+  async updateProfile(userId: string, updateProfileDto: UpdateProfileDto) {
+    //TODO: validate timezone before storing it if its given
+    //   if (dto.timezone) {
+    //   try {
+    //     Intl.DateTimeFormat(undefined, { timeZone: dto.timezone });
+    //   } catch {
+    //     throw new BadRequestException('Invalid IANA timezone identifier');
+    //   }
 
-  // needed by AuthService for login
-  // async findByEmail(email: string): Promise<User | null>{
-  //
-  //
-  // // needed by AuthService and other services
-  // async findById(id: string): Promise<User | null>
-  //
-  // // needed by email verification flow
-  // async markAsVerified(id: string): Promise<User>
-  //
-  // // needed by reset password flow
-  // async updatePassword(id: string, passwordHash: string): Promise<User>
-  //
+    try {
+      return await this.prisma.user.update({
+        where: { id: userId },
+        data: updateProfileDto,
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          // timezone: true,
+          role: true,
+        },
+      });
+    } catch (error) {
+      // P2025 is Prisma's code for "Record to update not found"
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        throw new NotFoundException(`User with ID ${userId} not found`);
+      }
+      throw error;
+    }
+  }
 }
