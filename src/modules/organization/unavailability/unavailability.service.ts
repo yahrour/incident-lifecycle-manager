@@ -5,15 +5,15 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { PrismaClientKnownRequestError } from "src/generated/prisma/internal/prismaNamespace";
+import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
 import {
   CreateUnavailabilityDto,
   OffsetPaginationSearchParams,
   CursorPaginationSearchParams,
   UpdateUnavailabilityDto,
 } from "./dto";
-import { PrismaService } from "src/common/prisma/prisma.service";
-import { Team, TeamMember } from "src/generated/prisma/client";
+import { PrismaService } from "@/common/prisma/prisma.service";
+import { Team, TeamMember } from "@/generated/prisma/client";
 import { Cursor, cursorSchema } from "./types";
 
 @Injectable()

@@ -1,6 +1,6 @@
 import { IsInt, IsOptional, Max, Min } from "class-validator";
 import { Type } from "class-transformer";
-import { PAGINATION } from "src/common/constants";
+import { PAGINATION } from "@/common/constants";
 
 export class OffsetPaginationSearchParams {
   @IsOptional()

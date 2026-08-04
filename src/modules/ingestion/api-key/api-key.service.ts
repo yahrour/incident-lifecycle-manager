@@ -5,7 +5,7 @@ import {
 } from "@nestjs/common";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
 import { createHash, randomBytes } from "crypto";
-import { PrismaService } from "src/common/prisma/prisma.service";
+import { PrismaService } from "@/common/prisma/prisma.service";
 
 @Injectable()
 export class ApiKeyService {
