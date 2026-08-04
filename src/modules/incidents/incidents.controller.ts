@@ -11,6 +11,7 @@ import { Role } from "@/generated/prisma/enums";
 import { ActiveUser } from "@/common/decorators/active-user.decorator";
 import { Roles } from "@/common/decorators/roles.decorator";
 import type { ActiveUserData } from "@/common/interfaces/active-user.interface";
+import { apiResponse } from "@/common/utils/api-response";
 import { CreateIncidentDto } from "./dto/create-incident.dto";
 import { FindIncidentsDto } from "./dto/find-incidents.dto";
 import { IncidentsService } from "./incidents.service";
@@ -21,11 +22,16 @@ export class IncidentsController {
 
   @Get()
   @Roles(Role.SRE, Role.ENGINEER)
-  findAll(
+  async findAll(
     @Query() query: FindIncidentsDto,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.incidentsService.findAll(user.sub, query);
+    const { data, total, nextCursor } = await this.incidentsService.findAll(
+      user.sub,
+      query
+    );
+
+    return apiResponse(data, { total, nextCursor });
   }
 
   @Get(":id")
