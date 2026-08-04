@@ -9,6 +9,7 @@ import { PrismaService } from "@/common/prisma/prisma.service";
 import { BcryptService } from "../security/bcrypt.service";
 import { Role } from "@/generated/prisma/client";
 import { Prisma } from "@/generated/prisma/client";
+// import { UpdateProfileDto } from "./dto/update-profile.dto";
 @Injectable()
 export class UsersService {
   constructor(
@@ -100,18 +101,46 @@ export class UsersService {
       where: { googleId },
     });
   }
-}
+  async getProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
 
-// needed by AuthService for login
-// async findByEmail(email: string): Promise<User | null>{
-//
-//
-// // needed by AuthService and other services
-// async findById(id: string): Promise<User | null>
-//
-// // needed by email verification flow
-// async markAsVerified(id: string): Promise<User>
-//
-// // needed by reset password flow
-// async updatePassword(id: string, passwordHash: string): Promise<User>
-//
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    // const org = await this.prisma.organization.findFirst()
+    //generating avatar staticly because we display avatar as first later from firstName
+    //and first later from lastName
+    const avatarInitials =
+      `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`.toUpperCase();
+
+    //TODO: add timezone and organizationName to return it
+    return {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      avatarInitials,
+      email: user.email,
+      // timezone: user.timezone,
+      role: user.role,
+      // organizationName: org?.name ?? "My Organization",
+    };
+  }
+  // async updateProfile(userId: string, updateProfileDto: UpdateProfileDto) {}
+
+  // needed by AuthService for login
+  // async findByEmail(email: string): Promise<User | null>{
+  //
+  //
+  // // needed by AuthService and other services
+  // async findById(id: string): Promise<User | null>
+  //
+  // // needed by email verification flow
+  // async markAsVerified(id: string): Promise<User>
+  //
+  // // needed by reset password flow
+  // async updatePassword(id: string, passwordHash: string): Promise<User>
+  //
+}
