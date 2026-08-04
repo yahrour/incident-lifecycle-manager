@@ -5,9 +5,9 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { PrismaService } from "src/common/prisma/prisma.service";
-import { Prisma } from "src/generated/prisma/client";
-import { OnCallService } from "src/modules/organization/oncall/oncall.service";
+import { PrismaService } from "@/common/prisma/prisma.service";
+import { Prisma } from "@/generated/prisma/client";
+import { OnCallService } from "@/modules/organization/oncall/oncall.service";
 import { CreateIncidentDto } from "./dto/create-incident.dto";
 import { FindIncidentsDto } from "./dto/find-incidents.dto";
 

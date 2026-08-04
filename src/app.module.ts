@@ -1,20 +1,20 @@
 import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
-import { PrismaModule } from "./common/prisma/prisma.module";
-import { HealthModule } from "./modules/health/health.module";
+import { PrismaModule } from "@/common/prisma/prisma.module";
+import { HealthModule } from "@/modules/health/health.module";
 import { ConfigModule } from "@nestjs/config";
-import { validationSchema } from "./common/validation/env.schema";
-import { OrganizationModule } from "./modules/organization/organization.module";
-import { MetricsModule } from "./modules/metrics/metrics.module";
-import { AuthModule } from "./modules/auth/auth.module";
-import { UsersModule } from "./modules/users/users.module";
-import { InviteModule } from "./modules/invite/invite.module";
-import { IngestionModule } from "./modules/ingestion/ingestion.module";
-import { IncidentsModule } from "./modules/incidents/incidents.module";
+import { validationSchema } from "@/common/validation/env.schema";
+import { OrganizationModule } from "@/modules/organization/organization.module";
+import { MetricsModule } from "@/modules/metrics/metrics.module";
+import { AuthModule } from "@/modules/auth/auth.module";
+import { UsersModule } from "@/modules/users/users.module";
+import { InviteModule } from "@/modules/invite/invite.module";
+import { IngestionModule } from "@/modules/ingestion/ingestion.module";
+import { IncidentsModule } from "@/modules/incidents/incidents.module";
 import { APP_GUARD } from "@nestjs/core";
-import { AccessTokenGuard } from "../src/common/guards/access-token/access-token.guard";
-import { RolesGuard } from "../src/common/guards/roles.guard";
+import { AccessTokenGuard } from "@/common/guards/access-token/access-token.guard";
+import { RolesGuard } from "@/common/guards/roles.guard";
 import { ScheduleModule } from "@nestjs/schedule";
-import { LoggerMiddleware } from "./common/middleware/logger.middleware";
+import { LoggerMiddleware } from "@/common/middleware/logger.middleware";
 
 @Module({
   imports: [

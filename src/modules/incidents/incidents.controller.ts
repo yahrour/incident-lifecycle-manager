@@ -7,10 +7,10 @@ import {
   Post,
   Query,
 } from "@nestjs/common";
-import { Role } from "src/generated/prisma/enums";
-import { ActiveUser } from "../../common/decorators/active-user.decorator";
-import { Roles } from "../../common/decorators/roles.decorator";
-import type { ActiveUserData } from "../../common/interfaces/active-user.interface";
+import { Role } from "@/generated/prisma/enums";
+import { ActiveUser } from "@/common/decorators/active-user.decorator";
+import { Roles } from "@/common/decorators/roles.decorator";
+import type { ActiveUserData } from "@/common/interfaces/active-user.interface";
 import { CreateIncidentDto } from "./dto/create-incident.dto";
 import { FindIncidentsDto } from "./dto/find-incidents.dto";
 import { IncidentsService } from "./incidents.service";

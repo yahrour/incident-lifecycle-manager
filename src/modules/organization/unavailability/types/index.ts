@@ -1,4 +1,4 @@
-import { SORT_ORDER } from "src/common/constants";
+import { SORT_ORDER } from "@/common/constants";
 import { SORT_FIELD } from "../constants";
 import Joi from "joi";
 

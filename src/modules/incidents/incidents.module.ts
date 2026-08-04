@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { OncallModule } from "src/modules/organization/oncall/oncall.module";
+import { OncallModule } from "@/modules/organization/oncall/oncall.module";
 import { IncidentsController } from "./incidents.controller";
 import { IncidentsService } from "./incidents.service";
 
