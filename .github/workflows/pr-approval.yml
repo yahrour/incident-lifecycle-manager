@@ -1,0 +1,29 @@
+name: PR Approval Notifier
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  notify-approval:
+    if: github.event.review.state == 'approved'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Discord Approval Notification
+        run: |
+          curl -H "Content-Type: application/json" \
+            -X POST \
+            -d '{
+              "embeds": [{
+                "title": "✅ Pull Request Approved!",
+                "url": "${{ github.event.pull_request.html_url }}",
+                "color": 5763719,
+                "fields": [
+                  { "name": "PR Title", "value": "${{ github.event.pull_request.title }}" },
+                  { "name": "Author", "value": "${{ github.event.pull_request.user.login }}", "inline": true },
+                  { "name": "Approved By", "value": "${{ github.event.review.user.login }}", "inline": true },
+                  { "name": "Next Step", "value": "Hey @${{ github.event.pull_request.user.login }}, your PR has been approved and is ready to be merged!" }
+                ]
+              }]
+            }' \
+            ${{ secrets.DISCORD_WEBHOOK_URL }}
