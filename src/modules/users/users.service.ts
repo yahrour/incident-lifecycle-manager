@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -9,6 +10,7 @@ import { BcryptService } from "../security/bcrypt.service";
 import { Role } from "@/generated/prisma/client";
 import { Prisma } from "@/generated/prisma/client";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
+import { UpdateEmailDto } from "./dto/update-email.dto";
 @Injectable()
 export class UsersService {
   constructor(
@@ -126,6 +128,7 @@ export class UsersService {
       // organizationName: org?.name ?? "My Organization",
     };
   }
+
   async updateProfile(userId: string, updateProfileDto: UpdateProfileDto) {
     //TODO: validate timezone before storing it if its given
     //   if (dto.timezone) {
@@ -134,7 +137,6 @@ export class UsersService {
     //   } catch {
     //     throw new BadRequestException('Invalid IANA timezone identifier');
     //   }
-
     try {
       return await this.prisma.user.update({
         where: { id: userId },
@@ -158,5 +160,51 @@ export class UsersService {
       }
       throw error;
     }
+  }
+
+  async updateEmail(
+    userId: string,
+    userEmail: string,
+    updateEmailDto: UpdateEmailDto
+  ) {
+    // 1. Fast fail: Cannot change to current active email
+    if (userEmail === updateEmailDto.email) {
+      throw new BadRequestException(
+        "New email cannot be the same as current email"
+      );
+    }
+
+    // 2. Check if the email belongs to another active user
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: updateEmailDto.email },
+    });
+
+    if (existingUser) {
+      throw new ConflictException("Email address is already in use");
+    }
+
+    // 3. Update pendingEmail with error handling for missing user
+    try {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { pendingEmail: updateEmailDto.email },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        throw new NotFoundException(`User with ID ${userId} not found`);
+      }
+      throw error;
+    }
+    // TODO: Generate verification token & dispatch verification email
+    // await this.authService.sendEmailVerificationToken(userId, dto.email);
+
+    return {
+      message:
+        "Verification email sent. Please check your inbox to confirm the change.",
+      pendingEmail: updateEmailDto.email,
+    };
   }
 }
