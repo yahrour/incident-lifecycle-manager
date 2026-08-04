@@ -1,6 +1,6 @@
 import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from "class-validator";
 import { Type } from "class-transformer";
-import { PAGINATION, SORT_ORDER } from "src/common/constants";
+import { PAGINATION, SORT_ORDER } from "@/common/constants";
 import { SORT_FIELD } from "../constants";
 
 export class OffsetPaginationSearchParams {

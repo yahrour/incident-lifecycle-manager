@@ -7,14 +7,14 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 
-import { PrismaService } from "src/common/prisma/prisma.service";
+import { PrismaService } from "@/common/prisma/prisma.service";
 import { CreateInvite } from "./dto/create-invite.dto";
 import { UsersService } from "../users/users.service";
 import { ConfigService } from "@nestjs/config";
 import * as crypto from "crypto";
 import { RegisterViaInviteDto } from "./dto/register-via-invite.dto";
-import { Role, InviteToken } from "src/generated/prisma/client";
-import { ActiveUserData } from "../../common/interfaces/active-user.interface";
+import { Role, InviteToken } from "@/generated/prisma/client";
+import { ActiveUserData } from "@/common/interfaces/active-user.interface";
 import { MembersService } from "../organization/members/members.service";
 
 @Injectable()

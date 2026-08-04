@@ -5,10 +5,10 @@ import {
 } from "@nestjs/common";
 import { CreateUserDto } from "./dto/create-user.dto";
 // import { UpdateUserDto } from "./dto/update-user.dto";
-import { PrismaService } from "src/common/prisma/prisma.service";
+import { PrismaService } from "@/common/prisma/prisma.service";
 import { BcryptService } from "../security/bcrypt.service";
-import { Role } from "src/generated/prisma/client";
-import { Prisma } from "src/generated/prisma/client";
+import { Role } from "@/generated/prisma/client";
+import { Prisma } from "@/generated/prisma/client";
 @Injectable()
 export class UsersService {
   constructor(

@@ -4,8 +4,8 @@ import {
   HealthCheckService,
   PrismaHealthIndicator,
 } from "@nestjs/terminus";
-import { PrismaService } from "src/common/prisma/prisma.service";
-import { Public } from "../../common/decorators/public.decorator";
+import { PrismaService } from "@/common/prisma/prisma.service";
+import { Public } from "@/common/decorators/public.decorator";
 
 @Controller({
   path: "health",
