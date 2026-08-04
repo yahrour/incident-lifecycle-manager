@@ -31,7 +31,7 @@ jobs:
   notify:
     name: Notify Discord
     needs: test
-    if: always() && github.event.action == 'opened'
+    if: always() && (github.event.action == 'opened' || github.event.action == 'synchronize')
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord Notification
