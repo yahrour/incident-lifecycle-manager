@@ -31,4 +31,28 @@ describe("IncidentsController", () => {
       controller.findOne("incident-id", { sub: "user-id" } as never)
     ).resolves.toEqual({ data: incident });
   });
+
+  it("wraps an acknowledged incident in data", async () => {
+    const incident = { id: "incident-id", status: "acknowledged" };
+    const incidentsService = {
+      acknowledge: jest.fn().mockResolvedValue(incident),
+    };
+    const controller = new IncidentsController(incidentsService as never);
+
+    await expect(
+      controller.acknowledge("incident-id", { sub: "user-id" } as never)
+    ).resolves.toEqual({ data: incident });
+  });
+
+  it("wraps a resolved incident in data", async () => {
+    const incident = { id: "incident-id", status: "resolved" };
+    const incidentsService = {
+      resolve: jest.fn().mockResolvedValue(incident),
+    };
+    const controller = new IncidentsController(incidentsService as never);
+
+    await expect(
+      controller.resolve("incident-id", { sub: "user-id" } as never)
+    ).resolves.toEqual({ data: incident });
+  });
 });

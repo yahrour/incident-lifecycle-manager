@@ -55,19 +55,21 @@ export class IncidentsController {
 
   @Post(":id/acknowledge")
   @Roles(Role.ENGINEER)
-  acknowledge(
+  async acknowledge(
     @Param("id", ParseUUIDPipe) id: string,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.incidentsService.acknowledge(user.sub, id);
+    const incident = await this.incidentsService.acknowledge(user.sub, id);
+    return apiResponse(incident);
   }
 
   @Post(":id/resolve")
   @Roles(Role.ENGINEER)
-  resolve(
+  async resolve(
     @Param("id", ParseUUIDPipe) id: string,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.incidentsService.resolve(user.sub, id);
+    const incident = await this.incidentsService.resolve(user.sub, id);
+    return apiResponse(incident);
   }
 }
