@@ -10,6 +10,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { OnCallService } from "@/modules/organization/oncall/oncall.service";
 import { CreateIncidentDto } from "./dto/create-incident.dto";
 import { FindIncidentsDto } from "./dto/find-incidents.dto";
+import { INCIDENT_STATUS } from "./constants";
 
 @Injectable()
 export class IncidentsService {
@@ -165,9 +166,9 @@ export class IncidentsService {
 
     const acknowledgedAt = new Date();
     const result = await this.prisma.incident.updateMany({
-      where: { id: incidentId, status: "open" },
+      where: { id: incidentId, status: INCIDENT_STATUS.OPEN },
       data: {
-        status: "acknowledged",
+        status: INCIDENT_STATUS.ACKNOWLEDGED,
         acknowledgedAt,
         mttaSeconds: Math.floor(
           (acknowledgedAt.getTime() - incident.createdAt.getTime()) / 1000
