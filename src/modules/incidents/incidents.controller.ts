@@ -11,6 +11,7 @@ import { Role } from "@/generated/prisma/enums";
 import { ActiveUser } from "@/common/decorators/active-user.decorator";
 import { Roles } from "@/common/decorators/roles.decorator";
 import type { ActiveUserData } from "@/common/interfaces/active-user.interface";
+import { apiResponse } from "@/common/utils/api-response";
 import { CreateIncidentDto } from "./dto/create-incident.dto";
 import { FindIncidentsDto } from "./dto/find-incidents.dto";
 import { IncidentsService } from "./incidents.service";
@@ -21,20 +22,26 @@ export class IncidentsController {
 
   @Get()
   @Roles(Role.SRE, Role.ENGINEER)
-  findAll(
+  async findAll(
     @Query() query: FindIncidentsDto,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.incidentsService.findAll(user.sub, query);
+    const { data, total, nextCursor } = await this.incidentsService.findAll(
+      user.sub,
+      query
+    );
+
+    return apiResponse(data, { total, nextCursor });
   }
 
   @Get(":id")
   @Roles(Role.SRE, Role.ENGINEER)
-  findOne(
+  async findOne(
     @Param("id", ParseUUIDPipe) id: string,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.incidentsService.findOne(user.sub, id);
+    const incident = await this.incidentsService.findOne(user.sub, id);
+    return apiResponse(incident);
   }
 
   @Post()
@@ -48,19 +55,21 @@ export class IncidentsController {
 
   @Post(":id/acknowledge")
   @Roles(Role.ENGINEER)
-  acknowledge(
+  async acknowledge(
     @Param("id", ParseUUIDPipe) id: string,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.incidentsService.acknowledge(user.sub, id);
+    const incident = await this.incidentsService.acknowledge(user.sub, id);
+    return apiResponse(incident);
   }
 
   @Post(":id/resolve")
   @Roles(Role.ENGINEER)
-  resolve(
+  async resolve(
     @Param("id", ParseUUIDPipe) id: string,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.incidentsService.resolve(user.sub, id);
+    const incident = await this.incidentsService.resolve(user.sub, id);
+    return apiResponse(incident);
   }
 }
