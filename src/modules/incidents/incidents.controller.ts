@@ -36,11 +36,12 @@ export class IncidentsController {
 
   @Get(":id")
   @Roles(Role.SRE, Role.ENGINEER)
-  findOne(
+  async findOne(
     @Param("id", ParseUUIDPipe) id: string,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.incidentsService.findOne(user.sub, id);
+    const incident = await this.incidentsService.findOne(user.sub, id);
+    return apiResponse(incident);
   }
 
   @Post()

@@ -19,4 +19,16 @@ describe("IncidentsController", () => {
       meta: { total: 1, nextCursor: "next-cursor" },
     });
   });
+
+  it("wraps one incident in data", async () => {
+    const incident = { id: "incident-id" };
+    const incidentsService = {
+      findOne: jest.fn().mockResolvedValue(incident),
+    };
+    const controller = new IncidentsController(incidentsService as never);
+
+    await expect(
+      controller.findOne("incident-id", { sub: "user-id" } as never)
+    ).resolves.toEqual({ data: incident });
+  });
 });
