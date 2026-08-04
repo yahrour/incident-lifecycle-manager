@@ -6,8 +6,8 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { OAuth2Client } from "google-auth-library";
 import { AuthService } from "../auth.service";
-import { Role } from "src/generated/prisma/client";
-import { UsersService } from "src/modules/users/users.service";
+import { Role } from "@/generated/prisma/client";
+import { UsersService } from "@/modules/users/users.service";
 
 @Injectable()
 export class GoogleAuthService implements OnModuleInit {

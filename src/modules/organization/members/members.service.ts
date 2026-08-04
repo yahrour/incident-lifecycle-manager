@@ -4,9 +4,9 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { OffsetPaginationSearchParams } from "./dto";
-import { PrismaService } from "src/common/prisma/prisma.service";
-import { Prisma } from "src/generated/prisma/client";
-import { PrismaClientKnownRequestError } from "src/generated/prisma/internal/prismaNamespace";
+import { PrismaService } from "@/common/prisma/prisma.service";
+import { Prisma } from "@/generated/prisma/client";
+import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
 
 @Injectable()
 export class MembersService {

@@ -4,14 +4,14 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { PrismaClientKnownRequestError } from "src/generated/prisma/internal/prismaNamespace";
+import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
 import {
   CreateTeamDto,
   CursorPaginationSearchParams,
   UpdateTeamDto,
 } from "./dto";
-import { Prisma } from "src/generated/prisma/client";
-import { PrismaService } from "src/common/prisma/prisma.service";
+import { Prisma } from "@/generated/prisma/client";
+import { PrismaService } from "@/common/prisma/prisma.service";
 import { Cursor, cursorSchema } from "./types";
 
 @Injectable()
