@@ -87,6 +87,7 @@ model User {
   isVerified   Boolean  @default(false) @map("is_verified")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
+  timezone     String?  @default("UTC") @map("timezone")
 
   resetTokens             ResetToken[]
   emailVerificationTokens EmailVerificationToken[]
@@ -98,32 +99,6 @@ model User {
 
   @@map("users")
   @@schema("auth")
-}
-
-////////////// INCIDENT SCHEMA //////////////
-
-model Incident {
-  id             String    @id @default(uuid()) @db.Uuid
-  teamId         String?   @map("team_id") @db.Uuid
-  team           Team?     @relation(fields: [teamId], references: [id], onDelete: SetNull)
-  title          String
-  service        String
-  severity       String
-  status         String    @default("open")
-  assignedToId   String?   @map("assigned_to") @db.Uuid
-  assignedTo     User?     @relation("IncidentAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  acknowledgedAt DateTime? @map("acknowledged_at") @db.Timestamptz
-  resolvedAt     DateTime? @map("resolved_at") @db.Timestamptz
-  mttaSeconds    Int?      @map("mtta_seconds")
-  mttrSeconds    Int?      @map("mttr_seconds")
-  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
-
-  @@index([teamId], name: "idx_incidents_team")
-  @@index([status], name: "idx_incidents_status")
-  @@index([createdAt], name: "idx_incidents_created_at")
-  @@map("incidents")
-  @@schema("incident")
 }
 
 model InviteToken {
@@ -165,6 +140,32 @@ model EmailVerificationToken {
 
   @@map("email_verification_tokens")
   @@schema("auth")
+}
+
+////////////// INCIDENT SCHEMA //////////////
+
+model Incident {
+  id             String    @id @default(uuid()) @db.Uuid
+  teamId         String?   @map("team_id") @db.Uuid
+  team           Team?     @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  title          String
+  service        String
+  severity       String
+  status         String    @default("open")
+  assignedToId   String?   @map("assigned_to") @db.Uuid
+  assignedTo     User?     @relation("IncidentAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  acknowledgedAt DateTime? @map("acknowledged_at") @db.Timestamptz
+  resolvedAt     DateTime? @map("resolved_at") @db.Timestamptz
+  mttaSeconds    Int?      @map("mtta_seconds")
+  mttrSeconds    Int?      @map("mttr_seconds")
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([teamId], name: "idx_incidents_team")
+  @@index([status], name: "idx_incidents_status")
+  @@index([createdAt], name: "idx_incidents_created_at")
+  @@map("incidents")
+  @@schema("incident")
 }
 
 ////////////// ALERT SCHEMA //////////////
