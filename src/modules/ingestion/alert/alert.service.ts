@@ -28,10 +28,10 @@ export class AlertService {
       return false;
     }
 
-    await this.prisma.apiKey.update({
-      where: { id: apiKey.id },
-      data: { lastUsedAt: new Date() },
-    });
+    // await this.prisma.apiKey.update({
+    //   where: { id: apiKey.id },
+    //   data: { lastUsedAt: new Date() },
+    // });
 
     return true;
   }
