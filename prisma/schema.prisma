@@ -85,8 +85,8 @@ model User {
   googleId     String?  @unique @map("google_id")
   specialty    String?
   isVerified   Boolean  @default(false) @map("is_verified")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
   timezone     String?  @default("UTC") @map("timezone")
 
   resetTokens             ResetToken[]
@@ -106,9 +106,9 @@ model InviteToken {
   token     String   @unique
   email     String
   teamId    String   @map("team_id") @db.Uuid
-  expiresAt DateTime @map("expires_at")
   used      Boolean  @default(false)
-  createdAt DateTime @default(now()) @map("created_at")
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   @@map("invite_tokens")
   @@schema("auth")
@@ -121,9 +121,9 @@ model ResetToken {
   userId String @map("user_id") @db.Uuid
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  expiresAt DateTime @map("expires_at")
   used      Boolean  @default(false)
-  createdAt DateTime @default(now()) @map("created_at")
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   @@map("reset_tokens")
   @@schema("auth")
@@ -134,9 +134,9 @@ model EmailVerificationToken {
   token     String   @unique
   userId    String   @map("user_id") @db.Uuid
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt DateTime @map("expires_at")
   used      Boolean  @default(false)
-  createdAt DateTime @default(now()) @map("created_at")
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   @@map("email_verification_tokens")
   @@schema("auth")
