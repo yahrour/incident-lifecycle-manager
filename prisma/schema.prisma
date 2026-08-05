@@ -79,6 +79,7 @@ model User {
   firstName    String   @map("first_name")
   lastName     String   @map("last_name")
   email        String   @unique
+  pendingEmail String?  @map("pending_email")
   passwordHash String?  @map("password_hash")
   role         Role
   googleId     String?  @unique @map("google_id")

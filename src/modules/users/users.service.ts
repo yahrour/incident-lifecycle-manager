@@ -1,14 +1,16 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
 import { CreateUserDto } from "./dto/create-user.dto";
-// import { UpdateUserDto } from "./dto/update-user.dto";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { BcryptService } from "../security/bcrypt.service";
-import { Role } from "@/generated/prisma/client";
-import { Prisma } from "@/generated/prisma/client";
+import { Role, Prisma } from "@/generated/prisma/client";
+import { UpdateProfileDto } from "./dto/update-profile.dto";
+import { UpdateEmailDto } from "./dto/update-email.dto";
+
 @Injectable()
 export class UsersService {
   constructor(
@@ -29,12 +31,13 @@ export class UsersService {
     if (existing) {
       throw new ConflictException("Email already in use");
     }
+
     return tx.user.create({
       data: {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
-        passwordHash: passwordHash,
+        passwordHash,
         role: data.role,
         specialty: data.specialty ?? null,
       },
@@ -79,11 +82,11 @@ export class UsersService {
         firstName: firstName || "Google", // Fallbacks just in case
         lastName: lastName || "User",
         role,
-        isVerified: true, // Google emails are already verified!
-        // Notice we do NOT pass a passwordHash here at all
+        isVerified: true, // Google emails are already verified
       },
     });
   }
+
   async findByEmail(email: string) {
     return this.prisma.user.findUnique({
       where: { email },
@@ -95,23 +98,105 @@ export class UsersService {
       where: { id },
     });
   }
+
   async findGoogleId(googleId: string) {
     return this.prisma.user.findUnique({
       where: { googleId },
     });
   }
-}
 
-// needed by AuthService for login
-// async findByEmail(email: string): Promise<User | null>{
-//
-//
-// // needed by AuthService and other services
-// async findById(id: string): Promise<User | null>
-//
-// // needed by email verification flow
-// async markAsVerified(id: string): Promise<User>
-//
-// // needed by reset password flow
-// async updatePassword(id: string, passwordHash: string): Promise<User>
-//
+  async getProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    // Generating avatar statically from first letter of firstName and lastName
+    const avatarInitials =
+      `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase();
+
+    // TODO: add timezone and organizationName to return payload
+    return {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      avatarInitials,
+      email: user.email,
+      role: user.role,
+    };
+  }
+
+  async updateProfile(userId: string, updateProfileDto: UpdateProfileDto) {
+    // TODO: validate timezone before storing it if it's provided
+    try {
+      return await this.prisma.user.update({
+        where: { id: userId },
+        data: updateProfileDto,
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          role: true,
+        },
+      });
+    } catch (error) {
+      // P2025 is Prisma's code for "Record to update not found"
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        throw new NotFoundException(`User with ID ${userId} not found`);
+      }
+      throw error;
+    }
+  }
+
+  async updateEmail(
+    userId: string,
+    userEmail: string,
+    updateEmailDto: UpdateEmailDto
+  ) {
+    // 1. Fast fail: Cannot change to current active email
+    if (userEmail === updateEmailDto.email) {
+      throw new BadRequestException(
+        "New email cannot be the same as current email"
+      );
+    }
+
+    // 2. Check if the email belongs to another active user
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: updateEmailDto.email },
+    });
+
+    if (existingUser) {
+      throw new ConflictException("Email address is already in use");
+    }
+
+    // 3. Update pendingEmail with error handling for missing user
+    try {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { pendingEmail: updateEmailDto.email },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        throw new NotFoundException(`User with ID ${userId} not found`);
+      }
+      throw error;
+    }
+
+    // TODO: Generate verification token & dispatch verification email
+    return {
+      message:
+        "Verification email sent. Please check your inbox to confirm the change.",
+      pendingEmail: updateEmailDto.email,
+    };
+  }
+}
