@@ -7,10 +7,10 @@ import {
 import { CreateUserDto } from "./dto/create-user.dto";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { BcryptService } from "../security/bcrypt.service";
-import { Role } from "@/generated/prisma/client";
-import { Prisma } from "@/generated/prisma/client";
+import { Role, Prisma } from "@/generated/prisma/client";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { UpdateEmailDto } from "./dto/update-email.dto";
+
 @Injectable()
 export class UsersService {
   constructor(
@@ -31,12 +31,13 @@ export class UsersService {
     if (existing) {
       throw new ConflictException("Email already in use");
     }
+
     return tx.user.create({
       data: {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
-        passwordHash: passwordHash,
+        passwordHash,
         role: data.role,
         specialty: data.specialty ?? null,
       },
@@ -81,10 +82,11 @@ export class UsersService {
         firstName: firstName || "Google", // Fallbacks just in case
         lastName: lastName || "User",
         role,
-        isVerified: true, // Google emails are already verified!
+        isVerified: true, // Google emails are already verified
       },
     });
   }
+
   async findByEmail(email: string) {
     return this.prisma.user.findUnique({
       where: { email },
@@ -96,11 +98,13 @@ export class UsersService {
       where: { id },
     });
   }
+
   async findGoogleId(googleId: string) {
     return this.prisma.user.findUnique({
       where: { googleId },
     });
   }
+
   async getProfile(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -110,33 +114,23 @@ export class UsersService {
       throw new NotFoundException("User not found");
     }
 
-    // const org = await this.prisma.organization.findFirst()
-    //generating avatar staticly because we display avatar as first later from firstName
-    //and first later from lastName
+    // Generating avatar statically from first letter of firstName and lastName
     const avatarInitials =
-      `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`.toUpperCase();
+      `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase();
 
-    //TODO: add timezone and organizationName to return it
+    // TODO: add timezone and organizationName to return payload
     return {
       id: user.id,
       firstName: user.firstName,
       lastName: user.lastName,
       avatarInitials,
       email: user.email,
-      // timezone: user.timezone,
       role: user.role,
-      // organizationName: org?.name ?? "My Organization",
     };
   }
 
   async updateProfile(userId: string, updateProfileDto: UpdateProfileDto) {
-    //TODO: validate timezone before storing it if its given
-    //   if (dto.timezone) {
-    //   try {
-    //     Intl.DateTimeFormat(undefined, { timeZone: dto.timezone });
-    //   } catch {
-    //     throw new BadRequestException('Invalid IANA timezone identifier');
-    //   }
+    // TODO: validate timezone before storing it if it's provided
     try {
       return await this.prisma.user.update({
         where: { id: userId },
@@ -146,7 +140,6 @@ export class UsersService {
           firstName: true,
           lastName: true,
           email: true,
-          // timezone: true,
           role: true,
         },
       });
@@ -198,9 +191,8 @@ export class UsersService {
       }
       throw error;
     }
-    // TODO: Generate verification token & dispatch verification email
-    // await this.authService.sendEmailVerificationToken(userId, dto.email);
 
+    // TODO: Generate verification token & dispatch verification email
     return {
       message:
         "Verification email sent. Please check your inbox to confirm the change.",

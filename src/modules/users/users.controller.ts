@@ -10,7 +10,6 @@ import { UpdateEmailDto } from "./dto/update-email.dto";
   path: "users",
   version: "1",
 })
-@Controller("users")
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -18,6 +17,7 @@ export class UsersController {
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
+
   @Get("me")
   async getProfile(@ActiveUser() user: ActiveUserData) {
     return this.usersService.getProfile(user.sub);
