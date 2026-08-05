@@ -126,7 +126,25 @@ export class IncidentsService {
     });
 
     if (!incident) throw new NotFoundException("Incident doesn't exist");
-    return incident;
+
+    const timeline = [
+      { type: "created", at: incident.createdAt },
+      ...(incident.acknowledgedAt
+        ? [{ type: "acknowledged", at: incident.acknowledgedAt }]
+        : []),
+      ...(incident.resolvedAt
+        ? [{ type: "resolved", at: incident.resolvedAt }]
+        : []),
+    ];
+
+    return {
+      ...incident,
+      metrics: {
+        mttaSeconds: incident.mttaSeconds,
+        mttrSeconds: incident.mttrSeconds,
+      },
+      timeline,
+    };
   }
 
   async create(ownerId: string, createIncidentDto: CreateIncidentDto) {
