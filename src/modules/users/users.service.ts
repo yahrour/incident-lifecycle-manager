@@ -228,6 +228,12 @@ export class UsersService {
     return this.mailService.sendEmailChangeVerification(email, name, verifyUrl);
   }
 
+  /**
+   * Verifies a pending email change using a one-time token sent to the user's new address.
+   * On success: marks the token as used and replaces `user.email` with `user.pendingEmail`.
+   * Throws NotFoundException/GoneException/ConflictException for invalid/expired/used tokens,
+   * or ConflictException if the target email was claimed by someone else in the meantime.
+   */
   async verifyEmailChange(token: string) {
     const hashedToken = hashToken(token);
     return this.prisma.$transaction(async (prisma) => {
