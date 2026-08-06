@@ -5,6 +5,8 @@ import {
   IsOptional,
   IsPositive,
   IsString,
+  IsTimeZone,
+  ValidateIf,
 } from "class-validator";
 
 export class CreateTeamDto {
@@ -21,9 +23,18 @@ export class CreateTeamDto {
   @IsPositive()
   rotationPeriodDays?: number;
 
-  @IsOptional()
+  @ValidateIf(
+    (o: CreateTeamDto) => o.timezone !== undefined && o.timezone !== null
+  )
   @IsDate()
   rotationStartDate?: Date;
+
+  @ValidateIf(
+    (o: CreateTeamDto) =>
+      o.rotationStartDate !== undefined && o.rotationStartDate !== null
+  )
+  @IsTimeZone()
+  timezone?: string;
 
   @IsOptional()
   @IsNumber()
