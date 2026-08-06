@@ -10,12 +10,15 @@ import { BcryptService } from "../security/bcrypt.service";
 import { Role, Prisma } from "@/generated/prisma/client";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { UpdateEmailDto } from "./dto/update-email.dto";
+// import { generateSecureToken } from "@/common/utils/token.util";
+// import { ConfigService } from "@nestjs/config";
 
 @Injectable()
 export class UsersService {
   constructor(
-    private prisma: PrismaService,
-    private bcrypt: BcryptService
+    private readonly prisma: PrismaService,
+    // private readonly configService: ConfigService,
+    private readonly bcrypt: BcryptService
   ) {}
 
   async create(
@@ -177,6 +180,7 @@ export class UsersService {
     }
 
     // 3. Update pendingEmail with error handling for missing user
+
     try {
       await this.prisma.user.update({
         where: { id: userId },
@@ -193,10 +197,29 @@ export class UsersService {
     }
 
     // TODO: Generate verification token & dispatch verification email
+    // await this.createAndSendVerificationToken(userId, updateEmailDto.email);
     return {
       message:
         "Verification email sent. Please check your inbox to confirm the change.",
       pendingEmail: updateEmailDto.email,
     };
   }
+  // async createAndSendVerificationToken(userId: string, email: string) {
+  //   const { rawToken, hashedToken } = generateSecureToken();
+  //   await this.prisma.emailVerificationToken.create({
+  //     data: {
+  //       token: hashedToken,
+  //       userId,
+  //       expiresAt: new Date(Date.now() + 1000 * 60 * 60), // 1 hour
+  //     },
+  //   });
+  //
+  //   const verifyUrl = `${this.configService.get("APP_URL")}/verify-email?token=${rawToken}`;
+  //   await this.mailService.send({
+  //     to: email,
+  //     subject: "Confirm your new email address",
+  //     template: "email-verification",
+  //     context: { verifyUrl },
+  //   });
+  // }
 }
