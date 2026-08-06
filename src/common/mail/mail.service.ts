@@ -39,11 +39,4 @@ export class MailService {
     });
   }
 
-  async sendInvite(to: string, teamName: string, inviteLink: string) {
-    await this.mailerService.sendMail({
-      to,
-      subject: `You've been invited to join ${teamName}`,
-      html: inviteTemplate(teamName, inviteLink),
-    });
-  }
 }
