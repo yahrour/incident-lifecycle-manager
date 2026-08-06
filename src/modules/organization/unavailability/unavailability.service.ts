@@ -15,6 +15,7 @@ import {
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { Team, TeamMember } from "@/generated/prisma/client";
 import { Cursor, cursorSchema } from "./types";
+import { convertDateToUtc } from "@/common/utils/timezone";
 
 @Injectable()
 export class UnavailabilityService {
@@ -91,7 +92,7 @@ export class UnavailabilityService {
     teamMemberId: number,
     createUnavailabilityDto: CreateUnavailabilityDto
   ) {
-    if (createUnavailabilityDto.startDate >= createUnavailabilityDto.endDate) {
+    if (createUnavailabilityDto.startDate > createUnavailabilityDto.endDate) {
       throw new BadRequestException("Start date must be before end date");
     }
 
@@ -106,8 +107,15 @@ export class UnavailabilityService {
       return await this.prisma.unavailability.create({
         data: {
           memberId: teamMemberId,
-          startDate: createUnavailabilityDto.startDate,
-          endDate: createUnavailabilityDto.endDate,
+          startDate: convertDateToUtc(
+            createUnavailabilityDto.startDate,
+            createUnavailabilityDto.timezone
+          ),
+          endDate: convertDateToUtc(
+            createUnavailabilityDto.endDate,
+            createUnavailabilityDto.timezone,
+            true
+          ),
           reason: createUnavailabilityDto.reason,
           confirmed: isTeamOwner, // if the requester is the team owner, confirm unavailability automatically
         },
@@ -139,10 +147,25 @@ export class UnavailabilityService {
     if (
       updateUnavailabilityDto.startDate &&
       updateUnavailabilityDto.endDate &&
-      updateUnavailabilityDto.startDate >= updateUnavailabilityDto.endDate
+      updateUnavailabilityDto.startDate > updateUnavailabilityDto.endDate
     ) {
       throw new BadRequestException(
         "end date should be greater than start date"
+      );
+    }
+
+    // convert to UTC
+    if (updateUnavailabilityDto.startDate) {
+      updateUnavailabilityDto.startDate = convertDateToUtc(
+        updateUnavailabilityDto.startDate,
+        updateUnavailabilityDto.timezone
+      );
+    }
+    if (updateUnavailabilityDto.endDate) {
+      updateUnavailabilityDto.endDate = convertDateToUtc(
+        updateUnavailabilityDto.endDate,
+        updateUnavailabilityDto.timezone,
+        true
       );
     }
 
@@ -157,18 +180,21 @@ export class UnavailabilityService {
         throw new NotFoundException("Unavailability doesn't exist");
       }
 
-      if (!(
-        updateUnavailabilityDto.startDate && updateUnavailabilityDto.endDate
-      )) {
+      // if one of the dates is present and the other one is missing
+      if (
+        (updateUnavailabilityDto.startDate &&
+          !updateUnavailabilityDto.endDate) ||
+        (!updateUnavailabilityDto.startDate && updateUnavailabilityDto.endDate)
+      ) {
         if (updateUnavailabilityDto.startDate) {
           if (
-            updateUnavailabilityDto.startDate >= currentUnavailability.endDate
+            updateUnavailabilityDto.startDate > currentUnavailability.endDate
           ) {
             throw new BadRequestException("Start date must be before end date");
           }
         } else if (updateUnavailabilityDto.endDate) {
           if (
-            updateUnavailabilityDto.endDate <= currentUnavailability.startDate
+            updateUnavailabilityDto.endDate < currentUnavailability.startDate
           ) {
             throw new BadRequestException("End date must be after start date");
           }
