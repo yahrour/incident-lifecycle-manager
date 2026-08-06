@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  GoneException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -10,7 +11,7 @@ import { BcryptService } from "../security/bcrypt.service";
 import { Role, Prisma } from "@/generated/prisma/client";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { UpdateEmailDto } from "./dto/update-email.dto";
-import { generateSecureToken } from "@/common/utils/token.util";
+import { generateSecureToken, hashToken } from "@/common/utils/token.util";
 import { ConfigService } from "@nestjs/config";
 import { MailService } from "@/common/mail/mail.service";
 
@@ -223,7 +224,38 @@ export class UsersService {
         expiresAt: new Date(Date.now() + 1000 * 60 * 60), // 1 hour
       },
     });
-    const verifyUrl = `${this.configService.get("APP_URL")}/users/verify-email-change?token=${rawToken}`;
+    const verifyUrl = `${this.configService.get("APP_URL")}/api/v1/users/verify-email-change?token=${rawToken}`;
     return this.mailService.sendEmailChangeVerification(email, name, verifyUrl);
+  }
+
+  async verifyEmailChange(token: string) {
+    const hashedToken = hashToken(token);
+    return this.prisma.$transaction(async (prisma) => {
+      const emailToken = await prisma.emailVerificationToken.findUnique({
+        where: { token: hashedToken },
+        include: { user: { select: { pendingEmail: true } } },
+      });
+
+      if (!emailToken) throw new NotFoundException("Invalid verification link");
+      if (emailToken.expiresAt < new Date())
+        throw new GoneException("This link has expired.");
+      if (emailToken.used)
+        throw new ConflictException("This link has already been used.");
+      if (!emailToken.user.pendingEmail) {
+        throw new BadRequestException(
+          "No pending email change found for this account"
+        );
+      }
+
+      await prisma.emailVerificationToken.update({
+        where: { id: emailToken.id },
+        data: { used: true },
+      });
+      await prisma.user.update({
+        where: { id: emailToken.userId },
+        data: { email: emailToken.user.pendingEmail, pendingEmail: null },
+      });
+      return { message: "Email updated successfully" };
+    });
   }
 }
