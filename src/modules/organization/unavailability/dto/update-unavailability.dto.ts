@@ -11,5 +11,5 @@ export class UpdateUnavailabilityDto extends PartialType(
       (o.endDate !== undefined && o.endDate !== null)
   )
   @IsTimeZone()
-  timezone: string;
+  timezone?: string;
 }

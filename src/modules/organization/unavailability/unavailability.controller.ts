@@ -97,8 +97,8 @@ export class UnavailabilityController {
     );
   }
 
-  @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(":teamId/members/:memberId/unavailabilities/:unavailabilityId")
+  @HttpCode(HttpStatus.NO_CONTENT)
   async removeMemberOne(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
