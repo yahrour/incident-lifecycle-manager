@@ -11,11 +11,11 @@ import { PrismaService } from "@/common/prisma/prisma.service";
 import { CreateInvite } from "./dto/create-invite.dto";
 import { UsersService } from "../users/users.service";
 import { ConfigService } from "@nestjs/config";
-import * as crypto from "crypto";
 import { RegisterViaInviteDto } from "./dto/register-via-invite.dto";
 import { Role, InviteToken } from "@/generated/prisma/client";
 import { ActiveUserData } from "@/common/interfaces/active-user.interface";
 import { MembersService } from "../organization/members/members.service";
+import { hashToken, generateSecureToken } from "@/common/utils/token.util";
 
 @Injectable()
 export class InviteService {
@@ -45,7 +45,7 @@ export class InviteService {
     }
 
     // generate new token
-    const { rawToken, hashedToken } = this.generateToken();
+    const { rawToken, hashedToken } = generateSecureToken();
 
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + createInvite.expiresIn);
@@ -148,22 +148,8 @@ export class InviteService {
       );
     }
   }
-
-  private generateToken() {
-    const rawToken = crypto.randomBytes(32).toString("hex");
-    const hashedToken = crypto
-      .createHash("sha256")
-      .update(rawToken)
-      .digest("hex");
-    return { rawToken, hashedToken };
-  }
-
-  private hashToken(rawToken: string): string {
-    return crypto.createHash("sha256").update(rawToken).digest("hex");
-  }
-
   private async findAndValidateToken(rawToken: string): Promise<InviteToken> {
-    const hashedToken = this.hashToken(rawToken);
+    const hashedToken = hashToken(rawToken);
 
     const invite = await this.prisma.inviteToken.findUnique({
       where: { token: hashedToken },

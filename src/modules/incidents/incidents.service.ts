@@ -10,6 +10,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { OnCallService } from "@/modules/organization/oncall/oncall.service";
 import { CreateIncidentDto } from "./dto/create-incident.dto";
 import { FindIncidentsDto } from "./dto/find-incidents.dto";
+import { INCIDENT_STATUS } from "./constants";
 
 @Injectable()
 export class IncidentsService {
@@ -125,7 +126,25 @@ export class IncidentsService {
     });
 
     if (!incident) throw new NotFoundException("Incident doesn't exist");
-    return incident;
+
+    const timeline = [
+      { type: "created", at: incident.createdAt },
+      ...(incident.acknowledgedAt
+        ? [{ type: "acknowledged", at: incident.acknowledgedAt }]
+        : []),
+      ...(incident.resolvedAt
+        ? [{ type: "resolved", at: incident.resolvedAt }]
+        : []),
+    ];
+
+    return {
+      ...incident,
+      metrics: {
+        mttaSeconds: incident.mttaSeconds,
+        mttrSeconds: incident.mttrSeconds,
+      },
+      timeline,
+    };
   }
 
   async create(ownerId: string, createIncidentDto: CreateIncidentDto) {
@@ -165,9 +184,9 @@ export class IncidentsService {
 
     const acknowledgedAt = new Date();
     const result = await this.prisma.incident.updateMany({
-      where: { id: incidentId, status: "open" },
+      where: { id: incidentId, status: INCIDENT_STATUS.OPEN },
       data: {
-        status: "acknowledged",
+        status: INCIDENT_STATUS.ACKNOWLEDGED,
         acknowledgedAt,
         mttaSeconds: Math.floor(
           (acknowledgedAt.getTime() - incident.createdAt.getTime()) / 1000
@@ -185,27 +204,40 @@ export class IncidentsService {
   async resolve(userId: string, incidentId: string) {
     const incident = await this.prisma.incident.findUnique({
       where: { id: incidentId },
-      include: { team: true },
     });
 
-    if (!incident) throw new NotFoundException("Incident doesn't exist");
+    if (!incident) {
+      throw new NotFoundException("Incident doesn't exist");
+    }
+
     if (incident.assignedToId !== userId) {
       throw new ForbiddenException("You cannot resolve this incident");
     }
-    if (incident.status === "resolved") {
-      throw new ConflictException("Incident is already resolved");
+
+    if (incident.status !== INCIDENT_STATUS.ACKNOWLEDGED) {
+      throw new ConflictException("Incident must be acknowledged first");
     }
 
     const resolvedAt = new Date();
-    return this.prisma.incident.update({
-      where: { id: incidentId },
+    const result = await this.prisma.incident.updateMany({
+      where: {
+        id: incidentId,
+        status: INCIDENT_STATUS.ACKNOWLEDGED,
+        assignedToId: userId,
+      },
       data: {
-        status: "resolved",
+        status: INCIDENT_STATUS.RESOLVED,
         resolvedAt,
         mttrSeconds: Math.floor(
           (resolvedAt.getTime() - incident.createdAt.getTime()) / 1000
         ),
       },
     });
+
+    if (result.count === 0) {
+      throw new ConflictException("Incident is no longer acknowledged");
+    }
+
+    return this.prisma.incident.findUnique({ where: { id: incidentId } });
   }
 }

@@ -53,6 +53,54 @@ describe("IncidentsService", () => {
     }
   );
 
+  it("derives lifecycle timeline from incident timestamps", async () => {
+    const createdAt = new Date("2026-01-01T00:00:00.000Z");
+    const acknowledgedAt = new Date("2026-01-01T00:05:00.000Z");
+    const resolvedAt = new Date("2026-01-01T00:35:00.000Z");
+    const findFirst = jest.fn().mockResolvedValue({
+      id: "incident-id",
+      createdAt,
+      acknowledgedAt,
+      resolvedAt,
+      mttaSeconds: 300,
+      mttrSeconds: 2100,
+    });
+    const prisma = { incident: { findFirst } } as unknown as PrismaService;
+    const service = new IncidentsService(prisma, {} as OnCallService);
+
+    await expect(service.findOne("user-id", "incident-id")).resolves.toEqual(
+      expect.objectContaining({
+        metrics: { mttaSeconds: 300, mttrSeconds: 2100 },
+        timeline: [
+          { type: "created", at: createdAt },
+          { type: "acknowledged", at: acknowledgedAt },
+          { type: "resolved", at: resolvedAt },
+        ],
+      })
+    );
+  });
+
+  it("keeps unresolved metrics and events empty when an incident is open", async () => {
+    const createdAt = new Date("2026-01-01T00:00:00.000Z");
+    const findFirst = jest.fn().mockResolvedValue({
+      id: "incident-id",
+      createdAt,
+      acknowledgedAt: null,
+      resolvedAt: null,
+      mttaSeconds: null,
+      mttrSeconds: null,
+    });
+    const prisma = { incident: { findFirst } } as unknown as PrismaService;
+    const service = new IncidentsService(prisma, {} as OnCallService);
+
+    await expect(service.findOne("user-id", "incident-id")).resolves.toEqual(
+      expect.objectContaining({
+        metrics: { mttaSeconds: null, mttrSeconds: null },
+        timeline: [{ type: "created", at: createdAt }],
+      })
+    );
+  });
+
   it("acknowledges an open incident and records MTTA", async () => {
     const findUnique = jest
       .fn()
@@ -92,5 +140,43 @@ describe("IncidentsService", () => {
     expect(update.data.status).toBe("acknowledged");
     expect(update.data.acknowledgedAt).toBeInstanceOf(Date);
     expect(update.data.mttaSeconds).toEqual(expect.any(Number));
+  });
+
+  it("resolves an acknowledged incident and records MTTR", async () => {
+    const findUnique = jest
+      .fn()
+      .mockResolvedValueOnce({
+        id: "incident-id",
+        status: "acknowledged",
+        assignedToId: "engineer-id",
+        createdAt: new Date(Date.now() - 5_000),
+      })
+      .mockResolvedValueOnce({ id: "incident-id", status: "resolved" });
+    const updateMany = jest.fn().mockResolvedValue({ count: 1 });
+    const prisma = {
+      incident: { create: jest.fn(), findUnique, updateMany },
+    } as unknown as PrismaService;
+    const onCall = {} as OnCallService;
+    const service = new IncidentsService(prisma, onCall);
+
+    await service.resolve("engineer-id", "incident-id");
+
+    expect(updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          id: "incident-id",
+          status: "acknowledged",
+          assignedToId: "engineer-id",
+        },
+      })
+    );
+    const update = (
+      updateMany.mock.calls as unknown as Array<
+        [{ data: { status: string; resolvedAt: Date; mttrSeconds: number } }]
+      >
+    )[0]?.[0];
+    expect(update?.data.status).toBe("resolved");
+    expect(update?.data.resolvedAt).toBeInstanceOf(Date);
+    expect(update?.data.mttrSeconds).toEqual(expect.any(Number));
   });
 });
