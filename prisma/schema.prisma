@@ -23,12 +23,12 @@ model Team {
   name                     String       @unique
   description              String?
   rotationPeriodDays       Int          @default(7) @map("rotation_period_days")
-  rotationStartDate        DateTime     @default(now()) @map("rotation_start_date")
+  rotationStartDate        DateTime     @default(now()) @map("rotation_start_date") @db.Timestamptz
   currentRotationIndex     Int          @default(0) @map("current_rotation_index")
-  lastRotatedAt            DateTime     @default(now()) @map("last_rotated_at")
+  lastRotatedAt            DateTime     @default(now()) @map("last_rotated_at") @db.Timestamptz
   escalationTimeoutMinutes Int          @default(5) @map("escalation_timeout_minutes")
-  createdAt                DateTime     @default(now()) @map("created_at")
-  updatedAt                DateTime     @updatedAt @map("updated_at")
+  createdAt                DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt                DateTime     @updatedAt @map("updated_at") @db.Timestamptz
   teamMembers              TeamMember[]
   incidents                Incident[]
 
@@ -42,7 +42,7 @@ model TeamMember {
   user             User             @relation(fields: [userId], references: [id])
   teamId           String           @map("team_id") @db.Uuid
   team             Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  joinedAt         DateTime         @default(now()) @map("joined_at")
+  joinedAt         DateTime         @default(now()) @map("joined_at") @db.Timestamptz
   unavailabilities Unavailability[]
 
   @@map("team_members")
@@ -53,10 +53,10 @@ model Unavailability {
   id         Int        @id @default(autoincrement())
   memberId   Int        @map("member_id")
   teamMember TeamMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  startDate  DateTime   @map("start_date")
-  endDate    DateTime   @map("end_date")
+  startDate  DateTime   @map("start_date") @db.Timestamptz
+  endDate    DateTime   @map("end_date") @db.Timestamptz
   reason     String?
-  createdAt  DateTime   @default(now()) @map("created_at")
+  createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz
   confirmed  Boolean    @default(false)
 
   @@unique([memberId, startDate, endDate], name: "unique_unavailability_window")

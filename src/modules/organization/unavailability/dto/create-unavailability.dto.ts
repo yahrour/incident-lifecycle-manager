@@ -1,14 +1,14 @@
-import { Type } from "class-transformer";
-import { IsDate, IsOptional, IsString } from "class-validator";
+import { IsDate, IsOptional, IsString, IsTimeZone } from "class-validator";
 
 export class CreateUnavailabilityDto {
-  @Type(() => Date)
   @IsDate()
   startDate: Date;
 
-  @Type(() => Date)
   @IsDate()
   endDate: Date;
+
+  @IsTimeZone()
+  timezone: string;
 
   @IsOptional()
   @IsString()

@@ -89,7 +89,7 @@ export class OnCallService {
     };
   }
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_5_MINUTES)
   async processRotations() {
     const teams = await this.prisma.team.findMany({
       select: {

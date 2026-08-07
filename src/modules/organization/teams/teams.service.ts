@@ -10,9 +10,9 @@ import {
   CursorPaginationSearchParams,
   UpdateTeamDto,
 } from "./dto";
-import { Prisma } from "@/generated/prisma/client";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { Cursor, cursorSchema } from "./types";
+import { convertDateToUtc } from "@/common/utils/timezone";
 
 @Injectable()
 export class TeamsService {
@@ -49,7 +49,12 @@ export class TeamsService {
           name: createTeamDto.name,
           description: createTeamDto.description,
           rotationPeriodDays: createTeamDto.rotationPeriodDays,
-          rotationStartDate: createTeamDto.rotationStartDate,
+          rotationStartDate:
+            createTeamDto.rotationStartDate &&
+            convertDateToUtc(
+              createTeamDto.rotationStartDate,
+              createTeamDto.timezone
+            ),
           escalationTimeoutMinutes: createTeamDto.escalationTimeoutMinutes,
         },
         omit: {
@@ -72,12 +77,16 @@ export class TeamsService {
   }
 
   async update(id: string, ownerId: string, updateTeamDto: UpdateTeamDto) {
-    const data: Prisma.TeamUpdateInput = { ...updateTeamDto };
+    const data: UpdateTeamDto & {
+      currentRotationIndex: number | undefined;
+      lastRotatedAt: Date | undefined;
+    } = {
+      ...updateTeamDto,
+      currentRotationIndex: undefined,
+      lastRotatedAt: undefined,
+    };
 
-    if (
-      updateTeamDto.rotationPeriodDays !== undefined ||
-      updateTeamDto.rotationStartDate !== undefined
-    ) {
+    if (updateTeamDto.rotationPeriodDays !== undefined) {
       data.currentRotationIndex = 0;
       data.lastRotatedAt = new Date();
     }
