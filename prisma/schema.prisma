@@ -11,7 +11,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["organization", "auth", "incident", "alert"]
+  schemas  = ["organization", "auth", "incident", "ingestion"]
 }
 
 ////////////// ORGANIZATION SCHEMA //////////////
@@ -79,14 +79,16 @@ model User {
   firstName    String   @map("first_name")
   lastName     String   @map("last_name")
   email        String   @unique
+  pendingEmail String?  @map("pending_email")
   passwordHash String?  @map("password_hash")
   role         Role
   googleId     String?  @unique @map("google_id")
   specialty    String?
   timezone     String   @default("Africa/Casablanca")
   isVerified   Boolean  @default(false) @map("is_verified")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  timezone     String?  @default("UTC") @map("timezone")
 
   resetTokens             ResetToken[]
   emailVerificationTokens EmailVerificationToken[]
@@ -97,6 +99,47 @@ model User {
   assignedIncidents Incident[]   @relation("IncidentAssignee")
 
   @@map("users")
+  @@schema("auth")
+}
+
+model InviteToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  token     String   @unique
+  email     String
+  teamId    String   @map("team_id") @db.Uuid
+  used      Boolean  @default(false)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("invite_tokens")
+  @@schema("auth")
+}
+
+model ResetToken {
+  id    String @id @default(uuid()) @db.Uuid
+  token String @unique
+
+  userId String @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  used      Boolean  @default(false)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("reset_tokens")
+  @@schema("auth")
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  token     String   @unique
+  userId    String   @map("user_id") @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  used      Boolean  @default(false)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("email_verification_tokens")
   @@schema("auth")
 }
 
@@ -112,12 +155,12 @@ model Incident {
   status         String    @default("open")
   assignedToId   String?   @map("assigned_to") @db.Uuid
   assignedTo     User?     @relation("IncidentAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
-  createdAt      DateTime  @default(now()) @map("created_at")
-  acknowledgedAt DateTime? @map("acknowledged_at")
-  resolvedAt     DateTime? @map("resolved_at")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  acknowledgedAt DateTime? @map("acknowledged_at") @db.Timestamptz
+  resolvedAt     DateTime? @map("resolved_at") @db.Timestamptz
   mttaSeconds    Int?      @map("mtta_seconds")
   mttrSeconds    Int?      @map("mttr_seconds")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   @@index([teamId], name: "idx_incidents_team")
   @@index([status], name: "idx_incidents_status")
@@ -126,61 +169,19 @@ model Incident {
   @@schema("incident")
 }
 
-model InviteToken {
-  id        String   @id @default(uuid()) @db.Uuid
-  token     String   @unique
-  email     String
-  teamId    String   @map("team_id") @db.Uuid
-  expiresAt DateTime @map("expires_at")
-  used      Boolean  @default(false)
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@map("invite_tokens")
-  @@schema("auth")
-}
-
-model ResetToken {
-  id    String @id @default(uuid()) @db.Uuid
-  token String @unique
-
-  userId String @map("user_id") @db.Uuid
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  expiresAt DateTime @map("expires_at")
-  used      Boolean  @default(false)
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@map("reset_tokens")
-  @@schema("auth")
-}
-
-model EmailVerificationToken {
-  id        String   @id @default(uuid()) @db.Uuid
-  token     String   @unique
-  userId    String   @map("user_id") @db.Uuid
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt DateTime @map("expires_at")
-  used      Boolean  @default(false)
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@map("email_verification_tokens")
-  @@schema("auth")
-}
-
 ////////////// ALERT SCHEMA //////////////
 
 model ApiKey {
-  id         String    @id @default(uuid()) @db.Uuid
-  ownerId    String    @map("owner_id") @db.Uuid
-  owner      User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  name       String
-  keyPrefix  String    @map("key_prefix") @db.VarChar(12)
-  keyHash    String    @unique @map("key_hash")
-  enabled    Boolean   @default(true)
-  lastUsedAt DateTime? @map("last_used_at")
-  createdAt  DateTime  @default(now()) @map("created_at")
+  id        String   @id @default(uuid()) @db.Uuid
+  ownerId   String   @map("owner_id") @db.Uuid
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name      String
+  keyPrefix String   @map("key_prefix") @db.VarChar(12)
+  keyHash   String   @unique @map("key_hash")
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   @@unique([ownerId, name], name: "unique_owner_name")
   @@map("api_keys")
-  @@schema("alert")
+  @@schema("ingestion")
 }
