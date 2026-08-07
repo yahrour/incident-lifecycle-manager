@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
+  Query,
   Req,
   Res,
   UnauthorizedException,
@@ -14,6 +16,7 @@ import { AuthService } from "./auth.service";
 import type { Response, Request } from "express";
 import { Public } from "@/common/decorators/public.decorator";
 import { RefrechTokenDto } from "./dto/refresh-token.dto";
+import { VerifySignupEmailDto } from "./dto/verify-signup-email.dto";
 
 @Public()
 @Controller({
@@ -64,5 +67,10 @@ export class AuthController {
       throw new UnauthorizedException("No refresh token provided");
     }
     return this.authService.refrechTokens(refreshToken);
+  }
+  @Public()
+  @Get("verify-email")
+  async verifyEmail(@Query() dto: VerifySignupEmailDto) {
+    return this.authService.verifySignupEmail(dto.token);
   }
 }

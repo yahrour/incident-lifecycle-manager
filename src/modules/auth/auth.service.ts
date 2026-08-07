@@ -1,4 +1,11 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import {
+  ConflictException,
+  ForbiddenException,
+  GoneException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { BcryptService } from "../security/bcrypt.service";
 import { SignUp } from "./dto/sign-up.dto";
 import { SignIn } from "./dto/sign-in.dto";
@@ -7,21 +14,57 @@ import { Role, User } from "@/generated/prisma/client";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config"; //
 import { ActiveUserData } from "@/common/interfaces/active-user.interface";
+import { generateSecureToken, hashToken } from "@/common/utils/token.util";
+import { PrismaService } from "@/common/prisma/prisma.service";
+import { MailService } from "@/common/mail/mail.service";
 
 @Injectable()
 export class AuthService {
   constructor(
-    private bcrypt: BcryptService,
+    private readonly bcrypt: BcryptService,
     private readonly userService: UsersService,
-    private jwtService: JwtService,
-    private configService: ConfigService
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService
   ) {}
   async signUp(signUp: SignUp) {
     const sreUserData = {
       ...signUp,
       role: Role.SRE,
     };
-    return this.userService.create(sreUserData);
+
+    /**
+     * User and verification-token creation are wrapped in a transaction so an
+     * account is never created without a corresponding token. Email sending is
+     * intentionally kept outside the transaction — an SMTP failure shouldn't
+     * roll back a valid signup, just leave a resendable unsent token.
+     */
+    const { user, rawToken } = await this.prisma.$transaction(
+      async (prisma) => {
+        const user = await this.userService.create(sreUserData, prisma);
+        const { rawToken, hashedToken } = generateSecureToken();
+
+        await prisma.emailVerificationToken.create({
+          data: {
+            token: hashedToken,
+            userId: user.id,
+            expiresAt: new Date(Date.now() + 1000 * 60 * 60),
+          },
+        });
+        return { user, rawToken };
+      }
+    );
+    const verifyUrl = `${this.configService.get("APP_URL")}/api/v1/auth/verify-email?token=${rawToken}`;
+    await this.mailService.sendEmailVerification(
+      user.email,
+      user.firstName,
+      verifyUrl
+    );
+    return {
+      message:
+        "Account created. Please check your email to verify your account.",
+    };
   }
 
   async signIn(signIn: SignIn) {
@@ -42,6 +85,12 @@ export class AuthService {
     if (!isMatch) {
       throw new UnauthorizedException("Invalid credentials");
     }
+    if (!user.isVerified) {
+      throw new ForbiddenException(
+        "Please verify your email before logging in"
+      );
+    }
+
     return this.generateTokens(user);
   }
 
@@ -110,5 +159,40 @@ export class AuthService {
     } catch {
       throw new UnauthorizedException("Invalid or expired refresh token");
     }
+  }
+
+  /**
+   * Verifies a newly registered account using a one-time token sent to the user's email on signup.
+   * On success: marks the token as used and sets `user.isVerified` to true.
+   * Throws NotFoundException/GoneException/ConflictException for invalid/expired/used tokens,
+   * or ConflictException if the account was already verified.
+   */
+  async verifySignupEmail(token: string) {
+    const hashedToken = hashToken(token);
+    return this.prisma.$transaction(async (prisma) => {
+      const emailToken = await prisma.emailVerificationToken.findUnique({
+        where: { token: hashedToken },
+        include: { user: { select: { isVerified: true } } },
+      });
+
+      if (!emailToken) throw new NotFoundException("Invalid verification link");
+      if (emailToken.expiresAt < new Date())
+        throw new GoneException("This link has expired.");
+
+      if (emailToken.used)
+        throw new ConflictException("This link has already been used.");
+      if (emailToken.user.isVerified)
+        throw new ConflictException("This account is already verified");
+
+      await prisma.emailVerificationToken.update({
+        where: { id: emailToken.id },
+        data: { used: true },
+      });
+      await prisma.user.update({
+        where: { id: emailToken.userId },
+        data: { isVerified: true },
+      });
+      return { message: "Email verified successfully" };
+    });
   }
 }
