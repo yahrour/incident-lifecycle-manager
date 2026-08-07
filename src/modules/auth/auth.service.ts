@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { BcryptService } from "../security/bcrypt.service";
 import { SignUp } from "./dto/sign-up.dto";
 import { SignIn } from "./dto/sign-in.dto";
@@ -42,6 +46,12 @@ export class AuthService {
     if (!isMatch) {
       throw new UnauthorizedException("Invalid credentials");
     }
+    if (!user.isVerified) {
+      throw new ForbiddenException(
+        "Please verify your email before logging in"
+      );
+    }
+
     return this.generateTokens(user);
   }
 
