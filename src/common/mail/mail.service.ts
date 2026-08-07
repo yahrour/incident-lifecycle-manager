@@ -2,7 +2,7 @@
 import { Injectable } from "@nestjs/common";
 import { MailerService } from "@nestjs-modules/mailer";
 import { emailConfirmationTemplate } from "./templates/email-confirmation.template";
-import { inviteTemplate } from "./templates/invite.template";
+// import { inviteTemplate } from "./templates/invite.template";
 
 @Injectable()
 export class MailService {
@@ -38,5 +38,4 @@ export class MailService {
       }),
     });
   }
-
 }

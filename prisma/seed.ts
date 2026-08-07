@@ -41,6 +41,7 @@ async function createUser(data: {
   email: string;
   role: Role;
   specialty?: string;
+  isVerified?: boolean;
 }) {
   const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 10);
 
@@ -83,13 +84,14 @@ async function main() {
   console.log("Seeding database...");
 
   // ── Users ────────────────────────────────────────────────────────────────
-  const sre = await createUser({
-    firstName: "Sam",
-    lastName: "Reyes",
-    email: "sre@example.com",
-    role: Role.SRE,
-    specialty: "Reliability Engineering",
-  });
+const sre = await createUser({
+  firstName: "Sam",
+  lastName: "Reyes",
+  email: "sre@example.com",
+  role: Role.SRE,
+  isVerified: true,
+  specialty: "Reliability Engineering",
+});
 
   const engineers = await Promise.all([
     createUser({
@@ -97,6 +99,7 @@ async function main() {
       lastName: "Nguyen",
       email: "alice.engineer@example.com",
       role: Role.ENGINEER,
+      isVerified: true,
       specialty: "Frontend",
     }),
     createUser({
@@ -104,6 +107,7 @@ async function main() {
       lastName: "Carter",
       email: "ben.engineer@example.com",
       role: Role.ENGINEER,
+      isVerified: true,
       specialty: "Frontend",
     }),
     createUser({
@@ -111,6 +115,7 @@ async function main() {
       lastName: "Dubois",
       email: "chloe.engineer@example.com",
       role: Role.ENGINEER,
+      isVerified: true,
       specialty: "Backend",
     }),
     createUser({
@@ -118,6 +123,7 @@ async function main() {
       lastName: "Okafor",
       email: "david.engineer@example.com",
       role: Role.ENGINEER,
+      isVerified: true,
       specialty: "Backend",
     }),
   ]);
