@@ -211,6 +211,7 @@ export class UsersService {
       pendingEmail: updateEmailDto.email,
     };
   }
+
   async createAndSendVerificationToken(
     userId: string,
     email: string,
