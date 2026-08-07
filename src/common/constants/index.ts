@@ -7,3 +7,5 @@ export enum SORT_ORDER {
   ASC = "asc",
   DESC = "desc",
 }
+
+export const DEFAULT_TIMEZONE = "Africa/Casablanca";
