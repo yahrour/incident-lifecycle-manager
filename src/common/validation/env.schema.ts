@@ -1,6 +1,7 @@
 import Joi from "joi";
 
 export const validationSchema = Joi.object({
+  TZ: Joi.string().required().equal("UTC"),
   NODE_ENV: Joi.string()
     .valid(...["development", "production"])
     .required(),
