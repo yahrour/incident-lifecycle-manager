@@ -84,7 +84,6 @@ model User {
   role         Role
   googleId     String?  @unique @map("google_id")
   specialty    String?
-  timezone     String   @default("Africa/Casablanca")
   isVerified   Boolean  @default(false) @map("is_verified")
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
