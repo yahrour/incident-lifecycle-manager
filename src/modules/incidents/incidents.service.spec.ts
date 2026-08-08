@@ -1,7 +1,7 @@
 jest.mock("src/common/prisma/prisma.service", () => ({
   PrismaService: class {},
 }));
-jest.mock("src/modules/organization/oncall/oncall.service", () => ({
+jest.mock("src/modules/oncall/oncall.service", () => ({
   OnCallService: class {},
 }));
 
