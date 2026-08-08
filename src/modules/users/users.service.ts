@@ -253,7 +253,6 @@ export class UsersService {
           "No pending email change found for this account"
         );
       }
-
       await prisma.emailVerificationToken.update({
         where: { id: emailToken.id },
         data: { used: true },
@@ -262,6 +261,10 @@ export class UsersService {
         where: { id: emailToken.userId },
         data: { email: emailToken.user.pendingEmail, pendingEmail: null },
       });
+      await prisma.refreshToken.deleteMany({
+        where: { userId: emailToken.userId },
+      });
+
       return { message: "Email updated successfully" };
     });
   }
