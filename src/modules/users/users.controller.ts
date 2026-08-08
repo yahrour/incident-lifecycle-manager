@@ -38,7 +38,7 @@ export class UsersController {
     @ActiveUser() user: ActiveUserData,
     @Body() dto: UpdateEmailDto
   ) {
-    return this.usersService.updateEmail(user.sub, user.email, dto);
+    return this.usersService.updateEmail(user.sub, dto);
   }
 
   @Public()
