@@ -13,10 +13,16 @@ import {
 import { SignUp } from "./dto/sign-up.dto";
 import { SignIn } from "./dto/sign-in.dto";
 import { AuthService } from "./auth.service";
-import type { Response, Request } from "express";
+import type { Response, Request, CookieOptions } from "express";
 import { Public } from "@/common/decorators/public.decorator";
 import { RefrechTokenDto } from "./dto/refresh-token.dto";
 import { VerifySignupEmailDto } from "./dto/verify-signup-email.dto";
+
+const AUTH_COOKIE_OPTIONS: CookieOptions = {
+  httpOnly: true,
+  sameSite: "lax",
+  secure: process.env.NODE_ENV === "production",
+};
 
 @Public()
 @Controller({
@@ -37,17 +43,12 @@ export class AuthController {
     @Body() signIn: SignIn
   ) {
     const { accessToken, refreshToken } = await this.authService.signIn(signIn);
-    const isProduction = process.env.NODE_ENV === "production";
     response.cookie("refreshToken", refreshToken, {
-      secure: isProduction,
-      httpOnly: true,
-      sameSite: "lax",
+      ...AUTH_COOKIE_OPTIONS,
       maxAge: 24 * 60 * 60 * 1000,
     });
     response.cookie("accessToken", accessToken, {
-      secure: isProduction,
-      httpOnly: true,
-      sameSite: "lax",
+      ...AUTH_COOKIE_OPTIONS,
       maxAge: 15 * 60 * 1000,
     });
     return { message: "SignIn successful" };
@@ -84,17 +85,8 @@ export class AuthController {
     const cookies = request.cookies as Record<string, string> | undefined;
     await this.authService.logout(cookies?.["refreshToken"]);
 
-    const isProduction = process.env.NODE_ENV === "production";
-    response.clearCookie("accessToken", {
-      secure: isProduction,
-      httpOnly: true,
-      sameSite: "lax",
-    });
-    response.clearCookie("refreshToken", {
-      secure: isProduction,
-      httpOnly: true,
-      sameSite: "lax",
-    });
+    response.clearCookie("accessToken", AUTH_COOKIE_OPTIONS);
+    response.clearCookie("refreshToken", AUTH_COOKIE_OPTIONS);
     return { message: "Logged out successfully" };
   }
 }
