@@ -210,4 +210,17 @@ export class AuthService {
       return { message: "Email verified successfully" };
     });
   }
+
+  async logout(refreshToken?: string) {
+    if (refreshToken) {
+      try {
+        await this.prisma.refreshToken.deleteMany({
+          where: { tokenHash: hashToken(refreshToken) },
+        });
+      } catch (error) {
+        console.error("Failed to revoke refresh token on logout:", error);
+      }
+    }
+    return { message: "Logged out successfully" };
+  }
 }
