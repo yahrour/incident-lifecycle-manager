@@ -161,13 +161,16 @@ export class UsersService {
     }
   }
 
-  async updateEmail(
-    userId: string,
-    userEmail: string,
-    updateEmailDto: UpdateEmailDto
-  ) {
+  async updateEmail(userId: string, updateEmailDto: UpdateEmailDto) {
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, firstName: true },
+    });
+    if (!currentUser) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
     // 1. Fast fail: Cannot change to current active email
-    if (userEmail === updateEmailDto.email) {
+    if (currentUser.email === updateEmailDto.email) {
       throw new BadRequestException(
         "New email cannot be the same as current email"
       );
@@ -182,28 +185,15 @@ export class UsersService {
       throw new ConflictException("Email address is already in use");
     }
 
-    // 3. Update pendingEmail with error handling for missing user
-    let updatedUser: { firstName: string };
-    try {
-      updatedUser = await this.prisma.user.update({
-        where: { id: userId },
-        data: { pendingEmail: updateEmailDto.email },
-        select: { firstName: true },
-      });
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2025"
-      ) {
-        throw new NotFoundException(`User with ID ${userId} not found`);
-      }
-      throw error;
-    }
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { pendingEmail: updateEmailDto.email },
+    });
 
     await this.createAndSendVerificationToken(
       userId,
       updateEmailDto.email,
-      updatedUser.firstName
+      currentUser.firstName
     );
     return {
       message:
@@ -222,7 +212,7 @@ export class UsersService {
       data: {
         token: hashedToken,
         userId,
-        expiresAt: new Date(Date.now() + 1000 * 60 * 60), // 1 hour
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60),
       },
     });
     const verifyUrl = `${this.configService.get("APP_URL")}/api/v1/users/verify-email-change?token=${rawToken}`;
@@ -253,7 +243,6 @@ export class UsersService {
           "No pending email change found for this account"
         );
       }
-
       await prisma.emailVerificationToken.update({
         where: { id: emailToken.id },
         data: { used: true },
@@ -262,6 +251,10 @@ export class UsersService {
         where: { id: emailToken.userId },
         data: { email: emailToken.user.pendingEmail, pendingEmail: null },
       });
+      await prisma.refreshToken.deleteMany({
+        where: { userId: emailToken.userId },
+      });
+
       return { message: "Email updated successfully" };
     });
   }
