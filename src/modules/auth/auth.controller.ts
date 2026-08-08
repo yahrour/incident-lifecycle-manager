@@ -42,13 +42,13 @@ export class AuthController {
       secure: isProduction,
       httpOnly: true,
       sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 24 * 60 * 60 * 1000,
     });
     response.cookie("accessToken", accessToken, {
       secure: isProduction,
       httpOnly: true,
       sameSite: "lax",
-      maxAge: 60 * 60 * 1000,
+      maxAge: 15 * 60 * 1000,
     });
     return { message: "SignIn successful" };
   }
