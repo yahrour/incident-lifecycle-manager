@@ -92,12 +92,22 @@ model User {
   resetTokens             ResetToken[]
   emailVerificationTokens EmailVerificationToken[]
   apiKeys                 ApiKey[]
-
-  ownedTeams        Team[]
-  teamMembers       TeamMember[]
-  assignedIncidents Incident[]   @relation("IncidentAssignee")
+  refreshTokens           RefreshToken[]
+  ownedTeams              Team[]
+  teamMembers             TeamMember[]
+  assignedIncidents       Incident[]               @relation("IncidentAssignee")
 
   @@map("users")
+  @@schema("auth")
+}
+
+model RefreshToken {
+  id        String @id @default(uuid()) @db.Uuid
+  userId    String @map("user_id") @db.Uuid
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String @unique @map("token_hash")
+
+  @@map("refresh_tokens")
   @@schema("auth")
 }
 

@@ -116,11 +116,20 @@ export class AuthService {
       ),
     ]);
 
+    await this.prisma.refreshToken.create({
+      data: {
+        userId: user.id,
+        tokenHash: hashToken(refreshToken),
+        expiresAt: new Date(Date.now() + refreshTtl * 1000),
+      },
+    });
+
     return {
       accessToken,
       refreshToken,
     };
   }
+
   private async signToken<T>(
     userId: string,
     expiresIn: number,
@@ -151,10 +160,17 @@ export class AuthService {
         issuer: this.configService.getOrThrow<string>("JWT_ISSUER"),
       });
 
+      const stored = await this.prisma.refreshToken.findUnique({
+        where: { tokenHash: hashToken(refrechToken) },
+      });
+      if (!stored) {
+        throw new UnauthorizedException("Invalid or expired refresh token");
+      }
       const user = await this.userService.findById(sub);
       if (!user) {
         throw new UnauthorizedException("User not found");
       }
+      await this.prisma.refreshToken.delete({ where: { id: stored.id } });
       return this.generateTokens(user);
     } catch {
       throw new UnauthorizedException("Invalid or expired refresh token");
