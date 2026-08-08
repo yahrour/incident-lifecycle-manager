@@ -68,9 +68,33 @@ export class AuthController {
     }
     return this.authService.refrechTokens(refreshToken);
   }
+
   @Public()
   @Get("verify-email")
   async verifyEmail(@Query() dto: VerifySignupEmailDto) {
     return this.authService.verifySignupEmail(dto.token);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post("logout")
+  async logout(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response
+  ) {
+    const cookies = request.cookies as Record<string, string> | undefined;
+    await this.authService.logout(cookies?.["refreshToken"]);
+
+    const isProduction = process.env.NODE_ENV === "production";
+    response.clearCookie("accessToken", {
+      secure: isProduction,
+      httpOnly: true,
+      sameSite: "lax",
+    });
+    response.clearCookie("refreshToken", {
+      secure: isProduction,
+      httpOnly: true,
+      sameSite: "lax",
+    });
+    return { message: "Logged out successfully" };
   }
 }
