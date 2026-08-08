@@ -107,7 +107,7 @@ export class AuthService {
         user.id,
         accessTtl,
         this.configService.getOrThrow<string>("JWT_SECRET"),
-        { email: user.email, role: user.role }
+        { role: user.role }
       ),
       this.signToken(
         user.id,
