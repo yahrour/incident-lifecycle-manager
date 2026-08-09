@@ -26,12 +26,13 @@ export class ApiKeyController {
   @Post("create")
   @Roles(Role.SRE)
   async create(@ActiveUser() user: ActiveUserData, @Body() dto: CreateApiKey) {
-    const { apiKey, prefix } = await this.apiKeyService.create(
+    const { apiKey, prefix, expiresAt } = await this.apiKeyService.create(
       user.sub,
-      dto.name
+      dto.name,
+      dto.expiresInDays
     );
 
-    return { data: { apiKey, prefix } };
+    return { data: { apiKey, prefix, expiresAt } };
   }
 
   @Get()
