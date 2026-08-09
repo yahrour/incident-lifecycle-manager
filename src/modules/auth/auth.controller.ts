@@ -18,6 +18,7 @@ import { Public } from "@/common/decorators/public.decorator";
 import { RefrechTokenDto } from "./dto/refresh-token.dto";
 import { VerifySignupEmailDto } from "./dto/verify-signup-email.dto";
 import { ForgotPasswordDto } from "./dto/forgot-password.dto";
+import { ResetPasswordDto } from "./dto/reset-password.dto";
 
 const AUTH_COOKIE_OPTIONS: CookieOptions = {
   httpOnly: true,
@@ -98,9 +99,10 @@ export class AuthController {
     return this.authService.requestPasswordReset(dto.email);
   }
 
-  // @Public() @HttpCode(HttpStatus.OK)
-  // @Post("reset-password")
-  // async resetPassword(@Body() dto: ResetPasswordDto) {
-  //   return this.authService.resetPassword(dto.token, dto.newPassword);
-  // }
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @Post("reset-password")
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto.token, dto.newPassword);
+  }
 }
