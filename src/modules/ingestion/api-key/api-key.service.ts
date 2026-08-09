@@ -14,22 +14,20 @@ export class ApiKeyService {
   private hashApiKey(rawKey: string) {
     return createHash("sha256").update(rawKey).digest("hex");
   }
-  private async findOwnedApiKey(ownerId: string, id: string) {
+  private findOwnedApiKey(ownerId: string, id: string) {
     return this.prisma.apiKey.findFirst({
       where: { ownerId, id },
     });
   }
 
-  async create(ownerId: string, name: string, expiresInDays?: number) {
+  async create(ownerId: string, name: string, expiresInDays: number) {
     const rawKey = `alert_${randomBytes(32).toString("hex")}`;
     const keyHash = this.hashApiKey(rawKey);
     const keyPrefix = rawKey.slice(0, 12);
 
-    const DEFAULT_TTL_DAYS = 90;
-    const ttl = expiresInDays ?? DEFAULT_TTL_DAYS;
-    const expiresAt = ttl
-      ? new Date(Date.now() + ttl * 24 * 60 * 60 * 1000)
-      : undefined;
+    const expiresAt = new Date(
+      Date.now() + expiresInDays * 24 * 60 * 60 * 1000
+    );
 
     try {
       await this.prisma.apiKey.create({
@@ -49,12 +47,13 @@ export class ApiKeyService {
           );
         }
       }
+      throw error;
     }
 
     return {
       apiKey: rawKey,
       prefix: keyPrefix,
-      expiresAt: expiresAt ? expiresAt.toISOString() : undefined,
+      expiresAt: expiresAt.toISOString(),
     };
   }
 
@@ -75,8 +74,7 @@ export class ApiKeyService {
 
     return apiKeys.map((apiKey) => {
       const expiresAt = apiKey.expiresAt;
-      const hasExpiry = expiresAt !== null;
-      const isExpired = hasExpiry && expiresAt < now;
+      const isExpired = expiresAt <= now;
 
       return {
         id: apiKey.id,
@@ -84,7 +82,7 @@ export class ApiKeyService {
         keyPrefix: apiKey.keyPrefix,
         enabled: apiKey.enabled,
         createdAt: apiKey.createdAt,
-        expiresAt: hasExpiry ? expiresAt.toISOString() : null,
+        expiresAt: expiresAt.toISOString(),
         isExpired,
       };
     });

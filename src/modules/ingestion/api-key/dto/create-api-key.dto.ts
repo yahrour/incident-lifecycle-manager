@@ -1,12 +1,11 @@
-import { IsNotEmpty, IsString, IsInt, IsOptional, Min } from "class-validator";
+import { IsNotEmpty, IsString, IsInt, IsIn } from "class-validator";
 
 export class CreateApiKey {
   @IsString()
   @IsNotEmpty()
   name: string;
 
-  @IsOptional()
   @IsInt()
-  @Min(1)
-  expiresInDays?: number;
+  @IsIn([7, 30, 90, 180, 365])
+  expiresInDays: number;
 }
