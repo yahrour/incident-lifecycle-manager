@@ -1,14 +1,14 @@
 jest.mock("src/common/prisma/prisma.service", () => ({
   PrismaService: class {},
 }));
-jest.mock("src/modules/organization/oncall/oncall.service", () => ({
+jest.mock("src/modules/oncall/oncall.service", () => ({
   OnCallService: class {},
 }));
 
 import { IncidentsService } from "./incidents.service";
 import { ConflictException } from "@nestjs/common";
 import type { PrismaService } from "src/common/prisma/prisma.service";
-import type { OnCallService } from "src/modules/organization/oncall/oncall.service";
+import type { OnCallService } from "src/modules/oncall/oncall.service";
 
 describe("IncidentsService", () => {
   const incident = {
