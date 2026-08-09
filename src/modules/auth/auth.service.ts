@@ -223,4 +223,37 @@ export class AuthService {
     }
     return { message: "Logged out successfully" };
   }
+
+  async requestPasswordReset(email: string) {
+    // const start = Date.now();
+    const user = await this.userService.findByEmail(email);
+
+    if (user) {
+      const { rawToken, hashedToken } = generateSecureToken();
+      await this.prisma.resetToken.create({
+        data: {
+          token: hashedToken,
+          userId: user.id,
+          expiresAt: new Date(Date.now() + 1000 * 60 * 60),
+        },
+      });
+
+      const resetUrl = `${this.configService.get("FRONTEND_URL")}/reset-password?token=${rawToken}`;
+
+      try {
+        await this.mailService.sendPasswordReset(
+          user.email,
+          user.firstName,
+          resetUrl
+        );
+      } catch (error) {
+        // this.logger.error("Failed to send password reset email", error); // at least log it
+        console.log(error);
+      }
+    }
+
+    // await this.padToMinimumDuration(start, 500);
+
+    return { message: "If that email exists, a reset link has been sent." };
+  }
 }

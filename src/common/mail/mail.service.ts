@@ -2,6 +2,7 @@
 import { Injectable } from "@nestjs/common";
 import { MailerService } from "@nestjs-modules/mailer";
 import { emailConfirmationTemplate } from "./templates/email-confirmation.template";
+import { passwordResetTemplate } from "./templates/password-reset.template";
 // import { inviteTemplate } from "./templates/invite.template";
 
 @Injectable()
@@ -36,6 +37,13 @@ export class MailService {
         heading: "Confirm your new email",
         message: "Click below to confirm this is your new email address.",
       }),
+    });
+  }
+  async sendPasswordReset(to: string, name: string, resetUrl: string) {
+    await this.mailerService.sendMail({
+      to,
+      subject: "Reset your password",
+      html: passwordResetTemplate(name, resetUrl),
     });
   }
 }
