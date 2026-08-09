@@ -5,6 +5,7 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
+  Logger,
 } from "@nestjs/common";
 import { BcryptService } from "../security/bcrypt.service";
 import { SignUp } from "./dto/sign-up.dto";
@@ -20,6 +21,7 @@ import { MailService } from "@/common/mail/mail.service";
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   constructor(
     private readonly bcrypt: BcryptService,
     private readonly userService: UsersService,
@@ -218,7 +220,7 @@ export class AuthService {
           where: { tokenHash: hashToken(refreshToken) },
         });
       } catch (error) {
-        console.error("Failed to revoke refresh token on logout:", error);
+        this.logger.error("Failed to revoke refresh token on logout:", error);
       }
     }
     return { message: "Logged out successfully" };
@@ -234,7 +236,7 @@ export class AuthService {
         data: {
           token: hashedToken,
           userId: user.id,
-          expiresAt: new Date(Date.now() + 1000 * 60 * 60),
+          expiresAt: new Date(Date.now() + 3 * 1000 * 60 * 60),
         },
       });
 
@@ -247,13 +249,50 @@ export class AuthService {
           resetUrl
         );
       } catch (error) {
-        // this.logger.error("Failed to send password reset email", error); // at least log it
-        console.log(error);
+        this.logger.error("Failed to send password reset email", error);
       }
     }
 
     // await this.padToMinimumDuration(start, 500);
 
     return { message: "If that email exists, a reset link has been sent." };
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const hashedToken = hashToken(token);
+
+    return this.prisma.$transaction(async (prisma) => {
+      const resetToken = await prisma.resetToken.findUnique({
+        where: { token: hashedToken },
+      });
+
+      if (!resetToken) {
+        throw new NotFoundException("Invalid reset link");
+      }
+      if (resetToken.expiresAt < new Date()) {
+        throw new GoneException("This reset link has expired.");
+      }
+      if (resetToken.used) {
+        throw new ConflictException("This reset link has already been used.");
+      }
+
+      const passwordHash = await this.bcrypt.hash(newPassword);
+
+      await prisma.resetToken.update({
+        where: { id: resetToken.id },
+        data: { used: true },
+      });
+      await prisma.user.update({
+        where: { id: resetToken.userId },
+        data: { passwordHash },
+      });
+
+      // same as email-change: kill all existing sessions after a password reset
+      await prisma.refreshToken.deleteMany({
+        where: { userId: resetToken.userId },
+      });
+
+      return { message: "Password reset successfully" };
+    });
   }
 }

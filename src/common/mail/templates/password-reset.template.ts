@@ -9,7 +9,7 @@ export function passwordResetTemplate(
       <body style="font-family: -apple-system, sans-serif; max-width: 500px; margin: auto; color: #24292f;">
         <p>Hi ${name},</p>
 
-        <p>We heard that you lost your password for [Your App Name]. Sorry about that!</p>
+        <p>We heard that you lost your password for Pules. Sorry about that!</p>
 
         <p>But don't worry! You can use the button below to reset your password:</p>
 
