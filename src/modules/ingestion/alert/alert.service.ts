@@ -28,10 +28,9 @@ export class AlertService {
       return false;
     }
 
-    // await this.prisma.apiKey.update({
-    //   where: { id: apiKey.id },
-    //   data: { lastUsedAt: new Date() },
-    // });
+    if (apiKey.expiresAt && new Date() > apiKey.expiresAt) {
+      return false;
+    }
 
     return true;
   }
