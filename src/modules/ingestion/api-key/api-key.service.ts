@@ -14,11 +14,22 @@ export class ApiKeyService {
   private hashApiKey(rawKey: string) {
     return createHash("sha256").update(rawKey).digest("hex");
   }
+  private async findOwnedApiKey(ownerId: string, id: string) {
+    return this.prisma.apiKey.findFirst({
+      where: { ownerId, id },
+    });
+  }
 
-  async create(ownerId: string, name: string) {
+  async create(ownerId: string, name: string, expiresInDays?: number) {
     const rawKey = `alert_${randomBytes(32).toString("hex")}`;
     const keyHash = this.hashApiKey(rawKey);
     const keyPrefix = rawKey.slice(0, 12);
+
+    const DEFAULT_TTL_DAYS = 90;
+    const ttl = expiresInDays ?? DEFAULT_TTL_DAYS;
+    const expiresAt = ttl
+      ? new Date(Date.now() + ttl * 24 * 60 * 60 * 1000)
+      : undefined;
 
     try {
       await this.prisma.apiKey.create({
@@ -27,6 +38,7 @@ export class ApiKeyService {
           name,
           keyPrefix,
           keyHash,
+          expiresAt,
         },
       });
     } catch (error) {
@@ -42,6 +54,7 @@ export class ApiKeyService {
     return {
       apiKey: rawKey,
       prefix: keyPrefix,
+      expiresAt: expiresAt ? expiresAt.toISOString() : undefined,
     };
   }
 
@@ -54,16 +67,31 @@ export class ApiKeyService {
         keyPrefix: true,
         enabled: true,
         createdAt: true,
+        expiresAt: true,
       },
     });
 
-    return apiKeys;
+    const now = new Date();
+
+    return apiKeys.map((apiKey) => {
+      const expiresAt = apiKey.expiresAt;
+      const hasExpiry = expiresAt !== null;
+      const isExpired = hasExpiry && expiresAt < now;
+
+      return {
+        id: apiKey.id,
+        name: apiKey.name,
+        keyPrefix: apiKey.keyPrefix,
+        enabled: apiKey.enabled,
+        createdAt: apiKey.createdAt,
+        expiresAt: hasExpiry ? expiresAt.toISOString() : null,
+        isExpired,
+      };
+    });
   }
 
   async disable(ownerId: string, id: string) {
-    const apiKey = await this.prisma.apiKey.findUnique({
-      where: { ownerId, id },
-    });
+    const apiKey = await this.findOwnedApiKey(ownerId, id);
 
     if (!apiKey) {
       throw new NotFoundException("API key not found");
@@ -76,9 +104,7 @@ export class ApiKeyService {
   }
 
   async enable(ownerId: string, id: string) {
-    const apiKey = await this.prisma.apiKey.findUnique({
-      where: { ownerId, id },
-    });
+    const apiKey = await this.findOwnedApiKey(ownerId, id);
 
     if (!apiKey) {
       throw new NotFoundException("API key not found");
@@ -91,9 +117,7 @@ export class ApiKeyService {
   }
 
   async delete(ownerId: string, id: string) {
-    const apiKey = await this.prisma.apiKey.findUnique({
-      where: { ownerId, id },
-    });
+    const apiKey = await this.findOwnedApiKey(ownerId, id);
 
     if (!apiKey) {
       throw new NotFoundException("API key not found");
