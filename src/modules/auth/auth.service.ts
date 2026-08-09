@@ -107,7 +107,7 @@ export class AuthService {
         user.id,
         accessTtl,
         this.configService.getOrThrow<string>("JWT_SECRET"),
-        { email: user.email, role: user.role }
+        { role: user.role }
       ),
       this.signToken(
         user.id,
@@ -116,11 +116,19 @@ export class AuthService {
       ),
     ]);
 
+    await this.prisma.refreshToken.create({
+      data: {
+        userId: user.id,
+        tokenHash: hashToken(refreshToken),
+      },
+    });
+
     return {
       accessToken,
       refreshToken,
     };
   }
+
   private async signToken<T>(
     userId: string,
     expiresIn: number,
@@ -151,10 +159,17 @@ export class AuthService {
         issuer: this.configService.getOrThrow<string>("JWT_ISSUER"),
       });
 
+      const stored = await this.prisma.refreshToken.findUnique({
+        where: { tokenHash: hashToken(refrechToken) },
+      });
+      if (!stored) {
+        throw new UnauthorizedException("Invalid or expired refresh token");
+      }
       const user = await this.userService.findById(sub);
       if (!user) {
         throw new UnauthorizedException("User not found");
       }
+      await this.prisma.refreshToken.delete({ where: { id: stored.id } });
       return this.generateTokens(user);
     } catch {
       throw new UnauthorizedException("Invalid or expired refresh token");
@@ -194,5 +209,18 @@ export class AuthService {
       });
       return { message: "Email verified successfully" };
     });
+  }
+
+  async logout(refreshToken?: string) {
+    if (refreshToken) {
+      try {
+        await this.prisma.refreshToken.deleteMany({
+          where: { tokenHash: hashToken(refreshToken) },
+        });
+      } catch (error) {
+        console.error("Failed to revoke refresh token on logout:", error);
+      }
+    }
+    return { message: "Logged out successfully" };
   }
 }
