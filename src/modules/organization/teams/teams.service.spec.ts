@@ -369,6 +369,7 @@ describe("TeamsService", () => {
 
     const makeTeam = (index: number) => ({
       id: `${TEAM_ID}${index}`,
+      ownerId: OWNER_ID,
       name: `frontend-${index}`,
       description: "frontend team",
       rotationPeriodDays: 7,
@@ -377,6 +378,7 @@ describe("TeamsService", () => {
       currentRotationIndex: 0,
       lastRotatedAt: NOW_DATE,
       createdAt: NOW_DATE,
+      updatedAt: NOW_DATE,
     });
 
     it("should return teams scoped to the owner without a next cursor when there is no next page", async () => {
