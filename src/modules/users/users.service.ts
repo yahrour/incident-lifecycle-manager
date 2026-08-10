@@ -254,7 +254,6 @@ export class UsersService {
       await prisma.refreshToken.deleteMany({
         where: { userId: emailToken.userId },
       });
-
       return { message: "Email updated successfully" };
     });
   }
