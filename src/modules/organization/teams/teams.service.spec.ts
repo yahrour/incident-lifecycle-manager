@@ -6,7 +6,19 @@ import { TeamsService } from "./teams.service";
 import { createMockPrisma, MockPrisma } from "../../../../test/prisma-mock";
 import { convertDateToUtc } from "@/common/utils/timezone";
 import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
-import { ConflictException, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from "@nestjs/common";
+import { SORT_FIELD } from "./constants";
+import { SORT_ORDER } from "@/common/constants";
+
+const encodeCursor = (cursor: {
+  id: string;
+  sortField: SORT_FIELD;
+  sortOrder: SORT_ORDER;
+}) => Buffer.from(JSON.stringify(cursor)).toString("base64url");
 
 const TEAM_ID = "teamId";
 const OWNER_ID = "ownerId";
@@ -348,5 +360,176 @@ describe("TeamsService", () => {
     });
   });
 
-  // TODO: findAll
+  describe("findAll", () => {
+    const defaultQuery = {
+      limit: 20,
+      sortField: SORT_FIELD.CREATED_AT,
+      sortOrder: SORT_ORDER.ASC,
+    };
+
+    const makeTeam = (index: number) => ({
+      id: `${TEAM_ID}${index}`,
+      name: `frontend-${index}`,
+      description: "frontend team",
+      rotationPeriodDays: 7,
+      rotationStartDate: NOW_DATE,
+      escalationTimeoutMinutes: 30,
+      currentRotationIndex: 0,
+      lastRotatedAt: NOW_DATE,
+      createdAt: NOW_DATE,
+    });
+
+    it("should return teams scoped to the owner without a next cursor when there is no next page", async () => {
+      const teams = [makeTeam(1), makeTeam(2)];
+      prisma.team.findMany.mockResolvedValue(teams);
+
+      const result = await service.findAll(OWNER_ID, defaultQuery);
+
+      expect(result).toEqual({ teams, nextCursor: null });
+
+      expect(prisma.team.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { ownerId: OWNER_ID },
+          take: defaultQuery.limit + 1,
+          orderBy: [
+            { [defaultQuery.sortField]: defaultQuery.sortOrder },
+            { id: defaultQuery.sortOrder },
+          ],
+        })
+      );
+    });
+
+    it("should return an empty list and no next cursor when there are no teams", async () => {
+      prisma.team.findMany.mockResolvedValue([]);
+
+      const result = await service.findAll(OWNER_ID, defaultQuery);
+
+      expect(result).toEqual({ teams: [], nextCursor: null });
+    });
+
+    it("should return a next cursor when there are more pages and truncate the results to the limit", async () => {
+      const teams = [makeTeam(1), makeTeam(2), makeTeam(3)];
+      prisma.team.findMany.mockResolvedValue(teams);
+
+      const result = await service.findAll(OWNER_ID, {
+        ...defaultQuery,
+        limit: 2,
+      });
+
+      expect(result.teams).toEqual([makeTeam(1), makeTeam(2)]);
+
+      const decodedCursor = result.nextCursor
+        ? JSON.parse(
+            Buffer.from(result.nextCursor, "base64url").toString("utf-8")
+          )
+        : null;
+      expect(decodedCursor).toEqual({
+        id: makeTeam(2).id,
+        sortField: defaultQuery.sortField,
+        sortOrder: defaultQuery.sortOrder,
+      });
+    });
+
+    it("should filter by search using a case-insensitive name match", async () => {
+      const teams = [makeTeam(1)];
+      prisma.team.findMany.mockResolvedValue(teams);
+
+      const search = "frontend";
+      const result = await service.findAll(OWNER_ID, {
+        ...defaultQuery,
+        search,
+      });
+
+      expect(result).toEqual({ teams, nextCursor: null });
+
+      expect(prisma.team.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            ownerId: OWNER_ID,
+            name: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+        })
+      );
+    });
+
+    it("should skip the cursor record when a cursor is provided", async () => {
+      const cursorId = "6015a4a0-b9ea-4a4d-85e1-5f0b4c8d0e2f";
+      const cursor = encodeCursor({
+        id: cursorId,
+        sortField: defaultQuery.sortField,
+        sortOrder: defaultQuery.sortOrder,
+      });
+      prisma.team.findMany.mockResolvedValue([makeTeam(2)]);
+
+      await service.findAll(OWNER_ID, { ...defaultQuery, cursor });
+
+      expect(prisma.team.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skip: 1,
+          cursor: { id: cursorId },
+        })
+      );
+    });
+
+    it("should combine cursor pagination with truncation and produce the next cursor when a page follows", async () => {
+      const cursorId = "6015a4a0-b9ea-4a4d-85e1-5f0b4c8d0e2f";
+      const cursor = encodeCursor({
+        id: cursorId,
+        sortField: defaultQuery.sortField,
+        sortOrder: defaultQuery.sortOrder,
+      });
+
+      // 3 rows returned from Prisma (2 fit the page, 1 signals a next page)
+      prisma.team.findMany.mockResolvedValue([
+        makeTeam(1),
+        makeTeam(2),
+        makeTeam(3),
+      ]);
+
+      const result = await service.findAll(OWNER_ID, {
+        ...defaultQuery,
+        cursor,
+        limit: 2,
+      });
+
+      expect(result.teams).toEqual([makeTeam(1), makeTeam(2)]);
+
+      const decodedCursor = result.nextCursor
+        ? JSON.parse(
+            Buffer.from(result.nextCursor, "base64url").toString("utf-8")
+          )
+        : null;
+      expect(decodedCursor).toEqual({
+        id: makeTeam(2).id,
+        sortField: SORT_FIELD.CREATED_AT,
+        sortOrder: SORT_ORDER.ASC,
+      });
+    });
+
+    it("should throw BadRequestException when the cursor sort parameters do not match the query", async () => {
+      const cursor = encodeCursor({
+        id: "6015a4a0-b9ea-4a4d-85e1-5f0b4c8d0e2f",
+        sortField: SORT_FIELD.NAME,
+        sortOrder: defaultQuery.sortOrder,
+      });
+
+      await expect(
+        service.findAll(OWNER_ID, { ...defaultQuery, cursor })
+      ).rejects.toThrow(BadRequestException);
+      expect(prisma.team.findMany).not.toHaveBeenCalled();
+    });
+
+    it("should throw BadRequestException when the cursor is invalid", async () => {
+      await expect(
+        service.findAll(OWNER_ID, {
+          ...defaultQuery,
+          cursor: "not-a-valid-cursor",
+        })
+      ).rejects.toThrow(BadRequestException);
+      expect(prisma.team.findMany).not.toHaveBeenCalled();
+    });
+  });
 });
