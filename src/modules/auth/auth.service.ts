@@ -287,7 +287,7 @@ export class AuthService {
         data: { passwordHash },
       });
 
-      // same as email-change: kill all existing sessions after a password reset
+      // same as email-change: revoke all existing sessions after a password reset
       await prisma.refreshToken.deleteMany({
         where: { userId: resetToken.userId },
       });
