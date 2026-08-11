@@ -327,57 +327,67 @@ export class UnavailabilityService {
       );
     }
 
-    const teamUnavailabilities = await this.prisma.unavailability.findMany({
-      where: {
-        teamMember: {
-          teamId,
-          team: { ownerId: requesterId },
+    try {
+      const teamUnavailabilities = await this.prisma.unavailability.findMany({
+        where: {
+          teamMember: {
+            teamId,
+            team: { ownerId: requesterId },
+          },
         },
-      },
-      include: {
-        teamMember: {
-          select: {
-            id: true,
-            user: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true,
-                specialty: true,
+        include: {
+          teamMember: {
+            select: {
+              id: true,
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                  specialty: true,
+                },
               },
             },
           },
         },
-      },
-      take: query.limit + 1,
-      ...(cursor && {
-        skip: 1,
-        cursor: {
-          id: cursor.id,
-        },
-      }),
-      orderBy: [
-        {
-          [query.sortField]: query.sortOrder,
-        },
-        { id: query.sortOrder },
-      ],
-    });
+        take: query.limit + 1,
+        ...(cursor && {
+          skip: 1,
+          cursor: {
+            id: cursor.id,
+          },
+        }),
+        orderBy: [
+          {
+            [query.sortField]: query.sortOrder,
+          },
+          { id: query.sortOrder },
+        ],
+      });
 
-    const hasNextPage = teamUnavailabilities.length > query.limit;
-    const unavailabilities = hasNextPage
-      ? teamUnavailabilities.slice(0, query.limit)
-      : teamUnavailabilities;
-    const nextCursor = hasNextPage
-      ? this.encodeCursor({
-          id: unavailabilities[unavailabilities.length - 1].id,
-          sortField: query.sortField,
-          sortOrder: query.sortOrder,
-        })
-      : null;
+      const hasNextPage = teamUnavailabilities.length > query.limit;
+      const unavailabilities = hasNextPage
+        ? teamUnavailabilities.slice(0, query.limit)
+        : teamUnavailabilities;
+      const nextCursor = hasNextPage
+        ? this.encodeCursor({
+            id: unavailabilities[unavailabilities.length - 1].id,
+            sortField: query.sortField,
+            sortOrder: query.sortOrder,
+          })
+        : null;
 
-    return { unavailabilities, nextCursor };
+      return { unavailabilities, nextCursor };
+    } catch (error) {
+      if (
+        error instanceof PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        throw new NotFoundException("Unavailability not found");
+      }
+      throw error;
+    }
   }
 
   async findPending(
