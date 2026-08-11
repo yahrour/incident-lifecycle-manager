@@ -1,0 +1,15 @@
+model ApiKey {
+  id        String   @id @default(uuid()) @db.Uuid
+  ownerId   String   @map("owner_id") @db.Uuid
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name      String
+  keyPrefix String   @map("key_prefix") @db.VarChar(12)
+  keyHash   String   @unique @map("key_hash")
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@unique([ownerId, name], name: "unique_owner_name")
+  @@map("api_keys")
+  @@schema("ingestion")
+}
