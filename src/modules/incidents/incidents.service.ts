@@ -168,6 +168,36 @@ export class IncidentsService {
     });
   }
 
+  async reassign(ownerId: string, incidentId: string, assigneeId: string) {
+    const incident = await this.prisma.incident.findFirst({
+      where: { id: incidentId, team: { ownerId } },
+      select: { id: true, teamId: true },
+    });
+
+    if (!incident) throw new NotFoundException("Incident doesn't exist");
+    if (!incident.teamId) throw new ConflictException("Incident has no team");
+
+    const member = await this.prisma.teamMember.findFirst({
+      where: { teamId: incident.teamId, userId: assigneeId },
+    });
+    if (!member) {
+      throw new NotFoundException(
+        "Assignee is not a member of the incident team"
+      );
+    }
+
+    return this.prisma.incident.update({
+      where: { id: incidentId },
+      data: { assignedToId: assigneeId },
+      include: {
+        team: { select: { id: true, name: true } },
+        assignedTo: {
+          select: { id: true, firstName: true, lastName: true, email: true },
+        },
+      },
+    });
+  }
+
   async acknowledge(userId: string, incidentId: string) {
     const incident = await this.prisma.incident.findUnique({
       where: { id: incidentId },

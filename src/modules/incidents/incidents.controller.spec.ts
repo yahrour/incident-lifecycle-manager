@@ -36,6 +36,32 @@ describe("IncidentsController", () => {
     ).resolves.toEqual({ data: incident });
   });
 
+  it("wraps a created incident in data", async () => {
+    const incident = { id: "incident-id", status: "open" };
+    const incidentsService = {
+      create: jest.fn().mockResolvedValue(incident),
+    };
+    const controller = new IncidentsController(incidentsService as never);
+
+    await expect(
+      controller.create({} as never, { sub: "user-id" } as never)
+    ).resolves.toEqual({ data: incident });
+  });
+
+  it("wraps a reassigned incident in data", async () => {
+    const incident = { id: "incident-id", assignedToId: "engineer-id" };
+    const incidentsService = {
+      reassign: jest.fn().mockResolvedValue(incident),
+    };
+    const controller = new IncidentsController(incidentsService as never);
+
+    await expect(
+      controller.reassign("incident-id", { assigneeId: "engineer-id" }, {
+        sub: "owner-id",
+      } as never)
+    ).resolves.toEqual({ data: incident });
+  });
+
   it("wraps an acknowledged incident in data", async () => {
     const incident = { id: "incident-id", status: "acknowledged" };
     const incidentsService = {

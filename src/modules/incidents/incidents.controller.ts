@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Query,
 } from "@nestjs/common";
@@ -14,6 +15,7 @@ import type { ActiveUserData } from "@/common/interfaces/active-user.interface";
 import { apiResponse } from "@/common/utils/api-response";
 import { CreateIncidentDto } from "./dto/create-incident.dto";
 import { FindIncidentsDto } from "./dto/find-incidents.dto";
+import { ReassignIncidentDto } from "./dto/reassign-incident.dto";
 import { IncidentsService } from "./incidents.service";
 
 @Controller({ path: "incidents", version: "1" })
@@ -46,11 +48,30 @@ export class IncidentsController {
 
   @Post()
   @Roles(Role.SRE)
-  create(
+  async create(
     @Body() createIncidentDto: CreateIncidentDto,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.incidentsService.create(user.sub, createIncidentDto);
+    const incident = await this.incidentsService.create(
+      user.sub,
+      createIncidentDto
+    );
+    return apiResponse(incident);
+  }
+
+  @Patch(":id/assignee")
+  @Roles(Role.SRE)
+  async reassign(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() reassignIncidentDto: ReassignIncidentDto,
+    @ActiveUser() user: ActiveUserData
+  ) {
+    const incident = await this.incidentsService.reassign(
+      user.sub,
+      id,
+      reassignIncidentDto.assigneeId
+    );
+    return apiResponse(incident);
   }
 
   @Post(":id/acknowledge")
