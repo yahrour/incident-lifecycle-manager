@@ -131,44 +131,56 @@ export class TeamsService {
       );
     }
 
-    const teamRows = await this.prisma.team.findMany({
-      where: {
-        ownerId,
-        ...(query.search && {
-          name: {
-            contains: query.search,
-            mode: "insensitive",
+    try {
+      const teamRows = await this.prisma.team.findMany({
+        where: {
+          ownerId,
+          ...(query.search && {
+            name: {
+              contains: query.search,
+              mode: "insensitive",
+            },
+          }),
+        },
+        take: query.limit + 1,
+        ...(cursor && {
+          skip: 1,
+          cursor: {
+            id: cursor.id,
           },
         }),
-      },
-      take: query.limit + 1,
-      ...(cursor && {
-        skip: 1,
-        cursor: {
-          id: cursor.id,
+        orderBy: [
+          { [query.sortField]: query.sortOrder },
+          { id: query.sortOrder },
+        ],
+        omit: {
+          ownerId: true,
+          updatedAt: true,
         },
-      }),
-      orderBy: [
-        { [query.sortField]: query.sortOrder },
-        { id: query.sortOrder },
-      ],
-      omit: {
-        ownerId: true,
-        updatedAt: true,
-      },
-    });
+      });
 
-    const hasNextPage = teamRows.length > query.limit;
-    const teams = hasNextPage ? teamRows.slice(0, query.limit) : teamRows;
-    const nextCursor = hasNextPage
-      ? this.encodeCursor({
-          id: teams[teams.length - 1].id,
-          sortField: query.sortField,
-          sortOrder: query.sortOrder,
-        })
-      : null;
+      const hasNextPage = teamRows.length > query.limit;
+      const teams = hasNextPage ? teamRows.slice(0, query.limit) : teamRows;
+      const nextCursor = hasNextPage
+        ? this.encodeCursor({
+            id: teams[teams.length - 1].id,
+            sortField: query.sortField,
+            sortOrder: query.sortOrder,
+          })
+        : null;
 
-    return { teams, nextCursor };
+      return { teams, nextCursor };
+    } catch (error) {
+      if (
+        error instanceof PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        throw new NotFoundException(
+          "Cursor references a no-longer-existing team"
+        );
+      }
+      throw error;
+    }
   }
 
   async findOne(id: string, ownerId: string) {
