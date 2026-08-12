@@ -28,6 +28,7 @@ model User {
   ownedTeams              Team[]
   teamMembers             TeamMember[]
   assignedIncidents       Incident[]               @relation("IncidentAssignee")
+  incidentNotes           IncidentNote[]
 
   @@map("users")
   @@schema("auth")

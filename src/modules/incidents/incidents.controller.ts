@@ -14,6 +14,7 @@ import type { ActiveUserData } from "@/common/interfaces/active-user.interface";
 import { apiResponse } from "@/common/utils/api-response";
 import { CreateIncidentDto } from "./dto/create-incident.dto";
 import { FindIncidentsDto } from "./dto/find-incidents.dto";
+import { CreateIncidentNoteDto } from "./dto/create-incident-note.dto";
 import { IncidentsService } from "./incidents.service";
 
 @Controller({ path: "incidents", version: "1" })
@@ -42,6 +43,21 @@ export class IncidentsController {
   ) {
     const incident = await this.incidentsService.findOne(user.sub, id);
     return apiResponse(incident);
+  }
+
+  @Post(":id/notes")
+  @Roles(Role.SRE, Role.ENGINEER)
+  async createNote(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() createIncidentNoteDto: CreateIncidentNoteDto,
+    @ActiveUser() user: ActiveUserData
+  ) {
+    const note = await this.incidentsService.createNote(
+      user.sub,
+      id,
+      createIncidentNoteDto.content
+    );
+    return apiResponse(note);
   }
 
   @Post()
