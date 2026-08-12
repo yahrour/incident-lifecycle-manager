@@ -6,7 +6,7 @@ jest.mock("src/modules/oncall/oncall.service", () => ({
 }));
 
 import { IncidentsService } from "./incidents.service";
-import { ConflictException } from "@nestjs/common";
+import { ConflictException, NotFoundException } from "@nestjs/common";
 import type { PrismaService } from "src/common/prisma/prisma.service";
 import type { OnCallService } from "src/modules/oncall/oncall.service";
 
@@ -78,6 +78,49 @@ describe("IncidentsService", () => {
         ],
       })
     );
+  });
+
+  it("creates a note for an incident the user can access", async () => {
+    const findFirst = jest.fn().mockResolvedValue({ id: "incident-id" });
+    const create = jest.fn().mockResolvedValue({
+      id: "note-id",
+      content: "Mitigation started",
+      authorId: "user-id",
+    });
+    const prisma = {
+      incident: { findFirst },
+      incidentNote: { create },
+    } as unknown as PrismaService;
+    const service = new IncidentsService(prisma, {} as OnCallService);
+
+    await expect(
+      service.createNote("user-id", "incident-id", "Mitigation started")
+    ).resolves.toEqual({
+      id: "note-id",
+      content: "Mitigation started",
+      authorId: "user-id",
+    });
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: {
+          incidentId: "incident-id",
+          authorId: "user-id",
+          content: "Mitigation started",
+        },
+      })
+    );
+  });
+
+  it("rejects notes for incidents the user cannot access", async () => {
+    const prisma = {
+      incident: { findFirst: jest.fn().mockResolvedValue(null) },
+      incidentNote: { create: jest.fn() },
+    } as unknown as PrismaService;
+    const service = new IncidentsService(prisma, {} as OnCallService);
+
+    await expect(
+      service.createNote("user-id", "incident-id", "Private update")
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it("keeps unresolved metrics and events empty when an incident is open", async () => {
