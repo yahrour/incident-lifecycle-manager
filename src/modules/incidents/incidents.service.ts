@@ -59,6 +59,7 @@ export class IncidentsService {
         ...(query.status ? [{ status: query.status }] : []),
         ...(query.severity ? [{ severity: query.severity }] : []),
         ...(query.teamId ? [{ teamId: query.teamId }] : []),
+        ...(query.assigneeId ? [{ assignedToId: query.assigneeId }] : []),
         ...(query.search
           ? [
               {
