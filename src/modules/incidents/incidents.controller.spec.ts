@@ -36,6 +36,20 @@ describe("IncidentsController", () => {
     ).resolves.toEqual({ data: incident });
   });
 
+  it("wraps a created note in data", async () => {
+    const note = { id: "note-id", content: "Mitigation started" };
+    const incidentsService = {
+      createNote: jest.fn().mockResolvedValue(note),
+    };
+    const controller = new IncidentsController(incidentsService as never);
+
+    await expect(
+      controller.createNote("incident-id", { content: note.content }, {
+        sub: "user-id",
+      } as never)
+    ).resolves.toEqual({ data: note });
+  });
+
   it("wraps an acknowledged incident in data", async () => {
     const incident = { id: "incident-id", status: "acknowledged" };
     const incidentsService = {

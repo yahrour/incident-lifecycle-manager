@@ -122,6 +122,19 @@ export class IncidentsService {
         assignedTo: {
           select: { id: true, firstName: true, lastName: true, email: true },
         },
+        notes: {
+          orderBy: { createdAt: "asc" },
+          include: {
+            author: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -145,6 +158,31 @@ export class IncidentsService {
       },
       timeline,
     };
+  }
+
+  async createNote(userId: string, incidentId: string, content: string) {
+    const incident = await this.prisma.incident.findFirst({
+      where: {
+        id: incidentId,
+        OR: [
+          { assignedToId: userId },
+          { team: { ownerId: userId } },
+          { team: { teamMembers: { some: { userId } } } },
+        ],
+      },
+      select: { id: true },
+    });
+
+    if (!incident) throw new NotFoundException("Incident doesn't exist");
+
+    return this.prisma.incidentNote.create({
+      data: { incidentId: incident.id, authorId: userId, content },
+      include: {
+        author: {
+          select: { id: true, firstName: true, lastName: true, email: true },
+        },
+      },
+    });
   }
 
   async create(ownerId: string, createIncidentDto: CreateIncidentDto) {
