@@ -6,7 +6,7 @@ jest.mock("src/modules/oncall/oncall.service", () => ({
 }));
 
 import { IncidentsService } from "./incidents.service";
-import { ConflictException } from "@nestjs/common";
+import { ConflictException, NotFoundException } from "@nestjs/common";
 import type { PrismaService } from "src/common/prisma/prisma.service";
 import type { OnCallService } from "src/modules/oncall/oncall.service";
 
@@ -52,6 +52,54 @@ describe("IncidentsService", () => {
       expect(create).not.toHaveBeenCalled();
     }
   );
+
+  it("reassigns an incident to a member of its team", async () => {
+    const findIncident = jest
+      .fn()
+      .mockResolvedValue({ id: "incident-id", teamId: "team-id" });
+    const findMember = jest.fn().mockResolvedValue({ userId: "engineer-id" });
+    const update = jest.fn().mockResolvedValue({
+      id: "incident-id",
+      assignedToId: "engineer-id",
+    });
+    const prisma = {
+      incident: { findFirst: findIncident, update },
+      teamMember: { findFirst: findMember },
+    } as unknown as PrismaService;
+    const service = new IncidentsService(prisma, {} as OnCallService);
+
+    await expect(
+      service.reassign("owner-id", "incident-id", "engineer-id")
+    ).resolves.toEqual({
+      id: "incident-id",
+      assignedToId: "engineer-id",
+    });
+    expect(findMember).toHaveBeenCalledWith({
+      where: { teamId: "team-id", userId: "engineer-id" },
+    });
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "incident-id" },
+        data: { assignedToId: "engineer-id" },
+      })
+    );
+  });
+
+  it("rejects reassignment to a user outside the incident team", async () => {
+    const prisma = {
+      incident: {
+        findFirst: jest
+          .fn()
+          .mockResolvedValue({ id: "incident-id", teamId: "team-id" }),
+      },
+      teamMember: { findFirst: jest.fn().mockResolvedValue(null) },
+    } as unknown as PrismaService;
+    const service = new IncidentsService(prisma, {} as OnCallService);
+
+    await expect(
+      service.reassign("owner-id", "incident-id", "outsider-id")
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
 
   it("derives lifecycle timeline from incident timestamps", async () => {
     const createdAt = new Date("2026-01-01T00:00:00.000Z");
