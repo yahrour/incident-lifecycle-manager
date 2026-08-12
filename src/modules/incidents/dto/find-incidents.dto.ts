@@ -28,6 +28,10 @@ export class FindIncidentsDto {
   teamId?: string;
 
   @IsOptional()
+  @IsUUID()
+  assigneeId?: string;
+
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
