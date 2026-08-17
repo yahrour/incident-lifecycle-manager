@@ -8,7 +8,8 @@ export class DatadogAdapter extends AlertAdapter<DatadogWebhookPayload> {
   normalize(payload: DatadogWebhookPayload): CommonAlert {
     return {
       provider: "datadog",
-      title: payload.title ?? "Datadog alert",
+      serviceName: payload.serviceName,
+      title: payload.title,
       message: payload.text,
       severity: this.mapSeverity(payload.priority),
       occurredAt: this.mapOccurredAt(payload.date),
