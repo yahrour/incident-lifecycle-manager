@@ -1,6 +1,8 @@
 import {
+  Body,
   Controller,
   Headers,
+  Param,
   Post,
   UnauthorizedException,
 } from "@nestjs/common";
@@ -14,15 +16,17 @@ import { AlertService } from "./alert.service";
 export class AlertController {
   constructor(private readonly alert: AlertService) {}
 
-  @Post()
+  @Post(":provider")
   @Public()
-  async ingestAlert(@Headers("x-api-key") apiKey: string) {
+  async ingestAlert(
+    @Param("provider") provider: string,
+    @Headers("x-api-key") apiKey: string,
+    @Body() payload: unknown
+  ) {
     const trusted = await this.alert.verifyApiKey(apiKey);
 
-    if (!trusted) {
-      throw new UnauthorizedException("Invalid ingestion API key");
-    }
+    if (!trusted) throw new UnauthorizedException("Invalid ingestion API key");
 
-    return { ok: true };
+    return this.alert.normalizeAlert(provider, payload);
   }
 }
