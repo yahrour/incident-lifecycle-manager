@@ -47,16 +47,16 @@ export class InviteService {
     // generate new token
     const { rawToken, hashedToken } = generateSecureToken();
 
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + createInvite.expiresIn);
+    const inviteTtlDays = this.configService.getOrThrow<number>(
+      "INVITE_TOKEN_TTL_DAYS"
+    );
 
     await this.prisma.inviteToken.create({
       data: {
         token: hashedToken,
         email: createInvite.inviteEmail,
         teamId: createInvite.teamId,
-        expiresAt,
-        used: false,
+        expiresAt: new Date(Date.now() + inviteTtlDays * 24 * 60 * 60 * 1000),
       },
     });
 

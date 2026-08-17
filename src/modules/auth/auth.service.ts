@@ -42,6 +42,10 @@ export class AuthService {
      * intentionally kept outside the transaction — an SMTP failure shouldn't
      * roll back a valid signup, just leave a resendable unsent token.
      */
+    const emailVerifyTtlHours = this.configService.getOrThrow<number>(
+      "EMAIL_VERIFICATION_TOKEN_TTL_HOURS"
+    );
+
     const { user, rawToken } = await this.prisma.$transaction(
       async (prisma) => {
         const user = await this.userService.create(sreUserData, prisma);
@@ -51,7 +55,9 @@ export class AuthService {
           data: {
             token: hashedToken,
             userId: user.id,
-            expiresAt: new Date(Date.now() + 1000 * 60 * 60),
+            expiresAt: new Date(
+              Date.now() + emailVerifyTtlHours * 60 * 60 * 1000
+            ),
           },
         });
         return { user, rawToken };
@@ -122,6 +128,7 @@ export class AuthService {
       data: {
         userId: user.id,
         tokenHash: hashToken(refreshToken),
+        expiresAt: new Date(Date.now() + refreshTtl * 1000),
       },
     });
 
@@ -230,13 +237,17 @@ export class AuthService {
     // const start = Date.now();
     const user = await this.userService.findByEmail(email);
 
+    const resetTtlHours = this.configService.getOrThrow<number>(
+      "RESET_TOKEN_TTL_HOURS"
+    );
+
     if (user) {
       const { rawToken, hashedToken } = generateSecureToken();
       await this.prisma.resetToken.create({
         data: {
           token: hashedToken,
           userId: user.id,
-          expiresAt: new Date(Date.now() + 3 * 1000 * 60 * 60),
+          expiresAt: new Date(Date.now() + resetTtlHours * 60 * 60 * 1000),
         },
       });
 
