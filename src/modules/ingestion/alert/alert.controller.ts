@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Headers,
   Post,
@@ -6,6 +7,7 @@ import {
 } from "@nestjs/common";
 import { Public } from "@/common/decorators/public.decorator";
 import { AlertService } from "./alert.service";
+import type { DatadogWebhookPayload } from "./providers/datadog/dto/datadog-webhook.dto";
 
 @Controller({
   path: "ingestion/alerts",
@@ -14,15 +16,16 @@ import { AlertService } from "./alert.service";
 export class AlertController {
   constructor(private readonly alert: AlertService) {}
 
-  @Post()
+  @Post("datadog")
   @Public()
-  async ingestAlert(@Headers("x-api-key") apiKey: string) {
+  async ingestDatadogAlert(
+    @Headers("x-api-key") apiKey: string,
+    @Body() payload: DatadogWebhookPayload
+  ) {
     const trusted = await this.alert.verifyApiKey(apiKey);
 
-    if (!trusted) {
-      throw new UnauthorizedException("Invalid ingestion API key");
-    }
+    if (!trusted) throw new UnauthorizedException("Invalid ingestion API key");
 
-    return { ok: true };
+    return this.alert.normalizeDatadogAlert(payload);
   }
 }
