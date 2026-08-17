@@ -1,10 +1,16 @@
 import { Injectable } from "@nestjs/common";
 import { createHash } from "crypto";
 import { PrismaService } from "@/common/prisma/prisma.service";
+import { CommonAlert } from "./common/common-alert";
+import { DatadogAdapter } from "./providers/datadog/datadog.adapter";
+import { DatadogWebhookPayload } from "./providers/datadog/dto/datadog-webhook.dto";
 
 @Injectable()
 export class AlertService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly datadogAdapter: DatadogAdapter
+  ) {}
 
   private hashApiKey(rawKey: string) {
     return createHash("sha256").update(rawKey).digest("hex");
@@ -24,14 +30,14 @@ export class AlertService {
       return false;
     }
 
-    if (keyHash !== apiKey.keyHash) {
-      return false;
-    }
-
     if (apiKey.expiresAt && new Date() > apiKey.expiresAt) {
       return false;
     }
 
     return true;
+  }
+
+  normalizeDatadogAlert(payload: DatadogWebhookPayload): CommonAlert {
+    return this.datadogAdapter.normalize(payload);
   }
 }
