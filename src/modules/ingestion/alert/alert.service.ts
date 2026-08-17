@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { createHash } from "crypto";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { CommonAlert } from "./common/common-alert";
@@ -17,27 +17,28 @@ export class AlertService {
   }
 
   async verifyApiKey(providedKey?: string): Promise<boolean> {
-    if (!providedKey) {
-      return false;
-    }
+    if (!providedKey) return false;
 
     const keyHash = this.hashApiKey(providedKey);
+
     const apiKey = await this.prisma.apiKey.findUnique({
       where: { keyHash },
     });
 
-    if (!apiKey || !apiKey.enabled) {
-      return false;
-    }
+    if (!apiKey || !apiKey.enabled) return false;
 
-    if (apiKey.expiresAt && new Date() > apiKey.expiresAt) {
-      return false;
-    }
+    if (apiKey.expiresAt && new Date() > apiKey.expiresAt) return false;
 
     return true;
   }
 
-  normalizeDatadogAlert(payload: DatadogWebhookPayload): CommonAlert {
-    return this.datadogAdapter.normalize(payload);
+  normalizeAlert(provider: string, payload: unknown): CommonAlert {
+    switch (provider.toLowerCase()) {
+      case "datadog":
+        return this.datadogAdapter.normalize(payload as DatadogWebhookPayload);
+
+      default:
+        throw new NotFoundException(`Unsupported alert provider: ${provider}`);
+    }
   }
 }

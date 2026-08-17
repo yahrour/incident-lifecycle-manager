@@ -1,10 +1,9 @@
 import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class DatadogWebhookPayload {
-  @IsOptional()
   @IsString()
   @IsNotEmpty()
-  title?: string;
+  title!: string;
 
   @IsOptional()
   @IsString()
@@ -18,4 +17,9 @@ export class DatadogWebhookPayload {
   @IsString()
   @IsNotEmpty()
   priority?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  serviceName?: string;
 }
