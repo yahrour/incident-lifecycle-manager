@@ -122,6 +122,7 @@ export class AuthService {
       data: {
         userId: user.id,
         tokenHash: hashToken(refreshToken),
+        expiresAt: new Date(Date.now() + refreshTtl * 1000),
       },
     });
 
