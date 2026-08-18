@@ -31,7 +31,6 @@ export class DiscordService {
   async linkAccount(userId: string, code: string): Promise<void> {
     const accessToken = await this.exchangeCodeForToken(code);
     const discordUser = await this.fetchDiscordUser(accessToken);
-
     try {
       await this.prisma.user.update({
         where: { id: userId },

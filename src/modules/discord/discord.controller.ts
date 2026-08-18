@@ -5,7 +5,10 @@ import type { ActiveUserData } from "@/common/interfaces/active-user.interface";
 import { ActiveUser } from "@/common/decorators/active-user.decorator";
 import { ConfigService } from "@nestjs/config";
 
-@Controller("discord")
+@Controller({
+  path: "discord",
+  version: "1",
+})
 export class DiscordController {
   constructor(
     private discordAuthService: DiscordService,
@@ -20,12 +23,9 @@ export class DiscordController {
   @Get("callback")
   async callback(
     @Query("code") code: string,
-    @ActiveUser() activeUser: ActiveUserData,
-    @Res() res: Response
+    @ActiveUser() activeUser: ActiveUserData
   ) {
     await this.discordAuthService.linkAccount(activeUser.sub, code);
-    res.redirect(
-      `${this.configService.get("FRONTEND_URL")}/settings?discord=connected`
-    );
+    return { success: true, message: "Discord account successfully linked" };
   }
 }
