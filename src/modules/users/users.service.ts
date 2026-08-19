@@ -43,6 +43,7 @@ export class UsersService {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
+        timezone: data.timezone,
         passwordHash,
         role: data.role,
         specialty: data.specialty ?? null,
