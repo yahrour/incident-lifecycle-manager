@@ -91,8 +91,9 @@ export class InviteService {
             firstName: registerViaInviteDto.firstName,
             lastName: registerViaInviteDto.lastName,
             password: registerViaInviteDto.password,
+            timezone: registerViaInviteDto.timezone,
             specialty: registerViaInviteDto.specialty,
-            role: Role.SRE,
+            role: Role.ENGINEER,
           },
           tx
         );
