@@ -9,6 +9,7 @@ model Team {
   currentRotationIndex     Int          @default(0) @map("current_rotation_index")
   lastRotatedAt            DateTime     @default(now()) @map("last_rotated_at") @db.Timestamptz
   escalationTimeoutMinutes Int          @default(5) @map("escalation_timeout_minutes")
+  webhookUrl               String?      @map("webhook_url")
   createdAt                DateTime     @default(now()) @map("created_at") @db.Timestamptz
   updatedAt                DateTime     @updatedAt @map("updated_at") @db.Timestamptz
   teamMembers              TeamMember[]

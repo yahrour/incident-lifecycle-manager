@@ -56,6 +56,7 @@ export class TeamsService {
               createTeamDto.timezone
             ),
           escalationTimeoutMinutes: createTeamDto.escalationTimeoutMinutes,
+          webhookUrl: createTeamDto.webhookUrl,
         },
         omit: {
           ownerId: true,
