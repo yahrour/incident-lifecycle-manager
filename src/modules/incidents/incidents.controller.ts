@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Query,
 } from "@nestjs/common";
@@ -62,11 +63,30 @@ export class IncidentsController {
 
   @Post()
   @Roles(Role.SRE)
-  create(
+  async create(
     @Body() createIncidentDto: CreateIncidentDto,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.incidentsService.create(user.sub, createIncidentDto);
+    const incident = await this.incidentsService.create(
+      user.sub,
+      createIncidentDto
+    );
+    return apiResponse(incident);
+  }
+
+  @Patch(":id/assignee")
+  @Roles(Role.SRE)
+  async reassign(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() reassignIncidentDto: ReassignIncidentDto,
+    @ActiveUser() user: ActiveUserData
+  ) {
+    const incident = await this.incidentsService.reassign(
+      user.sub,
+      id,
+      reassignIncidentDto.assigneeId
+    );
+    return apiResponse(incident);
   }
 
   @Post(":id/acknowledge")
