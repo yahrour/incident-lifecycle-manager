@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsString, MinLength } from "class-validator";
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsTimeZone,
+  MinLength,
+} from "class-validator";
 
 export class RegisterViaInviteDto {
   @IsString()
@@ -21,4 +27,10 @@ export class RegisterViaInviteDto {
   @IsString()
   @IsNotEmpty()
   specialty: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  @IsTimeZone({ message: "Invalid IANA time zone format." })
+  timezone: string = "UTC";
 }
