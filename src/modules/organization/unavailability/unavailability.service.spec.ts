@@ -30,7 +30,9 @@ const makeTeam = () => ({
   rotationStartDate: NOW_DATE,
   escalationTimeoutMinutes: 30,
   currentRotationIndex: 0,
+  lastNotifiedRotationIndex: 0,
   lastRotatedAt: NOW_DATE,
+  webhookUrl: null,
   createdAt: NOW_DATE,
   updatedAt: NOW_DATE,
 });

@@ -23,8 +23,10 @@ const makeTeam = (overrides = {}) => ({
   rotationPeriodDays: 7,
   rotationStartDate: new Date(),
   currentRotationIndex: 0,
+  lastNotifiedRotationIndex: 0,
   lastRotatedAt: new Date(),
   escalationTimeoutMinutes: 30,
+  webhookUrl: null,
   updatedAt: new Date(),
   ...overrides,
 });
