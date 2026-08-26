@@ -72,7 +72,9 @@ describe("TeamsService", () => {
         rotationStartDate: createTeamDto.rotationStartDate,
         escalationTimeoutMinutes: createTeamDto.escalationTimeoutMinutes,
         currentRotationIndex: 0,
+        lastNotifiedRotationIndex: -1,
         lastRotatedAt: new Date(),
+        webhookUrl: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -158,7 +160,9 @@ describe("TeamsService", () => {
         rotationStartDate: new Date(),
         escalationTimeoutMinutes: updateTeamDto.escalationTimeoutMinutes,
         currentRotationIndex: 0,
+        lastNotifiedRotationIndex: 0,
         lastRotatedAt: new Date(),
+        webhookUrl: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -178,6 +182,7 @@ describe("TeamsService", () => {
           data: {
             ...updateTeamDto,
             currentRotationIndex: undefined,
+            lastNotifiedRotationIndex: undefined,
             lastRotatedAt: undefined,
           },
         })
@@ -198,7 +203,9 @@ describe("TeamsService", () => {
         rotationStartDate: NOW_DATE,
         escalationTimeoutMinutes: 30,
         currentRotationIndex: 0,
+        lastNotifiedRotationIndex: -1,
         lastRotatedAt: NOW_DATE,
+        webhookUrl: null,
         createdAt: NOW_DATE,
         updatedAt: NOW_DATE,
       };
@@ -218,6 +225,7 @@ describe("TeamsService", () => {
           data: expect.objectContaining({
             rotationPeriodDays: 14,
             currentRotationIndex: 0,
+            lastNotifiedRotationIndex: -1,
             lastRotatedAt: NOW_DATE,
           }),
         })
@@ -279,7 +287,9 @@ describe("TeamsService", () => {
         timezone: "UTC",
         escalationTimeoutMinutes: 30,
         currentRotationIndex: 0,
+        lastNotifiedRotationIndex: 0,
         lastRotatedAt: NOW_DATE,
+        webhookUrl: null,
         createdAt: NOW_DATE,
         updatedAt: NOW_DATE,
       };
@@ -330,7 +340,9 @@ describe("TeamsService", () => {
         timezone: "UTC",
         escalationTimeoutMinutes: 30,
         currentRotationIndex: 0,
+        lastNotifiedRotationIndex: 0,
         lastRotatedAt: NOW_DATE,
+        webhookUrl: null,
         createdAt: NOW_DATE,
         updatedAt: NOW_DATE,
       };
@@ -376,7 +388,9 @@ describe("TeamsService", () => {
       rotationStartDate: NOW_DATE,
       escalationTimeoutMinutes: 30,
       currentRotationIndex: 0,
+      lastNotifiedRotationIndex: 0,
       lastRotatedAt: NOW_DATE,
+      webhookUrl: null,
       createdAt: NOW_DATE,
       updatedAt: NOW_DATE,
     });
