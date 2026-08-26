@@ -4,6 +4,7 @@ import {
   IsOptional,
   MinLength,
   IsNotEmpty,
+  IsTimeZone,
 } from "class-validator";
 
 export class SignUp {
@@ -27,4 +28,10 @@ export class SignUp {
   @IsString()
   @IsOptional()
   specialty?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  @IsTimeZone({ message: "Invalid IANA time zone format." })
+  timezone: string = "UTC";
 }

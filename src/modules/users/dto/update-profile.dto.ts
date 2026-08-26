@@ -1,5 +1,5 @@
 // update-profile.dto.ts
-import { IsOptional, IsString, IsNotEmpty } from "class-validator";
+import { IsOptional, IsString, IsNotEmpty, IsTimeZone } from "class-validator";
 
 export class UpdateProfileDto {
   @IsOptional()
@@ -12,7 +12,9 @@ export class UpdateProfileDto {
   @IsNotEmpty()
   lastName?: string;
 
-  @IsOptional()
   @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  @IsTimeZone({ message: "Invalid IANA time zone format." })
   timezone?: string;
 }

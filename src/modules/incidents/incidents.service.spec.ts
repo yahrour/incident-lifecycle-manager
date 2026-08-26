@@ -37,6 +37,39 @@ describe("IncidentsService", () => {
     });
   });
 
+  it("filters incidents by assignee while preserving access rules", async () => {
+    const findMany = jest.fn().mockResolvedValue([]);
+    const count = jest.fn().mockResolvedValue(0);
+    const prisma = {
+      incident: { findMany, count },
+    } as unknown as PrismaService;
+    const service = new IncidentsService(prisma, {} as OnCallService);
+
+    await service.findAll("viewer-id", {
+      assigneeId: "engineer-id",
+      limit: 10,
+    } as never);
+
+    const where = (
+      findMany.mock.calls as unknown as Array<[{ where: unknown }]>
+    )[0]?.[0]?.where as {
+      AND: Array<unknown>;
+    };
+    expect(where.AND).toEqual(
+      expect.arrayContaining([
+        { assignedToId: "engineer-id" },
+        {
+          OR: [
+            { assignedToId: "viewer-id" },
+            { team: { ownerId: "viewer-id" } },
+            { team: { teamMembers: { some: { userId: "viewer-id" } } } },
+          ],
+        },
+      ])
+    );
+    expect(count).toHaveBeenCalledWith({ where });
+  });
+
   it.each([null, { chain: [] }])(
     "throws ConflictException when no primary on-call engineer is available (%p)",
     async (onCallResult) => {
@@ -126,6 +159,49 @@ describe("IncidentsService", () => {
         ],
       })
     );
+  });
+
+  it("creates a note for an incident the user can access", async () => {
+    const findFirst = jest.fn().mockResolvedValue({ id: "incident-id" });
+    const create = jest.fn().mockResolvedValue({
+      id: "note-id",
+      content: "Mitigation started",
+      authorId: "user-id",
+    });
+    const prisma = {
+      incident: { findFirst },
+      incidentNote: { create },
+    } as unknown as PrismaService;
+    const service = new IncidentsService(prisma, {} as OnCallService);
+
+    await expect(
+      service.createNote("user-id", "incident-id", "Mitigation started")
+    ).resolves.toEqual({
+      id: "note-id",
+      content: "Mitigation started",
+      authorId: "user-id",
+    });
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: {
+          incidentId: "incident-id",
+          authorId: "user-id",
+          content: "Mitigation started",
+        },
+      })
+    );
+  });
+
+  it("rejects notes for incidents the user cannot access", async () => {
+    const prisma = {
+      incident: { findFirst: jest.fn().mockResolvedValue(null) },
+      incidentNote: { create: jest.fn() },
+    } as unknown as PrismaService;
+    const service = new IncidentsService(prisma, {} as OnCallService);
+
+    await expect(
+      service.createNote("user-id", "incident-id", "Private update")
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it("keeps unresolved metrics and events empty when an incident is open", async () => {
