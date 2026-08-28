@@ -2,7 +2,9 @@ import { Test } from "@nestjs/testing";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { createMockPrisma, MockPrisma } from "../../../test/prisma-mock";
 import { OnCallService } from "./oncall.service";
+import { DiscordService } from "@/modules/discord/discord.service";
 import { NotFoundException } from "@nestjs/common";
+import { mock } from "jest-mock-extended";
 
 const TEAM_ID = "teamId";
 const OWNER_ID = "ownerId";
@@ -17,10 +19,17 @@ function makeTeam(overrides = {}) {
     description: null,
     lastRotatedAt: new Date("2026-01-01T00:00:00.000Z"),
     currentRotationIndex: 0,
+    lastNotifiedRotationIndex: 0,
     rotationPeriodDays: 7,
     rotationStartDate: new Date("2025-12-01T00:00:00.000Z"),
     escalationTimeoutMinutes: 30,
+    webhookUrl: null,
     _count: { teamMembers: 3 },
+    teamMembers: [
+      { userId: "user-1" },
+      { userId: "user-2" },
+      { userId: "user-3" },
+    ],
     ...overrides,
   };
 }
@@ -28,11 +37,17 @@ function makeTeam(overrides = {}) {
 describe("OnCallService", () => {
   let service: OnCallService;
   let prisma: MockPrisma;
+  let discordService: DiscordService;
 
   beforeEach(async () => {
     prisma = createMockPrisma();
+    discordService = mock<DiscordService>();
     const module = await Test.createTestingModule({
-      providers: [OnCallService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        OnCallService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: DiscordService, useValue: discordService },
+      ],
     }).compile();
 
     service = module.get(OnCallService);
@@ -65,8 +80,10 @@ describe("OnCallService", () => {
         rotationPeriodDays: 7,
         rotationStartDate: new Date(),
         currentRotationIndex: 0,
+        lastNotifiedRotationIndex: 0,
         lastRotatedAt: new Date("2026-08-03T00:00:00Z"),
         escalationTimeoutMinutes: 30,
+        webhookUrl: null,
         updatedAt: new Date("2026-08-08T14:30:00Z"),
         teamMembers: [],
       };
@@ -88,8 +105,10 @@ describe("OnCallService", () => {
         rotationPeriodDays: 7,
         rotationStartDate: new Date(),
         currentRotationIndex: 0,
+        lastNotifiedRotationIndex: 0,
         lastRotatedAt: new Date("2026-08-03T00:00:00Z"),
         escalationTimeoutMinutes: 30,
+        webhookUrl: null,
         updatedAt: new Date("2026-08-08T14:30:00Z"),
 
         teamMembers: [
@@ -136,9 +155,11 @@ describe("OnCallService", () => {
         rotationPeriodDays: 7,
         rotationStartDate: new Date(),
         currentRotationIndex: 0,
+        lastNotifiedRotationIndex: 0,
         lastRotatedAt: new Date("2026-08-03T00:00:00Z"),
 
         escalationTimeoutMinutes: 30,
+        webhookUrl: null,
         updatedAt: new Date("2026-08-08T14:30:00Z"),
 
         teamMembers: [
@@ -181,8 +202,10 @@ describe("OnCallService", () => {
         rotationPeriodDays: 7,
         rotationStartDate: new Date(),
         currentRotationIndex: 0,
+        lastNotifiedRotationIndex: 0,
         lastRotatedAt: new Date("2026-08-03T00:00:00Z"),
         escalationTimeoutMinutes: 30,
+        webhookUrl: null,
         updatedAt: new Date("2026-08-08T14:30:00Z"),
 
         teamMembers: [
@@ -238,9 +261,11 @@ describe("OnCallService", () => {
         rotationPeriodDays: 7,
         rotationStartDate: new Date(),
         currentRotationIndex: 0,
+        lastNotifiedRotationIndex: 0,
         lastRotatedAt: new Date("2026-08-03T00:00:00Z"),
 
         escalationTimeoutMinutes: 30,
+        webhookUrl: null,
         updatedAt: new Date("2026-08-08T14:30:00Z"),
 
         teamMembers: [
@@ -372,6 +397,7 @@ describe("OnCallService", () => {
         data: {
           lastRotatedAt: new Date("2026-01-15T00:00:00.000Z"), // fixed "now"
           currentRotationIndex: 2, // (1 + 1) % 3
+          lastNotifiedRotationIndex: 2,
         },
       });
     });
@@ -394,6 +420,98 @@ describe("OnCallService", () => {
           data: expect.objectContaining({ currentRotationIndex: 0 }), // (2+1) % 3
         })
       );
+    });
+
+    it("notifies the current on-call engineer when a team is created (no rotation yet)", async () => {
+      prisma.team.findMany.mockResolvedValue([
+        makeTeam({
+          lastNotifiedRotationIndex: -1, // never notified
+          currentRotationIndex: 0,
+          lastRotatedAt: new Date("2026-01-14T00:00:00.000Z"), // not due
+          webhookUrl: "https://discord.com/api/webhooks/abc",
+        }),
+      ]);
+      prisma.user.findUnique.mockResolvedValue({
+        id: "user-1",
+        discordId: "123456789",
+        discordName: null,
+        email: "user-1@example.com",
+        firstName: "John",
+        lastName: "Doe",
+        pendingEmail: null,
+        passwordHash: null,
+        role: "ENGINEER",
+        googleId: null,
+        specialty: null,
+        isVerified: true,
+        timezone: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      await service.processRotations();
+
+      expect(prisma.team.update).toHaveBeenCalledWith({
+        where: { id: "team1" },
+        data: { lastNotifiedRotationIndex: 0 },
+      });
+      expect(discordService.sendWebhookNotification).toHaveBeenCalledWith(
+        "https://discord.com/api/webhooks/abc",
+        expect.objectContaining({
+          content: expect.stringContaining("<@123456789>") as string,
+        })
+      );
+    });
+
+    it("does not re-notify the current on-call engineer if already notified", async () => {
+      prisma.team.findMany.mockResolvedValue([
+        makeTeam({
+          lastNotifiedRotationIndex: 0,
+          currentRotationIndex: 0,
+          lastRotatedAt: new Date("2026-01-14T00:00:00.000Z"), // not due
+          webhookUrl: "https://discord.com/hooks/abc",
+        }),
+      ]);
+
+      await service.processRotations();
+
+      expect(prisma.team.update).not.toHaveBeenCalled();
+      expect(discordService.sendWebhookNotification).not.toHaveBeenCalled();
+    });
+
+    it("notifies only the incoming engineer when a rotation happens", async () => {
+      prisma.team.findMany.mockResolvedValue([
+        makeTeam({
+          lastRotatedAt: new Date("2026-01-01T00:00:00.000Z"), // due
+          currentRotationIndex: 1,
+          rotationPeriodDays: 7,
+          _count: { teamMembers: 3 },
+          webhookUrl: "https://discord.com/hooks/abc",
+        }),
+      ]);
+      prisma.team.updateMany.mockResolvedValue({ count: 1 });
+      prisma.user.findUnique.mockResolvedValue({
+        id: "user-1",
+        discordId: "111",
+        discordName: null,
+        email: "user-1@example.com",
+        firstName: "John",
+        lastName: "Doe",
+        pendingEmail: null,
+        passwordHash: null,
+        role: "ENGINEER",
+        googleId: null,
+        specialty: null,
+        isVerified: true,
+        timezone: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      await service.processRotations();
+
+      // only the incoming engineer (index 2) is notified, not the outgoing one
+      expect(discordService.sendWebhookNotification).toHaveBeenCalledTimes(1);
     });
 
     it("uses rotationStartDate as baseTime when it is later than lastRotatedAt", async () => {
