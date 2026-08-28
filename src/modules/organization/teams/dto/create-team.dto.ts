@@ -6,6 +6,7 @@ import {
   IsPositive,
   IsString,
   IsTimeZone,
+  IsUrl,
   ValidateIf,
 } from "class-validator";
 
@@ -40,4 +41,8 @@ export class CreateTeamDto {
   @IsNumber()
   @IsPositive()
   escalationTimeoutMinutes?: number;
+
+  @IsOptional()
+  @IsUrl()
+  webhookUrl?: string;
 }

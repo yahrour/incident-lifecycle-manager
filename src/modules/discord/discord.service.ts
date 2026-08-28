@@ -3,6 +3,7 @@ import { PrismaService } from "@/common/prisma/prisma.service";
 import {
   ConflictException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -13,10 +14,39 @@ import {
 
 @Injectable()
 export class DiscordService {
+  private readonly logger = new Logger(DiscordService.name);
+
   constructor(
     private readonly configService: ConfigService,
     private prisma: PrismaService
   ) {}
+
+  async sendWebhookNotification(
+    webhookUrl: string,
+    payload: { content?: string; embeds?: unknown[] }
+  ): Promise<void> {
+    if (!webhookUrl) return;
+
+    try {
+      const response = await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        this.logger.error(
+          `Discord Webhook delivery failed: ${response.status} ${response.statusText}`
+        );
+      } else {
+        this.logger.log(
+          `Discord Webhook delivered successfully: ${response.status} ${response.statusText}`
+        );
+      }
+    } catch (error) {
+      this.logger.error("Failed to send Discord webhook notification", error);
+    }
+  }
 
   buildAuthorizeUrl(): string {
     const params = new URLSearchParams({
