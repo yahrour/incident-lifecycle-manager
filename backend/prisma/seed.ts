@@ -42,6 +42,7 @@ async function createUser(data: {
   role: Role;
   specialty?: string;
   isVerified?: boolean;
+  discordId?: string;
 }) {
   const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 10);
 
@@ -56,6 +57,7 @@ async function createUser(data: {
       role: data.role,
       specialty: data.specialty,
       isVerified: true,
+      discordId: data.discordId,
     },
   });
 }
@@ -102,6 +104,7 @@ const sre = await createUser({
       role: Role.ENGINEER,
       isVerified: true,
       specialty: "Frontend",
+      discordId: "1117135511077797940",
     }),
     createUser({
       firstName: "Ben",
@@ -110,6 +113,7 @@ const sre = await createUser({
       role: Role.ENGINEER,
       isVerified: true,
       specialty: "Frontend",
+      discordId: "1117135511077797940",
     }),
     createUser({
       firstName: "Chloe",
@@ -118,6 +122,7 @@ const sre = await createUser({
       role: Role.ENGINEER,
       isVerified: true,
       specialty: "Backend",
+      discordId: "1117135511077797940",
     }),
     createUser({
       firstName: "David",
@@ -126,6 +131,7 @@ const sre = await createUser({
       role: Role.ENGINEER,
       isVerified: true,
       specialty: "Backend",
+      discordId: "1117135511077797940",
     }),
   ]);
   const [alice, ben, chloe, david] = engineers;
@@ -140,6 +146,8 @@ const sre = await createUser({
       name: "frontend",
       description: "Owns the customer-facing web application",
       ownerId: sre.id,
+      webhookUrl: "https://discord.com/api/webhooks/1533268012243746876/9tpebMe6iAEsEQM3dx0Ip6ZVmVOI81yqp-WAdEWzAE9sdk-S1btp7cAPwe_TG0c1sQfV",
+      lastNotifiedRotationIndex: -1,
     },
   });
 
@@ -150,6 +158,8 @@ const sre = await createUser({
       name: "backend",
       description: "Owns core APIs and platform services",
       ownerId: sre.id,
+      webhookUrl: "https://discord.com/api/webhooks/1533268012243746876/9tpebMe6iAEsEQM3dx0Ip6ZVmVOI81yqp-WAdEWzAE9sdk-S1btp7cAPwe_TG0c1sQfV",
+      lastNotifiedRotationIndex: -1,
     },
   });
 
