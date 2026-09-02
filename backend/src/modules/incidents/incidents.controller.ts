@@ -17,6 +17,7 @@ import { CreateIncidentDto } from "./dto/create-incident.dto";
 import { FindIncidentsDto } from "./dto/find-incidents.dto";
 import { CreateIncidentNoteDto } from "./dto/create-incident-note.dto";
 import { IncidentsService } from "./incidents.service";
+import { ReassignIncidentDto } from "./dto/reassign-incident.dto";
 
 @Controller({ path: "incidents", version: "1" })
 export class IncidentsController {
