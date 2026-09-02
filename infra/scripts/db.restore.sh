@@ -17,11 +17,17 @@ log_error()   { echo -e "${RED}ERROR: $1${NC}"; }
 
 # PREREQUISITE CHECKS
 
+# Resolve the script's own directory, regardless of where it's invoked from
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# infra/.env lives one level up from infra/scripts/
+ENV_FILE="$SCRIPT_DIR/../.env"
+
 # Ensure environment variables are loaded
-if [ -f .env ]; then
-    source .env
+if [ -f "$ENV_FILE" ]; then
+    source "$ENV_FILE"
 else
-    log_error ".env file not found."
+    log_error "$ENV_FILE file not found."
     exit 1
 fi
 

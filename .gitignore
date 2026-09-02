@@ -1,11 +1,9 @@
 # ==========================================
 # Dependencies & Build Outputs
 # ==========================================
-node_modules/
 **/node_modules/
-dist/
 **/dist/
-/build
+**/build
 
 # ==========================================
 # Logs
@@ -102,9 +100,8 @@ postgres-data/
 # ==========================================
 # Prisma
 # ==========================================
-src/generated/**
-src/generated/prisma
-prisma/migrations
+backend/src/generated/
+backend/prisma/migrations
 
 # ==========================================
 # Misc
