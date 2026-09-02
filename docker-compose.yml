@@ -14,7 +14,7 @@ services:
       - incident_network
   postgres-backup:
     build:
-      context: ./scripts/db-backup-service
+      context: ./infra/scripts/db-backup-service
       dockerfile: ./Dockerfile
     container_name: incident_postgres_backup
     restart: always
