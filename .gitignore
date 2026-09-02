@@ -103,6 +103,7 @@ postgres-data/
 src/generated/**
 src/generated/prisma
 prisma/migrations
+**/migrations
 
 # ==========================================
 # Misc
