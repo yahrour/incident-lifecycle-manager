@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  GoneException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -10,12 +11,17 @@ import { BcryptService } from "../security/bcrypt.service";
 import { Role, Prisma } from "@/generated/prisma/client";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { UpdateEmailDto } from "./dto/update-email.dto";
+import { generateSecureToken, hashToken } from "@/common/utils/token.util";
+import { ConfigService } from "@nestjs/config";
+import { MailService } from "@/common/mail/mail.service";
 
 @Injectable()
 export class UsersService {
   constructor(
-    private prisma: PrismaService,
-    private bcrypt: BcryptService
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+    private readonly bcrypt: BcryptService,
+    private readonly mailService: MailService
   ) {}
 
   async create(
@@ -177,10 +183,12 @@ export class UsersService {
     }
 
     // 3. Update pendingEmail with error handling for missing user
+    let updatedUser: { firstName: string };
     try {
-      await this.prisma.user.update({
+      updatedUser = await this.prisma.user.update({
         where: { id: userId },
         data: { pendingEmail: updateEmailDto.email },
+        select: { firstName: true },
       });
     } catch (error) {
       if (
@@ -192,11 +200,68 @@ export class UsersService {
       throw error;
     }
 
-    // TODO: Generate verification token & dispatch verification email
+    await this.createAndSendVerificationToken(
+      userId,
+      updateEmailDto.email,
+      updatedUser.firstName
+    );
     return {
       message:
         "Verification email sent. Please check your inbox to confirm the change.",
       pendingEmail: updateEmailDto.email,
     };
+  }
+  async createAndSendVerificationToken(
+    userId: string,
+    email: string,
+    name: string
+  ) {
+    const { rawToken, hashedToken } = generateSecureToken();
+    await this.prisma.emailVerificationToken.create({
+      data: {
+        token: hashedToken,
+        userId,
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60), // 1 hour
+      },
+    });
+    const verifyUrl = `${this.configService.get("APP_URL")}/api/v1/users/verify-email-change?token=${rawToken}`;
+    return this.mailService.sendEmailChangeVerification(email, name, verifyUrl);
+  }
+
+  /**
+   * Verifies a pending email change using a one-time token sent to the user's new address.
+   * On success: marks the token as used and replaces `user.email` with `user.pendingEmail`.
+   * Throws NotFoundException/GoneException/ConflictException for invalid/expired/used tokens,
+   * or ConflictException if the target email was claimed by someone else in the meantime.
+   */
+  async verifyEmailChange(token: string) {
+    const hashedToken = hashToken(token);
+    return this.prisma.$transaction(async (prisma) => {
+      const emailToken = await prisma.emailVerificationToken.findUnique({
+        where: { token: hashedToken },
+        include: { user: { select: { pendingEmail: true } } },
+      });
+
+      if (!emailToken) throw new NotFoundException("Invalid verification link");
+      if (emailToken.expiresAt < new Date())
+        throw new GoneException("This link has expired.");
+      if (emailToken.used)
+        throw new ConflictException("This link has already been used.");
+      if (!emailToken.user.pendingEmail) {
+        throw new BadRequestException(
+          "No pending email change found for this account"
+        );
+      }
+
+      await prisma.emailVerificationToken.update({
+        where: { id: emailToken.id },
+        data: { used: true },
+      });
+      await prisma.user.update({
+        where: { id: emailToken.userId },
+        data: { email: emailToken.user.pendingEmail, pendingEmail: null },
+      });
+      return { message: "Email updated successfully" };
+    });
   }
 }
