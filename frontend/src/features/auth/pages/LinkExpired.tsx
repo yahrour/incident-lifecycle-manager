@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 import "../auth.css";
@@ -40,9 +41,9 @@ export default function LinkExpired() {
           <button type="button" className="app-button" onClick={() => reset()}>
             Use a different email
           </button>
-          <a href="/sign-in" className="app-button">
+          <Link to="/sign-in" className="app-button">
             Back to sign in
-          </a>
+          </Link>
         </>
       ) : (
         <>
@@ -66,9 +67,9 @@ export default function LinkExpired() {
               {isPending ? "Sending..." : "Send a new link"}
             </button>
           </form>
-          <a href="/sign-in" className="app-button">
+          <Link to="/sign-in" className="app-button">
             Back to sign in
-          </a>
+          </Link>
         </>
       )}
     </AuthCard>
