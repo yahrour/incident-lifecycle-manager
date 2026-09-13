@@ -6,10 +6,18 @@ jest.mock("src/modules/organization/oncall/oncall.service", () => ({
 }));
 
 import { IncidentsService } from "./incidents.service";
+import { ConflictException } from "@nestjs/common";
 import type { PrismaService } from "src/common/prisma/prisma.service";
 import type { OnCallService } from "src/modules/organization/oncall/oncall.service";
 
 describe("IncidentsService", () => {
+  const incident = {
+    teamId: "22222222-2222-4222-8222-222222222222",
+    title: "API errors",
+    service: "api",
+    severity: "high" as const,
+  };
+
   it("assigns a new incident to the primary on-call engineer", async () => {
     const create = jest.fn();
     const prisma = { incident: { create } } as unknown as PrismaService;
@@ -20,12 +28,6 @@ describe("IncidentsService", () => {
     });
     const onCall = { getCurrentOnCall } as unknown as OnCallService;
     const service = new IncidentsService(prisma, onCall);
-    const incident = {
-      teamId: "22222222-2222-4222-8222-222222222222",
-      title: "API errors",
-      service: "api",
-      severity: "high" as const,
-    };
 
     await service.create("owner-id", incident);
 
@@ -36,4 +38,20 @@ describe("IncidentsService", () => {
       },
     });
   });
+
+  it.each([null, { chain: [] }])(
+    "throws ConflictException when no primary on-call engineer is available (%p)",
+    async (onCallResult) => {
+      const create = jest.fn();
+      const prisma = { incident: { create } } as unknown as PrismaService;
+      const getCurrentOnCall = jest.fn().mockResolvedValue(onCallResult);
+      const onCall = { getCurrentOnCall } as unknown as OnCallService;
+      const service = new IncidentsService(prisma, onCall);
+
+      await expect(service.create("owner-id", incident)).rejects.toBeInstanceOf(
+        ConflictException
+      );
+      expect(create).not.toHaveBeenCalled();
+    }
+  );
 });
