@@ -10,7 +10,9 @@ import { SignUp } from "./dto/sign-up.dto";
 import { SignIn } from "./dto/sign-in.dto";
 import { AuthService } from "./auth.service";
 import type { Response } from "express";
+import { Public } from "src/common/decorators/public.decorator";
 
+@Public()
 @Controller("auth")
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -19,6 +21,7 @@ export class AuthController {
     return this.authService.signUp(signUp);
   }
 
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Post("sign-in")
   async signIn(
@@ -29,8 +32,9 @@ export class AuthController {
     response.cookie("accessToken", accessToken, {
       secure: true,
       httpOnly: true,
-      sameSite: true,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 1000,
     });
-    return { message: "Login successful" };
+    return { message: "SignIn successful" };
   }
 }
