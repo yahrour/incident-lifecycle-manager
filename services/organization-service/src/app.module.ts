@@ -4,6 +4,7 @@ import { ConfigModule } from "@nestjs/config";
 import { validate } from "./common/validation/env.validation";
 import { TeamsModule } from "./teams/teams.module";
 import { MetricsModule } from "./metrics/metrics.module";
+import { HealthModule } from "./health/health.module";
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { MetricsModule } from "./metrics/metrics.module";
     PrismaModule,
     TeamsModule,
     MetricsModule,
+    HealthModule,
   ],
   controllers: [],
   providers: [],
