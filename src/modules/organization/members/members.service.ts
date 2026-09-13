@@ -60,6 +60,20 @@ export class MembersService {
           ownerId,
         },
       },
+      omit: {
+        userId: true,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            specialty: true,
+          },
+        },
+      },
     });
 
     return members;
@@ -72,6 +86,20 @@ export class MembersService {
         teamId,
         team: {
           ownerId,
+        },
+      },
+      omit: {
+        userId: true,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            specialty: true,
+          },
         },
       },
     });
