@@ -1,16 +1,6 @@
-import { Type } from "class-transformer";
-import { IsDate, IsOptional, IsString } from "class-validator";
+import { PartialType } from "@nestjs/mapped-types";
+import { CreateUnavailabilityDto } from "./create-unavailability.dto";
 
-export class UpdateUnavailabilityDto {
-  @Type(() => Date)
-  @IsDate()
-  startDate: Date;
-
-  @Type(() => Date)
-  @IsDate()
-  endDate: Date;
-
-  @IsOptional()
-  @IsString()
-  reason: string;
-}
+export class UpdateUnavailabilityDto extends PartialType(
+  CreateUnavailabilityDto
+) {}
