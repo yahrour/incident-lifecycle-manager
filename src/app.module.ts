@@ -9,6 +9,7 @@ import { AuthModule } from "./modules/auth/auth.module";
 import { UsersModule } from "./modules/users/users.module";
 import { InviteModule } from "./modules/invite/invite.module";
 import { IngestionModule } from "./modules/ingestion/ingestion.module";
+import { IncidentsModule } from "./modules/incidents/incidents.module";
 import { APP_GUARD } from "@nestjs/core";
 import { AccessTokenGuard } from "./modules/common/guards/access-token/access-token.guard";
 import { RolesGuard } from "./modules/common/guards/roles.guard";
@@ -29,6 +30,7 @@ import { ScheduleModule } from "@nestjs/schedule";
     OrganizationModule,
     MetricsModule,
     IngestionModule,
+    IncidentsModule,
   ],
   controllers: [],
   providers: [
