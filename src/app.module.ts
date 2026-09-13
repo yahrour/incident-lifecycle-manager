@@ -9,6 +9,9 @@ import { AuthModule } from "./modules/auth/auth.module";
 import { UsersModule } from "./modules/users/users.module";
 import { InviteModule } from "./modules/invite/invite.module";
 import { IngestionModule } from "./modules/ingestion/ingestion.module";
+import { APP_GUARD } from "@nestjs/core";
+import { AccessTokenGuard } from "./modules/common/guards/access-token/access-token.guard";
+import { RolesGuard } from "./modules/common/guards/roles.guard";
 
 @Module({
   imports: [
@@ -26,6 +29,9 @@ import { IngestionModule } from "./modules/ingestion/ingestion.module";
     IngestionModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    { provide: APP_GUARD, useClass: AccessTokenGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+  ],
 })
 export class AppModule {}

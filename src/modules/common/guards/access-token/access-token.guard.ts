@@ -15,7 +15,7 @@ export class AccessTokenGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
     private reflector: Reflector,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

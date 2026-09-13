@@ -20,7 +20,7 @@ async function bootstrap() {
       transformOptions: {
         enableImplicitConversion: true,
       },
-    }),
+    })
   );
 
   await app.listen(configService.get("PORT")!);

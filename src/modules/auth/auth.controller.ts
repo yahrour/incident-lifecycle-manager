@@ -31,7 +31,7 @@ export class AuthController {
   @Post("sign-in")
   async signIn(
     @Res({ passthrough: true }) response: Response,
-    @Body() signIn: SignIn,
+    @Body() signIn: SignIn
   ) {
     const { accessToken, refreshToken } = await this.authService.signIn(signIn);
     const isProduction = process.env.NODE_ENV === "production";
@@ -54,7 +54,7 @@ export class AuthController {
   @Post("refresh-tokens")
   refreshTokens(
     @Req() request: Request,
-    @Body() refrechTokenDto: RefrechTokenDto,
+    @Body() refrechTokenDto: RefrechTokenDto
   ) {
     const cookies = request.cookies as Record<string, string> | undefined;
     const refreshToken =

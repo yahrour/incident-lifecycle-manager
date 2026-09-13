@@ -14,7 +14,7 @@ export class AuthService {
     private bcrypt: BcryptService,
     private readonly userService: UsersService,
     private jwtService: JwtService,
-    private configService: ConfigService,
+    private configService: ConfigService
   ) {}
   async signUp(signUp: SignUp) {
     const sreUserData = {
@@ -31,12 +31,12 @@ export class AuthService {
     }
     if (!user.passwordHash) {
       throw new UnauthorizedException(
-        "This account was created with Google. Please sign in with Google.",
+        "This account was created with Google. Please sign in with Google."
       );
     }
     const isMatch = await this.bcrypt.compare(
       signIn.password,
-      user.passwordHash,
+      user.passwordHash
     );
 
     if (!isMatch) {
@@ -47,10 +47,10 @@ export class AuthService {
 
   async generateTokens(user: User) {
     const accessTtl = this.configService.getOrThrow<number>(
-      "JWT_ACCESS_TOKEN_TTL",
+      "JWT_ACCESS_TOKEN_TTL"
     );
     const refreshTtl = this.configService.getOrThrow<number>(
-      "JWT_REFRESH_TOKEN_TTL",
+      "JWT_REFRESH_TOKEN_TTL"
     );
 
     const [accessToken, refreshToken] = await Promise.all([
@@ -58,12 +58,12 @@ export class AuthService {
         user.id,
         accessTtl,
         this.configService.getOrThrow<string>("JWT_SECRET"),
-        { email: user.email, role: user.role },
+        { email: user.email, role: user.role }
       ),
       this.signToken(
         user.id,
         refreshTtl,
-        this.configService.getOrThrow<string>("JWT_REFRESH_SECRET"),
+        this.configService.getOrThrow<string>("JWT_REFRESH_SECRET")
       ),
     ]);
 
@@ -76,7 +76,7 @@ export class AuthService {
     userId: string,
     expiresIn: number,
     secret: string,
-    payload?: T,
+    payload?: T
   ) {
     return this.jwtService.signAsync(
       {
@@ -88,7 +88,7 @@ export class AuthService {
         issuer: this.configService.get("JWT_ISSUER"),
         secret,
         expiresIn,
-      },
+      }
     );
   }
 

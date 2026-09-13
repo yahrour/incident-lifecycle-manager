@@ -15,13 +15,13 @@ export class GoogleAuthService implements OnModuleInit {
   constructor(
     private readonly configueService: ConfigService,
     private readonly authService: AuthService,
-    private readonly usersService: UsersService,
+    private readonly usersService: UsersService
   ) {}
   onModuleInit() {
     const clientId =
       this.configueService.getOrThrow<string>("GOOGLE_CLIENT_ID");
     const clientSecret = this.configueService.getOrThrow<string>(
-      "GOOGLE_CLIENT_SECRET",
+      "GOOGLE_CLIENT_SECRET"
     );
     this.oauthClient = new OAuth2Client(clientId, clientSecret);
   }
@@ -53,7 +53,7 @@ export class GoogleAuthService implements OnModuleInit {
         googleId,
         firstName || "Unknown",
         lastName || "Unknown",
-        assignedRole,
+        assignedRole
       );
     }
     return this.authService.generateTokens(user);

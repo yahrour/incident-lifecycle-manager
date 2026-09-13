@@ -21,7 +21,7 @@ export class InviteService {
   constructor(
     private prisma: PrismaService,
     private readonly userService: UsersService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {}
 
   // ─── Public Methods ───────────────────────────────────────────────
@@ -77,7 +77,7 @@ export class InviteService {
     const existingUser = await this.userService.findByEmail(invite.email);
     if (existingUser) {
       throw new ConflictException(
-        "This email is already registered. Please use the login flow.",
+        "This email is already registered. Please use the login flow."
       );
     }
 
@@ -99,7 +99,7 @@ export class InviteService {
     } catch {
       await this.userService.deleteUser(newUser.id);
       throw new InternalServerErrorException(
-        "Failed to add engineer to team. Please try again.",
+        "Failed to add engineer to team. Please try again."
       );
     }
     await this.markTokenAsUsed(invite.id);
@@ -112,7 +112,7 @@ export class InviteService {
 
     if (invite.email !== activeUser.email) {
       throw new ForbiddenException(
-        "You can only accept invites sent to your registered email address.",
+        "You can only accept invites sent to your registered email address."
       );
     }
 
@@ -150,7 +150,7 @@ export class InviteService {
     }
     if (invite.expiresAt < new Date()) {
       throw new GoneException(
-        "This invite link has expired. Please request a new one.",
+        "This invite link has expired. Please request a new one."
       );
     }
     if (invite.used) {

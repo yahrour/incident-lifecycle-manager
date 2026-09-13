@@ -6,7 +6,7 @@ import { OnCallService } from "src/modules/organization/oncall/oncall.service";
 export class OrganizationService {
   constructor(
     private prisma: PrismaService,
-    private onCallService: OnCallService,
+    private onCallService: OnCallService
   ) {}
 
   private async getTotalTeams(ownerId: string) {
@@ -52,7 +52,7 @@ export class OrganizationService {
       teams.map(async (team) => {
         const activeMember = await this.onCallService.getCurrentOnCall(
           team.id,
-          ownerId,
+          ownerId
         );
         const onCallChain = [
           { role: "PRIMARY", userId: activeMember?.chain[0].userId },
@@ -63,7 +63,7 @@ export class OrganizationService {
           name: team.name,
           onCall: activeMember ? onCallChain : null,
         };
-      }),
+      })
     );
   }
 
