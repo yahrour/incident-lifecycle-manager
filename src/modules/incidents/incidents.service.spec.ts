@@ -22,9 +22,7 @@ describe("IncidentsService", () => {
     const create = jest.fn();
     const prisma = { incident: { create } } as unknown as PrismaService;
     const getCurrentOnCall = jest.fn().mockResolvedValue({
-      chain: [
-        { role: "PRIMARY", userId: "11111111-1111-4111-8111-111111111111" },
-      ],
+      chain: [{ role: "PRIMARY", id: "11111111-1111-4111-8111-111111111111" }],
     });
     const onCall = { getCurrentOnCall } as unknown as OnCallService;
     const service = new IncidentsService(prisma, onCall);
@@ -54,4 +52,45 @@ describe("IncidentsService", () => {
       expect(create).not.toHaveBeenCalled();
     }
   );
+
+  it("acknowledges an open incident and records MTTA", async () => {
+    const findUnique = jest
+      .fn()
+      .mockResolvedValueOnce({
+        id: "incident-id",
+        status: "open",
+        assignedToId: "engineer-id",
+        createdAt: new Date(Date.now() - 5_000),
+        team: null,
+      })
+      .mockResolvedValueOnce({ id: "incident-id", status: "acknowledged" });
+    const updates: unknown[] = [];
+    const updateMany = jest.fn((args: unknown) => {
+      updates.push(args);
+      return Promise.resolve({ count: 1 });
+    });
+    const prisma = {
+      incident: { create: jest.fn(), findUnique, updateMany },
+    } as unknown as PrismaService;
+    const onCall = {} as OnCallService;
+    const service = new IncidentsService(prisma, onCall);
+
+    await service.acknowledge("engineer-id", "incident-id");
+
+    expect(updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "incident-id", status: "open" },
+      })
+    );
+    const update = updates[0] as {
+      data: {
+        status: string;
+        acknowledgedAt: unknown;
+        mttaSeconds: unknown;
+      };
+    };
+    expect(update.data.status).toBe("acknowledged");
+    expect(update.data.acknowledgedAt).toBeInstanceOf(Date);
+    expect(update.data.mttaSeconds).toEqual(expect.any(Number));
+  });
 });
