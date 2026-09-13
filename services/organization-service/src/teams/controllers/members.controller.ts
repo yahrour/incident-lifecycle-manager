@@ -24,11 +24,9 @@ export class MembersController {
   @Post(":id/members")
   addMember(
     @Param("id", ParseUUIDPipe) id: string,
-    @Headers("x-user-id") ownerId: string,
     @Body() addMemberDto: AddMemberDto
   ) {
-    ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
-    return this.membersService.add(id, ownerId, addMemberDto.userId);
+    return this.membersService.add(id, addMemberDto.userId);
   }
 
   @Get(":id/members")
