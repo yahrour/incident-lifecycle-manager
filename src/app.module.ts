@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { PrismaModule } from "./common/prisma/prisma.module";
 import { HealthModule } from "./modules/health/health.module";
 import { ConfigModule } from "@nestjs/config";
@@ -14,6 +14,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { AccessTokenGuard } from "./modules/common/guards/access-token/access-token.guard";
 import { RolesGuard } from "./modules/common/guards/roles.guard";
 import { ScheduleModule } from "@nestjs/schedule";
+import { LoggerMiddleware } from "./common/middleware/logger.middleware";
 
 @Module({
   imports: [
@@ -38,4 +39,8 @@ import { ScheduleModule } from "@nestjs/schedule";
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes("*");
+  }
+}
