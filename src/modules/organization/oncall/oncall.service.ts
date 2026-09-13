@@ -19,6 +19,7 @@ export class OnCallService {
               where: {
                 startDate: { lte: now },
                 endDate: { gte: now },
+                confirmed: true,
               },
             },
           },
@@ -116,14 +117,21 @@ export class OnCallService {
           continue;
         }
 
-        await this.prisma.team.update({
-          where: { id: team.id },
+        const result = await this.prisma.team.updateMany({
+          where: {
+            id: team.id,
+            lastRotatedAt: team.lastRotatedAt,
+          },
           data: {
             lastRotatedAt: now,
             currentRotationIndex:
               (team.currentRotationIndex + 1) % totalTeamMembers,
           },
         });
+
+        if (result.count === 0) {
+          continue;
+        }
 
         // TODO: trigger a WEBHOOK to alert on-call engineer that his on-call for X rotationPeriodDays
       }

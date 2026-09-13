@@ -5,5 +5,6 @@ import { OnCallService } from "./oncall.service";
 @Module({
   controllers: [OnCallController],
   providers: [OnCallService],
+  exports: [OnCallService],
 })
 export class OncallModule {}
