@@ -11,6 +11,10 @@ model User {
   firstName    String   @map("first_name")
   lastName     String   @map("last_name")
   email        String   @unique
+  discordId    String?  @unique @map("discord_id")
+  discordName  String?  @map("discord_name")
+
+
   pendingEmail String?  @map("pending_email")
   passwordHash String?  @map("password_hash")
   role         Role
