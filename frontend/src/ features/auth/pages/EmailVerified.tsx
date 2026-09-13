@@ -1,6 +1,7 @@
 import logo from "../../../assets/logo-full.svg";
 import success from "../../../assets/success-svgrepo-com.svg";
 
+import "../auth.css";
 import "./EmailVerified.css";
 
 export default function EmailVerified() {
@@ -8,7 +9,7 @@ export default function EmailVerified() {
     <div className="auth-layout">
       <img src={logo} alt="Better Incidents" className="app-logo" />
 
-      <div className="email-verified-card">
+      <div className="auth-card">
         <img src={success} alt="Success Icon" className="success-icon" />
         <h1 className="auth-title">Email verified</h1>
         <p className="auth-text">

@@ -1,11 +1,12 @@
 import "./App.css";
 // import "./ features/auth/pages/EmailVerified.css";
 import EmailVerified from "./ features/auth/pages/EmailVerified";
+import LinkExpired from "./ features/auth/pages/LinkExpired";
 
 const App = () => {
   return (
     <div>
-      <EmailVerified />
+      <LinkExpired />
     </div>
   );
 };
