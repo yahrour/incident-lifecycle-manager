@@ -14,7 +14,10 @@ import {
 import { TeamsService } from "../services/teams.service";
 import { CreateTeamDto, UpdateTeamDto } from "../dto";
 
-@Controller("teams")
+@Controller({
+  path: "teams",
+  version: "1",
+})
 export class TeamsController {
   constructor(private readonly teamsService: TeamsService) {}
 
