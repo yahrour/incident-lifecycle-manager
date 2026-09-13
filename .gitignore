@@ -55,8 +55,11 @@ postgres-data/
 
 
 # ==========================================
-# Prisma 
+# Prisma
 # ==========================================
 
 services/**/migrations
 services/**/generated
+
+
+backups/
