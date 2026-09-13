@@ -31,8 +31,8 @@ export default function LinkExpired() {
     <AuthCard>
       {isSuccess ? (
         <>
-          <h1 className="auth-title">Check your email</h1>
-          <p className="auth-text">
+          <h1>Check your email</h1>
+          <p>
             We sent a new verification link to <strong>{variables}</strong>. It
             expires in 30 minutes.
           </p>
@@ -45,8 +45,8 @@ export default function LinkExpired() {
         </>
       ) : (
         <>
-          <h1 className="auth-title">This link is no longer valid</h1>
-          <p className="auth-text">
+          <h1>This link is no longer valid</h1>
+          <p>
             Verification links expire after a set time and can only be used
             once. Enter your email and we'll send a new one.
           </p>
@@ -70,7 +70,6 @@ export default function LinkExpired() {
               {isPending ? "Sending..." : "Send a new link"}
             </button>
           </form>
-
           <a href="/sign-in" className="app-button">
             Back to sign in
           </a>
