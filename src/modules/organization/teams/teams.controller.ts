@@ -9,8 +9,13 @@ import {
   ParseUUIDPipe,
   HttpCode,
   HttpStatus,
+  Query,
 } from "@nestjs/common";
-import { CreateTeamDto, UpdateTeamDto } from "./dto";
+import {
+  CreateTeamDto,
+  CursorPaginationSearchParams,
+  UpdateTeamDto,
+} from "./dto";
 import { TeamsService } from "./teams.service";
 import { ActiveUser } from "src/modules/common/decorators/active-user.decorator";
 import type { ActiveUserData } from "src/modules/common/interfaces/active-user.interface";
@@ -35,8 +40,11 @@ export class TeamsController {
 
   @Get()
   @Roles(Role.SRE)
-  findAll(@ActiveUser() user: ActiveUserData) {
-    return this.teamsService.findAll(user.sub);
+  findAll(
+    @ActiveUser() user: ActiveUserData,
+    @Query() query: CursorPaginationSearchParams
+  ) {
+    return this.teamsService.findAll(user.sub, query);
   }
 
   @Get(":id")
