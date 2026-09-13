@@ -186,27 +186,40 @@ export class IncidentsService {
   async resolve(userId: string, incidentId: string) {
     const incident = await this.prisma.incident.findUnique({
       where: { id: incidentId },
-      include: { team: true },
     });
 
-    if (!incident) throw new NotFoundException("Incident doesn't exist");
+    if (!incident) {
+      throw new NotFoundException("Incident doesn't exist");
+    }
+
     if (incident.assignedToId !== userId) {
       throw new ForbiddenException("You cannot resolve this incident");
     }
-    if (incident.status === "resolved") {
-      throw new ConflictException("Incident is already resolved");
+
+    if (incident.status !== INCIDENT_STATUS.ACKNOWLEDGED) {
+      throw new ConflictException("Incident must be acknowledged first");
     }
 
     const resolvedAt = new Date();
-    return this.prisma.incident.update({
-      where: { id: incidentId },
+    const result = await this.prisma.incident.updateMany({
+      where: {
+        id: incidentId,
+        status: INCIDENT_STATUS.ACKNOWLEDGED,
+        assignedToId: userId,
+      },
       data: {
-        status: "resolved",
+        status: INCIDENT_STATUS.RESOLVED,
         resolvedAt,
         mttrSeconds: Math.floor(
           (resolvedAt.getTime() - incident.createdAt.getTime()) / 1000
         ),
       },
     });
+
+    if (result.count === 0) {
+      throw new ConflictException("Incident is no longer acknowledged");
+    }
+
+    return this.prisma.incident.findUnique({ where: { id: incidentId } });
   }
 }
