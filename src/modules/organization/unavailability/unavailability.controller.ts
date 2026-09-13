@@ -18,7 +18,7 @@ import { Roles } from "src/modules/common/decorators/roles.decorator";
 import { Role } from "src/generated/prisma/enums";
 import { ActiveUser } from "src/modules/common/decorators/active-user.decorator";
 import type { ActiveUserData } from "src/modules/common/interfaces/active-user.interface";
-import { PaginationSearchParams } from "src/common/dto";
+import { OffsetPaginationSearchParams } from "src/common/dto";
 
 @Controller({
   path: "teams",
@@ -66,7 +66,7 @@ export class UnavailabilityController {
   findMemberAll(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
-    @Query() query: PaginationSearchParams,
+    @Query() query: OffsetPaginationSearchParams,
     @ActiveUser() user: ActiveUserData
   ) {
     return this.unavailabilityService.findMemberAll(
@@ -92,7 +92,7 @@ export class UnavailabilityController {
   @Roles(Role.SRE)
   findPending(
     @Param("teamId", ParseUUIDPipe) teamId: string,
-    @Query() query: PaginationSearchParams,
+    @Query() query: OffsetPaginationSearchParams,
     @ActiveUser() user: ActiveUserData
   ) {
     return this.unavailabilityService.findPending(user.sub, teamId, query);
