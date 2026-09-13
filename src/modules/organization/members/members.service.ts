@@ -11,11 +11,7 @@ import { PrismaClientKnownRequestError } from "src/generated/prisma/internal/pri
 export class MembersService {
   constructor(private prisma: PrismaService) {}
 
-  async add(
-    tx: Prisma.TransactionClient = this.prisma,
-    teamId: string,
-    userId: string
-  ) {
+  async add(tx: Prisma.TransactionClient, teamId: string, userId: string) {
     const team = await tx.team.findUnique({
       where: { id: teamId },
     });
