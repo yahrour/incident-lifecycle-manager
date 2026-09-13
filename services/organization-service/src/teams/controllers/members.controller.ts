@@ -9,6 +9,7 @@ import {
   Headers,
   HttpCode,
   HttpStatus,
+  ParseIntPipe,
 } from "@nestjs/common";
 import { AddMemberDto } from "../dto";
 import { MembersService } from "../services/members.service";
@@ -42,7 +43,7 @@ export class MembersController {
   @Get(":id/members/:memberId")
   findOne(
     @Param("id", ParseUUIDPipe) id: string,
-    @Param("memberId", ParseUUIDPipe) memberId: string,
+    @Param("memberId", ParseIntPipe) memberId: number,
     @Headers("x-user-id") ownerId: string
   ) {
     ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
@@ -53,7 +54,7 @@ export class MembersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   removeMember(
     @Param("id", ParseUUIDPipe) id: string,
-    @Param("memberId", ParseUUIDPipe) memberId: string,
+    @Param("memberId", ParseIntPipe) memberId: number,
     @Headers("x-user-id") ownerId: string
   ) {
     ownerId = "ae69daf4-5f81-4026-8b7d-111111111111"; // WARN: remove later when attching user info in the request using the API Gateway
