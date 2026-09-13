@@ -23,6 +23,8 @@ BACKUP_DIR="/backups"
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 BACKUP_FILE="$BACKUP_DIR/backup_$TIMESTAMP.sql"
 
+ls $BACKUP_DIR
+
 log_info "Starting database backup at $TIMESTAMP..."
 
 PGPASSWORD=$POSTGRES_PASSWORD pg_dump -h $POSTGRES_HOST -U $POSTGRES_USER -d $POSTGRES_DB > $BACKUP_FILE
