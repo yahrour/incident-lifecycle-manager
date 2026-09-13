@@ -5,6 +5,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsTimeZone,
   MinLength,
 } from "class-validator";
 import { Role } from "@/generated/prisma/client";
@@ -35,4 +36,9 @@ export class CreateUserDto {
   @IsString()
   @IsOptional()
   specialty?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsTimeZone({ message: "Invalid IANA time zone format." })
+  timezone: string;
 }
