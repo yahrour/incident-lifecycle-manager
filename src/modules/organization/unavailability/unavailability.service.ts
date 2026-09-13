@@ -6,10 +6,15 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { PrismaClientKnownRequestError } from "src/generated/prisma/internal/prismaNamespace";
-import { CreateUnavailabilityDto, UpdateUnavailabilityDto } from "./dto";
+import {
+  CreateUnavailabilityDto,
+  OffsetPaginationSearchParams,
+  CursorPaginationSearchParams,
+  UpdateUnavailabilityDto,
+} from "./dto";
 import { PrismaService } from "src/common/prisma/prisma.service";
 import { Team, TeamMember } from "src/generated/prisma/client";
-import { OffsetPaginationSearchParams } from "./dto";
+import { Cursor, cursorSchema } from "./types";
 
 @Injectable()
 export class UnavailabilityService {
@@ -55,6 +60,29 @@ export class UnavailabilityService {
     this.verifyAuthority(targetMember, requesterUserId);
 
     return targetMember;
+  }
+
+  private encodeCursor(cursor: Cursor): string {
+    return Buffer.from(JSON.stringify(cursor)).toString("base64url");
+  }
+
+  private decodeCursor(raw: string): Cursor {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(Buffer.from(raw, "base64url").toString("utf-8"));
+    } catch {
+      throw new BadRequestException("Invalid cursor");
+    }
+
+    const result = cursorSchema.validate(parsed, {
+      stripUnknown: true,
+    });
+
+    if (result.error) {
+      throw new BadRequestException("Invalid cursor");
+    }
+
+    return result.value;
   }
 
   async create(
@@ -214,19 +242,75 @@ export class UnavailabilityService {
     return { data: unavailabilities, total };
   }
 
-  async findTeamAll(requesterId: string, teamId: string) {
+  async findTeamAll(
+    requesterId: string,
+    teamId: string,
+    query: CursorPaginationSearchParams
+  ) {
     await this.verifyTeamOwnership(teamId, requesterId);
 
-    const teamUnavailabilities = await this.prisma.teamMember.findMany({
+    const cursor = query.cursor ? this.decodeCursor(query.cursor) : null;
+    if (
+      cursor &&
+      (cursor.sortField !== query.sortField ||
+        cursor.sortOrder !== query.sortOrder)
+    ) {
+      throw new BadRequestException(
+        "Cursor sort parameters do not match query sort parameters"
+      );
+    }
+
+    const teamUnavailabilities = await this.prisma.unavailability.findMany({
       where: {
-        teamId,
+        teamMember: {
+          teamId,
+          team: { ownerId: requesterId },
+        },
       },
       include: {
-        unavailabilities: true,
+        teamMember: {
+          select: {
+            id: true,
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                specialty: true,
+              },
+            },
+          },
+        },
       },
+      take: query.limit + 1,
+      ...(cursor && {
+        skip: 1,
+        cursor: {
+          id: cursor.id,
+        },
+      }),
+      orderBy: [
+        {
+          [query.sortField]: query.sortOrder,
+        },
+        { id: query.sortOrder },
+      ],
     });
 
-    return teamUnavailabilities;
+    const hasNextPage = teamUnavailabilities.length > query.limit;
+    const data = hasNextPage
+      ? teamUnavailabilities.slice(0, query.limit)
+      : teamUnavailabilities;
+    const nextCursor = hasNextPage
+      ? this.encodeCursor({
+          id: data[data.length - 1].id,
+          sortField: query.sortField,
+          sortOrder: query.sortOrder,
+        })
+      : null;
+
+    return { data, nextCursor };
   }
 
   async removeMemberAll(
