@@ -122,7 +122,12 @@ export class InviteService {
   async accept(token: string, activeUser: ActiveUserData) {
     const invite = await this.findAndValidateToken(token);
 
-    if (invite.email !== activeUser.email) {
+    const user = await this.userService.findById(activeUser.sub);
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    if (invite.email !== user.email) {
       throw new ForbiddenException(
         "You can only accept invites sent to your registered email address."
       );
