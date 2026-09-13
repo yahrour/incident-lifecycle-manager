@@ -1,12 +1,16 @@
+import { useState } from "react";
 import logo from "../../../assets/logo-full.svg";
 import "../auth.css";
 import "./LinkExpired.css";
 
-function sendLink(formData: FormData) {
-  const email = formData.get("email");
-  console.log(email);
-}
 export default function LinkExpired() {
+  const [send, setSend] = useState(false);
+  async function sendLink(formData: FormData) {
+    // const email = formData.get("email");
+    //sending the email throw the backend
+    setSend(true);
+  }
+  if (send) return <div className="auth-card">Check your email...</div>;
   return (
     <div className="auth-layout">
       <img src={logo} alt="Better Incidents" className="app-logo" />
