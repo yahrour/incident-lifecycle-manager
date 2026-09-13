@@ -7,7 +7,7 @@ export class OnCallService {
 
   async getCurrentOnCall(teamId: string, ownerId: string) {
     const team = await this.prisma.team.findUnique({
-      where: { id: teamId, owner_id: ownerId },
+      where: { id: teamId, ownerId },
     });
 
     if (!team) {
@@ -16,10 +16,10 @@ export class OnCallService {
 
     const members = await this.prisma.teamMember.findMany({
       where: {
-        team_id: teamId,
+        teamId,
       },
       orderBy: {
-        joined_at: "asc",
+        joinedAt: "asc",
       },
       include: { unavailabilities: true },
     });
@@ -29,24 +29,23 @@ export class OnCallService {
     }
 
     const now = Date.now();
-    const rotationPeriodMs = team.rotation_period_days * 24 * 60 * 60 * 1000; // convert the rotation period to Ms
-    const elapsed = now - team.last_rotated_at.getTime(); // get the duration of when last time rotated till now
+    const rotationPeriodMs = team.rotationPeriodDays * 24 * 60 * 60 * 1000; // convert the rotation period to Ms
+    const elapsed = now - team.lastRotatedAt.getTime(); // get the duration of when last time rotated till now
     const periodsElapsed = Math.floor(elapsed / rotationPeriodMs); // get how many full rotations periods have passed
 
-    let baseIndex = team.current_rotation_index;
+    let baseIndex = team.currentRotationIndex;
 
     if (periodsElapsed > 0) {
-      baseIndex =
-        (team.current_rotation_index + periodsElapsed) % members.length;
+      baseIndex = (team.currentRotationIndex + periodsElapsed) % members.length;
       const newLastRotated = new Date(
-        team.last_rotated_at.getTime() + periodsElapsed * rotationPeriodMs
+        team.lastRotatedAt.getTime() + periodsElapsed * rotationPeriodMs
       );
 
       await this.prisma.team.update({
         where: { id: teamId },
         data: {
-          current_rotation_index: baseIndex,
-          last_rotated_at: newLastRotated,
+          currentRotationIndex: baseIndex,
+          lastRotatedAt: newLastRotated,
         },
       });
     }
@@ -57,17 +56,17 @@ export class OnCallService {
       const isUnAvailable = candidate.unavailabilities.some(
         (unavailability) => {
           return (
-            now >= unavailability.start_date.getTime() &&
-            now <= unavailability.end_date.getTime()
+            now >= unavailability.startDate.getTime() &&
+            now <= unavailability.endDate.getTime()
           );
         }
       );
       if (!isUnAvailable) {
         return {
           id: candidate.id,
-          user_id: candidate.user_id,
-          team_id: candidate.team_id,
-          joined_at: candidate.joined_at,
+          user_id: candidate.userId,
+          team_id: candidate.teamId,
+          joined_at: candidate.joinedAt,
         };
       }
     }
