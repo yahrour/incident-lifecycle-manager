@@ -38,6 +38,16 @@ export class TeamsController {
     return this.teamsService.create(user.sub, createTeamDto);
   }
 
+  @Patch(":id")
+  @Roles(Role.SRE)
+  update(
+    @Param("id", ParseUUIDPipe) id: string,
+    @ActiveUser() user: ActiveUserData,
+    @Body() updateTeamDto: UpdateTeamDto
+  ) {
+    return this.teamsService.update(id, user.sub, updateTeamDto);
+  }
+
   @Get()
   @Roles(Role.SRE)
   findAll(
@@ -56,23 +66,13 @@ export class TeamsController {
     return this.teamsService.findOne(id, user.sub);
   }
 
-  @Patch(":id")
-  @Roles(Role.SRE)
-  update(
-    @Param("id", ParseUUIDPipe) id: string,
-    @ActiveUser() user: ActiveUserData,
-    @Body() updateTeamDto: UpdateTeamDto
-  ) {
-    return this.teamsService.update(id, user.sub, updateTeamDto);
-  }
-
   @Delete(":id")
   @Roles(Role.SRE)
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(
+  delete(
     @Param("id", ParseUUIDPipe) id: string,
     @ActiveUser() user: ActiveUserData
   ) {
-    return this.teamsService.remove(id, user.sub);
+    return this.teamsService.delete(id, user.sub);
   }
 }

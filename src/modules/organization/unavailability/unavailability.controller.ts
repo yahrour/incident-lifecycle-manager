@@ -31,7 +31,6 @@ import { OffsetPaginationSearchParams } from "./dto";
 export class UnavailabilityController {
   constructor(private readonly unavailabilityService: UnavailabilityService) {}
 
-  // POST create an unavailability
   @Post(":teamId/members/:memberId/unavailabilities")
   create(
     @Param("teamId", ParseUUIDPipe) teamId: string,
@@ -47,7 +46,6 @@ export class UnavailabilityController {
     );
   }
 
-  // PATCH member unavailability
   @Patch(":teamId/members/:memberId/unavailabilities/:unavailabilityId")
   update(
     @Param("teamId", ParseUUIDPipe) teamId: string,
@@ -65,7 +63,6 @@ export class UnavailabilityController {
     );
   }
 
-  // GET member unavailabilities
   @Get(":teamId/members/:memberId/unavailabilities")
   findMemberAll(
     @Param("teamId", ParseUUIDPipe) teamId: string,
@@ -81,47 +78,6 @@ export class UnavailabilityController {
     );
   }
 
-  // GET team unavailabilities
-  @Get(":teamId/unavailabilities")
-  @Roles(Role.SRE)
-  findTeamAll(
-    @Param("teamId", ParseUUIDPipe) teamId: string,
-    @Query() query: CursorPaginationSearchParams,
-    @ActiveUser() user: ActiveUserData
-  ) {
-    return this.unavailabilityService.findTeamAll(user.sub, teamId, query);
-  }
-
-  // GET pending unavailabilities
-  @Get(":teamId/unavailabilities/pending")
-  @Roles(Role.SRE)
-  findPending(
-    @Param("teamId", ParseUUIDPipe) teamId: string,
-    @Query() query: OffsetPaginationSearchParams,
-    @ActiveUser() user: ActiveUserData
-  ) {
-    return this.unavailabilityService.findPending(user.sub, teamId, query);
-  }
-
-  // POST confirm unavailability
-  @Post(":teamId/members/:memberId/unavailabilities/:unavailabilityId/confirm")
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @Roles(Role.SRE)
-  confirm(
-    @Param("teamId", ParseUUIDPipe) teamId: string,
-    @Param("memberId", ParseIntPipe) memberId: number,
-    @Param("unavailabilityId", ParseIntPipe) unavailabilityId: number,
-    @ActiveUser() user: ActiveUserData
-  ) {
-    return this.unavailabilityService.confirm(
-      user.sub,
-      teamId,
-      memberId,
-      unavailabilityId
-    );
-  }
-
-  // DELETE member unavailabilities
   @Delete(":teamId/members/:memberId/unavailabilities")
   @HttpCode(HttpStatus.NO_CONTENT)
   removeMemberAll(
@@ -136,7 +92,6 @@ export class UnavailabilityController {
     );
   }
 
-  // DELETE member unavailability
   @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(":teamId/members/:memberId/unavailabilities/:unavailabilityId")
   removeMemberOne(
@@ -146,6 +101,43 @@ export class UnavailabilityController {
     @ActiveUser() user: ActiveUserData
   ) {
     return this.unavailabilityService.removeMemberOne(
+      user.sub,
+      teamId,
+      memberId,
+      unavailabilityId
+    );
+  }
+
+  @Get(":teamId/unavailabilities")
+  @Roles(Role.SRE)
+  findTeamAll(
+    @Param("teamId", ParseUUIDPipe) teamId: string,
+    @Query() query: CursorPaginationSearchParams,
+    @ActiveUser() user: ActiveUserData
+  ) {
+    return this.unavailabilityService.findTeamAll(user.sub, teamId, query);
+  }
+
+  @Get(":teamId/unavailabilities/pending")
+  @Roles(Role.SRE)
+  findPending(
+    @Param("teamId", ParseUUIDPipe) teamId: string,
+    @Query() query: OffsetPaginationSearchParams,
+    @ActiveUser() user: ActiveUserData
+  ) {
+    return this.unavailabilityService.findPending(user.sub, teamId, query);
+  }
+
+  @Post(":teamId/members/:memberId/unavailabilities/:unavailabilityId/confirm")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Roles(Role.SRE)
+  confirm(
+    @Param("teamId", ParseUUIDPipe) teamId: string,
+    @Param("memberId", ParseIntPipe) memberId: number,
+    @Param("unavailabilityId", ParseIntPipe) unavailabilityId: number,
+    @ActiveUser() user: ActiveUserData
+  ) {
+    return this.unavailabilityService.confirm(
       user.sub,
       teamId,
       memberId,
