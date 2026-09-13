@@ -1,45 +1,36 @@
+// @ts-check
 import eslint from '@eslint/js';
-import tseslint from '@typescript-eslint/eslint-plugin';
-import tsparser from '@typescript-eslint/parser';
-import prettierConfig from 'eslint-config-prettier';
+import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import globals from 'globals';
+import tseslint from 'typescript-eslint';
 
-export default [
+export default tseslint.config(
   {
-    ignores: [
-      '**/node_modules/**',
-      '**/dist/**',
-      '**/build/**',
-      '**/coverage/**',
-      '**/*.config.mjs',
-      '**/generated/**'
-    ],
+    ignores: ['eslint.config.mjs', 'node-modules', 'dist', 'generated'],
   },
-
   eslint.configs.recommended,
+  ...tseslint.configs.recommendedTypeChecked,
+  eslintPluginPrettierRecommended,
   {
-    // 1. Tell ESLint to target ALL TypeScript files in your workspace
-    files: ['services/**/*.ts', 'shared/**/*.ts'],
     languageOptions: {
-      parser: tsparser,
-      ecmaVersion: 'latest',
-      sourceType: 'module',
       globals: {
         ...globals.node,
-        ...globals.jest, // Useful if your teammates write tests
+        ...globals.jest,
+      },
+      sourceType: 'commonjs',
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
       },
     },
-    plugins: {
-      '@typescript-eslint': tseslint,
-    },
+  },
+  {
     rules: {
-      'no-unused-vars': 'off',
-      // Custom rules your team wants to enforce
-      '@typescript-eslint/no-unused-vars': 'warn',
-      '@typescript-eslint/no-explicit-any': 'off', // Turn off if you're okay with 'any' during development
-      'no-console': 'off',
+      '@typescript-eslint/no-unused-vars': 'error',
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-floating-promises': 'warn',
+      '@typescript-eslint/no-unsafe-argument': 'warn',
+      "prettier/prettier": ["error", { endOfLine: "auto" }],
     },
   },
-  // 2. This turns off style rules that conflict with Prettier
-  prettierConfig,
-];
+);

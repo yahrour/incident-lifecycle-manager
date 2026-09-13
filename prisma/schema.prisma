@@ -1,0 +1,137 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["organization", "auth"]
+}
+
+////////////// ORGANIZATION SCHEMA //////////////
+
+model Team {
+  id                       String       @id @default(uuid()) @db.Uuid
+  ownerId                  String       @map("owner_id") @db.Uuid
+  owner                    User         @relation(fields: [ownerId], references: [id])
+  name                     String       @unique
+  description              String?
+  rotationPeriodDays       Int          @default(7) @map("rotation_period_days")
+  rotationStartDate        DateTime     @default(now()) @map("rotation_start_date")
+  currentRotationIndex     Int          @default(0) @map("current_rotation_index")
+  lastRotatedAt            DateTime     @default(now()) @map("last_rotated_at")
+  escalationTimeoutMinutes Int          @default(5) @map("escalation_timeout_minutes")
+  createdAt                DateTime     @default(now()) @map("created_at")
+  updatedAt                DateTime     @updatedAt @map("updated_at")
+  teamMembers              TeamMember[]
+
+  @@map("teams")
+  @@schema("organization")
+}
+
+model TeamMember {
+  id               Int              @id @default(autoincrement())
+  userId           String           @unique @map("user_id") @db.Uuid
+  user             User             @relation(fields: [userId], references: [id])
+  teamId           String           @map("team_id") @db.Uuid
+  team             Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  joinedAt         DateTime         @default(now()) @map("joined_at")
+  unavailabilities Unavailability[]
+
+  @@map("team_members")
+  @@schema("organization")
+}
+
+model Unavailability {
+  id         Int        @id @default(autoincrement())
+  memberId   Int        @map("member_id")
+  teamMember TeamMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  startDate  DateTime   @map("start_date")
+  endDate    DateTime   @map("end_date")
+  reason     String?
+  createdAt  DateTime   @default(now()) @map("created_at")
+
+  @@unique([memberId, startDate, endDate], name: "unique_unavailability_window")
+  @@map("unavailabilities")
+  @@schema("organization")
+}
+
+////////////// AUTH SCHEMA //////////////
+
+enum Role {
+  SRE
+  ENGINEER
+
+  @@map("role")
+  @@schema("auth")
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  firstName    String   @map("first_name")
+  lastName     String   @map("last_name")
+  email        String   @unique
+  passwordHash String?  @map("password_hash")
+  role         Role
+  googleId     String?  @unique @map("google_id")
+  specialty    String?
+  isVerified   Boolean  @default(false) @map("is_verified")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  resetTokens             ResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
+
+  ownedTeams  Team[]
+  teamMembers TeamMember[]
+
+  @@map("users")
+  @@schema("auth")
+}
+
+model InviteToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  token     String   @unique
+  email     String
+  teamId    String   @map("team_id") @db.Uuid
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("invite_tokens")
+  @@schema("auth")
+}
+
+model ResetToken {
+  id    String @id @default(uuid()) @db.Uuid
+  token String @unique
+
+  userId String @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("reset_tokens")
+  @@schema("auth")
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  token     String   @unique
+  userId    String   @map("user_id") @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("email_verification_tokens")
+  @@schema("auth")
+}
