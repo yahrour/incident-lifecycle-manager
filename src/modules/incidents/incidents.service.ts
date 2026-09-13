@@ -7,7 +7,7 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { Prisma } from "@/generated/prisma/client";
-import { OnCallService } from "@/modules/organization/oncall/oncall.service";
+import { OnCallService } from "@/modules/oncall/oncall.service";
 import { CreateIncidentDto } from "./dto/create-incident.dto";
 import { FindIncidentsDto } from "./dto/find-incidents.dto";
 import { INCIDENT_STATUS } from "./constants";
