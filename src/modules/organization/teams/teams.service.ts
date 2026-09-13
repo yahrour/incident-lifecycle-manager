@@ -89,6 +89,7 @@ export class TeamsService {
         ...(query.search && {
           name: {
             contains: query.search,
+            mode: "insensitive",
           },
         }),
       },
