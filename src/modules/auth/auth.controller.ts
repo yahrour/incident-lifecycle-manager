@@ -12,7 +12,7 @@ import { SignUp } from "./dto/sign-up.dto";
 import { SignIn } from "./dto/sign-in.dto";
 import { AuthService } from "./auth.service";
 import type { Response, Request } from "express";
-import { Public } from "../../common/decorators/public.decorator";
+import { Public } from "@/common/decorators/public.decorator";
 import { RefrechTokenDto } from "./dto/refresh-token.dto";
 
 @Public()

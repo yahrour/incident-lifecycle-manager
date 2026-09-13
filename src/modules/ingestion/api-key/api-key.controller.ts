@@ -9,10 +9,10 @@ import {
   ParseUUIDPipe,
   Post,
 } from "@nestjs/common";
-import { Role } from "src/generated/prisma/enums";
-import { ActiveUser } from "../../../common/decorators/active-user.decorator";
-import { Roles } from "../../../common/decorators/roles.decorator";
-import type { ActiveUserData } from "../../../common/interfaces/active-user.interface";
+import { Role } from "@/generated/prisma/enums";
+import { ActiveUser } from "@/common/decorators/active-user.decorator";
+import { Roles } from "@/common/decorators/roles.decorator";
+import type { ActiveUserData } from "@/common/interfaces/active-user.interface";
 import { CreateApiKey } from "./dto/create-api-key.dto";
 import { ApiKeyService } from "./api-key.service";
 
