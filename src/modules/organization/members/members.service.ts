@@ -4,14 +4,19 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { PrismaService } from "src/common/prisma/prisma.service";
+import { Prisma } from "src/generated/prisma/client";
 import { PrismaClientKnownRequestError } from "src/generated/prisma/internal/prismaNamespace";
 
 @Injectable()
 export class MembersService {
   constructor(private prisma: PrismaService) {}
 
-  async add(teamId: string, userId: string) {
-    const team = await this.prisma.team.findUnique({
+  async add(
+    tx: Prisma.TransactionClient = this.prisma,
+    teamId: string,
+    userId: string
+  ) {
+    const team = await tx.team.findUnique({
       where: { id: teamId },
     });
 
@@ -26,7 +31,7 @@ export class MembersService {
     }
 
     try {
-      await this.prisma.teamMember.create({
+      await tx.teamMember.create({
         data: {
           userId,
           teamId,
