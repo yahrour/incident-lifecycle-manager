@@ -5,6 +5,8 @@ import { RegisterViaInviteDto } from "./dto/register-via-invite.dto";
 import { ActiveUser } from "../common/decorators/active-user.decorator";
 import type { ActiveUserData } from "../common/interfaces/active-user.interface";
 import { Public } from "../common/decorators/public.decorator";
+import { Roles } from "../common/decorators/roles.decorator";
+import { Role } from "src/generated/prisma/enums";
 
 @Controller({
   path: "invite",
@@ -13,6 +15,7 @@ import { Public } from "../common/decorators/public.decorator";
 export class InviteController {
   constructor(private readonly inviteService: InviteService) {}
 
+  @Roles(Role.SRE)
   @Post("create")
   create(@Body() createInvite: CreateInvite) {
     return this.inviteService.createInvite(createInvite);

@@ -38,8 +38,6 @@ export class AccessTokenGuard implements CanActivate {
         Record<string, unknown>
       >(token, {
         secret: this.configService.getOrThrow<string>("JWT_SECRET"),
-        audience: this.configService.getOrThrow<string>("JWT_AUDIENCE"),
-        issuer: this.configService.getOrThrow<string>("JWT_ISSUER"),
       });
 
       (request as Request & { user: Record<string, unknown> }).user = payload;
