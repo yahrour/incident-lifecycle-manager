@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
+import { Cron, CronExpression } from "@nestjs/schedule";
 import { PrismaService } from "src/prisma/prisma.service";
 
 @Injectable()
@@ -8,69 +9,90 @@ export class OnCallService {
   async getCurrentOnCall(teamId: string, ownerId: string) {
     const team = await this.prisma.team.findUnique({
       where: { id: teamId, ownerId },
+      include: {
+        teamMembers: {
+          orderBy: { joinedAt: "asc" },
+          select: {
+            userId: true,
+          },
+        },
+      },
     });
 
     if (!team) {
       throw new NotFoundException("Team doesn't exist");
     }
 
-    const members = await this.prisma.teamMember.findMany({
-      where: {
-        teamId,
-      },
-      orderBy: {
-        joinedAt: "asc",
-      },
-      include: { unavailabilities: true },
-    });
-
-    if (members.length === 0) {
+    if (team.teamMembers.length === 0) {
       return null;
     }
 
-    const now = Date.now();
-    const rotationPeriodMs = team.rotationPeriodDays * 24 * 60 * 60 * 1000; // convert the rotation period to Ms
-    const elapsed = now - team.lastRotatedAt.getTime(); // get the duration of when last time rotated till now
-    const periodsElapsed = Math.floor(elapsed / rotationPeriodMs); // get how many full rotations periods have passed
+    const primary =
+      team.teamMembers[team.currentRotationIndex % team.teamMembers.length];
+    const secondary =
+      team.teamMembers[
+        (team.currentRotationIndex + 1) % team.teamMembers.length
+      ];
 
-    let baseIndex = team.currentRotationIndex;
+    const data = {
+      teamId: team.id,
+      escalationTimeoutMinutes: team.escalationTimeoutMinutes,
+      chain: [
+        { role: "PRIMARY", userId: primary.userId },
+        { role: "SECONDARY", userId: secondary.userId },
+      ],
+    };
 
-    if (periodsElapsed > 0) {
-      baseIndex = (team.currentRotationIndex + periodsElapsed) % members.length;
-      const newLastRotated = new Date(
-        team.lastRotatedAt.getTime() + periodsElapsed * rotationPeriodMs
-      );
+    return data;
+  }
 
-      await this.prisma.team.update({
-        where: { id: teamId },
-        data: {
-          currentRotationIndex: baseIndex,
-          lastRotatedAt: newLastRotated,
+  @Cron(CronExpression.EVERY_10_SECONDS)
+  async processRotations() {
+    const teams = await this.prisma.team.findMany({
+      select: {
+        id: true,
+        lastRotatedAt: true,
+        currentRotationIndex: true,
+        rotationPeriodDays: true,
+        rotationStartDate: true,
+        _count: {
+          select: { teamMembers: true },
         },
-      });
-    }
+      },
+    });
 
-    // loop over the team members starting from the current on-call member till finding the first available one
-    for (let offset = 0; offset < members.length; offset++) {
-      const candidate = members[(baseIndex + offset) % members.length];
-      const isUnAvailable = candidate.unavailabilities.some(
-        (unavailability) => {
-          return (
-            now >= unavailability.startDate.getTime() &&
-            now <= unavailability.endDate.getTime()
-          );
-        }
+    const now = new Date();
+
+    for (const team of teams) {
+      if (now < team.rotationStartDate) {
+        continue;
+      }
+
+      const baseTime = Math.max(
+        team.lastRotatedAt.getTime(),
+        team.rotationStartDate.getTime()
       );
-      if (!isUnAvailable) {
-        return {
-          id: candidate.id,
-          userId: candidate.userId,
-          teamId: candidate.teamId,
-          joinedAt: candidate.joinedAt,
-        };
+      const daysSinceLastRotation =
+        (now.getTime() - baseTime) / (1000 * 60 * 60 * 24);
+
+      if (daysSinceLastRotation >= team.rotationPeriodDays) {
+        const totalTeamMembers = team._count.teamMembers;
+
+        if (totalTeamMembers === 0) {
+          continue;
+        }
+
+        await this.prisma.team.update({
+          where: { id: team.id },
+          data: {
+            lastRotatedAt: now,
+            currentRotationIndex:
+              (team.currentRotationIndex + 1) % totalTeamMembers,
+          },
+        });
+
+        // TODO: trigger a WEBHOOK to alert on-call engineer that his on-call for X rotationPeriodDays
       }
     }
-
-    return null;
   }
 }
