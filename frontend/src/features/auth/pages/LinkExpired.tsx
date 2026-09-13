@@ -2,6 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 import "../auth.css";
 import { AuthCard } from "../components/AuthCard";
+import { Field } from "../components/Field";
 
 // the mutationFn — one argument in, the data you want in `data` out.
 async function resendLink(email: string) {
@@ -52,18 +53,13 @@ export default function LinkExpired() {
           </p>
 
           <form action={sendLink} className="custom-form">
-            <div className="flex text-left flex-col gap-5">
-              <label htmlFor="email">Work email</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                required
-                disabled={isPending}
-                className="w-full rounded-lg border border-(--border) bg-transparent px-3 py-2 outline-none focus:border-blue-500 disabled:opacity-50"
-              />
-            </div>
-
+            <Field
+              label="Work email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              disabled={isPending}
+            />
             {isError && <p className="form-error">{getErrorMessage(error)}</p>}
 
             <button type="submit" className="app-button" disabled={isPending}>
