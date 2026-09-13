@@ -30,6 +30,11 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException("Invalid credentials");
     }
+    if (!user.passwordHash) {
+      throw new UnauthorizedException(
+        "This account was created with Google. Please sign in with Google."
+      );
+    }
     const isMatch = await this.bcrypt.compare(
       signIn.password,
       user.passwordHash

@@ -3,7 +3,7 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { BcryptService } from "../common/security/bcrypt.service";
-
+import { Role } from "@prisma/client";
 @Injectable()
 export class UsersService {
   constructor(
@@ -42,6 +42,26 @@ export class UsersService {
       },
     });
   }
+
+  async createWithGoogle(
+    email: string,
+    googleId: string,
+    firstName: string,
+    lastName: string,
+    role: Role
+  ) {
+    return this.prisma.user.create({
+      data: {
+        email,
+        googleId,
+        firstName: firstName || "Google", // Fallbacks just in case
+        lastName: lastName || "User",
+        role,
+        isVerified: true, // Google emails are already verified!
+        // Notice we do NOT pass a passwordHash here at all
+      },
+    });
+  }
   async findByEmail(email: string) {
     return this.prisma.user.findUnique({
       where: { email },
@@ -51,6 +71,11 @@ export class UsersService {
   async findById(id: string) {
     return this.prisma.user.findUnique({
       where: { id },
+    });
+  }
+  async findGoogleId(googleId: string) {
+    return this.prisma.user.findUnique({
+      where: { googleId },
     });
   }
 }
