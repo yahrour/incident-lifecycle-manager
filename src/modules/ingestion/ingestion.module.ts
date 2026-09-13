@@ -1,9 +1,10 @@
 import { Module } from "@nestjs/common";
-import { IngestionController } from "./ingestion.controller";
-import { IngestionService } from "./ingestion.service";
+import { ApiKeyModule } from "./api-key/api-key.module";
+import { AlertModule } from "./alert/alert.module";
 
 @Module({
-  controllers: [IngestionController],
-  providers: [IngestionService],
+  controllers: [],
+  providers: [],
+  imports: [ApiKeyModule, AlertModule],
 })
 export class IngestionModule {}
