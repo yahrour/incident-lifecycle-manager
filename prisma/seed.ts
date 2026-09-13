@@ -74,6 +74,7 @@ async function createApiKey(ownerId: string, name: string) {
       keyPrefix,
       keyHash,
       enabled: true,
+      expiresAt: new Date(),
     },
   });
 
