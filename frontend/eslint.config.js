@@ -8,7 +8,7 @@ import prettier from "eslint-config-prettier";
 import pluginQuery from "@tanstack/eslint-plugin-query";
 
 export default defineConfig([
-  globalIgnores(["dist", "src/components/ui/"]),
+  globalIgnores(["dist", "src/components/ui/", "src/hooks/use-mobile.ts"]),
   ...pluginQuery.configs["flat/recommended"],
   {
     files: ["**/*.{ts,tsx}"],
