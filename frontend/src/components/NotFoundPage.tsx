@@ -18,7 +18,7 @@ export default function NotFoundPage() {
     : "/login";
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#f2efe9] px-4">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="flex flex-col items-center text-center">
         <span className="text-xs font-semibold tracking-widest text-[#a39a8b]">
           ERROR 404
