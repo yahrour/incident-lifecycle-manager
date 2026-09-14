@@ -4,7 +4,10 @@ import { Public } from "@/common/decorators/public.decorator";
 import { GoogleToken } from "../dto/google-token.dto";
 import type { Response } from "express";
 
-@Controller("authentication/google")
+@Controller({
+  path: "authentication/google",
+  version: "1",
+})
 export class GoogleAuthController {
   constructor(private readonly googleAuthService: GoogleAuthService) {}
   @Public()
