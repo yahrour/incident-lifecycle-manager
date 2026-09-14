@@ -20,10 +20,20 @@ import { VerifySignupEmailDto } from "./dto/verify-signup-email.dto";
 import { ForgotPasswordDto } from "./dto/forgot-password.dto";
 import { ResetPasswordDto } from "./dto/reset-password.dto";
 
-const AUTH_COOKIE_OPTIONS: CookieOptions = {
+const BASE_COOKIE_OPTIONS: CookieOptions = {
   httpOnly: true,
   sameSite: "lax",
   secure: process.env.NODE_ENV === "production",
+};
+
+const ACCESS_COOKIE_OPTIONS: CookieOptions = {
+  ...BASE_COOKIE_OPTIONS,
+  path: "/api",
+};
+
+const REFRESH_COOKIE_OPTIONS: CookieOptions = {
+  ...BASE_COOKIE_OPTIONS,
+  path: "/api/v1/auth",
 };
 
 @Public()
@@ -37,7 +47,6 @@ export class AuthController {
   signUp(@Body() signUp: SignUp) {
     return this.authService.signUp(signUp);
   }
-
   @HttpCode(HttpStatus.OK)
   @Post("sign-in")
   async signIn(
@@ -46,11 +55,11 @@ export class AuthController {
   ) {
     const { accessToken, refreshToken } = await this.authService.signIn(signIn);
     response.cookie("refreshToken", refreshToken, {
-      ...AUTH_COOKIE_OPTIONS,
+      ...REFRESH_COOKIE_OPTIONS,
       maxAge: 24 * 60 * 60 * 1000,
     });
     response.cookie("accessToken", accessToken, {
-      ...AUTH_COOKIE_OPTIONS,
+      ...ACCESS_COOKIE_OPTIONS,
       maxAge: 15 * 60 * 1000,
     });
     return { message: "SignIn successful" };
@@ -87,8 +96,8 @@ export class AuthController {
     const cookies = request.cookies as Record<string, string> | undefined;
     await this.authService.logout(cookies?.["refreshToken"]);
 
-    response.clearCookie("accessToken", AUTH_COOKIE_OPTIONS);
-    response.clearCookie("refreshToken", AUTH_COOKIE_OPTIONS);
+    response.clearCookie("accessToken", ACCESS_COOKIE_OPTIONS);
+    response.clearCookie("refreshToken", REFRESH_COOKIE_OPTIONS);
     return { message: "Logged out successfully" };
   }
 
