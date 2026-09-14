@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { cn } from "@/lib/utils";
+import type { Role } from "@/types";
 
 const managerItems = {
   respondItems: [
@@ -52,7 +53,7 @@ const engineerItems = {
     { label: "Delivery log", href: "/engineer/delivery-log", icon: Send },
   ],
   orgItems: [
-    { label: "Availability", href: "/engineer/availability", icon: Calendar },
+    { label: "Team", href: "/engineer/team", icon: Users },
     { label: "Time Off", href: "/engineer/time-off", icon: CalendarOff },
   ],
   setupItems: [
@@ -67,7 +68,7 @@ export function AppSidebar() {
     id: "#1",
     name: "Tobi",
     email: "tobi@acme.com",
-    role: "engineer" as "manager" | "engineer",
+    role: "manager" as Role,
     team: "Acme Cloud",
   };
 
