@@ -16,6 +16,7 @@ export class GoogleAuthController {
     @Res({ passthrough: true }) response: Response,
     @Body() googleToken: GoogleToken
   ) {
+    console.log("this was called");
     const { accessToken, refreshToken } =
       await this.googleAuthService.authentificate(googleToken.token);
     const isProduction = process.env.NODE_ENV === "production";

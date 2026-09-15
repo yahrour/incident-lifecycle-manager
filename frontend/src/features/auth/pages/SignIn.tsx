@@ -82,17 +82,15 @@ export default function SignIn() {
         <div className="h-px flex-1 bg-border" />
       </div>
       <div>
-        {/*
-    <GoogleLogin
-      onSuccess={(credentialResponse) => {
-        if (credentialResponse.credential) {
-          googleMutation.mutate(credentialResponse.credential);
-        }
-      }}
-      onError={() => console.error("Google sign-in failed")}
-      width="400"
-    />
-  */}
+        <GoogleLogin
+          onSuccess={(credentialResponse) => {
+            if (credentialResponse.credential) {
+              googleMutation.mutate(credentialResponse.credential);
+            }
+          }}
+          onError={() => console.error("Google sign-in failed")}
+          width="400"
+        />
       </div>
       <div className="flex gap-2">
         <Link
