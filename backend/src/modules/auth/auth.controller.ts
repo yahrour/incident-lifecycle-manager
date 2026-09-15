@@ -13,18 +13,16 @@ import {
 import { SignUp } from "./dto/sign-up.dto";
 import { SignIn } from "./dto/sign-in.dto";
 import { AuthService } from "./auth.service";
-import type { Response, Request, CookieOptions } from "express";
+import type { Response, Request } from "express";
 import { Public } from "@/common/decorators/public.decorator";
 import { RefrechTokenDto } from "./dto/refresh-token.dto";
 import { VerifySignupEmailDto } from "./dto/verify-signup-email.dto";
 import { ForgotPasswordDto } from "./dto/forgot-password.dto";
 import { ResetPasswordDto } from "./dto/reset-password.dto";
-
-const AUTH_COOKIE_OPTIONS: CookieOptions = {
-  httpOnly: true,
-  sameSite: "lax",
-  secure: process.env.NODE_ENV === "production",
-};
+import {
+  ACCESS_COOKIE_OPTIONS,
+  REFRESH_COOKIE_OPTIONS,
+} from "./auth-cookie.constants";
 
 @Public()
 @Controller({
@@ -45,14 +43,8 @@ export class AuthController {
     @Body() signIn: SignIn
   ) {
     const { accessToken, refreshToken } = await this.authService.signIn(signIn);
-    response.cookie("refreshToken", refreshToken, {
-      ...AUTH_COOKIE_OPTIONS,
-      maxAge: 24 * 60 * 60 * 1000,
-    });
-    response.cookie("accessToken", accessToken, {
-      ...AUTH_COOKIE_OPTIONS,
-      maxAge: 15 * 60 * 1000,
-    });
+    response.cookie("refreshToken", refreshToken, REFRESH_COOKIE_OPTIONS);
+    response.cookie("accessToken", accessToken, ACCESS_COOKIE_OPTIONS);
     return { message: "SignIn successful" };
   }
 
@@ -87,8 +79,8 @@ export class AuthController {
     const cookies = request.cookies as Record<string, string> | undefined;
     await this.authService.logout(cookies?.["refreshToken"]);
 
-    response.clearCookie("accessToken", AUTH_COOKIE_OPTIONS);
-    response.clearCookie("refreshToken", AUTH_COOKIE_OPTIONS);
+    response.clearCookie("accessToken", ACCESS_COOKIE_OPTIONS);
+    response.clearCookie("refreshToken", REFRESH_COOKIE_OPTIONS);
     return { message: "Logged out successfully" };
   }
 
