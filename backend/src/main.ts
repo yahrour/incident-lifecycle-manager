@@ -10,6 +10,11 @@ async function bootstrap() {
   app.enableVersioning({
     type: VersioningType.URI,
   });
+  app.enableCors({
+    origin:
+      configService.get<string>("FRONTEND_URL") ?? "http://localhost:5173",
+    credentials: true,
+  });
   app.setGlobalPrefix("/api");
   app.useGlobalPipes(
     new ValidationPipe({
