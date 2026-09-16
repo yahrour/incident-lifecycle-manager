@@ -9,6 +9,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -75,29 +76,29 @@ export function AppSidebar() {
   const items = user.role === "manager" ? managerItems : engineerItems;
 
   return (
-    <Sidebar className="border-none bg-primary text-[#e8ddd3]">
-      <SidebarHeader className="flex flex-row items-center p-4">
-        <img src="/icon.svg" alt="icon" className="w-8" />
-        <span className="text-xs font-semibold uppercase">
-          better incidents
-        </span>
+    <Sidebar className="border-none bg-primary" collapsible="icon">
+      <SidebarHeader className="flex flex-row items-center justify-between p-4 group-data-[collapsible=icon]:justify-center">
+        <div className="flex flex-row items-center group-data-[collapsible=icon]:hidden">
+          <img src="/icon.svg" alt="icon" className="w-8" />
+        </div>
+        <SidebarTrigger className="z-50 hover:bg-transparent hover:text-white" />
       </SidebarHeader>
 
       <SidebarContent className="gap-6 px-2">
-        <SidebarGroup>
-          <SidebarGroupLabel className="px-2 text-[10px] font-medium tracking-wider">
+        <SidebarGroup className="space-y-2">
+          <SidebarGroupLabel className="px-2 text-xs text-muted/50 font-bold tracking-wider">
             RESPOND
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-0.5">
               {items.respondItems.map((item) => (
                 <SidebarMenuItem key={item.label}>
                   <SidebarMenuButton
                     className={cn(
-                      "gap-2.5 rounded-lg font-medium",
+                      "text-sm gap-2.5 rounded-lg font-medium",
                       location.pathname === item.href
                         ? "bg-secondary text-white hover:bg-secondary"
-                        : "text-[#e8ddd3]"
+                        : "text-muted/70"
                     )}
                     render={
                       <Link to={item.href}>
@@ -112,8 +113,8 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="px-2 text-[10px] font-medium tracking-wider">
+        <SidebarGroup className="space-y-0.5">
+          <SidebarGroupLabel className="px-2 text-xs text-muted/50 font-bold tracking-wider">
             ORG
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -122,10 +123,10 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.label}>
                   <SidebarMenuButton
                     className={cn(
-                      "gap-2.5 rounded-lg font-medium",
+                      "text-sm gap-2.5 rounded-lg font-medium",
                       location.pathname === item.href
                         ? "bg-secondary text-white hover:bg-secondary"
-                        : "text-[#e8ddd3]"
+                        : "text-muted/70"
                     )}
                     render={
                       <Link to={item.href}>
@@ -140,8 +141,8 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="px-2 text-[10px] font-medium tracking-wider">
+        <SidebarGroup className="space-y-0.5">
+          <SidebarGroupLabel className="px-2 text-xs text-muted/50 font-bold tracking-wider">
             SETUP
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -150,10 +151,10 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.label}>
                   <SidebarMenuButton
                     className={cn(
-                      "gap-2.5 rounded-lg font-medium",
+                      "text-sm gap-2.5 rounded-lg font-medium",
                       location.pathname === item.href
                         ? "bg-secondary text-white hover:bg-secondary"
-                        : "text-[#e8ddd3]"
+                        : "text-muted/70"
                     )}
                     render={
                       <Link to={item.href}>
@@ -181,7 +182,7 @@ export function AppSidebar() {
               </AvatarFallback>
             </Avatar>
           </div>
-          <div className="flex-1 text-left">
+          <div className="flex-1 text-left group-data-[collapsible=icon]:hidden">
             <p className="text-sm font-medium text-[#e8ddd3]">
               {user?.name ?? "Unknown"}
             </p>
