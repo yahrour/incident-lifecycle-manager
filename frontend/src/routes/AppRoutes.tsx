@@ -9,13 +9,13 @@ export default function AppRoutes() {
   return (
     <Routes>
       {/* Public — must stay outside RequireAuth */}
-      <Route path="/login" element={SignIn()} />
+      <Route path="/login" element={<SignIn />} />
       <Route path="/unauthorized" element={<div>Not allowed</div>} />
 
       {/* Everything below requires being logged in */}
       <Route element={<RequireAuth />}>
         {/* Manager only */}
-        <Route element={<ProtectedRoute allowedRole="manager" />}>
+        <Route element={<ProtectedRoute allowedRole="SRE" />}>
           <Route element={<AppLayout />}>
             <Route path="/" element={<div>Home</div>} />
             <Route path="/manager/teams" element={<div>manage teams</div>} />
@@ -35,7 +35,7 @@ export default function AppRoutes() {
         </Route>
 
         {/* Engineer only */}
-        <Route element={<ProtectedRoute allowedRole="engineer" />}>
+        <Route element={<ProtectedRoute allowedRole="ENGINEER" />}>
           <Route element={<AppLayout />}>
             <Route path="/engineer/my-shift" element={<div>my shift</div>} />
             <Route

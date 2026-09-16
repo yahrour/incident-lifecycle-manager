@@ -1,9 +1,10 @@
 import axios from "axios";
-import { Link } from "react-router";
+import { Link, Navigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { AuthCard } from "../components/AuthCard";
+import { useAuth } from "../context/AuthContext";
 import useSignIn from "../hooks/useSignIn";
 
 function getErrorMessage(error: Error) {
@@ -14,7 +15,11 @@ function getErrorMessage(error: Error) {
 }
 
 export default function SignIn() {
+  const { user, isLoading } = useAuth();
   const { mutate, isPending, error } = useSignIn();
+
+  if (isLoading) return null;
+  if (user) return <Navigate to="/" replace />;
 
   function submit(formData: FormData) {
     if (isPending) return;
@@ -25,12 +30,10 @@ export default function SignIn() {
 
   return (
     <AuthCard>
-      <h1 className="font-heading text-base font-semibold tracking-tight">
-        Sign in
-      </h1>
+      <h1 className="font-heading tracking-tight">Sign in</h1>
 
-      <form action={submit} className="flex flex-col gap-4">
-        <FieldGroup>
+      <form action={submit} className="flex flex-col gap-5">
+        <FieldGroup className="gap-5">
           <Field>
             <FieldLabel htmlFor="email">Work email</FieldLabel>
             <Input
@@ -42,7 +45,15 @@ export default function SignIn() {
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="password">Password</FieldLabel>
+            <div className="flex items-center justify-between">
+              <FieldLabel htmlFor="password">Password</FieldLabel>
+              <Link
+                to="/forgot-password"
+                className="text-xs text-primary hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <Input
               id="password"
               name="password"
@@ -54,28 +65,23 @@ export default function SignIn() {
         </FieldGroup>
 
         {error && (
-          <p className="text-xs text-destructive">{getErrorMessage(error)}</p>
+          <p className="text-sm text-destructive">{getErrorMessage(error)}</p>
         )}
 
-        <Button type="submit" disabled={isPending}>
+        <Button type="submit" className="w-full" disabled={isPending}>
           {isPending ? "Signing in..." : "Sign in"}
         </Button>
       </form>
 
-      <div className="flex gap-2">
-        <Link
-          to="/forgot-password"
-          className="flex-1 rounded-md bg-primary/10 py-2 text-xs font-semibold text-primary"
-        >
-          Forgot password?
-        </Link>
+      <p className="text-center text-sm text-muted-foreground">
+        New here?{" "}
         <Link
           to="/register"
-          className="flex-1 rounded-md border border-border py-2 text-xs font-semibold"
+          className="font-medium text-primary hover:underline"
         >
           Create an account
         </Link>
-      </div>
+      </p>
     </AuthCard>
   );
 }
