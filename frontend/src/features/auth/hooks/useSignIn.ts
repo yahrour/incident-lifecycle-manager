@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { signIn } from "../services/authService";
-function useAuthSucces() {
+
+function useAuthSuccess() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   return async () => {
@@ -11,6 +12,6 @@ function useAuthSucces() {
 }
 
 export default function useSignIn() {
-  const onSuccess = useAuthSucces();
+  const onSuccess = useAuthSuccess();
   return useMutation({ mutationFn: signIn, onSuccess });
 }
