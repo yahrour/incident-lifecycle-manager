@@ -1,24 +1,11 @@
-import type { Role } from "@/types";
-import { Navigate, Outlet, useLocation } from "react-router";
+// src/routes/ProtectedRoute.tsx
+import { Navigate, Outlet } from "react-router";
+import { useAuth } from "@/features/auth/context/AuthContext";
 
-export function ProtectedRoute({ allowedRole }: { allowedRole: Role }) {
-  const user = {
-    id: "#1",
-    name: "Tobi",
-    email: "tobi@acme.com",
-    role: "manager" as "manager" | "engineer",
-    team: "Acme Cloud",
-  };
-
-  const location = useLocation();
-
-  if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  if (user.role != allowedRole) {
-    return <Navigate to="/" replace />;
-  }
+export function ProtectedRoute({ allowedRole }: { allowedRole: string }) {
+  const { user } = useAuth();
+  if (user?.role !== allowedRole)
+    return <Navigate to="/unauthorized" replace />;
 
   return <Outlet />;
 }
