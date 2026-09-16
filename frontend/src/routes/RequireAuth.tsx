@@ -1,5 +1,5 @@
 // src/components/ProtectedRoute.tsx
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet } from "react-router";
 import { useAuth } from "@/features/auth/context/AuthContext";
 
 export function RequireAuth() {
