@@ -2,6 +2,7 @@ import NotFoundPage from "@/components/NotFoundPage";
 import { Route, Routes } from "react-router";
 import { AppLayout } from "./AppLayout";
 import { ProtectedRoute } from "./ProtectedRoute";
+import { Teams } from "@/features/teams";
 
 export default function AppRoutes() {
   return (
@@ -12,7 +13,7 @@ export default function AppRoutes() {
       <Route element={<ProtectedRoute allowedRole={"manager"} />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<div>Home</div>} />
-          <Route path="/manager/teams" element={<div>manage teams</div>} />
+          <Route path="/manager/teams" element={<Teams />} />
           <Route
             path="/manager/engineers"
             element={<div>manage engineers</div>}
