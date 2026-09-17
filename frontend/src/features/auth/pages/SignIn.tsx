@@ -22,7 +22,6 @@ export default function SignIn() {
   if (user) return <Navigate to="/" replace />;
 
   function submit(formData: FormData) {
-    if (isPending) return;
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
     mutate({ email, password });
