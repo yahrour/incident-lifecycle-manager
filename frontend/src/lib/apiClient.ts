@@ -13,7 +13,7 @@ apiClient.interceptors.response.use(
       const status = error.response?.status;
       const url = error.config?.url ?? "";
       const onLoginPage = window.location.pathname === "/login";
-      const isSessionCheck = url.includes("/auth/me");
+      const isSessionCheck = url.includes("/users/me");
 
       // Only force a redirect when an already-logged-in user's session expires
       if (status === 401 && !isSessionCheck && !onLoginPage) {
