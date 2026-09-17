@@ -8,6 +8,7 @@ export const queryClient = new QueryClient({
         if (axios.isAxiosError(error) && error.response?.status === 401) {
           return false;
         }
+        // retry on networks failures only
         if (failureCount >= 3) return false;
         return true;
       },
