@@ -6,19 +6,26 @@ export const apiClient = axios.create({
   withCredentials: true,
 });
 
-// NOTE: soufian need to review this
 apiClient.interceptors.response.use(
   (response) => response,
   (error: unknown) => {
-    if (axios.isAxiosError(error) && error.response?.status === 401) {
-      window.location.href = "/login";
-    }
     if (axios.isAxiosError(error)) {
-      return Promise.reject(new Error(error.message));
-    }
-    if (error instanceof Error) {
+      const status = error.response?.status;
+      const url = error.config?.url ?? "";
+      const onLoginPage = window.location.pathname === "/login";
+      const isSessionCheck = url.includes("/users/me");
+
+      // Only force a redirect when an already-logged-in user's session expires
+      if (status === 401 && !isSessionCheck && !onLoginPage) {
+        window.location.href = "/login";
+      }
+
+      // Keep the AxiosError so callers can still read error.response.status
       return Promise.reject(error);
     }
-    return Promise.reject(new Error(String(error)));
+
+    return Promise.reject(
+      error instanceof Error ? error : new Error(String(error))
+    );
   }
 );
