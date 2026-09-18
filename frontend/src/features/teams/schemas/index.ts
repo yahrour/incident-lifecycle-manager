@@ -20,6 +20,7 @@ export const createTeamSchema = z
     rotationPeriodDays: z
       .number({ error: "Rotation period must be a number" })
       .int("Rotation period must be a whole number")
+      .max(30, "Rotation period must not exceed 30 days")
       .positive("Rotation period must be at least 1 day")
       .default(DEFAULT_ROTATION_PERIOD_DAYS),
 
@@ -35,6 +36,7 @@ export const createTeamSchema = z
     escalationTimeoutMinutes: z
       .number({ error: "Escalation timeout must be a number" })
       .int("Escalation timeout must be a whole number")
+      .max(1440, "Escalation timeout must not exceed 1440 minutes (24 hours)")
       .positive("Escalation timeout must be at least 1 minute")
       .default(DEFAULT_ESCALATION_TIMEOUT_MINUTES),
 
