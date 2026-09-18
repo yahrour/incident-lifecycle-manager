@@ -74,10 +74,7 @@ export default function SignIn() {
 
       <p className="text-center text-sm text-muted-foreground">
         New here?{" "}
-        <Link
-          to="/register"
-          className="font-medium text-primary hover:underline"
-        >
+        <Link to="/signup" className="font-medium text-primary hover:underline">
           Create an account
         </Link>
       </p>

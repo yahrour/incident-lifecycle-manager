@@ -1,71 +1,124 @@
 import { useState } from "react";
-import axios from "axios";
-import { Link, Navigate } from "react-router";
+import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+  FieldError,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { AuthCard } from "../components/AuthCard";
 import useSignUp from "../hooks/useSignUp";
-import { signUpSchema } from "../schemas";
+import { signUpSchema, type SignUpCredentials } from "../schemas";
+import { CircleAlert } from "lucide-react";
+type FieldErrors = Partial<Record<keyof SignUpCredentials, string>>;
 
 export default function SignUp() {
   const { mutate, isPending, error } = useSignUp();
+  const [errors, setErrors] = useState<FieldErrors>({});
+
   function submit(formData: FormData) {
-    const firstName = formData.get("firstName") as string;
-    const lastName = formData.get("lastName") as string;
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-    mutate({ firstName, lastName, email, password });
+    const result = signUpSchema.safeParse({
+      firstName: formData.get("firstName"),
+      lastName: formData.get("lastName"),
+      email: formData.get("email"),
+      password: formData.get("password"),
+    });
+
+    if (!result.success) {
+      const fieldErrors: FieldErrors = {};
+      for (const issue of result.error.issues) {
+        const key = issue.path[0] as keyof SignUpCredentials;
+        if (!fieldErrors[key]) fieldErrors[key] = issue.message;
+      }
+      setErrors(fieldErrors);
+      return;
+    }
+
+    setErrors({});
+    mutate(result.data);
   }
+
   return (
     <AuthCard>
       <h1 className="font-heading tracking-tight">Create an account</h1>
 
       <form action={submit} className="flex flex-col gap-5">
         <FieldGroup className="gap-5">
-          <div className="grid grid-cols-2 gap-3">
-            <Field>
-              <FieldLabel htmlFor="firstName">First name</FieldLabel>
-              <Input
-                id="firstName"
-                name="firstName"
-                autoComplete="given-name"
-                required
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="lastName">Last name</FieldLabel>
-              <Input
-                id="lastName"
-                name="lastName"
-                autoComplete="family-name"
-                required
-              />
-            </Field>
-          </div>
-          <Field>
-            <FieldLabel htmlFor="email">Work email</FieldLabel>
+          <Field data-invalid={!!errors.firstName}>
+            <FieldLabel htmlFor="firstName" className="text-foreground">
+              First name
+            </FieldLabel>
+            <Input
+              id="firstName"
+              name="firstName"
+              autoComplete="given-name"
+              aria-invalid={!!errors.firstName}
+            />
+            {errors.firstName && (
+              <FieldError className="flex items-center gap-1.5">
+                <CircleAlert className="h-3.5 w-3.5 shrink-0" />
+                {errors.firstName}
+              </FieldError>
+            )}
+          </Field>
+
+          <Field data-invalid={!!errors.lastName}>
+            <FieldLabel htmlFor="lastName" className="text-foreground">
+              Last name
+            </FieldLabel>
+            <Input
+              id="lastName"
+              name="lastName"
+              autoComplete="family-name"
+              aria-invalid={!!errors.lastName}
+            />
+            {errors.lastName && (
+              <FieldError className="flex items-center gap-1.5">
+                <CircleAlert className="h-3.5 w-3.5 shrink-0" />
+                {errors.lastName}
+              </FieldError>
+            )}
+          </Field>
+
+          <Field data-invalid={!!errors.email}>
+            <FieldLabel htmlFor="email" className="text-foreground">
+              Work email
+            </FieldLabel>
             <Input
               id="email"
               name="email"
               type="email"
               autoComplete="email"
-              required
+              aria-invalid={!!errors.email}
             />
+            {errors.email && (
+              <FieldError className="flex items-center gap-1.5">
+                <CircleAlert className="h-3.5 w-3.5 shrink-0" />
+
+                {errors.email}
+              </FieldError>
+            )}
           </Field>
-          <Field>
-            <FieldLabel htmlFor="password">Password</FieldLabel>
+
+          <Field data-invalid={!!errors.password}>
+            <FieldLabel htmlFor="password" className="text-foreground">
+              Password
+            </FieldLabel>
             <Input
               id="password"
               name="password"
               type="password"
               autoComplete="new-password"
-              minLength={8}
-              required
+              aria-invalid={!!errors.password}
             />
-            <p className="text-xs text-muted-foreground">
-              Must be at least 8 characters.
-            </p>
+            {errors.password && (
+              <FieldError className="flex items-center gap-1.5">
+                <CircleAlert className="h-3.5 w-3.5 shrink-0" />
+                {errors.password}
+              </FieldError>
+            )}
           </Field>
         </FieldGroup>
 
