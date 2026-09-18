@@ -106,7 +106,7 @@ function TeamsTable({ teams }: { teams: Team[] }) {
           <TableHead className="w-2/5">team</TableHead>
           <TableHead>services</TableHead>
           <TableHead className="w-15">members</TableHead>
-          <TableHead>roation</TableHead>
+          <TableHead>rotation</TableHead>
           <TableHead>on-call now</TableHead>
           <TableHead>escalates</TableHead>
         </TableRow>
