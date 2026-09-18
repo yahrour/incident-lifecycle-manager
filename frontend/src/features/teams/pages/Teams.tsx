@@ -131,7 +131,9 @@ function TeamsTable({ teams }: { teams: Team[] }) {
             </TableCell>
             <TableCell className="text-xs text-right">{team.members}</TableCell>
             <TableCell className="text-xs text-muted-foreground">
-              every {team.rotation} days
+              {Number(team.rotation) > 1
+                ? `every ${team.rotation} days`
+                : "every day"}
             </TableCell>
             <TableCell className="text-xs text-muted-foreground">
               {team.onCallNow}
@@ -157,8 +159,9 @@ function CreateTeamDialog() {
       name: "",
       description: "",
       escalationTimeoutMinutes: DEFAULT_ESCALATION_TIMEOUT_MINUTES,
-      timezone: null,
+      timezone: "",
       rotationPeriodDays: DEFAULT_ROTATION_PERIOD_DAYS,
+      webhookUrl: "",
     },
   });
 
@@ -167,7 +170,9 @@ function CreateTeamDialog() {
     form.reset();
     setOpen(false);
     toast.add({
+      type: "success",
       title: "Team created",
+      description: `${data.name} is ready to go.`,
     });
   };
 
@@ -328,6 +333,7 @@ function CreateTeamDialog() {
                       aria-invalid={fieldState.invalid}
                       autoComplete="off"
                       type="number"
+                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
                     />
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
@@ -350,6 +356,7 @@ function CreateTeamDialog() {
                       aria-invalid={fieldState.invalid}
                       autoComplete="off"
                       type="number"
+                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
                     />
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
