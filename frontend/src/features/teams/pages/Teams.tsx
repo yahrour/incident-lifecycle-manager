@@ -49,6 +49,7 @@ import {
   DEFAULT_ESCALATION_TIMEOUT_MINUTES,
   DEFAULT_ROTATION_PERIOD_DAYS,
 } from "../constants";
+import { useNavigate } from "react-router";
 
 const teams = [
   {
@@ -99,6 +100,8 @@ export function Teams() {
 }
 
 function TeamsTable({ teams }: { teams: Team[] }) {
+  const navigate = useNavigate();
+
   return (
     <Table>
       <TableHeader>
@@ -116,7 +119,9 @@ function TeamsTable({ teams }: { teams: Team[] }) {
           <TableRow
             key={team.team}
             className="w-full cursor-pointer"
-            onClick={() => (window.location.href = `/teams/${team.team}`)}
+            onClick={() => {
+              void navigate(`/teams/${team.team}`);
+            }}
           >
             <TableCell className="font-medium text-sm flex-1">
               {team.team}
