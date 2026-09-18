@@ -5,15 +5,17 @@ import { RequireAuth } from "./RequireAuth";
 import { ProtectedRoute } from "./ProtectedRoute";
 import SignIn from "@/features/auth/pages/SignIn";
 import SignUp from "@/features/auth/pages/signUp";
+import { GuestOnly } from "./GuestOnly";
 
 export default function AppRoutes() {
   return (
     <Routes>
       {/* Public — must stay outside RequireAuth */}
-      <Route path="/login" element={<SignIn />} />
-      <Route path="/signup" element={<SignUp />} />
       <Route path="/unauthorized" element={<div>Not allowed</div>} />
-
+      <Route element={<GuestOnly />}>
+        <Route path="/login" element={<SignIn />} />
+        <Route path="/signup" element={<SignUp />} />
+      </Route>
       {/* Everything below requires being logged in */}
       <Route element={<RequireAuth />}>
         {/* Manager only */}

@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { AuthCard } from "../components/AuthCard";
 import useSignUp from "../hooks/useSignUp";
 import { signUpSchema, type SignUpCredentials } from "../schemas";
-import { CircleAlert } from "lucide-react";
 type FieldErrors = Partial<Record<keyof SignUpCredentials, string>>;
 
 export default function SignUp() {
@@ -46,7 +45,7 @@ export default function SignUp() {
 
       <form action={submit} className="flex flex-col gap-5">
         <FieldGroup className="gap-5">
-          <Field data-invalid={!!errors.firstName}>
+          <Field>
             <FieldLabel htmlFor="firstName" className="text-foreground">
               First name
             </FieldLabel>
@@ -58,13 +57,12 @@ export default function SignUp() {
             />
             {errors.firstName && (
               <FieldError className="flex items-center gap-1.5">
-                <CircleAlert className="h-3.5 w-3.5 shrink-0" />
                 {errors.firstName}
               </FieldError>
             )}
           </Field>
 
-          <Field data-invalid={!!errors.lastName}>
+          <Field>
             <FieldLabel htmlFor="lastName" className="text-foreground">
               Last name
             </FieldLabel>
@@ -76,13 +74,12 @@ export default function SignUp() {
             />
             {errors.lastName && (
               <FieldError className="flex items-center gap-1.5">
-                <CircleAlert className="h-3.5 w-3.5 shrink-0" />
                 {errors.lastName}
               </FieldError>
             )}
           </Field>
 
-          <Field data-invalid={!!errors.email}>
+          <Field>
             <FieldLabel htmlFor="email" className="text-foreground">
               Work email
             </FieldLabel>
@@ -95,8 +92,6 @@ export default function SignUp() {
             />
             {errors.email && (
               <FieldError className="flex items-center gap-1.5">
-                <CircleAlert className="h-3.5 w-3.5 shrink-0" />
-
                 {errors.email}
               </FieldError>
             )}
@@ -115,7 +110,6 @@ export default function SignUp() {
             />
             {errors.password && (
               <FieldError className="flex items-center gap-1.5">
-                <CircleAlert className="h-3.5 w-3.5 shrink-0" />
                 {errors.password}
               </FieldError>
             )}
