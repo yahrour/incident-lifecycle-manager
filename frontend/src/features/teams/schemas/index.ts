@@ -4,55 +4,69 @@ import {
   DEFAULT_ESCALATION_TIMEOUT_MINUTES,
   DEFAULT_ROTATION_PERIOD_DAYS,
 } from "../constants";
+import { isBefore, startOfDay } from "date-fns";
 
 export const createTeamSchema = z
   .object({
-    name: z.string().min(1, "set a name for the team"),
-    description: z.string().optional(),
+    name: z.string().min(1, "Team name is required"),
+    description: z
+      .string()
+      .optional()
+      .transform((val) => (val?.trim() === "" ? undefined : val)),
     rotationPeriodDays: z
-      .number("rotation period must be a positive number")
-      .positive()
-      .default(DEFAULT_ROTATION_PERIOD_DAYS)
-      .optional(),
+      .number({ error: "Rotation period must be a number" })
+      .int("Rotation period must be a whole number")
+      .positive("Rotation period must be at least 1 day")
+      .default(DEFAULT_ROTATION_PERIOD_DAYS),
 
     rotationStartDate: z.date().optional(),
     timezone: z
       .string()
-      .refine((tz: unknown) => isValidTimeZone(tz), {
+      .refine((tz) => tz === "" || isValidTimeZone(tz), {
         error: "Invalid IANA timezone",
       })
-      .nullable()
-      .optional(),
+      .optional()
+      .transform((val) => (val?.trim() === "" ? undefined : val)),
 
     escalationTimeoutMinutes: z
-      .number("escalation timeout must be a positive number")
-      .positive()
-      .default(DEFAULT_ESCALATION_TIMEOUT_MINUTES)
-      .optional(),
-    webhookUrl: z.url().optional(),
+      .number({ error: "Escalation timeout must be a number" })
+      .int("Escalation timeout must be a whole number")
+      .positive("Escalation timeout must be at least 1 minute")
+      .default(DEFAULT_ESCALATION_TIMEOUT_MINUTES),
+
+    webhookUrl: z
+      .union([z.url("Enter a valid Discord webhook URL"), z.literal("")])
+      .optional()
+      .transform((val) => (val?.trim() === "" ? undefined : val)),
   })
   .superRefine((data, ctx) => {
-    const hasStartDate =
-      data.rotationStartDate !== undefined && data.rotationStartDate !== null;
-    const hasTimezone = data.timezone !== undefined && data.timezone !== null;
+    const hasStartDate = data.rotationStartDate !== undefined;
+    const hasTimezone = data.timezone !== undefined && data.timezone !== "";
 
-    if (!hasStartDate && !hasTimezone) {
-      return;
+    if (hasStartDate !== hasTimezone) {
+      if (hasStartDate) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["timezone"],
+          message: "Timezone is required with a rotation start date.",
+        });
+      } else {
+        ctx.addIssue({
+          code: "custom",
+          path: ["rotationStartDate"],
+          message: "Rotation start date is required with a timezone.",
+        });
+      }
     }
 
-    if (hasStartDate && !hasTimezone) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["timezone"],
-        message: "timezone is required with rotation start date.",
-      });
-    }
-
-    if (!hasStartDate && hasTimezone) {
+    if (
+      data.rotationStartDate &&
+      isBefore(data.rotationStartDate, startOfDay(new Date()))
+    ) {
       ctx.addIssue({
         code: "custom",
         path: ["rotationStartDate"],
-        message: "rotation start date is required with timezone.",
+        message: "Rotation start date must be in the future.",
       });
     }
   });
