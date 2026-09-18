@@ -2,7 +2,7 @@ import { apiClient } from "@/lib/apiClient";
 import type { User } from "@/types";
 import { type SignInCredentials } from "../types";
 import { type SignUpResponse } from "../types";
-import { type SignUpCredentials } from "../types";
+import { type SignUpCredentials } from "../schemas";
 
 export async function getMe(): Promise<User> {
   const res = await apiClient.get<User>("/users/me");
