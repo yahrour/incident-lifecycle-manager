@@ -2,14 +2,14 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { createHash } from "crypto";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { CommonAlert } from "./common/common-alert";
-import { DatadogAdapter } from "./providers/datadog/datadog.adapter";
-import { DatadogWebhookPayload } from "./providers/datadog/dto/datadog-webhook.dto";
+import { PrometheusAdapter } from "./providers/prometheus/prometheus.adapter";
+import { PrometheusAlertmanagerPayload } from "./providers/prometheus/dto/prometheus-alertmanager.dto";
 
 @Injectable()
 export class AlertService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly datadogAdapter: DatadogAdapter
+    private readonly prometheusAdapter: PrometheusAdapter
   ) {}
 
   private hashApiKey(rawKey: string) {
@@ -32,10 +32,33 @@ export class AlertService {
     return true;
   }
 
-  normalizeAlert(provider: string, payload: unknown): CommonAlert {
+  async ingestAlert(provider: string, payload: unknown) {
+    const normalized = this.normalizeAlert(provider, payload);
+    const alert = await this.prisma.alert.create({
+      data: {
+        provider: normalized.provider,
+        title: normalized.title,
+        service: normalized.serviceName,
+        message: normalized.message,
+        severity: normalized.severity,
+        occurredAt: normalized.occurredAt,
+        payload: payload as object,
+      },
+    });
+
+    return {
+      ...normalized,
+      id: alert.id,
+      receivedAt: alert.receivedAt,
+    };
+  }
+
+  private normalizeAlert(provider: string, payload: unknown): CommonAlert {
     switch (provider.toLowerCase()) {
-      case "datadog":
-        return this.datadogAdapter.normalize(payload as DatadogWebhookPayload);
+      case "prometheus":
+        return this.prometheusAdapter.normalize(
+          payload as PrometheusAlertmanagerPayload
+        );
 
       default:
         throw new NotFoundException(`Unsupported alert provider: ${provider}`);
