@@ -7,16 +7,19 @@ import {
   IsString,
   IsTimeZone,
   IsUrl,
+  MaxLength,
   ValidateIf,
 } from "class-validator";
 
 export class CreateTeamDto {
   @IsNotEmpty()
   @IsString()
+  @MaxLength(50, { message: "name must not exceed 50 characters" })
   name: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255, { message: "description must not exceed 255 characters" })
   description?: string;
 
   @IsOptional()
@@ -44,5 +47,6 @@ export class CreateTeamDto {
 
   @IsOptional()
   @IsUrl()
+  @MaxLength(255, { message: "webhook url must not exceed 255 characters" })
   webhookUrl?: string;
 }
