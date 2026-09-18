@@ -8,9 +8,13 @@ import { isBefore, startOfDay } from "date-fns";
 
 export const createTeamSchema = z
   .object({
-    name: z.string().min(1, "Team name is required"),
+    name: z
+      .string()
+      .min(1, "Team name is required")
+      .max(50, "name must not exceed 50 characters"),
     description: z
       .string()
+      .max(255, "description must not exceed 255 characters")
       .optional()
       .transform((val) => (val?.trim() === "" ? undefined : val)),
     rotationPeriodDays: z
@@ -35,7 +39,12 @@ export const createTeamSchema = z
       .default(DEFAULT_ESCALATION_TIMEOUT_MINUTES),
 
     webhookUrl: z
-      .union([z.url("Enter a valid Discord webhook URL"), z.literal("")])
+      .union([
+        z
+          .url("Enter a valid Discord webhook URL")
+          .max(255, "webhook URL must not exceed 255 characters"),
+        z.literal(""),
+      ])
       .optional()
       .transform((val) => (val?.trim() === "" ? undefined : val)),
   })
