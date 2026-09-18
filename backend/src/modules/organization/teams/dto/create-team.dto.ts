@@ -7,6 +7,7 @@ import {
   IsString,
   IsTimeZone,
   IsUrl,
+  Max,
   MaxLength,
   ValidateIf,
 } from "class-validator";
@@ -25,6 +26,9 @@ export class CreateTeamDto {
   @IsOptional()
   @IsNumber()
   @IsPositive()
+  @Max(30, {
+    message: "rotation period must not exceed 30 days",
+  })
   rotationPeriodDays?: number;
 
   @ValidateIf(
@@ -43,6 +47,9 @@ export class CreateTeamDto {
   @IsOptional()
   @IsNumber()
   @IsPositive()
+  @Max(1440, {
+    message: "escalation timeout must not exceed 1440 minutes (24 hours)",
+  })
   escalationTimeoutMinutes?: number;
 
   @IsOptional()
