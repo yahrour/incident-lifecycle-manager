@@ -3,6 +3,7 @@ import type { User } from "@/types";
 import { type SignInCredentials } from "../types";
 import { type SignUpResponse } from "../types";
 import { type SignUpCredentials } from "../schemas";
+import { type VerifyEmailResponse } from "../types";
 
 export async function getMe(): Promise<User> {
   const res = await apiClient.get<User>("/users/me");
@@ -23,5 +24,13 @@ export async function signUp(
     ...credentials,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   });
+  return data;
+}
+
+export async function verifyEmail(token: string): Promise<VerifyEmailResponse> {
+  const { data } = await apiClient.post<VerifyEmailResponse>(
+    "/auth/verify-email",
+    { token }
+  );
   return data;
 }

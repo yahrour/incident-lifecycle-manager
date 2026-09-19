@@ -10,3 +10,8 @@ export type SignUpCredentials = {
   password: string;
 };
 export type SignUpResponse = { message: string };
+
+export type VerifyEmailResponse = {
+  message: string;
+  alreadyVerified: boolean;
+};
