@@ -14,9 +14,8 @@ import { signUpSchema, type SignUpCredentials } from "../schemas";
 type FieldErrors = Partial<Record<keyof SignUpCredentials, string>>;
 
 export default function SignUp() {
-  const { mutate, isPending, error } = useSignUp();
+  const { mutate, data, isPending, isSuccess, error } = useSignUp();
   const [errors, setErrors] = useState<FieldErrors>({});
-
   function submit(formData: FormData) {
     const result = signUpSchema.safeParse({
       firstName: formData.get("firstName"),
@@ -37,6 +36,23 @@ export default function SignUp() {
 
     setErrors({});
     mutate(result.data);
+  }
+  if (isSuccess) {
+    return (
+      <AuthCard>
+        <h1 className="font-heading tracking-tight">Check your inbox</h1>
+        <p className="text-center text-sm text-muted-foreground">
+          {data?.message ??
+            "Account created. Please check your email to verify your account."}
+        </p>
+        <Link
+          to="/login"
+          className="text-center text-sm font-medium text-primary hover:underline"
+        >
+          Back to sign in
+        </Link>
+      </AuthCard>
+    );
   }
 
   return (
