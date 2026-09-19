@@ -7,6 +7,7 @@ import { Teams } from "@/features/teams";
 import SignIn from "@/features/auth/pages/SignIn";
 import SignUp from "@/features/auth/pages/signUp";
 import { GuestOnly } from "./GuestOnly";
+import ApiKeys from "@/features/ingestion/pages/ApiKeys";
 
 export default function AppRoutes() {
   return (
@@ -24,6 +25,7 @@ export default function AppRoutes() {
           <Route element={<AppLayout />}>
             <Route path="/" element={<div>Home</div>} />
             <Route path="/manager/teams" element={<Teams />} />
+            <Route path="/manager/integrations" element={<ApiKeys />} />
             <Route
               path="/manager/engineers"
               element={<div>manage engineers</div>}
