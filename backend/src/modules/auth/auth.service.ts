@@ -63,7 +63,7 @@ export class AuthService {
         return { user, rawToken };
       }
     );
-    const verifyUrl = `${this.configService.get("APP_URL")}/api/v1/auth/verify-email?token=${rawToken}`;
+    const verifyUrl = `${this.configService.get("FRONTEND_URL")}/verify-email?token=${rawToken}`;
     await this.mailService.sendEmailVerification(
       user.email,
       user.firstName,
