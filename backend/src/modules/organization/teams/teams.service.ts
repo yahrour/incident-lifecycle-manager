@@ -7,7 +7,7 @@ import {
 import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
 import {
   CreateTeamDto,
-  CursorPaginationSearchParams,
+  OffsetPaginationSearchParams,
   UpdateTeamDto,
 } from "./dto";
 import { PrismaService } from "@/common/prisma/prisma.service";
@@ -123,57 +123,41 @@ export class TeamsService {
     }
   }
 
-  async findAll(ownerId: string, query: CursorPaginationSearchParams) {
-    const cursor = query.cursor ? this.decodeCursor(query.cursor) : null;
-    if (
-      cursor &&
-      (cursor.sortField !== query.sortField ||
-        cursor.sortOrder !== query.sortOrder)
-    ) {
-      throw new BadRequestException(
-        "Cursor sort parameters do not match query sort parameters"
-      );
-    }
-
+  async findAll(ownerId: string, query: OffsetPaginationSearchParams) {
     try {
-      const teamRows = await this.prisma.team.findMany({
-        where: {
-          ownerId,
-          ...(query.search && {
-            name: {
-              contains: query.search,
-              mode: "insensitive",
+      const [teams, total] = await Promise.all([
+        this.prisma.team.findMany({
+          where: {
+            ownerId,
+            ...(query.search && {
+              name: {
+                contains: query.search,
+                mode: "insensitive",
+              },
+            }),
+          },
+          skip: query.offset,
+          take: query.limit,
+          ...(query.sortField && {
+            orderBy: {
+              [query.sortField]: query.sortOrder,
             },
           }),
-        },
-        take: query.limit + 1,
-        ...(cursor && {
-          skip: 1,
-          cursor: {
-            id: cursor.id,
+          omit: {
+            ownerId: true,
+            updatedAt: true,
+            currentRotationIndex: true,
+            lastNotifiedRotationIndex: true,
           },
         }),
-        orderBy: [
-          { [query.sortField]: query.sortOrder },
-          { id: query.sortOrder },
-        ],
-        omit: {
-          ownerId: true,
-          updatedAt: true,
-        },
-      });
+        this.prisma.team.count({
+          where: {
+            ownerId,
+          },
+        }),
+      ]);
 
-      const hasNextPage = teamRows.length > query.limit;
-      const teams = hasNextPage ? teamRows.slice(0, query.limit) : teamRows;
-      const nextCursor = hasNextPage
-        ? this.encodeCursor({
-            id: teams[teams.length - 1].id,
-            sortField: query.sortField,
-            sortOrder: query.sortOrder,
-          })
-        : null;
-
-      return { teams, nextCursor };
+      return { teams, total };
     } catch (error) {
       if (
         error instanceof PrismaClientKnownRequestError &&
