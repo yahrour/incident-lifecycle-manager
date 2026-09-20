@@ -7,21 +7,28 @@ import {
   IsString,
   IsTimeZone,
   IsUrl,
+  Max,
+  MaxLength,
   ValidateIf,
 } from "class-validator";
 
 export class CreateTeamDto {
   @IsNotEmpty()
   @IsString()
+  @MaxLength(50, { message: "name must not exceed 50 characters" })
   name: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255, { message: "description must not exceed 255 characters" })
   description?: string;
 
   @IsOptional()
   @IsNumber()
   @IsPositive()
+  @Max(30, {
+    message: "rotation period must not exceed 30 days",
+  })
   rotationPeriodDays?: number;
 
   @ValidateIf(
@@ -40,9 +47,13 @@ export class CreateTeamDto {
   @IsOptional()
   @IsNumber()
   @IsPositive()
+  @Max(1440, {
+    message: "escalation timeout must not exceed 1440 minutes (24 hours)",
+  })
   escalationTimeoutMinutes?: number;
 
   @IsOptional()
   @IsUrl()
+  @MaxLength(255, { message: "webhook url must not exceed 255 characters" })
   webhookUrl?: string;
 }
