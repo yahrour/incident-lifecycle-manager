@@ -1,13 +1,20 @@
-import { Button } from "@/components/ui/button";
+import { Controller, useForm } from "react-hook-form";
+import { createTeamSchema } from "../../schemas";
+import z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { createTeam } from "../../api/teamsApi";
+import { useState } from "react";
+import { toast } from "@/components/ui/toast";
+import axios from "axios";
+import type { ApiError } from "@/types";
 import { CalendarIcon, Plus } from "lucide-react";
+import { format } from "date-fns";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  DEFAULT_ESCALATION_TIMEOUT_MINUTES,
+  DEFAULT_ROTATION_PERIOD_DAYS,
+} from "../../constants";
+
 import {
   Dialog,
   DialogContent,
@@ -16,11 +23,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import z from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
-import { createTeamSchema } from "../schemas";
-import { toast } from "@/components/ui/toast";
 import {
   Field,
   FieldError,
@@ -28,14 +30,11 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Combobox,
   ComboboxContent,
@@ -44,115 +43,16 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-import { useState } from "react";
-import {
-  DEFAULT_ESCALATION_TIMEOUT_MINUTES,
-  DEFAULT_ROTATION_PERIOD_DAYS,
-} from "../constants";
-import { useNavigate } from "react-router";
+import { Calendar } from "@/components/ui/calendar";
+import { Spinner } from "@/components/ui/spinner";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { ErrorSection } from "../../components/ErrorSection";
 
-const teams = [
-  {
-    team: "platform",
-    services: ["api-gateway", "auth", "payments"],
-    members: 8,
-    rotation: "7",
-    onCallNow: "Sarah Chen",
-    escalates: "Platform Lead",
-  },
-  {
-    team: "frontend",
-    services: ["web-app", "mobile-app"],
-    members: 6,
-    rotation: "Daily",
-    onCallNow: "James Wilson",
-    escalates: "Frontend Lead",
-  },
-  {
-    team: "data",
-    services: ["data-pipeline", "analytics", "warehouse"],
-    members: 5,
-    rotation: 9,
-    onCallNow: "Maya Patel",
-    escalates: "Data Lead",
-  },
-];
-type Team = (typeof teams)[0];
-
-export function Teams() {
-  return (
-    <div>
-      <div className="bg-white flex items-center gap-2 px-4 py-3 border-b">
-        <h1 className="font-medium text-sm">Teams</h1>
-        <span className="text-muted-foreground text-xs">3 teams</span>
-      </div>
-      <div className="mt-2 p-4 space-y-4">
-        <div className="flex justify-between items-center">
-          <p className="text-xs opacity-50">
-            Organize engineers into teams to manage on-call rotations
-          </p>
-          <CreateTeamDialog />
-        </div>
-        <TeamsTable teams={teams} />
-      </div>
-    </div>
-  );
-}
-
-function TeamsTable({ teams }: { teams: Team[] }) {
-  const navigate = useNavigate();
-
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow className="uppercase">
-          <TableHead className="w-2/5">team</TableHead>
-          <TableHead>services</TableHead>
-          <TableHead className="w-15">members</TableHead>
-          <TableHead>rotation</TableHead>
-          <TableHead>on-call now</TableHead>
-          <TableHead>escalates</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {teams.map((team) => (
-          <TableRow
-            key={team.team}
-            className="w-full cursor-pointer"
-            onClick={() => {
-              void navigate(`/teams/${team.team}`);
-            }}
-          >
-            <TableCell className="font-medium text-sm flex-1">
-              {team.team}
-            </TableCell>
-            <TableCell className="text-xs text-left text-muted-foreground">
-              {team.services.join(" • ")}
-            </TableCell>
-            <TableCell className="text-xs text-right">{team.members}</TableCell>
-            <TableCell className="text-xs text-muted-foreground">
-              {Number(team.rotation) > 1
-                ? `every ${team.rotation} days`
-                : "every day"}
-            </TableCell>
-            <TableCell className="text-xs text-muted-foreground">
-              {team.onCallNow}
-            </TableCell>
-            <TableCell className="text-xs text-muted-foreground">
-              {team.escalates}
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  );
-}
-
-function CreateTeamDialog() {
-  const [open, setOpen] = useState(false);
-
+export function CreateTeam() {
   type CreateTeamInput = z.input<typeof createTeamSchema>;
   type CreateTeamOutput = z.output<typeof createTeamSchema>;
+
   const form = useForm<CreateTeamInput, unknown, CreateTeamOutput>({
     resolver: zodResolver(createTeamSchema),
     defaultValues: {
@@ -165,21 +65,50 @@ function CreateTeamDialog() {
     },
   });
 
+  const { mutate, isPending } = useMutation({
+    mutationFn: createTeam,
+  });
+
+  const [errors, setErrors] = useState<string[]>([]);
+  const [open, setOpen] = useState(false);
+  const timezones = Intl.supportedValuesOf("timeZone");
+
   const onSubmit = (data: z.infer<typeof createTeamSchema>) => {
-    console.log("data: ", data);
-    form.reset();
-    setOpen(false);
-    toast.add({
-      type: "success",
-      title: "Team created",
-      description: `${data.name} is ready to go.`,
+    setErrors([]);
+    mutate(data, {
+      onSuccess: (createdTeam) => {
+        form.reset();
+        setOpen(false);
+        toast.add({
+          type: "success",
+          title: "Team created",
+          description: `${createdTeam.data.name} is ready to go.`,
+        });
+      },
+      onError: (error) => {
+        if (axios.isAxiosError(error)) {
+          const apiError = error.response?.data as ApiError;
+          setErrors(
+            Array.isArray(apiError.message)
+              ? [...apiError.message]
+              : [apiError.message]
+          );
+        }
+      },
     });
   };
 
-  const timezones = Intl.supportedValuesOf("timeZone");
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen);
+        if (!nextOpen) {
+          setErrors([]);
+          form.reset();
+        }
+      }}
+    >
       <DialogTrigger
         render={
           <Button className="cursor-pointer">
@@ -388,6 +317,10 @@ function CreateTeamDialog() {
               )}
             />
           </FieldGroup>
+
+          {/* Show API response errors */}
+          {errors.length > 0 && <ErrorSection errors={errors} />}
+
           <Field orientation="horizontal" className="flex justify-end">
             <Button
               type="button"
@@ -396,10 +329,14 @@ function CreateTeamDialog() {
                 form.reset();
                 setOpen(false);
               }}
+              disabled={isPending}
             >
               Cancel
             </Button>
-            <Button type="submit">Submit</Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending && <Spinner />}
+              Create
+            </Button>
           </Field>
         </form>
       </DialogContent>
