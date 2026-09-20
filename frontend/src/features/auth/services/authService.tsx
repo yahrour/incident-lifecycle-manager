@@ -28,9 +28,5 @@ export async function signUp(
 }
 
 export async function verifyEmail(token: string): Promise<VerifyEmailResponse> {
-  const { data } = await apiClient.post<VerifyEmailResponse>(
-    "/auth/verify-email",
-    { token }
-  );
-  return data;
+  return apiClient.post<VerifyEmailResponse>("/auth/verify-email", { token });
 }

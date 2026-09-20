@@ -7,8 +7,7 @@ export function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
 
-  const { mutate, isIdle, isPending, isSuccess, isError, error } =
-    useVerifyEmail();
+  const { mutate, isIdle, isPending, isSuccess, error } = useVerifyEmail();
   const fired = useRef(false);
 
   useEffect(() => {
@@ -16,6 +15,16 @@ export function VerifyEmailPage() {
     fired.current = true;
     mutate(token);
   }, [token, mutate]);
+
+  if (!token) {
+    return (
+      <div>
+        <h1>Invalid link</h1>
+        <p>This verification link is missing its token.</p>
+        <Link to="/signup">Back to sign up</Link>
+      </div>
+    );
+  }
 
   if (isIdle || isPending) {
     return <p>Confirming your email…</p>;
@@ -41,7 +50,6 @@ export function VerifyEmailPage() {
       </div>
     );
   }
-
   return (
     <div>
       <h1>We couldn't confirm your email</h1>
