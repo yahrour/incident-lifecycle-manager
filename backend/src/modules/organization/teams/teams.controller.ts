@@ -13,7 +13,7 @@ import {
 } from "@nestjs/common";
 import {
   CreateTeamDto,
-  CursorPaginationSearchParams,
+  OffsetPaginationSearchParams,
   UpdateTeamDto,
 } from "./dto";
 import { TeamsService } from "./teams.service";
@@ -55,13 +55,10 @@ export class TeamsController {
   @Roles(Role.SRE)
   async findAll(
     @ActiveUser() user: ActiveUserData,
-    @Query() query: CursorPaginationSearchParams
+    @Query() query: OffsetPaginationSearchParams
   ) {
-    const { teams, nextCursor } = await this.teamsService.findAll(
-      user.sub,
-      query
-    );
-    return apiResponse(teams, { nextCursor });
+    const { teams, total } = await this.teamsService.findAll(user.sub, query);
+    return apiResponse(teams, { total });
   }
 
   @Get(":id")
