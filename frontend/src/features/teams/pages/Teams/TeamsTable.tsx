@@ -12,15 +12,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { DEFAULT_LIMIT } from "../../constants";
 
 export function TeamsTable() {
+  const [page, setPage] = useState(1);
+
   const [teamsQuery, metricsQuery] = useQueries({
     queries: [
       {
-        queryKey: ["teams"],
-        queryFn: fetchTeams,
+        queryKey: ["teams", page],
+        queryFn: () => fetchTeams(page),
       },
       {
         queryKey: ["teamsMetrics"],
@@ -58,6 +69,7 @@ export function TeamsTable() {
   }
 
   const teams = teamsQuery.data;
+  const totalTeams = teams?.meta?.total as number;
   const metrics = metricsQuery.data?.data;
 
   const membersCountByTeam = new Map(
@@ -74,58 +86,87 @@ export function TeamsTable() {
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow className="uppercase">
-          <TableHead className="w-2/5">team</TableHead>
-          <TableHead className="w-15">members</TableHead>
-          <TableHead>rotation</TableHead>
-          <TableHead>on-call now</TableHead>
-          <TableHead>escalates</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {teams?.data.map((team) => {
-          const onCall = onCallByTeam.get(team.id);
-          const initials = onCall?.firstName?.[0] ?? "?";
+    <>
+      <Table>
+        <TableHeader>
+          <TableRow className="uppercase">
+            <TableHead className="w-2/5">team</TableHead>
+            <TableHead className="w-15">members</TableHead>
+            <TableHead>rotation</TableHead>
+            <TableHead>on-call now</TableHead>
+            <TableHead>escalates</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {teams?.data.map((team) => {
+            const onCall = onCallByTeam.get(team.id);
+            const initials = onCall?.firstName?.[0] ?? "?";
 
-          return (
-            <TableRow
-              key={team.id}
-              className="w-full cursor-pointer"
-              onClick={() => {
-                void navigate(`/teams/${team.id}`);
-              }}
-            >
-              <TableCell className="font-medium text-sm flex-1">
-                {team.name}
-              </TableCell>
-              <TableCell className="text-xs text-right">
-                {membersCountByTeam.get(team.id)}
-              </TableCell>
-              <TableCell className="text-xs text-muted-foreground">
-                {team.rotationPeriodDays > 1
-                  ? `every ${team.rotationPeriodDays} days`
-                  : "every day"}
-              </TableCell>
-              <TableCell className="text-xs text-center text-muted-foreground flex items-center gap-1">
-                {onCall && (
-                  <Avatar className="h-5 w-5 bg-purple-400 text-white">
-                    <AvatarFallback className="bg-purple-400 text-xs text-white">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                )}
-                {onCall?.firstName ?? <span className="block ml-6">──</span>}
-              </TableCell>
-              <TableCell className="text-xs text-muted-foreground">
-                {team.escalationTimeoutMinutes}m
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+            return (
+              <TableRow
+                key={team.id}
+                className="w-full cursor-pointer"
+                onClick={() => {
+                  void navigate(`/teams/${team.id}`);
+                }}
+              >
+                <TableCell className="font-medium text-sm flex-1">
+                  {team.name}
+                </TableCell>
+                <TableCell className="text-xs text-right">
+                  {membersCountByTeam.get(team.id)}
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  {team.rotationPeriodDays > 1
+                    ? `every ${team.rotationPeriodDays} days`
+                    : "every day"}
+                </TableCell>
+                <TableCell className="text-xs text-center text-muted-foreground flex items-center gap-1">
+                  {onCall && (
+                    <Avatar className="h-5 w-5 bg-purple-400 text-white">
+                      <AvatarFallback className="bg-purple-400 text-xs text-white">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+                  {onCall?.firstName ?? <span className="block ml-6">──</span>}
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  {team.escalationTimeoutMinutes}m
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+      <Pagination>
+        <PaginationContent>
+          <PaginationItem
+            className={
+              page === 1 ? "pointer-events-none opacity-50" : undefined
+            }
+            aria-disabled={page === 1}
+          >
+            <PaginationPrevious onClick={() => setPage(page - 1)} />
+          </PaginationItem>
+
+          <PaginationItem>
+            <PaginationLink isActive>{page}</PaginationLink>
+          </PaginationItem>
+
+          <PaginationItem
+            className={
+              page * DEFAULT_LIMIT >= totalTeams
+                ? "pointer-events-none opacity-50"
+                : undefined
+            }
+            aria-disabled={page * DEFAULT_LIMIT >= totalTeams}
+          >
+            <PaginationNext onClick={() => setPage(page + 1)} />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    </>
   );
 }
 
