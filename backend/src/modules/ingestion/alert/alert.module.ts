@@ -1,10 +1,10 @@
 import { Module } from "@nestjs/common";
 import { AlertController } from "./alert.controller";
 import { AlertService } from "./alert.service";
-import { DatadogAdapter } from "./providers/datadog/datadog.adapter";
+import { PrometheusAdapter } from "./providers/prometheus/prometheus.adapter";
 
 @Module({
   controllers: [AlertController],
-  providers: [AlertService, DatadogAdapter],
+  providers: [AlertService, PrometheusAdapter],
 })
 export class AlertModule {}
