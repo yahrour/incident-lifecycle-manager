@@ -21,17 +21,23 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { DEFAULT_LIMIT } from "../../constants";
 
-export function TeamsTable() {
-  const [page, setPage] = useState(1);
-
+export function TeamsTable({
+  search,
+  page,
+  setPage,
+}: {
+  search: string;
+  page: number;
+  setPage: React.Dispatch<React.SetStateAction<number>>;
+}) {
   const [teamsQuery, metricsQuery] = useQueries({
     queries: [
       {
-        queryKey: ["teams", page],
-        queryFn: () => fetchTeams(page),
+        queryKey: ["teams", page, search],
+        queryFn: () => fetchTeams(page, search),
       },
       {
         queryKey: ["teamsMetrics"],

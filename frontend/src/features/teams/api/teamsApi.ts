@@ -5,11 +5,10 @@ import type { createTeamSchema } from "../schemas";
 import z from "zod";
 import { DEFAULT_LIMIT } from "../constants";
 
-export async function fetchTeams(page: number) {
+export async function fetchTeams(page: number, search: string) {
   const offset = (page - 1) * DEFAULT_LIMIT;
-  const response = await apiClient.get<ApiResponse<Team[]>>(
-    `/teams?offset=${offset}&limit=${DEFAULT_LIMIT}`
-  );
+  const apiEndpoint = `/teams?offset=${offset}&limit=${DEFAULT_LIMIT}${search.length > 0 ? `&search=${search}` : ""}`;
+  const response = await apiClient.get<ApiResponse<Team[]>>(apiEndpoint);
   return response.data;
 }
 
