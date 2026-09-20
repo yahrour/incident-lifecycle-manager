@@ -8,3 +8,14 @@ export type User = {
   email: string;
   role: Role;
 };
+
+export type ApiResponse<T> = {
+  data: T;
+  meta?: Record<string, unknown>;
+};
+
+export type ApiError = {
+  error: string;
+  message: string | string[];
+  statusCode: number;
+};
