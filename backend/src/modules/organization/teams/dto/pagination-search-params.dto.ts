@@ -11,25 +11,27 @@ import { Type } from "class-transformer";
 import { PAGINATION, SORT_ORDER } from "@/common/constants";
 import { SORT_FIELD } from "../constants";
 
-export class CursorPaginationSearchParams {
+export class OffsetPaginationSearchParams {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(PAGINATION.MAX_LIMIT)
-  limit: number = PAGINATION.DEFAULT_LIMIT;
+  limit?: number = PAGINATION.DEFAULT_LIMIT;
 
   @IsOptional()
-  @IsString()
-  cursor?: string;
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  offset?: number = 0;
 
   @IsOptional()
   @IsEnum(SORT_FIELD)
-  sortField: SORT_FIELD = SORT_FIELD.CREATED_AT;
+  sortField?: SORT_FIELD = SORT_FIELD.CREATED_AT;
 
   @IsOptional()
   @IsEnum(SORT_ORDER)
-  sortOrder: SORT_ORDER = SORT_ORDER.ASC;
+  sortOrder?: SORT_ORDER = SORT_ORDER.ASC;
 
   @IsOptional()
   @IsString()
