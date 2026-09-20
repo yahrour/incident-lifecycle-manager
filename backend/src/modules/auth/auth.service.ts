@@ -63,7 +63,7 @@ export class AuthService {
         return { user, rawToken };
       }
     );
-    const verifyUrl = `${this.configService.get("APP_URL")}/api/v1/auth/verify-email?token=${rawToken}`;
+    const verifyUrl = `${this.configService.get("FRONTEND_URL")}/verify-email?token=${rawToken}`;
     await this.mailService.sendEmailVerification(
       user.email,
       user.firstName,
@@ -203,10 +203,9 @@ export class AuthService {
       if (emailToken.expiresAt < new Date())
         throw new GoneException("This link has expired.");
 
-      if (emailToken.used)
-        throw new ConflictException("This link has already been used.");
-      if (emailToken.user.isVerified)
-        throw new ConflictException("This account is already verified");
+      if (emailToken.used || emailToken.user.isVerified) {
+        return { message: "Email already verified", alreadyVerified: true };
+      }
 
       await prisma.emailVerificationToken.update({
         where: { id: emailToken.id },
