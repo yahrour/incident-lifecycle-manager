@@ -22,7 +22,7 @@ export function Teams() {
         <div className="flex justify-between items-center">
           <InputGroup className="w-1/3 bg-white">
             <InputGroupInput
-              placeholder="Search.."
+              placeholder="Search..."
               value={search}
               onChange={(v) => {
                 setSearch(v.currentTarget.value);
