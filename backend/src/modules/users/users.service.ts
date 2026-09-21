@@ -24,14 +24,19 @@ export class UsersService {
     private readonly mailService: MailService
   ) {}
 
+  private normalizeEmail(email: string) {
+    return email.toLowerCase();
+  }
+
   async create(
     data: CreateUserDto,
     tx: Prisma.TransactionClient = this.prisma
   ) {
     const { password } = data;
+    const email = this.normalizeEmail(data.email);
     const passwordHash = await this.bcrypt.hash(password);
     const existing = await tx.user.findUnique({
-      where: { email: data.email },
+      where: { email },
     });
 
     if (existing) {
@@ -42,7 +47,7 @@ export class UsersService {
       data: {
         firstName: data.firstName,
         lastName: data.lastName,
-        email: data.email,
+        email,
         timezone: data.timezone,
         passwordHash,
         role: data.role,
@@ -84,7 +89,7 @@ export class UsersService {
   ) {
     return this.prisma.user.create({
       data: {
-        email,
+        email: this.normalizeEmail(email),
         googleId,
         firstName: firstName || "Google", // Fallbacks just in case
         lastName: lastName || "User",
@@ -96,7 +101,7 @@ export class UsersService {
 
   async findByEmail(email: string) {
     return this.prisma.user.findUnique({
-      where: { email },
+      where: { email: this.normalizeEmail(email) },
     });
   }
 
@@ -163,6 +168,7 @@ export class UsersService {
   }
 
   async updateEmail(userId: string, updateEmailDto: UpdateEmailDto) {
+    const email = this.normalizeEmail(updateEmailDto.email);
     const currentUser = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { email: true, firstName: true },
@@ -171,7 +177,7 @@ export class UsersService {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
     // 1. Fast fail: Cannot change to current active email
-    if (currentUser.email === updateEmailDto.email) {
+    if (currentUser.email === email) {
       throw new BadRequestException(
         "New email cannot be the same as current email"
       );
@@ -179,7 +185,7 @@ export class UsersService {
 
     // 2. Check if the email belongs to another active user
     const existingUser = await this.prisma.user.findUnique({
-      where: { email: updateEmailDto.email },
+      where: { email },
     });
 
     if (existingUser) {
@@ -188,18 +194,18 @@ export class UsersService {
 
     await this.prisma.user.update({
       where: { id: userId },
-      data: { pendingEmail: updateEmailDto.email },
+      data: { pendingEmail: email },
     });
 
     await this.createAndSendVerificationToken(
       userId,
-      updateEmailDto.email,
+      email,
       currentUser.firstName
     );
     return {
       message:
         "Verification email sent. Please check your inbox to confirm the change.",
-      pendingEmail: updateEmailDto.email,
+      pendingEmail: email,
     };
   }
 

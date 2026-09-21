@@ -6,11 +6,15 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  MaxLength,
 } from "class-validator";
+import { Trim } from "src/common/transformers/trim.transformer";
 
 export class CreateInvite {
   @IsNotEmpty()
   @IsEmail()
+  @Trim()
+  @MaxLength(255)
   inviteEmail: string;
 
   @IsUUID()
@@ -19,6 +23,8 @@ export class CreateInvite {
 
   @IsString()
   @IsNotEmpty()
+  @Trim()
+  @MaxLength(100)
   speaciality: string;
 
   @IsOptional()

@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MaxLength } from "class-validator";
+import { IsEmail, IsNotEmpty, IsString, MaxLength } from "class-validator";
 import { Trim } from "src/common/transformers/trim.transformer";
 
 export class SignIn {
@@ -7,6 +7,7 @@ export class SignIn {
   @MaxLength(255)
   email: string;
 
+  @IsNotEmpty()
   @IsString()
   @MaxLength(72)
   password: string;

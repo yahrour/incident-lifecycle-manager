@@ -1,11 +1,10 @@
-import { IsEmail, IsNotEmpty } from "class-validator";
-import { Transform } from "class-transformer";
+import { IsEmail, IsNotEmpty, MaxLength } from "class-validator";
+import { Trim } from "src/common/transformers/trim.transformer";
 
 export class UpdateEmailDto {
   @IsNotEmpty()
   @IsEmail({}, { message: "Invalid email address format" })
-  @Transform(({ value }: { value: unknown }) =>
-    typeof value === "string" ? value.trim().toLowerCase() : value
-  )
+  @Trim()
+  @MaxLength(255)
   email: string;
 }
