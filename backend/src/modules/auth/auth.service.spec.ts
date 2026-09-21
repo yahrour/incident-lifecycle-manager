@@ -9,7 +9,6 @@ import { JwtService } from "@nestjs/jwt";
 import {
   NotFoundException,
   GoneException,
-  ConflictException,
 } from "@nestjs/common";
 
 describe("AuthService", () => {
@@ -138,28 +137,30 @@ describe("AuthService", () => {
       );
     });
 
-    it("throws ConflictException when token already used", async () => {
+    it("returns already verified response when token already used", async () => {
       fakePrisma.emailVerificationToken.findUnique.mockResolvedValue({
         expiresAt: new Date(Date.now() + 1000 * 60 * 60),
         used: true,
         user: { isVerified: false },
       });
 
-      await expect(service.verifySignupEmail("token")).rejects.toThrow(
-        ConflictException
-      );
+      await expect(service.verifySignupEmail("token")).resolves.toEqual({
+        message: "Email already verified",
+        alreadyVerified: true,
+      });
     });
 
-    it("throws ConflictException when account already verified", async () => {
+    it("returns already verified response when account already verified", async () => {
       fakePrisma.emailVerificationToken.findUnique.mockResolvedValue({
         expiresAt: new Date(Date.now() + 1000 * 60 * 60),
         used: false,
         user: { isVerified: true },
       });
 
-      await expect(service.verifySignupEmail("token")).rejects.toThrow(
-        ConflictException
-      );
+      await expect(service.verifySignupEmail("token")).resolves.toEqual({
+        message: "Email already verified",
+        alreadyVerified: true,
+      });
     });
 
     it("marks token used and verifies user on success", async () => {
