@@ -6,11 +6,21 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group";
 import { Search, XIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function Teams() {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [search]);
 
   return (
     <div>
@@ -23,27 +33,30 @@ export function Teams() {
             <InputGroupInput
               placeholder="Search"
               value={search}
-              onChange={(v) => {
-                setSearch(v.currentTarget.value);
-                setPage(1);
-              }}
+              onChange={(v) => setSearch(v.currentTarget.value)}
             />
             <InputGroupAddon>
               <Search />
             </InputGroupAddon>
-            <InputGroupAddon
-              align="inline-end"
-              className="cursor-pointer"
-              onClick={() => setSearch("")}
-            >
-              <XIcon />
-            </InputGroupAddon>
+
+            {search.length > 0 && (
+              <InputGroupAddon
+                align="inline-end"
+                className="cursor-pointer"
+                onClick={() => {
+                  setSearch("");
+                  setPage(1);
+                }}
+              >
+                <XIcon />
+              </InputGroupAddon>
+            )}
           </InputGroup>
 
           <CreateTeam />
         </div>
 
-        <TeamsTable search={search} page={page} setPage={setPage} />
+        <TeamsTable search={debouncedSearch} page={page} setPage={setPage} />
       </div>
     </div>
   );
