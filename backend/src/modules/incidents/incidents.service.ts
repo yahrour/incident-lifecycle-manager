@@ -11,6 +11,7 @@ import { OnCallService } from "@/modules/oncall/oncall.service";
 import { CreateIncidentDto } from "./dto/create-incident.dto";
 import { FindIncidentsDto } from "./dto/find-incidents.dto";
 import { INCIDENT_STATUS } from "./constants";
+import { createIncidentFingerprint } from "./utils/incident-fingerprint";
 
 @Injectable()
 export class IncidentsService {
@@ -202,6 +203,11 @@ export class IncidentsService {
     return this.prisma.incident.create({
       data: {
         ...createIncidentDto,
+        fingerprint: createIncidentFingerprint(
+          "manual",
+          createIncidentDto.service,
+          createIncidentDto.title
+        ),
         assignedToId: assigneeUserId,
       },
     });
@@ -253,7 +259,11 @@ export class IncidentsService {
 
     const acknowledgedAt = new Date();
     const result = await this.prisma.incident.updateMany({
-      where: { id: incidentId, status: INCIDENT_STATUS.OPEN },
+      where: {
+        id: incidentId,
+        status: INCIDENT_STATUS.OPEN,
+        assignedToId: userId,
+      },
       data: {
         status: INCIDENT_STATUS.ACKNOWLEDGED,
         acknowledgedAt,

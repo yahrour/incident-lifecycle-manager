@@ -1,4 +1,10 @@
-import { IsDate, IsOptional, IsString, IsTimeZone } from "class-validator";
+import {
+  IsDate,
+  IsOptional,
+  IsString,
+  IsTimeZone,
+  MaxLength,
+} from "class-validator";
 
 export class CreateUnavailabilityDto {
   @IsDate()
@@ -12,5 +18,6 @@ export class CreateUnavailabilityDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(255, { message: "reason must not exceed 255 characters" })
   reason?: string;
 }
