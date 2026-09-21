@@ -1,11 +1,9 @@
 import {
   Body,
   Controller,
-  Get,
   HttpCode,
   HttpStatus,
   Post,
-  Query,
   Req,
   Res,
   UnauthorizedException,
@@ -65,8 +63,8 @@ export class AuthController {
   }
 
   @Public()
-  @Get("verify-email")
-  async verifyEmail(@Query() dto: VerifySignupEmailDto) {
+  @Post("verify-email")
+  async verifyEmail(@Body() dto: VerifySignupEmailDto) {
     return this.authService.verifySignupEmail(dto.token);
   }
 
