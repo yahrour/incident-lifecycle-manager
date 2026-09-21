@@ -191,6 +191,68 @@ export class TeamsService {
     return team;
   }
 
+  async findStats(id: string, ownerId: string) {
+    const now = new Date();
+    const [teamStats, activeUnavailabilityCount] = await Promise.all([
+      this.prisma.team.findUnique({
+        where: {
+          id,
+          ownerId,
+        },
+        select: {
+          _count: {
+            select: {
+              incidents: true,
+              teamMembers: true,
+            },
+          },
+          teamMembers: {
+            select: {
+              _count: {
+                select: {
+                  unavailabilities: {
+                    where: {
+                      confirmed: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }),
+
+      this.prisma.unavailability.count({
+        where: {
+          teamMember: { team: { ownerId } },
+          confirmed: true,
+          startDate: {
+            lte: now,
+          },
+          endDate: {
+            gte: now,
+          },
+        },
+      }),
+    ]);
+
+    if (!teamStats) {
+      throw new NotFoundException("Team doesn't exist");
+    }
+
+    const unavailabilityCount = teamStats.teamMembers.reduce(
+      (sum, member) => sum + member._count.unavailabilities,
+      0
+    );
+
+    return {
+      memberCount: teamStats._count.teamMembers,
+      incidentCount: teamStats._count.incidents,
+      unavailabilityCount,
+      activeUnavailabilityCount,
+    };
+  }
+
   async delete(id: string, ownerId: string) {
     try {
       await this.prisma.team.delete({
