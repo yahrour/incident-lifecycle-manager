@@ -2,6 +2,7 @@ export const INCIDENT_STATUS = {
   OPEN: "open",
   ACKNOWLEDGED: "acknowledged",
   RESOLVED: "resolved",
+  IN_PROGRESS: "in_progress",
 } as const;
 
 export type IncidentStatus =
