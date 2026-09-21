@@ -113,7 +113,7 @@ export function TeamsTable({
                 key={team.id}
                 className="w-full cursor-pointer"
                 onClick={() => {
-                  void navigate(`/teams/${team.id}`);
+                  void navigate(`/manager/teams/${team.id}`);
                 }}
               >
                 <TableCell className="font-medium text-sm flex-1">
