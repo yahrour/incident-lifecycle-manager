@@ -41,7 +41,6 @@ async function createUser(data: {
   email: string;
   role: Role;
   specialty?: string;
-  isVerified?: boolean;
 }) {
   const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 10);
 
@@ -55,7 +54,6 @@ async function createUser(data: {
       passwordHash,
       role: data.role,
       specialty: data.specialty,
-      isVerified: true,
     },
   });
 }
@@ -90,7 +88,6 @@ const sre = await createUser({
   lastName: "Reyes",
   email: "sre@example.com",
   role: Role.SRE,
-  isVerified: true,
   specialty: "Reliability Engineering",
 });
 
@@ -100,7 +97,6 @@ const sre = await createUser({
       lastName: "Nguyen",
       email: "alice.engineer@example.com",
       role: Role.ENGINEER,
-      isVerified: true,
       specialty: "Frontend",
     }),
     createUser({
@@ -108,7 +104,6 @@ const sre = await createUser({
       lastName: "Carter",
       email: "ben.engineer@example.com",
       role: Role.ENGINEER,
-      isVerified: true,
       specialty: "Frontend",
     }),
     createUser({
@@ -116,7 +111,6 @@ const sre = await createUser({
       lastName: "Dubois",
       email: "chloe.engineer@example.com",
       role: Role.ENGINEER,
-      isVerified: true,
       specialty: "Backend",
     }),
     createUser({
@@ -124,7 +118,6 @@ const sre = await createUser({
       lastName: "Okafor",
       email: "david.engineer@example.com",
       role: Role.ENGINEER,
-      isVerified: true,
       specialty: "Backend",
     }),
   ]);

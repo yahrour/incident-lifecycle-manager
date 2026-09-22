@@ -7,42 +7,37 @@ enum Role {
 }
 
 model User {
-  id           String   @id @default(uuid()) @db.Uuid
-  firstName    String   @map("first_name")
-  lastName     String   @map("last_name")
-  email        String   @unique
-  discordId    String?  @unique @map("discord_id")
-  discordName  String?  @map("discord_name")
+  id          String  @id @default(uuid()) @db.Uuid
+  firstName   String  @map("first_name")
+  lastName    String  @map("last_name")
+  email       String  @unique
+  discordId   String? @unique @map("discord_id")
+  discordName String? @map("discord_name")
 
-
-  pendingEmail String?  @map("pending_email")
   passwordHash String?  @map("password_hash")
   role         Role
   googleId     String?  @unique @map("google_id")
   specialty    String?
-  isVerified   Boolean  @default(false) @map("is_verified")
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
   timezone     String?  @default("UTC") @map("timezone")
 
-  resetTokens             ResetToken[]
-  emailVerificationTokens EmailVerificationToken[]
-  apiKeys                 ApiKey[]
-  refreshTokens           RefreshToken[]
-  ownedTeams              Team[]
-  teamMembers             TeamMember[]
-  assignedIncidents       Incident[]               @relation("IncidentAssignee")
-  incidentNotes           IncidentNote[]
+  apiKeys           ApiKey[]
+  refreshTokens     RefreshToken[]
+  ownedTeams        Team[]
+  teamMembers       TeamMember[]
+  assignedIncidents Incident[]     @relation("IncidentAssignee")
+  incidentNotes     IncidentNote[]
 
   @@map("users")
   @@schema("auth")
 }
 
 model RefreshToken {
-  id        String @id @default(uuid()) @db.Uuid
-  userId    String @map("user_id") @db.Uuid
-  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tokenHash String @unique @map("token_hash")
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique @map("token_hash")
   expiresAt DateTime @map("expires_at") @db.Timestamptz
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
@@ -60,33 +55,5 @@ model InviteToken {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   @@map("invite_tokens")
-  @@schema("auth")
-}
-
-model ResetToken {
-  id    String @id @default(uuid()) @db.Uuid
-  token String @unique
-
-  userId String @map("user_id") @db.Uuid
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  used      Boolean  @default(false)
-  expiresAt DateTime @map("expires_at") @db.Timestamptz
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
-
-  @@map("reset_tokens")
-  @@schema("auth")
-}
-
-model EmailVerificationToken {
-  id        String   @id @default(uuid()) @db.Uuid
-  token     String   @unique
-  userId    String   @map("user_id") @db.Uuid
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  used      Boolean  @default(false)
-  expiresAt DateTime @map("expires_at") @db.Timestamptz
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
-
-  @@map("email_verification_tokens")
   @@schema("auth")
 }
