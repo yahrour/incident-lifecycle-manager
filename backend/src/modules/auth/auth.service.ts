@@ -1,12 +1,4 @@
-import {
-  ConflictException,
-  ForbiddenException,
-  GoneException,
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-  Logger,
-} from "@nestjs/common";
+import { Injectable, UnauthorizedException, Logger } from "@nestjs/common";
 import { BcryptService } from "../security/bcrypt.service";
 import { SignUp } from "./dto/sign-up.dto";
 import { SignIn } from "./dto/sign-in.dto";
@@ -15,9 +7,8 @@ import { Role, User } from "@/generated/prisma/client";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config"; //
 import { ActiveUserData } from "@/common/interfaces/active-user.interface";
-import { generateSecureToken, hashToken } from "@/common/utils/token.util";
+import { hashToken } from "@/common/utils/token.util";
 import { PrismaService } from "@/common/prisma/prisma.service";
-import { MailService } from "@/common/mail/mail.service";
 
 @Injectable()
 export class AuthService {
@@ -27,8 +18,7 @@ export class AuthService {
     private readonly userService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly prisma: PrismaService,
-    private readonly mailService: MailService
+    private readonly prisma: PrismaService
   ) {}
   async signUp(signUp: SignUp) {
     const sreUserData = {
@@ -36,42 +26,10 @@ export class AuthService {
       role: Role.SRE,
     };
 
-    /**
-     * User and verification-token creation are wrapped in a transaction so an
-     * account is never created without a corresponding token. Email sending is
-     * intentionally kept outside the transaction — an SMTP failure shouldn't
-     * roll back a valid signup, just leave a resendable unsent token.
-     */
-    const emailVerifyTtlHours = this.configService.getOrThrow<number>(
-      "EMAIL_VERIFICATION_TOKEN_TTL_HOURS"
-    );
+    await this.userService.create(sreUserData);
 
-    const { user, rawToken } = await this.prisma.$transaction(
-      async (prisma) => {
-        const user = await this.userService.create(sreUserData, prisma);
-        const { rawToken, hashedToken } = generateSecureToken();
-
-        await prisma.emailVerificationToken.create({
-          data: {
-            token: hashedToken,
-            userId: user.id,
-            expiresAt: new Date(
-              Date.now() + emailVerifyTtlHours * 60 * 60 * 1000
-            ),
-          },
-        });
-        return { user, rawToken };
-      }
-    );
-    const verifyUrl = `${this.configService.get("FRONTEND_URL")}/verify-email?token=${rawToken}`;
-    await this.mailService.sendEmailVerification(
-      user.email,
-      user.firstName,
-      verifyUrl
-    );
     return {
-      message:
-        "Account created. Please check your email to verify your account.",
+      message: "Account created successfully.",
     };
   }
 
@@ -92,11 +50,6 @@ export class AuthService {
 
     if (!isMatch) {
       throw new UnauthorizedException("Invalid credentials");
-    }
-    if (!user.isVerified) {
-      throw new ForbiddenException(
-        "Please verify your email before logging in"
-      );
     }
 
     return this.generateTokens(user);
@@ -185,40 +138,6 @@ export class AuthService {
     }
   }
 
-  /**
-   * Verifies a newly registered account using a one-time token sent to the user's email on signup.
-   * On success: marks the token as used and sets `user.isVerified` to true.
-   * Throws NotFoundException/GoneException/ConflictException for invalid/expired/used tokens,
-   * or ConflictException if the account was already verified.
-   */
-  async verifySignupEmail(token: string) {
-    const hashedToken = hashToken(token);
-    return this.prisma.$transaction(async (prisma) => {
-      const emailToken = await prisma.emailVerificationToken.findUnique({
-        where: { token: hashedToken },
-        include: { user: { select: { isVerified: true } } },
-      });
-
-      if (!emailToken) throw new NotFoundException("Invalid verification link");
-      if (emailToken.expiresAt < new Date())
-        throw new GoneException("This link has expired.");
-
-      if (emailToken.used || emailToken.user.isVerified) {
-        return { message: "Email already verified", alreadyVerified: true };
-      }
-
-      await prisma.emailVerificationToken.update({
-        where: { id: emailToken.id },
-        data: { used: true },
-      });
-      await prisma.user.update({
-        where: { id: emailToken.userId },
-        data: { isVerified: true },
-      });
-      return { message: "Email verified successfully" };
-    });
-  }
-
   async logout(refreshToken?: string) {
     if (refreshToken) {
       try {
@@ -230,79 +149,5 @@ export class AuthService {
       }
     }
     return { message: "Logged out successfully" };
-  }
-
-  async requestPasswordReset(email: string) {
-    // const start = Date.now();
-    const user = await this.userService.findByEmail(email);
-
-    const resetTtlHours = this.configService.getOrThrow<number>(
-      "RESET_TOKEN_TTL_HOURS"
-    );
-
-    if (user) {
-      const { rawToken, hashedToken } = generateSecureToken();
-      await this.prisma.resetToken.create({
-        data: {
-          token: hashedToken,
-          userId: user.id,
-          expiresAt: new Date(Date.now() + resetTtlHours * 60 * 60 * 1000),
-        },
-      });
-
-      const resetUrl = `${this.configService.get("FRONTEND_URL")}/reset-password?token=${rawToken}`;
-
-      try {
-        await this.mailService.sendPasswordReset(
-          user.email,
-          user.firstName,
-          resetUrl
-        );
-      } catch (error) {
-        this.logger.error("Failed to send password reset email", error);
-      }
-    }
-
-    // await this.padToMinimumDuration(start, 500);
-
-    return { message: "If that email exists, a reset link has been sent." };
-  }
-
-  async resetPassword(token: string, newPassword: string) {
-    const hashedToken = hashToken(token);
-
-    return this.prisma.$transaction(async (prisma) => {
-      const resetToken = await prisma.resetToken.findUnique({
-        where: { token: hashedToken },
-      });
-
-      if (!resetToken) {
-        throw new NotFoundException("Invalid reset link");
-      }
-      if (resetToken.expiresAt < new Date()) {
-        throw new GoneException("This reset link has expired.");
-      }
-      if (resetToken.used) {
-        throw new ConflictException("This reset link has already been used.");
-      }
-
-      const passwordHash = await this.bcrypt.hash(newPassword);
-
-      await prisma.resetToken.update({
-        where: { id: resetToken.id },
-        data: { used: true },
-      });
-      await prisma.user.update({
-        where: { id: resetToken.userId },
-        data: { passwordHash },
-      });
-
-      // same as email-change: revoke all existing sessions after a password reset
-      await prisma.refreshToken.deleteMany({
-        where: { userId: resetToken.userId },
-      });
-
-      return { message: "Password reset successfully" };
-    });
   }
 }
