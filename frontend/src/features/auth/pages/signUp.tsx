@@ -40,16 +40,15 @@ export default function SignUp() {
   if (isSuccess) {
     return (
       <AuthCard>
-        <h1 className="font-heading tracking-tight">Check your inbox</h1>
+        <h1 className="font-heading tracking-tight">Account created</h1>
         <p className="text-center text-sm text-muted-foreground">
-          {data?.message ??
-            "Account created. Please check your email to verify your account."}
+          {data?.message ?? "Your account has been created."}
         </p>
         <Link
           to="/login"
           className="text-center text-sm font-medium text-primary hover:underline"
         >
-          Back to sign in
+          Sign in
         </Link>
       </AuthCard>
     );
