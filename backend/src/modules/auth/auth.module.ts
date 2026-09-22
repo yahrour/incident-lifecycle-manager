@@ -6,10 +6,9 @@ import { GoogleAuthController } from "./google/google-auth.controller";
 import { GoogleAuthService } from "./google/google-auth.service";
 import { UsersModule } from "../users/users.module";
 import { SecurityModule } from "../security/security.module"; // adjust path/alias
-import { MailModule } from "@/common/mail/mail.module";
 
 @Module({
-  imports: [SecurityModule, UsersModule, JwtModule.register({}), MailModule],
+  imports: [SecurityModule, UsersModule, JwtModule.register({})],
   providers: [AuthService, GoogleAuthService],
   exports: [JwtModule],
   controllers: [AuthController, GoogleAuthController],
