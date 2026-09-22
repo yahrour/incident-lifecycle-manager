@@ -3,9 +3,15 @@ import type { ApiResponse } from "@/types";
 import type { Team } from "../types";
 import type { createTeamSchema } from "../schemas";
 import z from "zod";
+import { DEFAULT_LIMIT } from "../constants";
 
-export async function fetchTeams() {
-  const response = await apiClient.get<ApiResponse<Team[]>>("/teams");
+export async function fetchTeams(page: number, search: string) {
+  const offset = (page - 1) * DEFAULT_LIMIT;
+  const params = new URLSearchParams({
+    search: search,
+  });
+  const apiEndpoint = `/teams?offset=${offset}&limit=${DEFAULT_LIMIT}${search.length > 0 ? `&${params.toString()}` : ""}`;
+  const response = await apiClient.get<ApiResponse<Team[]>>(apiEndpoint);
   return response.data;
 }
 
