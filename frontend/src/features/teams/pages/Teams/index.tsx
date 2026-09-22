@@ -15,7 +15,7 @@ export function Teams() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(search);
+      setDebouncedSearch(search.trim());
       setPage(1);
     }, 400);
 
@@ -33,7 +33,7 @@ export function Teams() {
             <InputGroupInput
               placeholder="Search"
               value={search}
-              onChange={(v) => setSearch(v.currentTarget.value)}
+              onChange={(v) => setSearch(v.currentTarget.value.trim())}
             />
             <InputGroupAddon>
               <Search />
