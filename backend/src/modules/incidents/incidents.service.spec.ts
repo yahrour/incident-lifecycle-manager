@@ -384,4 +384,62 @@ describe("IncidentsService", () => {
     expect(update?.data.resolvedAt).toBeInstanceOf(Date);
     expect(update?.data.mttrSeconds).toEqual(expect.any(Number));
   });
+
+  it("creates an incident from an alert, attaches repeats, skips unrouted and resolved", async () => {
+    const alert = {
+      provider: "prometheus",
+      title: "HighErrorRate",
+      serviceName: "checkout-api",
+      severity: "critical" as const,
+      status: "firing" as const,
+      team: "frontend",
+      occurredAt: new Date(),
+    };
+    const findUnique = jest.fn().mockResolvedValue(null);
+    const upsert = jest.fn().mockResolvedValue({ id: "incident-id" });
+    const incidentAlertCreate = jest.fn();
+    const prisma = {
+      team: { findFirst: jest.fn().mockResolvedValue({ id: "team-id" }) },
+      incident: { findUnique, upsert },
+      incidentAlert: { create: incidentAlertCreate },
+    } as unknown as PrismaService;
+    const getCurrentOnCall = jest.fn().mockResolvedValue({
+      chain: [{ role: "PRIMARY", id: "primary-id" }],
+    });
+    const service = new IncidentsService(prisma, {
+      getCurrentOnCall,
+    } as unknown as OnCallService);
+
+    await expect(
+      service.createFromAlert("owner-id", "a1", alert)
+    ).resolves.toBe("incident-id");
+    expect(upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({
+          teamId: "team-id",
+          severity: "critical",
+          assignedToId: "primary-id",
+        }) as unknown,
+      })
+    );
+
+    findUnique.mockResolvedValue({ id: "incident-id" });
+    await service.createFromAlert("owner-id", "a2", alert);
+    expect(upsert).toHaveBeenCalledTimes(1);
+    expect(incidentAlertCreate).toHaveBeenLastCalledWith({
+      data: { alertId: "a2", incidentId: "incident-id" },
+    });
+
+    findUnique.mockResolvedValue(null);
+    await expect(
+      service.createFromAlert("owner-id", "a3", {
+        ...alert,
+        status: "resolved",
+      })
+    ).resolves.toBeNull();
+    await expect(
+      service.createFromAlert("owner-id", "a4", { ...alert, team: undefined })
+    ).resolves.toBeNull();
+    expect(upsert).toHaveBeenCalledTimes(1);
+  });
 });
