@@ -82,6 +82,9 @@ export function EditDialog({ teamId }: { teamId: string }) {
         onSuccess: () => {
           void queryClient.invalidateQueries({ queryKey: ["teams"] });
           void queryClient.invalidateQueries({ queryKey: ["team", teamId] });
+          void queryClient.invalidateQueries({
+            queryKey: ["team", teamId, "stats"],
+          });
           setOpen(false);
           toast.add({
             type: "success",
@@ -90,23 +93,23 @@ export function EditDialog({ teamId }: { teamId: string }) {
         },
         onError: (error) => {
           if (axios.isAxiosError(error)) {
-            const apiError = error.response?.data as ApiError;
-            setErrors(
-              Array.isArray(apiError.message)
-                ? [...apiError.message]
-                : [apiError.message]
-            );
+            const apiError = error.response?.data as ApiError | undefined;
+            const message = apiError?.message;
+
+            if (Array.isArray(message)) {
+              setErrors([...message]);
+            } else if (message) {
+              setErrors([message]);
+            } else {
+              setErrors(["Something went wrong. Please try again."]);
+            }
+          } else {
+            setErrors(["An unexpected error occurred."]);
           }
         },
       }
     );
   };
-
-  if (isPending) {
-    return (
-      <Spinner className="size-5 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
-    );
-  }
 
   return (
     <Dialog
@@ -134,69 +137,28 @@ export function EditDialog({ teamId }: { teamId: string }) {
             Update the team details and save your changes.
           </DialogDescription>
         </DialogHeader>
-        <form
-          onSubmit={(event) => {
-            void form.handleSubmit(onSubmit)(event);
-          }}
-          className="space-y-4"
-        >
-          <FieldGroup>
-            <Controller
-              name="name"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="teamName">Team name *</FieldLabel>
-                  <Input
-                    {...field}
-                    id="teamName"
-                    aria-invalid={fieldState.invalid}
-                    placeholder="e.g. Platform Infrastructure"
-                    autoComplete="off"
-                  />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-
-            <Controller
-              name="description"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="description">Description</FieldLabel>
-                  <Textarea
-                    {...field}
-                    value={field.value ?? ""}
-                    id="description"
-                    aria-invalid={fieldState.invalid}
-                    placeholder="What does this team own or respond to?"
-                  />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
+        {isPending ? (
+          <Spinner className="size-5 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
+        ) : (
+          <form
+            onSubmit={(event) => {
+              void form.handleSubmit(onSubmit)(event);
+            }}
+            className="space-y-4"
+          >
+            <FieldGroup>
               <Controller
-                name="rotationPeriodDays"
+                name="name"
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="rotationPeriodDays">
-                      Rotation period (days)
-                    </FieldLabel>
+                    <FieldLabel htmlFor="teamName">Team name *</FieldLabel>
                     <Input
                       {...field}
-                      id="rotationPeriodDays"
+                      id="teamName"
                       aria-invalid={fieldState.invalid}
+                      placeholder="e.g. Platform Infrastructure"
                       autoComplete="off"
-                      type="number"
-                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
                     />
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
@@ -206,20 +168,17 @@ export function EditDialog({ teamId }: { teamId: string }) {
               />
 
               <Controller
-                name="escalationTimeoutMinutes"
+                name="description"
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="escalationTimeoutMinutes">
-                      Escalation timeout (minutes)
-                    </FieldLabel>
-                    <Input
+                    <FieldLabel htmlFor="description">Description</FieldLabel>
+                    <Textarea
                       {...field}
-                      id="escalationTimeoutMinutes"
+                      value={field.value ?? ""}
+                      id="description"
                       aria-invalid={fieldState.invalid}
-                      autoComplete="off"
-                      type="number"
-                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                      placeholder="What does this team own or respond to?"
                     />
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
@@ -227,56 +186,104 @@ export function EditDialog({ teamId }: { teamId: string }) {
                   </Field>
                 )}
               />
-            </div>
 
-            <Controller
-              name="webhookUrl"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="webhookurl">
-                    Discord webhook URL
-                  </FieldLabel>
-                  <Input
-                    {...field}
-                    value={field.value ?? ""}
-                    id="webhookurl"
-                    aria-invalid={fieldState.invalid}
-                    placeholder="Paste your Discord webhook URL"
-                    autoComplete="off"
-                  />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
+              <div className="grid grid-cols-2 gap-4">
+                <Controller
+                  name="rotationPeriodDays"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="rotationPeriodDays">
+                        Rotation period (days)
+                      </FieldLabel>
+                      <Input
+                        {...field}
+                        id="rotationPeriodDays"
+                        aria-invalid={fieldState.invalid}
+                        autoComplete="off"
+                        type="number"
+                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                      />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
                   )}
-                </Field>
-              )}
-            />
-          </FieldGroup>
+                />
 
-          {/* Show API response errors */}
-          {errors.length > 0 && <ErrorSection errors={errors} />}
+                <Controller
+                  name="escalationTimeoutMinutes"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="escalationTimeoutMinutes">
+                        Escalation timeout (minutes)
+                      </FieldLabel>
+                      <Input
+                        {...field}
+                        id="escalationTimeoutMinutes"
+                        aria-invalid={fieldState.invalid}
+                        autoComplete="off"
+                        type="number"
+                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                      />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+              </div>
 
-          <Field orientation="horizontal" className="flex justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                form.reset();
-                setOpen(false);
-              }}
-              disabled={mutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={mutation.isPending || !form.formState.isDirty}
-            >
-              {mutation.isPending && <Spinner />}
-              Update
-            </Button>
-          </Field>
-        </form>
+              <Controller
+                name="webhookUrl"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="webhookurl">
+                      Discord webhook URL
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      value={field.value ?? ""}
+                      id="webhookurl"
+                      aria-invalid={fieldState.invalid}
+                      placeholder="Paste your Discord webhook URL"
+                      autoComplete="off"
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+
+            {/* Show API response errors */}
+            {errors.length > 0 && <ErrorSection errors={errors} />}
+
+            <Field orientation="horizontal" className="flex justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  form.reset();
+                  setOpen(false);
+                }}
+                disabled={mutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={mutation.isPending || !form.formState.isDirty}
+              >
+                {mutation.isPending && <Spinner />}
+                Update
+              </Button>
+            </Field>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );

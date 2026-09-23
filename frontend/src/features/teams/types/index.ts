@@ -36,6 +36,5 @@ export type Metrics = {
 export type Stats = {
   memberCount: number;
   incidentCount: number;
-  unavailabilityCount: number;
   activeUnavailabilityCount: number;
 };

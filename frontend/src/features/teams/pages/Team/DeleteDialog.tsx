@@ -37,6 +37,13 @@ export function DeleteDialog({ teamId }: { teamId: string }) {
 
       void navigate("/manager/teams", { replace: true });
     },
+    onError: () => {
+      toast.add({
+        type: "error",
+        title: "failed to delete",
+        description: "something went wrong when deleting the team",
+      });
+    },
     onSettled: () => {
       setOpen(false);
     },
@@ -57,7 +64,10 @@ export function DeleteDialog({ teamId }: { teamId: string }) {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={() => mutate(teamId)}>
+          <AlertDialogAction
+            onClick={() => mutate(teamId)}
+            disabled={isPending}
+          >
             {isPending ? (
               <>
                 <Spinner />
