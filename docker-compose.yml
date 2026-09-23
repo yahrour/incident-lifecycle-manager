@@ -31,7 +31,38 @@ services:
     depends_on:
       - postgres
 
+  prometheus:
+    image: prom/prometheus:v3.13.0
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+      - --storage.tsdb.retention.size=2GB
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - incident_network
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file: backend/.env
+    environment:
+      NODE_ENV: production
+    depends_on:
+      - postgres
+    ports:
+      - "3000:3000"
+    networks:
+      - incident_network
+
 volumes:
+  prometheus_data:
   postgres_data:
 
 networks:
