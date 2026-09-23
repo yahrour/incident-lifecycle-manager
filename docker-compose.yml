@@ -30,6 +30,21 @@ services:
       - incident_network
     depends_on:
       - postgres
+  vault:
+    build:
+      context: ./vault
+      dockerfile: Dockerfile
+    container_name: incident_vault
+    ports:
+      - "8200:8200"
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - vault_token:/vault/runtime
+    env_file:
+      - ./vault/.env
+    networks:
+      - incident_network
 
   prometheus:
     image: prom/prometheus:v3.13.0
@@ -77,6 +92,7 @@ services:
 volumes:
   prometheus_data:
   postgres_data:
+  vault_token:
   grafana-data:
 
 networks:
