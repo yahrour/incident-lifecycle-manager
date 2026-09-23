@@ -58,7 +58,7 @@ services:
     depends_on:
       - postgres
     ports:
-      - "8000:3000"
+      - "3000:3000"
     networks:
       - incident_network
 
