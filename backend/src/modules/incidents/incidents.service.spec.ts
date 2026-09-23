@@ -9,6 +9,7 @@ import { IncidentsService } from "./incidents.service";
 import { ConflictException, NotFoundException } from "@nestjs/common";
 import type { PrismaService } from "src/common/prisma/prisma.service";
 import type { OnCallService } from "src/modules/oncall/oncall.service";
+import { createIncidentFingerprint } from "./utils/incident-fingerprint";
 
 describe("IncidentsService", () => {
   const incident = {
@@ -17,6 +18,46 @@ describe("IncidentsService", () => {
     service: "api",
     severity: "high" as const,
   };
+
+  it("creates the same fingerprint for normalized incident identity", () => {
+    expect(
+      createIncidentFingerprint(
+        " Prometheus ",
+        " Payments-API ",
+        " High Latency "
+      )
+    ).toBe(
+      createIncidentFingerprint("prometheus", "payments-api", "high latency")
+    );
+  });
+
+  it("changes the fingerprint when a stable identity field changes", () => {
+    const fingerprint = createIncidentFingerprint(
+      "prometheus",
+      "payments-api",
+      "high latency"
+    );
+
+    expect(
+      createIncidentFingerprint("prometheus", "auth-api", "high latency")
+    ).not.toBe(fingerprint);
+    expect(
+      createIncidentFingerprint("prometheus", "payments-api", "disk full")
+    ).not.toBe(fingerprint);
+    expect(
+      createIncidentFingerprint("grafana", "payments-api", "high latency")
+    ).not.toBe(fingerprint);
+  });
+
+  it("ignores changing fields outside the fingerprint identity", () => {
+    const fingerprint = createIncidentFingerprint(
+      "prometheus",
+      "payments-api",
+      "high latency"
+    );
+
+    expect(fingerprint).toHaveLength(64);
+  });
 
   it("assigns a new incident to the primary on-call engineer", async () => {
     const create = jest.fn();
@@ -29,12 +70,25 @@ describe("IncidentsService", () => {
 
     await service.create("owner-id", incident);
 
-    expect(create).toHaveBeenCalledWith({
-      data: {
-        ...incident,
-        assignedToId: "11111111-1111-4111-8111-111111111111",
-      },
+    const createCall = (
+      create.mock.calls as unknown as Array<
+        [
+          {
+            data: typeof incident & {
+              fingerprint: string;
+              assignedToId: string;
+            };
+          },
+        ]
+      >
+    )[0]?.[0];
+
+    expect(createCall?.data).toEqual({
+      ...incident,
+      fingerprint: createCall?.data.fingerprint,
+      assignedToId: "11111111-1111-4111-8111-111111111111",
     });
+    expect(typeof createCall?.data.fingerprint).toBe("string");
   });
 
   it("filters incidents by assignee while preserving access rules", async () => {
@@ -251,7 +305,11 @@ describe("IncidentsService", () => {
 
     expect(updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: "incident-id", status: "open" },
+        where: {
+          id: "incident-id",
+          status: "open",
+          assignedToId: "engineer-id",
+        },
       })
     );
     const update = updates[0] as {
@@ -264,6 +322,29 @@ describe("IncidentsService", () => {
     expect(update.data.status).toBe("acknowledged");
     expect(update.data.acknowledgedAt).toBeInstanceOf(Date);
     expect(update.data.mttaSeconds).toEqual(expect.any(Number));
+  });
+
+  it("rejects acknowledgement when the incident is reassigned during the update", async () => {
+    const findUnique = jest.fn().mockResolvedValue({
+      id: "incident-id",
+      status: "open",
+      assignedToId: "engineer-id",
+      createdAt: new Date(Date.now() - 5_000),
+      team: null,
+    });
+    const updateMany = jest.fn().mockResolvedValue({ count: 0 });
+    const prisma = {
+      incident: { findUnique, updateMany },
+    } as unknown as PrismaService;
+    const service = new IncidentsService(prisma, {} as OnCallService);
+
+    await expect(
+      service.acknowledge("engineer-id", "incident-id")
+    ).rejects.toBeInstanceOf(ConflictException);
+    const updateCall = (
+      updateMany.mock.calls as unknown as Array<[{ data: { status: string } }]>
+    )[0]?.[0];
+    expect(updateCall?.data.status).toBe("acknowledged");
   });
 
   it("resolves an acknowledged incident and records MTTR", async () => {
