@@ -62,9 +62,22 @@ services:
     networks:
       - incident_network
 
+  grafana:
+    image: grafana/grafana:13.2.2
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - incident_network
+
 volumes:
   prometheus_data:
   postgres_data:
+  grafana-data:
 
 networks:
   incident_network:
