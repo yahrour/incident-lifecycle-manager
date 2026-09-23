@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -11,35 +10,11 @@ import {
   UpdateTeamDto,
 } from "./dto";
 import { PrismaService } from "@/common/prisma/prisma.service";
-import { Cursor, cursorSchema } from "./types";
 import { convertDateToUtc } from "@/common/utils/timezone";
 
 @Injectable()
 export class TeamsService {
   constructor(private prisma: PrismaService) {}
-
-  private encodeCursor(cursor: Cursor): string {
-    return Buffer.from(JSON.stringify(cursor)).toString("base64url");
-  }
-
-  private decodeCursor(raw: string): Cursor {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(Buffer.from(raw, "base64url").toString("utf-8"));
-    } catch {
-      throw new BadRequestException("Invalid cursor");
-    }
-
-    const result = cursorSchema.validate(parsed, {
-      stripUnknown: true,
-    });
-
-    if (result.error) {
-      throw new BadRequestException("Invalid cursor");
-    }
-
-    return result.value;
-  }
 
   async create(ownerId: string, createTeamDto: CreateTeamDto) {
     try {
@@ -202,21 +177,12 @@ export class TeamsService {
         select: {
           _count: {
             select: {
-              incidents: true,
-              teamMembers: true,
-            },
-          },
-          teamMembers: {
-            select: {
-              _count: {
-                select: {
-                  unavailabilities: {
-                    where: {
-                      confirmed: true,
-                    },
-                  },
+              incidents: {
+                where: {
+                  status: "open",
                 },
               },
+              teamMembers: true,
             },
           },
         },
@@ -224,7 +190,7 @@ export class TeamsService {
 
       this.prisma.unavailability.count({
         where: {
-          teamMember: { team: { ownerId } },
+          teamMember: { team: { ownerId }, teamId: id },
           confirmed: true,
           startDate: {
             lte: now,
@@ -240,15 +206,9 @@ export class TeamsService {
       throw new NotFoundException("Team doesn't exist");
     }
 
-    const unavailabilityCount = teamStats.teamMembers.reduce(
-      (sum, member) => sum + member._count.unavailabilities,
-      0
-    );
-
     return {
       memberCount: teamStats._count.teamMembers,
       incidentCount: teamStats._count.incidents,
-      unavailabilityCount,
       activeUnavailabilityCount,
     };
   }

@@ -1,5 +1,5 @@
 import { useQueries } from "@tanstack/react-query";
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import { useEffect } from "react";
 import { toast } from "@/components/ui/toast";
 import { Spinner } from "@/components/ui/spinner";
@@ -16,6 +16,7 @@ import { StatBlock } from "./StatBlock";
 import { EmptyState } from "./EmptyState";
 import { DeleteDialog } from "./DeleteDialog";
 import { EditDialog } from "./EditDialog";
+import { Button } from "@/components/ui/button";
 
 export function Team() {
   const params = useParams();
@@ -28,7 +29,7 @@ export function Team() {
         queryFn: () => fetchTeam(teamId as string),
       },
       {
-        queryKey: ["stats", teamId],
+        queryKey: ["team", teamId, "stats"],
         queryFn: () => fetchStats(teamId as string),
       },
     ],
@@ -54,7 +55,7 @@ export function Team() {
     }
   }, [statsQuery.isError]);
 
-  if (teamQuery.isPending || statsQuery.isPending) {
+  if (teamQuery.isPending) {
     return (
       <Spinner className="size-5 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
     );
@@ -63,7 +64,7 @@ export function Team() {
   const team = teamQuery?.data?.data;
   const stats = statsQuery?.data?.data;
 
-  if (!team || !stats) {
+  if (!team) {
     return <EmptyState />;
   }
 
@@ -73,7 +74,9 @@ export function Team() {
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/manager/teams">Teams</BreadcrumbLink>
+              <BreadcrumbLink render={<Link to="/manager/teams" />}>
+                Teams
+              </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
@@ -94,16 +97,36 @@ export function Team() {
           </div>
         </div>
 
-        <div className="flex w-full bg-white border border-border/50 rounded-xl divide-x divide-border/50 overflow-hidden">
-          <StatBlock title="Members" value={stats.memberCount} />
-          <StatBlock title="Away Now" value={stats.activeUnavailabilityCount} />
-          <StatBlock title="Rotation (day)" value={team.rotationPeriodDays} />
-          <StatBlock
-            title="Escalation (min)"
-            value={team.escalationTimeoutMinutes}
-          />
-          <StatBlock title="Open Incidents" value={stats.incidentCount} />
-        </div>
+        {statsQuery.isPending ? (
+          <div className="flex w-full bg-white border border-border/50 rounded-xl overflow-hidden h-24">
+            <Spinner className="m-auto size-5" />
+          </div>
+        ) : statsQuery.isError || !stats ? (
+          <div className="flex w-full items-center justify-center bg-white border border-border/50 rounded-xl p-4 text-sm text-muted-foreground">
+            Couldn't load team stats.
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => void statsQuery.refetch()}
+            >
+              Retry
+            </Button>
+          </div>
+        ) : (
+          <div className="flex w-full bg-white border border-border/50 rounded-xl divide-x divide-border/50 overflow-hidden">
+            <StatBlock title="Members" value={stats.memberCount} />
+            <StatBlock
+              title="Away Now"
+              value={stats.activeUnavailabilityCount}
+            />
+            <StatBlock title="Rotation (day)" value={team.rotationPeriodDays} />
+            <StatBlock
+              title="Escalation (min)"
+              value={team.escalationTimeoutMinutes}
+            />
+            <StatBlock title="Open Incidents" value={stats.incidentCount} />
+          </div>
+        )}
       </div>
     </div>
   );
