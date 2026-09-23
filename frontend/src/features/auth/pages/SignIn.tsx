@@ -35,15 +35,7 @@ export default function SignIn() {
             />
           </Field>
           <Field>
-            <div className="flex items-center justify-between">
-              <FieldLabel htmlFor="password">Password</FieldLabel>
-              <Link
-                to="/forgot-password"
-                className="text-xs text-primary hover:underline"
-              >
-                Forgot password?
-              </Link>
-            </div>
+            <FieldLabel htmlFor="password">Password</FieldLabel>
             <Input
               id="password"
               name="password"
