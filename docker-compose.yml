@@ -58,13 +58,25 @@ services:
     depends_on:
       - postgres
     ports:
-      - "3000:3000"
+      - "8000:3000"
+    networks:
+      - incident_network
+
+  grafana:
+    image: grafana/grafana:13.2.2
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
     networks:
       - incident_network
 
 volumes:
   prometheus_data:
   postgres_data:
+  grafana-data:
 
 networks:
   incident_network:
