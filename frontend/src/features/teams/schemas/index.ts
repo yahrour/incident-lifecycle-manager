@@ -81,3 +81,54 @@ export const createTeamSchema = z
       });
     }
   });
+
+export const updateTeamSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, "Team name is required")
+      .max(50, "Name must not exceed 50 characters")
+      .optional(),
+
+    description: z
+      .string()
+      .max(255, "Description must not exceed 255 characters")
+      .optional()
+      .nullable()
+      .transform((val) => (val?.trim() === "" ? null : val)),
+
+    rotationPeriodDays: z
+      .number({ error: "Rotation period must be a number" })
+      .int("Rotation period must be a whole number")
+      .max(30, "Rotation period must not exceed 30 days")
+      .positive("Rotation period must be at least 1 day")
+      .optional(),
+
+    escalationTimeoutMinutes: z
+      .number({ error: "Escalation timeout must be a number" })
+      .int("Escalation timeout must be a whole number")
+      .max(1440, "Escalation timeout must not exceed 1440 minutes (24 hours)")
+      .positive("Escalation timeout must be at least 1 minute")
+      .optional(),
+
+    webhookUrl: z
+      .union([
+        z
+          .url("Enter a valid Discord webhook URL")
+          .max(255, "Webhook URL must not exceed 255 characters"),
+        z.literal(""),
+      ])
+      .optional()
+      .nullable()
+      .transform((val) => (val?.trim() === "" ? null : val)),
+  })
+  .superRefine((data, ctx) => {
+    const providedFields = Object.values(data).filter((v) => v !== undefined);
+    if (providedFields.length === 0) {
+      ctx.addIssue({
+        code: "custom",
+        path: [],
+        message: "At least one field must be provided to update the team.",
+      });
+    }
+  });
