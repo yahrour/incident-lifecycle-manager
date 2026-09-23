@@ -46,9 +46,54 @@ services:
     networks:
       - incident_network
 
+  prometheus:
+    image: prom/prometheus:v3.13.0
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+      - --storage.tsdb.retention.size=2GB
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - incident_network
+
+  backend:
+    build:
+      context: ./backend
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/prisma:/app/prisma
+    depends_on:
+      - postgres
+    ports:
+      - "3000:3000"
+    networks:
+      - incident_network
+
+  grafana:
+    image: grafana/grafana:13.2.2
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - incident_network
+
 volumes:
+  prometheus_data:
   postgres_data:
   vault_token:
+  grafana-data:
 
 networks:
   incident_network:
