@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -11,35 +10,11 @@ import {
   UpdateTeamDto,
 } from "./dto";
 import { PrismaService } from "@/common/prisma/prisma.service";
-import { Cursor, cursorSchema } from "./types";
 import { convertDateToUtc } from "@/common/utils/timezone";
 
 @Injectable()
 export class TeamsService {
   constructor(private prisma: PrismaService) {}
-
-  private encodeCursor(cursor: Cursor): string {
-    return Buffer.from(JSON.stringify(cursor)).toString("base64url");
-  }
-
-  private decodeCursor(raw: string): Cursor {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(Buffer.from(raw, "base64url").toString("utf-8"));
-    } catch {
-      throw new BadRequestException("Invalid cursor");
-    }
-
-    const result = cursorSchema.validate(parsed, {
-      stripUnknown: true,
-    });
-
-    if (result.error) {
-      throw new BadRequestException("Invalid cursor");
-    }
-
-    return result.value;
-  }
 
   async create(ownerId: string, createTeamDto: CreateTeamDto) {
     try {
@@ -189,6 +164,53 @@ export class TeamsService {
     }
 
     return team;
+  }
+
+  async findStats(id: string, ownerId: string) {
+    const now = new Date();
+    const [teamStats, activeUnavailabilityCount] = await Promise.all([
+      this.prisma.team.findUnique({
+        where: {
+          id,
+          ownerId,
+        },
+        select: {
+          _count: {
+            select: {
+              incidents: {
+                where: {
+                  status: "open",
+                },
+              },
+              teamMembers: true,
+            },
+          },
+        },
+      }),
+
+      this.prisma.unavailability.count({
+        where: {
+          teamMember: { team: { ownerId }, teamId: id },
+          confirmed: true,
+          startDate: {
+            lte: now,
+          },
+          endDate: {
+            gte: now,
+          },
+        },
+      }),
+    ]);
+
+    if (!teamStats) {
+      throw new NotFoundException("Team doesn't exist");
+    }
+
+    return {
+      memberCount: teamStats._count.teamMembers,
+      incidentCount: teamStats._count.incidents,
+      activeUnavailabilityCount,
+    };
   }
 
   async delete(id: string, ownerId: string) {

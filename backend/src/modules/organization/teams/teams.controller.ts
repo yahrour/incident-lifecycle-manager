@@ -71,6 +71,16 @@ export class TeamsController {
     return apiResponse(result);
   }
 
+  @Get(":id/stats")
+  @Roles(Role.SRE)
+  async findStats(
+    @Param("id", ParseUUIDPipe) id: string,
+    @ActiveUser() user: ActiveUserData
+  ) {
+    const result = await this.teamsService.findStats(id, user.sub);
+    return apiResponse(result);
+  }
+
   @Delete(":id")
   @Roles(Role.SRE)
   @HttpCode(HttpStatus.NO_CONTENT)
