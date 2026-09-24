@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql
+      - postgres_data:/var/lib/postgresql 
     networks:
       - incident_network
     healthcheck:
@@ -17,7 +17,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
-
   postgres-backup:
     build:
       context: ./infra/scripts/db-backup-service
@@ -36,6 +35,7 @@ services:
       - incident_network
     depends_on:
       - postgres
+  
   vault:
     build:
       context: ./vault
@@ -81,9 +81,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-
-    ports:
-      - "3000:3000"
     networks:
       - incident_network
 
@@ -100,6 +97,18 @@ services:
       - grafana-data:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./monitoring/grafana/dashboards:/etc/grafana/dashboards:ro
+    networks:
+      - incident_network
+
+  waf:
+    build:
+      context: ./waf
+      dockerfile: Dockerfile
+    container_name: incident_waf
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
     networks:
       - incident_network
 
