@@ -12,6 +12,12 @@ services:
       - postgres_data:/var/lib/postgresql
     networks:
       - incident_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
   postgres-backup:
     build:
       context: ./infra/scripts/db-backup-service
@@ -65,13 +71,17 @@ services:
   backend:
     build:
       context: ./backend
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
     env_file:
       - ./backend/.env
     volumes:
       - ./backend/src:/app/src
       - ./backend/prisma:/app/prisma
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+
     ports:
       - "3000:3000"
     networks:
@@ -89,6 +99,7 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/etc/grafana/dashboards:ro
     networks:
       - incident_network
 
