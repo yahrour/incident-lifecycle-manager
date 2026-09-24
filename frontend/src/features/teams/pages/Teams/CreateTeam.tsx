@@ -79,11 +79,11 @@ export function CreateTeam() {
     mutate(data, {
       onSuccess: (createdTeam) => {
         void queryClient.invalidateQueries({
-          queryKey: ["teams"]
+          queryKey: ["teams"],
         });
         void queryClient.invalidateQueries({
-          queryKey: ["teamsMetrics"]
-        })
+          queryKey: ["teamsMetrics"],
+        });
         form.reset();
         setOpen(false);
         toast.add({
