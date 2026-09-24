@@ -10,8 +10,14 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U incident_admin -d incident_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
     networks:
       - incident_network
+  
   postgres-backup:
     build:
       context: ./infra/scripts/db-backup-service
@@ -30,6 +36,7 @@ services:
       - incident_network
     depends_on:
       - postgres
+  
   vault:
     build:
       context: ./vault
@@ -71,9 +78,8 @@ services:
       - ./backend/src:/app/src
       - ./backend/prisma:/app/prisma
     depends_on:
-      - postgres
-    ports:
-      - "3000:3000"
+      postgres:
+        condition: service_healthy
     networks:
       - incident_network
 
@@ -86,6 +92,18 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - incident_network
+
+  waf:
+    build:
+      context: ./waf
+      dockerfile: Dockerfile
+    container_name: incident_waf
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
     networks:
       - incident_network
 
