@@ -89,6 +89,18 @@ services:
     networks:
       - incident_network
 
+  waf:
+    build:
+      context: ./waf
+      dockerfile: Dockerfile
+    container_name: incident_waf
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - incident_network
+
 volumes:
   prometheus_data:
   postgres_data:
