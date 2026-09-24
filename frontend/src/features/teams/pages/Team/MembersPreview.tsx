@@ -40,7 +40,7 @@ export function MembersPreview({ teamId }: { teamId: string }) {
       </div>
 
       {isError ? (
-        <p className="border-t border-border/50 px-4 py-6 text-center text-sm">
+        <p className="px-4 py-6 text-center text-sm">
           Couldn't load members.{" "}
           <button
             onClick={() => void refetch()}

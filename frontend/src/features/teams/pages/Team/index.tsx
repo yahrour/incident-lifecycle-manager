@@ -134,7 +134,7 @@ export function Team() {
               <StatBlock title="Open Incidents" value={stats.incidentCount} />
             </div>
             <MembersPreview teamId={team.id} />
-            <div className="flex gap-4">
+            <div className="flex gap-4 max-md:flex-col">
               <OnCall teamId={team.id} />
               <UnavailabilitiesPreview teamId={team.id} />
             </div>
