@@ -73,7 +73,7 @@ export function AppSidebar() {
     team: "Acme Cloud",
   };
 
-  const items = user.role === "manager" ? managerItems : engineerItems;
+  const items = user.role === "SRE" ? managerItems : engineerItems;
 
   return (
     <Sidebar className="border-none bg-primary" collapsible="icon">
@@ -187,7 +187,7 @@ export function AppSidebar() {
               {user?.name ?? "Unknown"}
             </p>
             <p className="text-xs text-[#8a7a6d]">
-              {user?.role === "manager" ? "Manager" : "Engineer"} · Acme Cloud
+              {user?.role === "SRE" ? "Manager" : "Engineer"} · Acme Cloud
             </p>
           </div>
           <ChevronDown className="h-4 w-4 text-[#8a7a6d]" />
