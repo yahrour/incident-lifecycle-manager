@@ -177,7 +177,7 @@ export class InviteService {
 
   private buildInviteLinkResponse(rawToken: string) {
     const appUrl = this.configService.get<string>("APP_URL");
-    const inviteLink = `${appUrl}/register?token=${rawToken}`;
+    const inviteLink = `${appUrl}/invite?token=${rawToken}`;
     return {
       success: true,
       inviteLink,
