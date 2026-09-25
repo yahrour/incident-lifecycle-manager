@@ -60,6 +60,7 @@ export class IncidentsService {
         ...(query.status ? [{ status: query.status }] : []),
         ...(query.severity ? [{ severity: query.severity }] : []),
         ...(query.teamId ? [{ teamId: query.teamId }] : []),
+        ...(query.service ? [{ service: query.service }] : []),
         ...(query.assigneeId ? [{ assignedToId: query.assigneeId }] : []),
         ...(query.search
           ? [
@@ -150,7 +151,13 @@ export class IncidentsService {
       ...(incident.resolvedAt
         ? [{ type: "resolved", at: incident.resolvedAt }]
         : []),
-    ];
+      ...(incident.notes ?? []).map((note) => ({
+        type: "note_added",
+        at: note.createdAt,
+        noteId: note.id,
+        actor: note.author,
+      })),
+    ].sort((a, b) => a.at.getTime() - b.at.getTime());
 
     return {
       ...incident,
@@ -281,14 +288,22 @@ export class IncidentsService {
     return incident.id;
   }
 
-  async reassign(ownerId: string, incidentId: string, assigneeId: string) {
+  async reassign(
+    ownerId: string,
+    incidentId: string,
+    assigneeId: string,
+    note?: string
+  ) {
     const incident = await this.prisma.incident.findFirst({
       where: { id: incidentId, team: { ownerId } },
-      select: { id: true, teamId: true },
+      select: { id: true, teamId: true, status: true },
     });
 
     if (!incident) throw new NotFoundException("Incident doesn't exist");
     if (!incident.teamId) throw new ConflictException("Incident has no team");
+    if (incident.status === INCIDENT_STATUS.RESOLVED) {
+      throw new ConflictException("Resolved incidents cannot be reassigned");
+    }
 
     const member = await this.prisma.teamMember.findFirst({
       where: { teamId: incident.teamId, userId: assigneeId },
@@ -299,7 +314,7 @@ export class IncidentsService {
       );
     }
 
-    return this.prisma.incident.update({
+    const update = this.prisma.incident.update({
       where: { id: incidentId },
       data: { assignedToId: assigneeId },
       include: {
@@ -309,6 +324,16 @@ export class IncidentsService {
         },
       },
     });
+
+    if (!note) return update;
+
+    const [updated] = await this.prisma.$transaction([
+      update,
+      this.prisma.incidentNote.create({
+        data: { incidentId, authorId: ownerId, content: note },
+      }),
+    ]);
+    return updated;
   }
 
   async acknowledge(userId: string, incidentId: string) {
