@@ -85,7 +85,8 @@ export class IncidentsController {
     const incident = await this.incidentsService.reassign(
       user.sub,
       id,
-      reassignIncidentDto.assigneeId
+      reassignIncidentDto.assigneeId,
+      reassignIncidentDto.note
     );
     return apiResponse(incident);
   }

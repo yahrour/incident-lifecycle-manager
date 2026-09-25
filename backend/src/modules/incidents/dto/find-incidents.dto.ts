@@ -16,7 +16,11 @@ export class FindIncidentsDto {
   search?: string;
 
   @IsOptional()
-  @IsIn(["open", "acknowledged", "in_progress", "resolved"])
+  @IsString()
+  service?: string;
+
+  @IsOptional()
+  @IsIn(["open", "acknowledged", "resolved"])
   status?: string;
 
   @IsOptional()
