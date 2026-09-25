@@ -1,5 +1,5 @@
 import { Controller, useForm } from "react-hook-form";
-import { createTeamSchema } from "../../schemas";
+import { createTeamSchema, servicesSchema } from "../../schemas";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -49,6 +50,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ErrorSection } from "../../components/ErrorSection";
 import { queryClient } from "@/lib/queryClient";
+import { Badge } from "@/components/ui/badge";
 
 export function CreateTeam() {
   type CreateTeamInput = z.input<typeof createTeamSchema>;
@@ -59,9 +61,8 @@ export function CreateTeam() {
     defaultValues: {
       name: "",
       description: "",
-      escalationTimeoutMinutes: DEFAULT_ESCALATION_TIMEOUT_MINUTES,
+      services: [],
       timezone: "",
-      rotationPeriodDays: DEFAULT_ROTATION_PERIOD_DAYS,
       webhookUrl: "",
     },
   });
@@ -70,6 +71,7 @@ export function CreateTeam() {
     mutationFn: createTeam,
   });
 
+  const [service, setService] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const timezones = Intl.supportedValuesOf("timeZone");
@@ -79,13 +81,15 @@ export function CreateTeam() {
     mutate(data, {
       onSuccess: (createdTeam) => {
         void queryClient.invalidateQueries({
-          queryKey: ["teams"]
+          queryKey: ["teams"],
         });
         void queryClient.invalidateQueries({
-          queryKey: ["teamsMetrics"]
-        })
+          queryKey: ["teamsMetrics"],
+        });
         form.reset();
+        setErrors([]);
         setOpen(false);
+        setService("");
         toast.add({
           type: "success",
           title: "Team created",
@@ -105,6 +109,23 @@ export function CreateTeam() {
     });
   };
 
+  const handleAddService = () => {
+    const candidate = [...form.getValues("services"), service.trim()];
+
+    const { data, success, error } = servicesSchema.safeParse(candidate);
+
+    if (!success) {
+      form.setError("services", {
+        message: error.issues[0].message,
+      });
+      return;
+    }
+
+    form.clearErrors("services");
+    form.setValue("services", data);
+    setService("");
+  };
+
   return (
     <Dialog
       open={open}
@@ -112,6 +133,7 @@ export function CreateTeam() {
         setOpen(nextOpen);
         if (!nextOpen) {
           setErrors([]);
+          setService("");
           form.reset();
         }
       }}
@@ -124,7 +146,7 @@ export function CreateTeam() {
           </Button>
         }
       ></DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-lg!">
         <DialogHeader>
           <DialogTitle>Create a team</DialogTitle>
           <DialogDescription>
@@ -174,6 +196,54 @@ export function CreateTeam() {
                     <FieldError errors={[fieldState.error]} />
                   )}
                 </Field>
+              )}
+            />
+
+            <Controller
+              name="services"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <div className="space-y-2">
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="services">Services</FieldLabel>
+                    <FieldDescription>
+                      Alerts for this service will route to the team.
+                    </FieldDescription>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        {...field}
+                        id="services"
+                        aria-invalid={fieldState.invalid}
+                        placeholder="e.g. payments-api, checkout-service"
+                        value={service}
+                        onChange={(v) => setService(v.currentTarget.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddService();
+                          }
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleAddService}
+                      >
+                        <Plus />
+                      </Button>
+                    </div>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                  <div className="flex items-center flex-wrap gap-1">
+                    {field.value.map((s) => (
+                      <Badge variant="secondary" key={s}>
+                        {s}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
               )}
             />
 
@@ -263,13 +333,21 @@ export function CreateTeam() {
                     <FieldLabel htmlFor="rotationPeriodDays">
                       Rotation period (days)
                     </FieldLabel>
+                    <FieldDescription>
+                      Defaults to {DEFAULT_ROTATION_PERIOD_DAYS} minutes if left
+                      blank.
+                    </FieldDescription>
                     <Input
                       {...field}
                       id="rotationPeriodDays"
                       aria-invalid={fieldState.invalid}
                       autoComplete="off"
                       type="number"
-                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                      value={field.value ?? ""}
+                      onChange={(e) => {
+                        const value = e.target.valueAsNumber;
+                        field.onChange(Number.isNaN(value) ? undefined : value);
+                      }}
                     />
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
@@ -286,13 +364,21 @@ export function CreateTeam() {
                     <FieldLabel htmlFor="escalationTimeoutMinutes">
                       Escalation timeout (minutes)
                     </FieldLabel>
+                    <FieldDescription>
+                      Defaults to {DEFAULT_ESCALATION_TIMEOUT_MINUTES} minutes
+                      if left blank.
+                    </FieldDescription>
                     <Input
                       {...field}
                       id="escalationTimeoutMinutes"
                       aria-invalid={fieldState.invalid}
                       autoComplete="off"
                       type="number"
-                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                      value={field.value ?? ""}
+                      onChange={(e) => {
+                        const value = e.target.valueAsNumber;
+                        field.onChange(Number.isNaN(value) ? undefined : value);
+                      }}
                     />
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
@@ -310,6 +396,14 @@ export function CreateTeam() {
                   <FieldLabel htmlFor="webhookurl">
                     Discord webhook URL
                   </FieldLabel>
+                  <FieldDescription>
+                    Notifies this Discord channel when a shift starts. Create
+                    one under{" "}
+                    <span className="font-medium">
+                      Server Settings → Integrations → Webhooks
+                    </span>
+                    .
+                  </FieldDescription>
                   <Input
                     {...field}
                     id="webhookurl"
@@ -334,6 +428,8 @@ export function CreateTeam() {
               variant="outline"
               onClick={() => {
                 form.reset();
+                setErrors([]);
+                setService("");
                 setOpen(false);
               }}
               disabled={isPending}

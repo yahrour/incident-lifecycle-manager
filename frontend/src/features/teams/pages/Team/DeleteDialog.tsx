@@ -35,8 +35,8 @@ export function DeleteDialog({ teamId }: { teamId: string }) {
         queryKey: ["teams"],
       });
       void queryClient.invalidateQueries({
-        queryKey: ["teamsMetrics"]
-      })
+        queryKey: ["teamsMetrics"],
+      });
 
       void navigate("/manager/teams", { replace: true });
     },
