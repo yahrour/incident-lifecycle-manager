@@ -1,30 +1,47 @@
 import { isValidTimeZone } from "@/utils/timezone";
 import z from "zod";
-import {
-  DEFAULT_ESCALATION_TIMEOUT_MINUTES,
-  DEFAULT_ROTATION_PERIOD_DAYS,
-} from "../constants";
 import { isBefore, startOfDay } from "date-fns";
+
+export const servicesSchema = z
+  .array(
+    z
+      .string()
+      .trim()
+      .min(1, "Service name cannot be empty")
+      .max(25, "service name must not exceed 25 characters")
+  )
+  .min(1, "At least one service is required")
+  .refine(
+    (items) => new Set(items.map((s) => s.toLowerCase())).size === items.length,
+    { error: "Services must be unique" }
+  );
 
 export const createTeamSchema = z
   .object({
     name: z
       .string()
+      .trim()
       .min(1, "Team name is required")
       .max(50, "name must not exceed 50 characters"),
+
+    services: servicesSchema,
+
     description: z
       .string()
+      .trim()
       .max(255, "description must not exceed 255 characters")
       .optional()
-      .transform((val) => (val?.trim() === "" ? undefined : val)),
+      .transform((val) => (val === "" ? undefined : val)),
+
     rotationPeriodDays: z
       .number({ error: "Rotation period must be a number" })
       .int("Rotation period must be a whole number")
       .max(30, "Rotation period must not exceed 30 days")
       .positive("Rotation period must be at least 1 day")
-      .default(DEFAULT_ROTATION_PERIOD_DAYS),
+      .optional(),
 
     rotationStartDate: z.date().optional(),
+
     timezone: z
       .string()
       .refine((tz) => tz === "" || isValidTimeZone(tz), {
@@ -38,13 +55,19 @@ export const createTeamSchema = z
       .int("Escalation timeout must be a whole number")
       .max(1440, "Escalation timeout must not exceed 1440 minutes (24 hours)")
       .positive("Escalation timeout must be at least 1 minute")
-      .default(DEFAULT_ESCALATION_TIMEOUT_MINUTES),
+      .optional(),
 
     webhookUrl: z
       .union([
         z
           .url("Enter a valid Discord webhook URL")
-          .max(255, "webhook URL must not exceed 255 characters"),
+          .max(255, "webhook URL must not exceed 255 characters")
+          .refine(
+            (url) => url.startsWith("https://discord.com/api/webhooks/"),
+            {
+              error: "Must be a Discord webhook URL",
+            }
+          ),
         z.literal(""),
       ])
       .optional()
@@ -86,16 +109,20 @@ export const updateTeamSchema = z
   .object({
     name: z
       .string()
+      .trim()
       .min(1, "Team name is required")
       .max(50, "Name must not exceed 50 characters")
       .optional(),
 
     description: z
       .string()
+      .trim()
       .max(255, "Description must not exceed 255 characters")
       .optional()
       .nullable()
-      .transform((val) => (val?.trim() === "" ? null : val)),
+      .transform((val) => (val === "" ? null : val)),
+
+    services: servicesSchema.optional(),
 
     rotationPeriodDays: z
       .number({ error: "Rotation period must be a number" })
