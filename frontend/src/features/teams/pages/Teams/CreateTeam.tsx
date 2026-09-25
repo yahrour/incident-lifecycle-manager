@@ -48,6 +48,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ErrorSection } from "../../components/ErrorSection";
+import { queryClient } from "@/lib/queryClient";
 
 export function CreateTeam() {
   type CreateTeamInput = z.input<typeof createTeamSchema>;
@@ -77,6 +78,12 @@ export function CreateTeam() {
     setErrors([]);
     mutate(data, {
       onSuccess: (createdTeam) => {
+        void queryClient.invalidateQueries({
+          queryKey: ["teams"],
+        });
+        void queryClient.invalidateQueries({
+          queryKey: ["teamsMetrics"],
+        });
         form.reset();
         setOpen(false);
         toast.add({
