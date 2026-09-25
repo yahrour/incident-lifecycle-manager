@@ -4,7 +4,7 @@ import type { Unavailability } from "../types";
 
 export async function fetchUnavailabilities(id: string) {
   const response = await apiClient.get<ApiResponse<Unavailability[]>>(
-    `/teams/${id}/unavailabilities`
+    `/teams/${id}/unavailabilities?limit=5`
   );
   return response.data;
 }
