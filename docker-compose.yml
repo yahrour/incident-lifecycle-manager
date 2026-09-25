@@ -114,9 +114,17 @@ services:
     ports:
       - "8080:80"
       - "8443:443"
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html:ro
     depends_on:
       backend:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSk https://localhost:8443/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
     networks:
       - incident_network
 
