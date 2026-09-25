@@ -96,14 +96,21 @@ export function CreateTeam() {
           description: `${createdTeam.data.name} is ready to go.`,
         });
       },
+
       onError: (error) => {
         if (axios.isAxiosError(error)) {
-          const apiError = error.response?.data as ApiError;
-          setErrors(
-            Array.isArray(apiError.message)
-              ? [...apiError.message]
-              : [apiError.message]
-          );
+          const apiError = error.response?.data as ApiError | undefined;
+          const message = apiError?.message;
+
+          if (Array.isArray(message)) {
+            setErrors([...message]);
+          } else if (message) {
+            setErrors([message]);
+          } else {
+            setErrors(["Something went wrong. Please try again."]);
+          }
+        } else {
+          setErrors(["An unexpected error occurred."]);
         }
       },
     });
