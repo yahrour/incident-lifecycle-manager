@@ -213,6 +213,74 @@ export class IncidentsService {
     });
   }
 
+  async createFromAlert(
+    ownerId: string,
+    alertId: string,
+    alert: {
+      provider: string;
+      title: string;
+      serviceName?: string;
+      severity: string;
+      status?: string;
+      team?: string;
+    }
+  ) {
+    const team =
+      alert.team &&
+      (await this.prisma.team.findFirst({
+        where: { ownerId, name: alert.team },
+        select: { id: true },
+      }));
+    if (!team) return null;
+
+    const service = alert.serviceName ?? "unknown";
+    const fingerprint = createIncidentFingerprint(
+      alert.provider,
+      service,
+      alert.title
+    );
+    const where = {
+      unique_team_open_fingerprint: {
+        teamId: team.id,
+        openFingerprint: fingerprint,
+      },
+    };
+
+    let incident = await this.prisma.incident.findUnique({
+      where,
+      select: { id: true },
+    });
+    if (!incident) {
+      if (alert.status === "resolved") return null;
+      const onCall = await this.onCallService.getCurrentOnCall(
+        team.id,
+        ownerId
+      );
+      incident = await this.prisma.incident.upsert({
+        where,
+        update: {},
+        create: {
+          teamId: team.id,
+          title: alert.title,
+          service,
+          severity:
+            { critical: "critical", warning: "medium" }[alert.severity] ??
+            "low",
+          fingerprint,
+          openFingerprint: fingerprint,
+          assignedToId: onCall?.chain.find(({ role }) => role === "PRIMARY")
+            ?.id,
+        },
+        select: { id: true },
+      });
+    }
+
+    await this.prisma.incidentAlert.create({
+      data: { alertId, incidentId: incident.id },
+    });
+    return incident.id;
+  }
+
   async reassign(ownerId: string, incidentId: string, assigneeId: string) {
     const incident = await this.prisma.incident.findFirst({
       where: { id: incidentId, team: { ownerId } },
@@ -307,6 +375,7 @@ export class IncidentsService {
       data: {
         status: INCIDENT_STATUS.RESOLVED,
         resolvedAt,
+        openFingerprint: null,
         mttrSeconds: Math.floor(
           (resolvedAt.getTime() - incident.createdAt.getTime()) / 1000
         ),
