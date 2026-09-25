@@ -132,6 +132,7 @@ export function Team() {
                 value={team.escalationTimeoutMinutes}
               />
               <StatBlock title="Open Incidents" value={stats.incidentCount} />
+              <StatBlock title="Services" value={team.services} />
             </div>
             <MembersPreview teamId={team.id} />
             <div className="flex gap-4 max-md:flex-col">
