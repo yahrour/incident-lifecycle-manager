@@ -23,6 +23,7 @@ export class TeamsService {
           ownerId,
           name: createTeamDto.name,
           description: createTeamDto.description,
+          services: createTeamDto.services,
           rotationPeriodDays: createTeamDto.rotationPeriodDays,
           rotationStartDate:
             createTeamDto.rotationStartDate &&
