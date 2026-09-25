@@ -1,8 +1,8 @@
-import { IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { MaxLength, IsOptional, IsString } from "class-validator";
 
 export class RefrechTokenDto {
   @IsOptional()
   @IsString()
-  @IsNotEmpty()
+  @MaxLength(64)
   refreshToken?: string;
 }

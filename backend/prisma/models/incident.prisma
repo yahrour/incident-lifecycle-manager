@@ -4,6 +4,8 @@ model Incident {
   team           Team?          @relation(fields: [teamId], references: [id], onDelete: SetNull)
   title          String
   service        String
+  fingerprint    String?
+  openFingerprint String?       @map("open_fingerprint")
   severity       String
   status         String         @default("open")
   assignedToId   String?        @map("assigned_to") @db.Uuid
@@ -15,8 +17,11 @@ model Incident {
   mttrSeconds    Int?           @map("mttr_seconds")
   updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz
   notes          IncidentNote[]
+  alerts         IncidentAlert[]
 
+  @@unique([teamId, openFingerprint], name: "unique_team_open_fingerprint")
   @@index([teamId], name: "idx_incidents_team")
+  @@index([fingerprint, status], name: "idx_incidents_fingerprint_status")
   @@index([status], name: "idx_incidents_status")
   @@index([createdAt], name: "idx_incidents_created_at")
   @@map("incidents")
@@ -35,5 +40,14 @@ model IncidentNote {
 
   @@index([incidentId, createdAt], name: "idx_incident_notes_incident_created")
   @@map("incident_notes")
+  @@schema("incident")
+}
+
+model IncidentAlert {
+  alertId    String   @id @map("alert_id") @db.Uuid
+  incidentId String   @map("incident_id") @db.Uuid
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@map("incident_alerts")
   @@schema("incident")
 }

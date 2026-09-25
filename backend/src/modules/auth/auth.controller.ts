@@ -1,11 +1,9 @@
 import {
   Body,
   Controller,
-  Get,
   HttpCode,
   HttpStatus,
   Post,
-  Query,
   Req,
   Res,
   UnauthorizedException,
@@ -16,9 +14,6 @@ import { AuthService } from "./auth.service";
 import type { Response, Request } from "express";
 import { Public } from "@/common/decorators/public.decorator";
 import { RefrechTokenDto } from "./dto/refresh-token.dto";
-import { VerifySignupEmailDto } from "./dto/verify-signup-email.dto";
-import { ForgotPasswordDto } from "./dto/forgot-password.dto";
-import { ResetPasswordDto } from "./dto/reset-password.dto";
 import {
   ACCESS_COOKIE_OPTIONS,
   REFRESH_COOKIE_OPTIONS,
@@ -64,12 +59,6 @@ export class AuthController {
     return this.authService.refrechTokens(refreshToken);
   }
 
-  @Public()
-  @Get("verify-email")
-  async verifyEmail(@Query() dto: VerifySignupEmailDto) {
-    return this.authService.verifySignupEmail(dto.token);
-  }
-
   @HttpCode(HttpStatus.OK)
   @Post("logout")
   async logout(
@@ -82,19 +71,5 @@ export class AuthController {
     response.clearCookie("accessToken", ACCESS_COOKIE_OPTIONS);
     response.clearCookie("refreshToken", REFRESH_COOKIE_OPTIONS);
     return { message: "Logged out successfully" };
-  }
-
-  @HttpCode(HttpStatus.OK)
-  @Public()
-  @Post("forgot-password")
-  async forgotPassword(@Body() dto: ForgotPasswordDto) {
-    return this.authService.requestPasswordReset(dto.email);
-  }
-
-  @Public()
-  @HttpCode(HttpStatus.OK)
-  @Post("reset-password")
-  async resetPassword(@Body() dto: ResetPasswordDto) {
-    return this.authService.resetPassword(dto.token, dto.newPassword);
   }
 }

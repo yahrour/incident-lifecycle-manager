@@ -7,5 +7,6 @@ import { IncidentsService } from "./incidents.service";
   imports: [OncallModule],
   controllers: [IncidentsController],
   providers: [IncidentsService],
+  exports: [IncidentsService],
 })
 export class IncidentsModule {}

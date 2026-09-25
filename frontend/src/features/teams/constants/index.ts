@@ -1,0 +1,3 @@
+export const DEFAULT_ROTATION_PERIOD_DAYS = 7;
+export const DEFAULT_ESCALATION_TIMEOUT_MINUTES = 5;
+export const DEFAULT_LIMIT = 1;

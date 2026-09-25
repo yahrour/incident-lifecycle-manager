@@ -27,6 +27,6 @@ export class AlertController {
 
     if (!trusted) throw new UnauthorizedException("Invalid ingestion API key");
 
-    return this.alert.normalizeAlert(provider, payload);
+    return this.alert.ingestAlert(provider, payload);
   }
 }

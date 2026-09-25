@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -7,39 +6,15 @@ import {
 import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
 import {
   CreateTeamDto,
-  CursorPaginationSearchParams,
+  OffsetPaginationSearchParams,
   UpdateTeamDto,
 } from "./dto";
 import { PrismaService } from "@/common/prisma/prisma.service";
-import { Cursor, cursorSchema } from "./types";
 import { convertDateToUtc } from "@/common/utils/timezone";
 
 @Injectable()
 export class TeamsService {
   constructor(private prisma: PrismaService) {}
-
-  private encodeCursor(cursor: Cursor): string {
-    return Buffer.from(JSON.stringify(cursor)).toString("base64url");
-  }
-
-  private decodeCursor(raw: string): Cursor {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(Buffer.from(raw, "base64url").toString("utf-8"));
-    } catch {
-      throw new BadRequestException("Invalid cursor");
-    }
-
-    const result = cursorSchema.validate(parsed, {
-      stripUnknown: true,
-    });
-
-    if (result.error) {
-      throw new BadRequestException("Invalid cursor");
-    }
-
-    return result.value;
-  }
 
   async create(ownerId: string, createTeamDto: CreateTeamDto) {
     try {
@@ -48,6 +23,7 @@ export class TeamsService {
           ownerId,
           name: createTeamDto.name,
           description: createTeamDto.description,
+          services: createTeamDto.services,
           rotationPeriodDays: createTeamDto.rotationPeriodDays,
           rotationStartDate:
             createTeamDto.rotationStartDate &&
@@ -123,57 +99,41 @@ export class TeamsService {
     }
   }
 
-  async findAll(ownerId: string, query: CursorPaginationSearchParams) {
-    const cursor = query.cursor ? this.decodeCursor(query.cursor) : null;
-    if (
-      cursor &&
-      (cursor.sortField !== query.sortField ||
-        cursor.sortOrder !== query.sortOrder)
-    ) {
-      throw new BadRequestException(
-        "Cursor sort parameters do not match query sort parameters"
-      );
-    }
-
+  async findAll(ownerId: string, query: OffsetPaginationSearchParams) {
     try {
-      const teamRows = await this.prisma.team.findMany({
-        where: {
-          ownerId,
-          ...(query.search && {
-            name: {
-              contains: query.search,
-              mode: "insensitive",
+      const [teams, total] = await Promise.all([
+        this.prisma.team.findMany({
+          where: {
+            ownerId,
+            ...(query.search && {
+              name: {
+                contains: query.search,
+                mode: "insensitive",
+              },
+            }),
+          },
+          skip: query.offset,
+          take: query.limit,
+          ...(query.sortField && {
+            orderBy: {
+              [query.sortField]: query.sortOrder,
             },
           }),
-        },
-        take: query.limit + 1,
-        ...(cursor && {
-          skip: 1,
-          cursor: {
-            id: cursor.id,
+          omit: {
+            ownerId: true,
+            updatedAt: true,
+            currentRotationIndex: true,
+            lastNotifiedRotationIndex: true,
           },
         }),
-        orderBy: [
-          { [query.sortField]: query.sortOrder },
-          { id: query.sortOrder },
-        ],
-        omit: {
-          ownerId: true,
-          updatedAt: true,
-        },
-      });
+        this.prisma.team.count({
+          where: {
+            ownerId,
+          },
+        }),
+      ]);
 
-      const hasNextPage = teamRows.length > query.limit;
-      const teams = hasNextPage ? teamRows.slice(0, query.limit) : teamRows;
-      const nextCursor = hasNextPage
-        ? this.encodeCursor({
-            id: teams[teams.length - 1].id,
-            sortField: query.sortField,
-            sortOrder: query.sortOrder,
-          })
-        : null;
-
-      return { teams, nextCursor };
+      return { teams, total };
     } catch (error) {
       if (
         error instanceof PrismaClientKnownRequestError &&
@@ -205,6 +165,53 @@ export class TeamsService {
     }
 
     return team;
+  }
+
+  async findStats(id: string, ownerId: string) {
+    const now = new Date();
+    const [teamStats, activeUnavailabilityCount] = await Promise.all([
+      this.prisma.team.findUnique({
+        where: {
+          id,
+          ownerId,
+        },
+        select: {
+          _count: {
+            select: {
+              incidents: {
+                where: {
+                  status: "open",
+                },
+              },
+              teamMembers: true,
+            },
+          },
+        },
+      }),
+
+      this.prisma.unavailability.count({
+        where: {
+          teamMember: { team: { ownerId }, teamId: id },
+          confirmed: true,
+          startDate: {
+            lte: now,
+          },
+          endDate: {
+            gte: now,
+          },
+        },
+      }),
+    ]);
+
+    if (!teamStats) {
+      throw new NotFoundException("Team doesn't exist");
+    }
+
+    return {
+      memberCount: teamStats._count.teamMembers,
+      incidentCount: teamStats._count.incidents,
+      activeUnavailabilityCount,
+    };
   }
 
   async delete(id: string, ownerId: string) {

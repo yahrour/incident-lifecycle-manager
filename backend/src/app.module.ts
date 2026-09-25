@@ -17,6 +17,7 @@ import { RolesGuard } from "@/common/guards/roles.guard";
 import { ScheduleModule } from "@nestjs/schedule";
 import { LoggerMiddleware } from "@/common/middleware/logger.middleware";
 import { DiscordModule } from "./modules/discord/discord.module";
+import { MonitoringModule } from "./modules/monitoring/monitoring.module";
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { DiscordModule } from "./modules/discord/discord.module";
     IngestionModule,
     IncidentsModule,
     DiscordModule,
+    MonitoringModule,
   ],
   controllers: [],
   providers: [
