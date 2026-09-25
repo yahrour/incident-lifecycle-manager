@@ -22,10 +22,13 @@ export function OnCall({ teamId }: { teamId: string }) {
       <div className="px-4 py-3">
         {isPending ? (
           <div className="space-y-2">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-10 animate-pulse rounded bg-[#f1ece4]" />
-          ))}
-        </div>
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-10 animate-pulse rounded bg-[#f1ece4]"
+              />
+            ))}
+          </div>
         ) : isError ? (
           <p className="text-sm text-[#2a2320]">
             Couldn't load who's on call.{" "}
