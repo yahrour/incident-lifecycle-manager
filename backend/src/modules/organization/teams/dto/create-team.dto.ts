@@ -77,8 +77,12 @@ export class CreateTeamDto {
     each: true,
     message: "Each service must not exceed 25 characters",
   })
-  @ArrayUnique((service: string) => service.toLowerCase(), {
-    message: "Services must be unique (case-insensitive)",
-  })
+  @ArrayUnique(
+    (service: unknown) =>
+      typeof service === "string" ? service.toLowerCase() : service,
+    {
+      message: "Services must be unique (case-insensitive)",
+    }
+  )
   services: string[];
 }
