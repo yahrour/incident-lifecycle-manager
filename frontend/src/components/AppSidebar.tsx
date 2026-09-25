@@ -21,13 +21,13 @@ import {
   CalendarOff,
   Plug,
   Settings,
-  ChevronDown,
   Calendar,
   Home,
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { cn } from "@/lib/utils";
-import type { Role } from "@/types";
+import { useAuth } from "@/features/auth/context/AuthContext";
+import { Role } from "@/types";
 
 const managerItems = {
   respondItems: [
@@ -64,16 +64,15 @@ const engineerItems = {
 
 export function AppSidebar() {
   const location = useLocation();
+  const { user, isLoading } = useAuth();
 
-  const user = {
-    id: "#1",
-    name: "Tobi",
-    email: "tobi@acme.com",
-    role: "SRE" as Role,
-    team: "Acme Cloud",
-  };
+  if (isLoading) {
+    return <p>Loading...</p>;
+  } else if (!user) {
+    return <p>Unauthorized</p>;
+  }
 
-  const items = user.role === "SRE" ? managerItems : engineerItems;
+  const items = user.role === Role.SRE ? managerItems : engineerItems;
 
   return (
     <Sidebar className="border-none bg-primary" collapsible="icon">
@@ -171,27 +170,24 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-white/10 px-2 py-3">
-        <button className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/5">
+        <Link
+          to={"/"}
+          className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/5"
+        >
           <div className="relative">
             <Avatar className="h-8 w-8 bg-purple-400 text-white">
               <AvatarFallback className="bg-purple-400 text-xs text-white">
-                {user?.name
-                  ?.split(" ")
-                  .map((n) => n[0])
-                  .join("") ?? "?"}
+                {user.firstName.charAt(0) + user.lastName.charAt(0)}
               </AvatarFallback>
             </Avatar>
           </div>
           <div className="flex-1 text-left group-data-[collapsible=icon]:hidden">
             <p className="text-sm font-medium text-[#e8ddd3]">
-              {user?.name ?? "Unknown"}
+              {user.firstName + " " + user.lastName}
             </p>
-            <p className="text-xs text-[#8a7a6d]">
-              {user?.role === "SRE" ? "Manager" : "Engineer"} · Acme Cloud
-            </p>
+            <p className="text-xs text-muted-foreground">{user.role}</p>
           </div>
-          <ChevronDown className="h-4 w-4 text-[#8a7a6d]" />
-        </button>
+        </Link>
       </SidebarFooter>
     </Sidebar>
   );
