@@ -7,8 +7,8 @@ export function OnCall({ teamId }: { teamId: string }) {
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["oncall", teamId],
     queryFn: () => fetchOnCall(teamId),
-    refetchInterval: 60_000, // every hour
-    staleTime: 30_000,
+    refetchInterval: 3_600_000, // every hour
+    staleTime: 1_800_000, // every half hour
   });
 
   const [primary, secondary] = data?.data?.chain ?? [];
