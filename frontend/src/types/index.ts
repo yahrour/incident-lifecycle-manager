@@ -1,4 +1,9 @@
-export type Role = "SRE" | "ENGINEER";
+export const Role = {
+  SRE: "SRE",
+  ENGINEER: "ENGINEER",
+} as const;
+
+export type Role = (typeof Role)[keyof typeof Role];
 
 export type User = {
   id: string;
