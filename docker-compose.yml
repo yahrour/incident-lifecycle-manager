@@ -75,6 +75,9 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
     env_file:
       - ./backend/.env
+    ports:
+      - "3000:3000"
+
     volumes:
       - ./backend/src:/app/src
       - ./backend/prisma:/app/prisma
