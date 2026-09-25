@@ -334,7 +334,7 @@ export function CreateTeam() {
                       Rotation period (days)
                     </FieldLabel>
                     <FieldDescription>
-                      Defaults to {DEFAULT_ROTATION_PERIOD_DAYS} minutes if left
+                      Defaults to {DEFAULT_ROTATION_PERIOD_DAYS} day(s) if left
                       blank.
                     </FieldDescription>
                     <Input
@@ -365,7 +365,7 @@ export function CreateTeam() {
                       Escalation timeout (minutes)
                     </FieldLabel>
                     <FieldDescription>
-                      Defaults to {DEFAULT_ESCALATION_TIMEOUT_MINUTES} minutes
+                      Defaults to {DEFAULT_ESCALATION_TIMEOUT_MINUTES} minute(s)
                       if left blank.
                     </FieldDescription>
                     <Input
