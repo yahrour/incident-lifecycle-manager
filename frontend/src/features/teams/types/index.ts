@@ -38,3 +38,58 @@ export type Stats = {
   incidentCount: number;
   activeUnavailabilityCount: number;
 };
+
+export type Member = {
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    specialty: string | null;
+  };
+  teamId: string;
+  id: number;
+  joinedAt: Date;
+};
+
+export type Unavailability = {
+  id: number;
+  startDate: Date;
+  endDate: Date;
+  reason: string | null;
+  confirmed: boolean;
+  createdAt: Date;
+  memberId: number;
+  teamMember: {
+    id: number;
+    user: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+      specialty: string | null;
+    };
+  };
+};
+
+export type OnCall = {
+  teamId: string;
+  escalationTimeoutMinutes: number;
+  chain: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    specialty: string | null;
+    role: string;
+  }[];
+} | null;
+
+export type Engineer = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  specialty: string | null;
+  role: string;
+};

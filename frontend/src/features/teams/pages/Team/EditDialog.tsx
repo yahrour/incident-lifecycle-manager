@@ -82,9 +82,7 @@ export function EditDialog({ teamId }: { teamId: string }) {
         onSuccess: () => {
           void queryClient.invalidateQueries({ queryKey: ["teams"] });
           void queryClient.invalidateQueries({ queryKey: ["team", teamId] });
-          void queryClient.invalidateQueries({
-            queryKey: ["team", teamId, "stats"],
-          });
+          void queryClient.invalidateQueries({ queryKey: ["oncall", teamId] });
           setOpen(false);
           toast.add({
             type: "success",
