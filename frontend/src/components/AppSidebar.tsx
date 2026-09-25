@@ -69,7 +69,7 @@ export function AppSidebar() {
     id: "#1",
     name: "Tobi",
     email: "tobi@acme.com",
-    role: "manager" as Role,
+    role: "SRE" as Role,
     team: "Acme Cloud",
   };
 
