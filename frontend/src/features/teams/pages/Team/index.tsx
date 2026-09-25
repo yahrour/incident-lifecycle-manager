@@ -17,6 +17,9 @@ import { EmptyState } from "./EmptyState";
 import { DeleteDialog } from "./DeleteDialog";
 import { EditDialog } from "./EditDialog";
 import { Button } from "@/components/ui/button";
+import { MembersPreview } from "./MembersPreview";
+import { OnCall } from "./OnCall";
+import { UnavailabilitiesPreview } from "./UnavailabilitiesPreview";
 
 export function Team() {
   const params = useParams();
@@ -113,19 +116,29 @@ export function Team() {
             </Button>
           </div>
         ) : (
-          <div className="flex w-full bg-white border border-border/50 rounded-xl divide-x divide-border/50 overflow-hidden">
-            <StatBlock title="Members" value={stats.memberCount} />
-            <StatBlock
-              title="Away Now"
-              value={stats.activeUnavailabilityCount}
-            />
-            <StatBlock title="Rotation (day)" value={team.rotationPeriodDays} />
-            <StatBlock
-              title="Escalation (min)"
-              value={team.escalationTimeoutMinutes}
-            />
-            <StatBlock title="Open Incidents" value={stats.incidentCount} />
-          </div>
+          <>
+            <div className="flex w-full bg-white border border-border/50 rounded-xl divide-x divide-border/50 overflow-hidden">
+              <StatBlock title="Members" value={stats.memberCount} />
+              <StatBlock
+                title="Away Now"
+                value={stats.activeUnavailabilityCount}
+              />
+              <StatBlock
+                title="Rotation (day)"
+                value={team.rotationPeriodDays}
+              />
+              <StatBlock
+                title="Escalation (min)"
+                value={team.escalationTimeoutMinutes}
+              />
+              <StatBlock title="Open Incidents" value={stats.incidentCount} />
+            </div>
+            <MembersPreview teamId={team.id} />
+            <div className="flex gap-4 max-md:flex-col">
+              <OnCall teamId={team.id} />
+              <UnavailabilitiesPreview teamId={team.id} />
+            </div>
+          </>
         )}
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { apiClient } from "@/lib/apiClient";
 import type { ApiResponse } from "@/types";
-import type { Stats, Team } from "../types";
+import type { OnCall, Stats, Team } from "../types";
 import type { createTeamSchema, updateTeamSchema } from "../schemas";
 import z from "zod";
 import { DEFAULT_LIMIT } from "../constants";
@@ -43,6 +43,13 @@ export async function updateTeam(
   const response = await apiClient.patch<ApiResponse<Team>>(
     `/teams/${id}`,
     updatedTeam
+  );
+  return response.data;
+}
+
+export async function fetchOnCall(id: string) {
+  const response = await apiClient.get<ApiResponse<OnCall>>(
+    `/teams/${id}/oncall/current`
   );
   return response.data;
 }
