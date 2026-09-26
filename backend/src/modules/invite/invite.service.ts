@@ -34,9 +34,10 @@ export class InviteService {
     if (!currUser) {
       throw new NotFoundException("User not found");
     }
-    if (currUser.email.toLowerCase() === createInvite.inviteEmail) {
+    if (currUser.email === createInvite.inviteEmail) {
       throw new BadRequestException("You can't invite yourself to a team.");
     }
+
     const existingInvite = await this.prisma.inviteToken.findFirst({
       where: {
         email: createInvite.inviteEmail,
@@ -141,7 +142,10 @@ export class InviteService {
         "You can only accept invites sent to your registered email address."
       );
     }
-
+    if (user.role !== Role.ENGINEER) {
+      throw new ForbiddenException("Only engineers can join a team.");
+    }
+    //TODO: checking if the user belong to a team before adding them to a team
     try {
       // OPEN THE TRANSACTION BUBBLE
       await this.prisma.$transaction(async (tx) => {
