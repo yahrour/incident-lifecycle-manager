@@ -142,7 +142,13 @@ export const updateTeamSchema = z
       .union([
         z
           .url("Enter a valid Discord webhook URL")
-          .max(255, "Webhook URL must not exceed 255 characters"),
+          .max(255, "webhook URL must not exceed 255 characters")
+          .refine(
+            (url) => url.startsWith("https://discord.com/api/webhooks/"),
+            {
+              error: "Must be a Discord webhook URL",
+            }
+          ),
         z.literal(""),
       ])
       .optional()

@@ -96,7 +96,7 @@ export function Team() {
             {team.name}
           </h1>
           <div className="space-x-2">
-            <EditDialog teamId={team.id} />
+            <EditDialog team={team} />
             <DeleteDialog teamId={team.id} />
           </div>
         </div>
