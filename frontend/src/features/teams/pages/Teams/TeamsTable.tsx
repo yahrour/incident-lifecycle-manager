@@ -97,7 +97,8 @@ export function TeamsTable({
         <TableHeader>
           <TableRow className="uppercase">
             <TableHead className="w-2/5">team</TableHead>
-            <TableHead className="w-15">members</TableHead>
+            <TableHead>services</TableHead>
+            <TableHead>members</TableHead>
             <TableHead>rotation</TableHead>
             <TableHead>on-call now</TableHead>
             <TableHead>escalates</TableHead>
@@ -119,7 +120,16 @@ export function TeamsTable({
                 <TableCell className="font-medium text-sm flex-1">
                   {team.name}
                 </TableCell>
-                <TableCell className="text-xs text-right">
+                <TableCell>
+                  {team.services.slice(0, 2).join(" • ")}
+                  {team.services.length > 2 && (
+                    <span className="text-muted-foreground">
+                      {" "}
+                      +{team.services.length - 2}
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell className="text-xs">
                   {membersCountByTeam.get(team.id)}
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">

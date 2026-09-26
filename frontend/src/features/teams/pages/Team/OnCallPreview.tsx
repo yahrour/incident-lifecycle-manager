@@ -3,7 +3,7 @@ import { Mail } from "lucide-react";
 import { fetchOnCall } from "../../api/teamsApi";
 import type { Engineer } from "../../types";
 
-export function OnCall({ teamId }: { teamId: string }) {
+export function OnCallPreview({ teamId }: { teamId: string }) {
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["oncall", teamId],
     queryFn: () => fetchOnCall(teamId),
