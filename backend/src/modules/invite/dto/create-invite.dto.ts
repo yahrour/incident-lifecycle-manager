@@ -7,8 +7,12 @@ import {
   IsString,
   IsUUID,
 } from "class-validator";
+import { Transform } from "class-transformer";
 
 export class CreateInvite {
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === "string" ? value.trim().toLowerCase() : value
+  )
   @IsNotEmpty()
   @IsEmail()
   inviteEmail: string;
