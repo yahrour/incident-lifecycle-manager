@@ -23,11 +23,23 @@ import {
   Settings,
   Calendar,
   Home,
+  ChevronDown,
+  LogOut,
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth/context/AuthContext";
 import { Role } from "@/types";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { Button } from "./ui/button";
 
 const managerItems = {
   respondItems: [
@@ -170,24 +182,57 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-white/10 px-2 py-3">
-        <Link
-          to={"/"}
-          className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/5"
-        >
-          <div className="relative">
-            <Avatar className="h-8 w-8 bg-purple-400 text-white">
-              <AvatarFallback className="bg-purple-400 text-xs text-white">
-                {user.firstName.charAt(0) + user.lastName.charAt(0)}
-              </AvatarFallback>
-            </Avatar>
-          </div>
-          <div className="flex-1 text-left group-data-[collapsible=icon]:hidden">
-            <p className="text-sm font-medium text-[#e8ddd3]">
-              {user.firstName + " " + user.lastName}
-            </p>
-            <p className="text-xs text-muted-foreground">{user.role}</p>
-          </div>
-        </Link>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                variant="ghost"
+                className="group hover:bg-transparent aria-expanded:bg-transparent hover:text-white aria-expanded:text-white"
+              />
+            }
+          >
+            <div className="relative">
+              <Avatar className="h-8 w-8 bg-purple-400 text-white">
+                <AvatarFallback className="bg-purple-400 text-xs text-white">
+                  {user.firstName.charAt(0) + user.lastName.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+            <div className="flex-1 text-left group-data-[collapsible=icon]:hidden">
+              <p className="text-sm font-medium text-[#e8ddd3]">
+                {user.firstName + " " + user.lastName}
+              </p>
+              <p className="text-xs text-muted-foreground">{user.role}</p>
+            </div>
+            <ChevronDown className="group-aria-expanded:rotate-180 transition-all duration-300" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="px-2.5">
+            <DropdownMenuGroup className="py-2">
+              <DropdownMenuLabel>
+                <p className="text-sm font-medium text-foreground">
+                  {user.firstName + " " + user.lastName}
+                </p>
+                <p>
+                  {user.email}
+                </p>
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup className="py-2">
+              <DropdownMenuItem className="cursor-pointer hover:bg-muted-foreground/10!" render={<Link to={"/settings"}/>} >
+                <Settings />
+                Settings
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup className="py-2">
+              <DropdownMenuItem variant="destructive" className="cursor-pointer">
+                <LogOut />
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </SidebarFooter>
     </Sidebar>
   );
