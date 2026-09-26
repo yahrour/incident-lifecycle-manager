@@ -19,7 +19,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Trash } from "lucide-react";
 
-export function DeleteDialog({ teamId }: { teamId: string }) {
+export function DeleteTeamDialog({ teamId }: { teamId: string }) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -43,8 +43,8 @@ export function DeleteDialog({ teamId }: { teamId: string }) {
     onError: () => {
       toast.add({
         type: "error",
-        title: "failed to delete",
-        description: "something went wrong when deleting the team",
+        title: "Couldn't delete team",
+        description: "Something went wrong. Please try again.",
       });
     },
     onSettled: () => {

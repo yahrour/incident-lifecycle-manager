@@ -3,7 +3,6 @@ import { fetchTeams } from "../../api/teams";
 import { fetchMetrics } from "../../api/metrics";
 import { useNavigate } from "react-router";
 import { Spinner } from "@/components/ui/spinner";
-import { toast } from "@/components/ui/toast";
 import {
   Table,
   TableBody,
@@ -21,21 +20,9 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useEffect } from "react";
 import { DEFAULT_LIMIT } from "../../constants";
 import { EmptyTeamsState } from "./EmptyState";
-
-function useErrorToast(isError: boolean, message: string) {
-  useEffect(() => {
-    if (isError) {
-      toast.add({
-        type: "error",
-        title: "failed to fetch",
-        description: message,
-      });
-    }
-  }, [isError, message]);
-}
+import { useErrorToast } from "../../hooks";
 
 export function TeamsTable({
   search,

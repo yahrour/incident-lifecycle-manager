@@ -6,8 +6,6 @@ import { useMutation } from "@tanstack/react-query";
 import { updateTeam } from "../../api/teams";
 import { useState } from "react";
 import { toast } from "@/components/ui/toast";
-import axios from "axios";
-import type { ApiError } from "@/types";
 import { Info, Pen, Plus, XIcon } from "lucide-react";
 import {
   Dialog,
@@ -37,8 +35,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { parseApiError } from "../../utils";
 
-export function EditDialog({ team }: { team: Team }) {
+export function EditTeamDialog({ team }: { team: Team }) {
   const [errors, setErrors] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [service, setService] = useState("");
@@ -63,15 +62,15 @@ export function EditDialog({ team }: { team: Team }) {
   });
 
   const onSubmit = (data: z.infer<typeof updateTeamSchema>) => {
+    setErrors([]);
+
     const dirtyFields = form.formState.dirtyFields;
     const changedData: Record<string, unknown> = {};
-
     // Extract changed fields
     for (const key of Object.keys(data) as (keyof typeof data)[]) {
       changedData[key] = dirtyFields[key] ? data[key] : undefined;
     }
 
-    setErrors([]);
     mutation.mutate(
       { id: team.id, ...(changedData as typeof data) },
       {
@@ -86,20 +85,7 @@ export function EditDialog({ team }: { team: Team }) {
           });
         },
         onError: (error) => {
-          if (axios.isAxiosError(error)) {
-            const apiError = error.response?.data as ApiError | undefined;
-            const message = apiError?.message;
-
-            if (Array.isArray(message)) {
-              setErrors([...message]);
-            } else if (message) {
-              setErrors([message]);
-            } else {
-              setErrors(["Something went wrong. Please try again."]);
-            }
-          } else {
-            setErrors(["An unexpected error occurred."]);
-          }
+          setErrors(parseApiError(error));
         },
       }
     );
@@ -133,15 +119,19 @@ export function EditDialog({ team }: { team: Team }) {
     });
   };
 
+  const resetForm = () => {
+    setErrors([]);
+    setService("");
+    form.reset();
+  };
+
   return (
     <Dialog
       open={open}
       onOpenChange={(nextOpen) => {
         setOpen(nextOpen);
         if (!nextOpen) {
-          setErrors([]);
-          setService("");
-          form.reset();
+          resetForm();
         }
       }}
     >
@@ -371,9 +361,7 @@ export function EditDialog({ team }: { team: Team }) {
               type="button"
               variant="outline"
               onClick={() => {
-                form.reset();
-                setService("");
-                setErrors([]);
+                resetForm();
                 setOpen(false);
               }}
               disabled={mutation.isPending}

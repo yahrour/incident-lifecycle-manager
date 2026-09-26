@@ -6,8 +6,6 @@ import { useMutation } from "@tanstack/react-query";
 import { createTeam } from "../../api/teams";
 import { useState } from "react";
 import { toast } from "@/components/ui/toast";
-import axios from "axios";
-import type { ApiError } from "@/types";
 import { CalendarIcon, Plus, XIcon } from "lucide-react";
 import { format } from "date-fns";
 import {
@@ -51,19 +49,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { ErrorSection } from "../../components/ErrorSection";
 import { queryClient } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
-
+import { parseApiError } from "../../utils";
 
 const TIMEZONES = Intl.supportedValuesOf("timeZone");
-
-function parseApiError(error: unknown): string[] {
-  if (!axios.isAxiosError(error)) {
-    return ["An unexpected error occurred."];
-  }
-  const message = (error.response?.data as ApiError | undefined)?.message;
-  if (Array.isArray(message)) return message;
-  if (message) return [message];
-  return ["Something went wrong. Please try again."];
-}
 
 export function CreateTeam() {
   type CreateTeamInput = z.input<typeof createTeamSchema>;
@@ -79,8 +67,6 @@ export function CreateTeam() {
       webhookUrl: "",
     },
   });
-
-  
 
   const { mutate, isPending } = useMutation({
     mutationFn: createTeam,
