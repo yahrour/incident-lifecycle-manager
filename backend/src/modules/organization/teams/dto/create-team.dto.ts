@@ -12,6 +12,7 @@ import {
   IsString,
   IsTimeZone,
   IsUrl,
+  Matches,
   Max,
   MaxLength,
   ValidateIf,
@@ -62,6 +63,9 @@ export class CreateTeamDto {
 
   @IsOptional()
   @IsUrl()
+  @Matches(/^https:\/\/discord\.com\/api\/webhooks\//, {
+    message: "URL must be a Discord webhook URL",
+  })
   @MaxLength(255, { message: "webhook url must not exceed 255 characters" })
   webhookUrl?: string;
 
