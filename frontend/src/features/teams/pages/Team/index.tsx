@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router";
 import { useEffect } from "react";
 import { toast } from "@/components/ui/toast";
 import { Spinner } from "@/components/ui/spinner";
-import { fetchStats, fetchTeam } from "../../api/teamsApi";
+import { fetchStats, fetchTeam } from "../../api/teams";
 import {
   Breadcrumb,
   BreadcrumbItem,

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useMutation } from "@tanstack/react-query";
-import { deleteTeam } from "../../api/teamsApi";
+import { deleteTeam } from "../../api/teams";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
 import { queryClient } from "@/lib/queryClient";

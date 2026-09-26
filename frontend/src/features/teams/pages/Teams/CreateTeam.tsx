@@ -3,7 +3,7 @@ import { createTeamSchema, servicesSchema } from "../../schemas";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { createTeam } from "../../api/teamsApi";
+import { createTeam } from "../../api/teams";
 import { useState } from "react";
 import { toast } from "@/components/ui/toast";
 import axios from "axios";
@@ -52,6 +52,19 @@ import { ErrorSection } from "../../components/ErrorSection";
 import { queryClient } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
 
+
+const TIMEZONES = Intl.supportedValuesOf("timeZone");
+
+function parseApiError(error: unknown): string[] {
+  if (!axios.isAxiosError(error)) {
+    return ["An unexpected error occurred."];
+  }
+  const message = (error.response?.data as ApiError | undefined)?.message;
+  if (Array.isArray(message)) return message;
+  if (message) return [message];
+  return ["Something went wrong. Please try again."];
+}
+
 export function CreateTeam() {
   type CreateTeamInput = z.input<typeof createTeamSchema>;
   type CreateTeamOutput = z.output<typeof createTeamSchema>;
@@ -67,6 +80,8 @@ export function CreateTeam() {
     },
   });
 
+  
+
   const { mutate, isPending } = useMutation({
     mutationFn: createTeam,
   });
@@ -74,7 +89,11 @@ export function CreateTeam() {
   const [service, setService] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
-  const timezones = Intl.supportedValuesOf("timeZone");
+  const resetForm = () => {
+    form.reset();
+    setErrors([]);
+    setService("");
+  };
 
   const onSubmit = (data: z.infer<typeof createTeamSchema>) => {
     setErrors([]);
@@ -86,10 +105,8 @@ export function CreateTeam() {
         void queryClient.invalidateQueries({
           queryKey: ["teamsMetrics"],
         });
-        form.reset();
-        setErrors([]);
+        resetForm();
         setOpen(false);
-        setService("");
         toast.add({
           type: "success",
           title: "Team created",
@@ -98,20 +115,7 @@ export function CreateTeam() {
       },
 
       onError: (error) => {
-        if (axios.isAxiosError(error)) {
-          const apiError = error.response?.data as ApiError | undefined;
-          const message = apiError?.message;
-
-          if (Array.isArray(message)) {
-            setErrors([...message]);
-          } else if (message) {
-            setErrors([message]);
-          } else {
-            setErrors(["Something went wrong. Please try again."]);
-          }
-        } else {
-          setErrors(["An unexpected error occurred."]);
-        }
+        setErrors(parseApiError(error));
       },
     });
   };
@@ -150,9 +154,7 @@ export function CreateTeam() {
       onOpenChange={(nextOpen) => {
         setOpen(nextOpen);
         if (!nextOpen) {
-          setErrors([]);
-          setService("");
-          form.reset();
+          resetForm();
         }
       }}
     >
@@ -319,7 +321,7 @@ export function CreateTeam() {
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor="timezone">Timezone</FieldLabel>
                     <Combobox
-                      items={timezones}
+                      items={TIMEZONES}
                       value={field.value}
                       onValueChange={field.onChange}
                     >

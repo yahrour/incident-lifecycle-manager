@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchMembers } from "../../api/membersApi";
+import { fetchMembers } from "../../api/members";
 import {
   Table,
   TableBody,

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Mail } from "lucide-react";
-import { fetchOnCall } from "../../api/teamsApi";
+import { fetchOnCall } from "../../api/teams";
 import type { Engineer } from "../../types";
 
 export function OnCallPreview({ teamId }: { teamId: string }) {

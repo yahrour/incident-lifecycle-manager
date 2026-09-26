@@ -212,21 +212,25 @@ export function AppSidebar() {
                 <p className="text-sm font-medium text-foreground">
                   {user.firstName + " " + user.lastName}
                 </p>
-                <p>
-                  {user.email}
-                </p>
+                <p>{user.email}</p>
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup className="py-2">
-              <DropdownMenuItem className="cursor-pointer hover:bg-muted-foreground/10!" render={<Link to={"/settings"}/>} >
+              <DropdownMenuItem
+                className="cursor-pointer hover:bg-muted-foreground/10!"
+                render={<Link to={"/settings"} />}
+              >
                 <Settings />
                 Settings
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup className="py-2">
-              <DropdownMenuItem variant="destructive" className="cursor-pointer">
+              <DropdownMenuItem
+                variant="destructive"
+                className="cursor-pointer"
+              >
                 <LogOut />
                 Log out
               </DropdownMenuItem>

@@ -1,6 +1,6 @@
 import { useQueries } from "@tanstack/react-query";
-import { fetchTeams } from "../../api/teamsApi";
-import { fetchMetrics } from "../../api/metricsApi";
+import { fetchTeams } from "../../api/teams";
+import { fetchMetrics } from "../../api/metrics";
 import { useNavigate } from "react-router";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
@@ -23,6 +23,19 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useEffect } from "react";
 import { DEFAULT_LIMIT } from "../../constants";
+import { EmptyTeamsState } from "./EmptyState";
+
+function useErrorToast(isError: boolean, message: string) {
+  useEffect(() => {
+    if (isError) {
+      toast.add({
+        type: "error",
+        title: "failed to fetch",
+        description: message,
+      });
+    }
+  }, [isError, message]);
+}
 
 export function TeamsTable({
   search,
@@ -33,6 +46,7 @@ export function TeamsTable({
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
 }) {
+  const navigate = useNavigate();
   const [teamsQuery, metricsQuery] = useQueries({
     queries: [
       {
@@ -46,27 +60,8 @@ export function TeamsTable({
     ],
   });
 
-  useEffect(() => {
-    if (teamsQuery.isError) {
-      toast.add({
-        type: "error",
-        title: "failed to fetch",
-        description: "something went wrong fetching teams",
-      });
-    }
-  }, [teamsQuery.isError]);
-
-  useEffect(() => {
-    if (metricsQuery.isError) {
-      toast.add({
-        type: "error",
-        title: "failed to fetch",
-        description: "something went wrong fetching metrics",
-      });
-    }
-  }, [metricsQuery.isError]);
-
-  const navigate = useNavigate();
+  useErrorToast(teamsQuery.isError, "something went wrong fetching teams");
+  useErrorToast(metricsQuery.isError, "something went wrong fetching metrics");
 
   if (teamsQuery.isPending || metricsQuery.isPending) {
     return (
@@ -91,6 +86,9 @@ export function TeamsTable({
     return <EmptyTeamsState />;
   }
 
+  const isFirstPage = page === 1;
+  const isLastPage = page * DEFAULT_LIMIT >= totalTeams;
+
   return (
     <>
       <Table>
@@ -107,7 +105,6 @@ export function TeamsTable({
         <TableBody>
           {teams?.data.map((team) => {
             const onCall = onCallByTeam.get(team.id);
-            const initials = onCall?.firstName?.[0] ?? "?";
 
             return (
               <TableRow
@@ -139,13 +136,13 @@ export function TeamsTable({
                 </TableCell>
                 <TableCell className="text-xs text-center text-muted-foreground flex items-center gap-1">
                   {onCall && (
-                    <Avatar className="h-5 w-5 bg-purple-400 text-white">
-                      <AvatarFallback className="bg-purple-400 text-xs text-white">
-                        {initials}
+                    <Avatar className="h-6 w-6">
+                      <AvatarFallback className="text-xs">
+                        {onCall.firstName.charAt(0) + onCall.lastName.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                   )}
-                  {onCall?.firstName ?? <span className="block ml-6">──</span>}
+                  {onCall?.firstName + " " + onCall?.lastName}
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
                   {team.escalationTimeoutMinutes}m
@@ -159,9 +156,9 @@ export function TeamsTable({
         <PaginationContent>
           <PaginationItem
             className={
-              page === 1 ? "pointer-events-none opacity-50" : undefined
+              isFirstPage ? "pointer-events-none opacity-50" : undefined
             }
-            aria-disabled={page === 1}
+            aria-disabled={isFirstPage}
           >
             <PaginationPrevious onClick={() => setPage(page - 1)} />
           </PaginationItem>
@@ -172,24 +169,14 @@ export function TeamsTable({
 
           <PaginationItem
             className={
-              page * DEFAULT_LIMIT >= totalTeams
-                ? "pointer-events-none opacity-50"
-                : undefined
+              isLastPage ? "pointer-events-none opacity-50" : undefined
             }
-            aria-disabled={page * DEFAULT_LIMIT >= totalTeams}
+            aria-disabled={isLastPage}
           >
             <PaginationNext onClick={() => setPage(page + 1)} />
           </PaginationItem>
         </PaginationContent>
       </Pagination>
     </>
-  );
-}
-
-function EmptyTeamsState() {
-  return (
-    <div className="mt-4 text-muted-foreground uppercase text-center font-medium text-sm w-full!">
-      No Teams Yet
-    </div>
   );
 }

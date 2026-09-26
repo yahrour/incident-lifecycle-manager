@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchUnavailabilities } from "../../api/unavailabilityApi";
+import { fetchUnavailabilities } from "../../api/unavailability";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router";
 

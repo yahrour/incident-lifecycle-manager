@@ -3,7 +3,7 @@ import { servicesSchema, updateTeamSchema } from "../../schemas";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { updateTeam } from "../../api/teamsApi";
+import { updateTeam } from "../../api/teams";
 import { useState } from "react";
 import { toast } from "@/components/ui/toast";
 import axios from "axios";
