@@ -150,4 +150,15 @@ export class MembersService {
       throw error;
     }
   }
+
+  async hasTeam(userId: string) {
+    const hasTeam = await this.prisma.teamMember.findUnique({
+      where: {
+        userId,
+      },
+      select: { id: true },
+    });
+
+    return hasTeam !== null;
+  }
 }
