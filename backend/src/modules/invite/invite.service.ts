@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   GoneException,
@@ -28,7 +29,14 @@ export class InviteService {
 
   // ─── Public Methods ───────────────────────────────────────────────
 
-  async createInvite(createInvite: CreateInvite) {
+  async createInvite(createInvite: CreateInvite, activeUser: ActiveUserData) {
+    const currUser = await this.userService.findById(activeUser.sub);
+    if (!currUser) {
+      throw new NotFoundException("User not found");
+    }
+    if (currUser.email.toLowerCase() === createInvite.inviteEmail) {
+      throw new BadRequestException("You can't invite yourself to a team.");
+    }
     const existingInvite = await this.prisma.inviteToken.findFirst({
       where: {
         email: createInvite.inviteEmail,
