@@ -11,6 +11,7 @@ export const servicesSchema = z
       .max(25, "service name must not exceed 25 characters")
   )
   .min(1, "At least one service is required")
+  .max(20, "You can have a maximum of 20 services")
   .refine(
     (items) => new Set(items.map((s) => s.toLowerCase())).size === items.length,
     { error: "Services must be unique" }
@@ -142,7 +143,13 @@ export const updateTeamSchema = z
       .union([
         z
           .url("Enter a valid Discord webhook URL")
-          .max(255, "Webhook URL must not exceed 255 characters"),
+          .max(255, "webhook URL must not exceed 255 characters")
+          .refine(
+            (url) => url.startsWith("https://discord.com/api/webhooks/"),
+            {
+              error: "Must be a Discord webhook URL",
+            }
+          ),
         z.literal(""),
       ])
       .optional()
