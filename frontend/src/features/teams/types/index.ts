@@ -1,6 +1,7 @@
 export type Team = {
   id: string;
   name: string;
+  services: string[];
   description: string | null;
   rotationPeriodDays: number;
   rotationStartDate: Date;
