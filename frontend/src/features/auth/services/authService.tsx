@@ -3,10 +3,16 @@ import type { User } from "@/types";
 import { type SignInCredentials } from "../types";
 import { type SignUpResponse } from "../types";
 import { type SignUpCredentials } from "../schemas";
+import axios from "axios";
 
-export async function getMe(): Promise<User> {
-  const res = await apiClient.get<User>("/users/me");
-  return res.data;
+export async function getMe(): Promise<User | null> {
+  try {
+    const res = await apiClient.get<User>("/users/me");
+    return res.data;
+  } catch (err) {
+    if (axios.isAxiosError(err) && err.response?.status === 401) return null;
+    throw err;
+  }
 }
 
 export async function signIn({

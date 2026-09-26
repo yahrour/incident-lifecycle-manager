@@ -17,6 +17,7 @@ import { RefrechTokenDto } from "./dto/refresh-token.dto";
 import {
   ACCESS_COOKIE_OPTIONS,
   REFRESH_COOKIE_OPTIONS,
+  SESSION_HINT_COOKIE_OPTIONS,
 } from "./auth-cookie.constants";
 
 @Public()
@@ -40,6 +41,7 @@ export class AuthController {
     const { accessToken, refreshToken } = await this.authService.signIn(signIn);
     response.cookie("refreshToken", refreshToken, REFRESH_COOKIE_OPTIONS);
     response.cookie("accessToken", accessToken, ACCESS_COOKIE_OPTIONS);
+    response.cookie("hasSession", "1", SESSION_HINT_COOKIE_OPTIONS);
     return { message: "SignIn successful" };
   }
 
@@ -70,6 +72,7 @@ export class AuthController {
 
     response.clearCookie("accessToken", ACCESS_COOKIE_OPTIONS);
     response.clearCookie("refreshToken", REFRESH_COOKIE_OPTIONS);
+    response.clearCookie("hasSession", SESSION_HINT_COOKIE_OPTIONS);
     return { message: "Logged out successfully" };
   }
 }
