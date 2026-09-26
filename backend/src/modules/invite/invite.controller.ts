@@ -17,8 +17,11 @@ export class InviteController {
 
   @Roles(Role.SRE)
   @Post("create")
-  create(@Body() createInvite: CreateInvite) {
-    return this.inviteService.createInvite(createInvite);
+  create(
+    @Body() createInvite: CreateInvite,
+    @ActiveUser() activeUser: ActiveUserData
+  ) {
+    return this.inviteService.createInvite(createInvite, activeUser);
   }
 
   @Public()
