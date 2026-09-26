@@ -1,8 +1,10 @@
 import { IsEmail, IsString, MaxLength } from "class-validator";
-import { Trim } from "src/common/transformers/trim.transformer";
+import { Transform } from "class-transformer";
 
 export class SignIn {
-  @Trim()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === "string" ? value.trim().toLowerCase() : value
+  )
   @IsEmail()
   @MaxLength(255)
   email: string;
