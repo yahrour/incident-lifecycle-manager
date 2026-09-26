@@ -182,27 +182,6 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-white/10 px-2 py-3">
-        {/*
-        <Link
-          to={"/"}
-          className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/5"
-        >
-          <div className="relative">
-            <Avatar className="h-8 w-8 bg-purple-400 text-white">
-              <AvatarFallback className="bg-purple-400 text-xs text-white">
-                {user.firstName.charAt(0) + user.lastName.charAt(0)}
-              </AvatarFallback>
-            </Avatar>
-          </div>
-          <div className="flex-1 text-left group-data-[collapsible=icon]:hidden">
-            <p className="text-sm font-medium text-[#e8ddd3]">
-              {user.firstName + " " + user.lastName}
-            </p>
-            <p className="text-xs text-muted-foreground">{user.role}</p>
-          </div>
-        </Link>
-*/}
-
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
