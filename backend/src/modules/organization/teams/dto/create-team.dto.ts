@@ -1,5 +1,6 @@
 import { Transform } from "class-transformer";
 import {
+  ArrayMaxSize,
   ArrayNotEmpty,
   ArrayUnique,
   IsArray,
@@ -66,6 +67,9 @@ export class CreateTeamDto {
 
   @IsArray()
   @ArrayNotEmpty()
+  @ArrayMaxSize(20, {
+    message: "You can have a maximum of 20 services",
+  })
   @IsString({ each: true })
   @Transform(({ value }: { value: unknown }) =>
     Array.isArray(value)
