@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   GoneException,
@@ -28,7 +29,15 @@ export class InviteService {
 
   // ─── Public Methods ───────────────────────────────────────────────
 
-  async createInvite(createInvite: CreateInvite) {
+  async createInvite(createInvite: CreateInvite, activeUser: ActiveUserData) {
+    const currUser = await this.userService.findById(activeUser.sub);
+    if (!currUser) {
+      throw new NotFoundException("User not found");
+    }
+    if (currUser.email === createInvite.inviteEmail) {
+      throw new BadRequestException("You can't invite yourself to a team.");
+    }
+
     const existingInvite = await this.prisma.inviteToken.findFirst({
       where: {
         email: createInvite.inviteEmail,
@@ -133,7 +142,15 @@ export class InviteService {
         "You can only accept invites sent to your registered email address."
       );
     }
-
+    if (user.role !== Role.ENGINEER) {
+      throw new ForbiddenException("Only engineers can join a team.");
+    }
+    const isMember = await this.membersService.hasTeam(user.id);
+    if (isMember) {
+      throw new ConflictException(
+        "You're already in a team. Leave it before joining a new one."
+      );
+    }
     try {
       // OPEN THE TRANSACTION BUBBLE
       await this.prisma.$transaction(async (tx) => {
@@ -176,8 +193,8 @@ export class InviteService {
   }
 
   private buildInviteLinkResponse(rawToken: string) {
-    const appUrl = this.configService.get<string>("APP_URL");
-    const inviteLink = `${appUrl}/register?token=${rawToken}`;
+    const frontUrl = this.configService.get<string>("FRONTEND_URL");
+    const inviteLink = `${frontUrl}/register?token=${rawToken}`;
     return {
       success: true,
       inviteLink,
