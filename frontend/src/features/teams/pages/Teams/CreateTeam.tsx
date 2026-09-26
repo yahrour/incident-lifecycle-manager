@@ -8,7 +8,7 @@ import { useState } from "react";
 import { toast } from "@/components/ui/toast";
 import axios from "axios";
 import type { ApiError } from "@/types";
-import { CalendarIcon, Plus } from "lucide-react";
+import { CalendarIcon, Plus, XIcon } from "lucide-react";
 import { format } from "date-fns";
 import {
   DEFAULT_ESCALATION_TIMEOUT_MINUTES,
@@ -133,6 +133,17 @@ export function CreateTeam() {
     setService("");
   };
 
+  const handleRemove = (service: string) => {
+    const services = form.getValues("services") || [];
+    if (services.length === 0) {
+      return;
+    }
+    const newServices = services.filter((s) => s !== service);
+    form.setValue("services", newServices, {
+      shouldDirty: true,
+    });
+  };
+
   return (
     <Dialog
       open={open}
@@ -245,8 +256,14 @@ export function CreateTeam() {
                   </Field>
                   <div className="flex items-center flex-wrap gap-1">
                     {field.value.map((s) => (
-                      <Badge variant="secondary" key={s}>
+                      <Badge
+                        variant="secondary"
+                        key={s}
+                        onClick={() => handleRemove(s)}
+                        className="cursor-pointer hover:opacity-80"
+                      >
                         {s}
+                        <XIcon />
                       </Badge>
                     ))}
                   </div>
