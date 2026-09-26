@@ -1,5 +1,6 @@
 import { Transform } from "class-transformer";
 import {
+  ArrayMaxSize,
   ArrayNotEmpty,
   ArrayUnique,
   IsArray,
@@ -11,6 +12,7 @@ import {
   IsString,
   IsTimeZone,
   IsUrl,
+  Matches,
   Max,
   MaxLength,
   ValidateIf,
@@ -61,11 +63,17 @@ export class CreateTeamDto {
 
   @IsOptional()
   @IsUrl()
+  @Matches(/^https:\/\/discord\.com\/api\/webhooks\//, {
+    message: "URL must be a Discord webhook URL",
+  })
   @MaxLength(255, { message: "webhook url must not exceed 255 characters" })
   webhookUrl?: string;
 
   @IsArray()
   @ArrayNotEmpty()
+  @ArrayMaxSize(20, {
+    message: "You can have a maximum of 20 services",
+  })
   @IsString({ each: true })
   @Transform(({ value }: { value: unknown }) =>
     Array.isArray(value)

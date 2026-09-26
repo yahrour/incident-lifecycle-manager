@@ -18,8 +18,9 @@ import { DeleteDialog } from "./DeleteDialog";
 import { EditDialog } from "./EditDialog";
 import { Button } from "@/components/ui/button";
 import { MembersPreview } from "./MembersPreview";
-import { OnCall } from "./OnCall";
+import { OnCallPreview } from "./OnCallPreview";
 import { UnavailabilitiesPreview } from "./UnavailabilitiesPreview";
+import { ServicesPreview } from "./ServicesPreview";
 
 export function Team() {
   const params = useParams();
@@ -95,7 +96,7 @@ export function Team() {
             {team.name}
           </h1>
           <div className="space-x-2">
-            <EditDialog teamId={team.id} />
+            <EditDialog team={team} />
             <DeleteDialog teamId={team.id} />
           </div>
         </div>
@@ -135,8 +136,9 @@ export function Team() {
             </div>
             <MembersPreview teamId={team.id} />
             <div className="flex gap-4 max-md:flex-col">
-              <OnCall teamId={team.id} />
+              <OnCallPreview teamId={team.id} />
               <UnavailabilitiesPreview teamId={team.id} />
+              <ServicesPreview services={team.services} />
             </div>
           </>
         )}
