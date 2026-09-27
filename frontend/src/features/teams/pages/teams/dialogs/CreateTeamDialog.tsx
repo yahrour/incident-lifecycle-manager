@@ -1,14 +1,18 @@
 import { Controller, useForm } from "react-hook-form";
-import { servicesSchema, updateTeamSchema } from "../../schemas";
+import { createTeamSchema, servicesSchema } from "../../../schemas";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { updateTeam } from "../../api/teamsApi";
+import { createTeam } from "../../../api/teams";
 import { useState } from "react";
 import { toast } from "@/components/ui/toast";
-import axios from "axios";
-import type { ApiError } from "@/types";
-import { Info, Pen, Plus, XIcon } from "lucide-react";
+import { CalendarIcon, Plus, XIcon } from "lucide-react";
+import { format } from "date-fns";
+import {
+  DEFAULT_ESCALATION_TIMEOUT_MINUTES,
+  DEFAULT_ROTATION_PERIOD_DAYS,
+} from "../../../constants";
+
 import {
   Dialog,
   DialogContent,
@@ -25,88 +29,85 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox";
+import { Calendar } from "@/components/ui/calendar";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ErrorSection } from "../../components/ErrorSection";
+import { ErrorSection } from "../../../components/ErrorSection";
 import { queryClient } from "@/lib/queryClient";
-import type { Team } from "../../types";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { parseApiError } from "../../../utils";
 
-export function EditDialog({ team }: { team: Team }) {
-  const [errors, setErrors] = useState<string[]>([]);
-  const [open, setOpen] = useState(false);
-  const [service, setService] = useState("");
+const TIMEZONES = Intl.supportedValuesOf("timeZone");
 
-  type UpdateTeamInput = z.input<typeof updateTeamSchema>;
-  type UpdateTeamOutput = z.output<typeof updateTeamSchema>;
+export function CreateTeamDialog() {
+  type CreateTeamInput = z.input<typeof createTeamSchema>;
+  type CreateTeamOutput = z.output<typeof createTeamSchema>;
 
-  const form = useForm<UpdateTeamInput, unknown, UpdateTeamOutput>({
-    resolver: zodResolver(updateTeamSchema),
-    values: {
-      name: team.name,
-      description: team.description || "",
-      services: team.services,
-      escalationTimeoutMinutes: team.escalationTimeoutMinutes,
-      rotationPeriodDays: team.rotationPeriodDays,
-      webhookUrl: team.webhookUrl || "",
+  const form = useForm<CreateTeamInput, unknown, CreateTeamOutput>({
+    resolver: zodResolver(createTeamSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      services: [],
+      timezone: "",
+      webhookUrl: "",
     },
   });
 
-  const mutation = useMutation({
-    mutationFn: updateTeam,
+  const { mutate, isPending } = useMutation({
+    mutationFn: createTeam,
   });
 
-  const onSubmit = (data: z.infer<typeof updateTeamSchema>) => {
-    const dirtyFields = form.formState.dirtyFields;
-    const changedData: Record<string, unknown> = {};
-
-    // Extract changed fields
-    for (const key of Object.keys(data) as (keyof typeof data)[]) {
-      changedData[key] = dirtyFields[key] ? data[key] : undefined;
-    }
-
+  const [service, setService] = useState("");
+  const [errors, setErrors] = useState<string[]>([]);
+  const [open, setOpen] = useState(false);
+  const resetForm = () => {
+    form.reset();
     setErrors([]);
-    mutation.mutate(
-      { id: team.id, ...(changedData as typeof data) },
-      {
-        onSuccess: () => {
-          void queryClient.invalidateQueries({ queryKey: ["teams"] });
-          void queryClient.invalidateQueries({ queryKey: ["team", team.id] });
-          void queryClient.invalidateQueries({ queryKey: ["oncall", team.id] });
-          setOpen(false);
-          toast.add({
-            type: "success",
-            title: "Team updated",
-          });
-        },
-        onError: (error) => {
-          if (axios.isAxiosError(error)) {
-            const apiError = error.response?.data as ApiError | undefined;
-            const message = apiError?.message;
+    setService("");
+  };
 
-            if (Array.isArray(message)) {
-              setErrors([...message]);
-            } else if (message) {
-              setErrors([message]);
-            } else {
-              setErrors(["Something went wrong. Please try again."]);
-            }
-          } else {
-            setErrors(["An unexpected error occurred."]);
-          }
-        },
-      }
-    );
+  const onSubmit = (data: z.infer<typeof createTeamSchema>) => {
+    setErrors([]);
+    mutate(data, {
+      onSuccess: (createdTeam) => {
+        void queryClient.invalidateQueries({
+          queryKey: ["teams"],
+        });
+        void queryClient.invalidateQueries({
+          queryKey: ["teamsMetrics"],
+        });
+        resetForm();
+        setOpen(false);
+        toast.add({
+          type: "success",
+          title: "Team created",
+          description: `${createdTeam.data.name} is ready to go.`,
+        });
+      },
+
+      onError: (error) => {
+        setErrors(parseApiError(error));
+      },
+    });
   };
 
   const handleAddService = () => {
-    const candidate = [...(form.getValues("services") || []), service.trim()];
+    const candidate = [...form.getValues("services"), service.trim()];
 
     const { data, success, error } = servicesSchema.safeParse(candidate);
 
@@ -118,7 +119,7 @@ export function EditDialog({ team }: { team: Team }) {
     }
 
     form.clearErrors("services");
-    form.setValue("services", data, { shouldDirty: true });
+    form.setValue("services", data);
     setService("");
   };
 
@@ -139,25 +140,23 @@ export function EditDialog({ team }: { team: Team }) {
       onOpenChange={(nextOpen) => {
         setOpen(nextOpen);
         if (!nextOpen) {
-          setErrors([]);
-          setService("");
-          form.reset();
+          resetForm();
         }
       }}
     >
       <DialogTrigger
         render={
-          <Button variant="outline" className="px-4">
-            <Pen data-icon="inline-start" />
-            Edit
+          <Button className="cursor-pointer">
+            <Plus data-icon="inline-start" />
+            Create team
           </Button>
         }
       ></DialogTrigger>
       <DialogContent className="max-w-lg!">
         <DialogHeader>
-          <DialogTitle>Edit team</DialogTitle>
+          <DialogTitle>Create a team</DialogTitle>
           <DialogDescription>
-            Update the team details and save your changes.
+            A team owns services and a single on-call rotation.
           </DialogDescription>
         </DialogHeader>
         <form
@@ -195,7 +194,6 @@ export function EditDialog({ team }: { team: Team }) {
                   <FieldLabel htmlFor="description">Description</FieldLabel>
                   <Textarea
                     {...field}
-                    value={field.value ?? ""}
                     id="description"
                     aria-invalid={fieldState.invalid}
                     placeholder="What does this team own or respond to?"
@@ -245,7 +243,7 @@ export function EditDialog({ team }: { team: Team }) {
                     )}
                   </Field>
                   <div className="flex items-center flex-wrap gap-1">
-                    {field.value?.map((s) => (
+                    {field.value.map((s) => (
                       <Badge
                         variant="secondary"
                         key={s}
@@ -263,26 +261,94 @@ export function EditDialog({ team }: { team: Team }) {
 
             <div className="grid grid-cols-2 gap-4">
               <Controller
+                name="rotationStartDate"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="rotationStartDate">
+                      Rotation start date
+                    </FieldLabel>
+                    <Popover>
+                      <PopoverTrigger
+                        render={
+                          <Button
+                            variant="outline"
+                            data-empty={!field.value}
+                            className="justify-start text-left font-normal data-[empty=true]:text-muted-foreground"
+                          />
+                        }
+                      >
+                        <CalendarIcon />
+                        {field.value ? (
+                          format(field.value, "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="timezone"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="timezone">Timezone</FieldLabel>
+                    <Combobox
+                      items={TIMEZONES}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <ComboboxInput
+                        placeholder="Select timezone"
+                        className="w-full"
+                      />
+
+                      <ComboboxContent>
+                        <ComboboxEmpty>No timezone found.</ComboboxEmpty>
+
+                        <ComboboxList>
+                          {(tz: string) => (
+                            <ComboboxItem key={tz} value={tz}>
+                              {tz.replaceAll("_", " ")}
+                            </ComboboxItem>
+                          )}
+                        </ComboboxList>
+                      </ComboboxContent>
+                    </Combobox>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Controller
                 name="rotationPeriodDays"
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <div className="flex items-center justify-between">
-                      <FieldLabel htmlFor="rotationPeriodDays">
-                        Rotation period (days)
-                      </FieldLabel>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Info size={16} className="cursor-pointer" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="text-sm">
-                            Changing this will restart the rotation from the
-                            beginning.
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
+                    <FieldLabel htmlFor="rotationPeriodDays">
+                      Rotation period (days)
+                    </FieldLabel>
+                    <FieldDescription>
+                      Defaults to {DEFAULT_ROTATION_PERIOD_DAYS} day(s) if left
+                      blank.
+                    </FieldDescription>
                     <Input
                       {...field}
                       id="rotationPeriodDays"
@@ -295,7 +361,6 @@ export function EditDialog({ team }: { team: Team }) {
                         field.onChange(Number.isNaN(value) ? undefined : value);
                       }}
                     />
-
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
@@ -311,6 +376,10 @@ export function EditDialog({ team }: { team: Team }) {
                     <FieldLabel htmlFor="escalationTimeoutMinutes">
                       Escalation timeout (minutes)
                     </FieldLabel>
+                    <FieldDescription>
+                      Defaults to {DEFAULT_ESCALATION_TIMEOUT_MINUTES} minute(s)
+                      if left blank.
+                    </FieldDescription>
                     <Input
                       {...field}
                       id="escalationTimeoutMinutes"
@@ -349,7 +418,6 @@ export function EditDialog({ team }: { team: Team }) {
                   </FieldDescription>
                   <Input
                     {...field}
-                    value={field.value ?? ""}
                     id="webhookurl"
                     aria-invalid={fieldState.invalid}
                     placeholder="Paste your Discord webhook URL"
@@ -372,20 +440,17 @@ export function EditDialog({ team }: { team: Team }) {
               variant="outline"
               onClick={() => {
                 form.reset();
-                setService("");
                 setErrors([]);
+                setService("");
                 setOpen(false);
               }}
-              disabled={mutation.isPending}
+              disabled={isPending}
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={mutation.isPending || !form.formState.isDirty}
-            >
-              {mutation.isPending && <Spinner />}
-              Update
+            <Button type="submit" disabled={isPending}>
+              {isPending && <Spinner />}
+              Create
             </Button>
           </Field>
         </form>
