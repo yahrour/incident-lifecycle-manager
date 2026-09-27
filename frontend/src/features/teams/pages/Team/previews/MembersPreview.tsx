@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router";
+import { DEFAULT_PREVIEW_LIMIT } from "@/features/teams/constants";
 
 const formatJoined = (date: Date | string) => {
   return new Date(date).toLocaleDateString("en-US", {
@@ -22,7 +23,7 @@ const formatJoined = (date: Date | string) => {
 export function MembersPreview({ teamId }: { teamId: string }) {
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["members", teamId],
-    queryFn: () => fetchMembers(teamId),
+    queryFn: () => fetchMembers(teamId, DEFAULT_PREVIEW_LIMIT),
   });
 
   const members = data?.data ?? [];
