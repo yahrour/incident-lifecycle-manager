@@ -1,3 +1,4 @@
+import { isValidTimeZone } from "@/utils/timezone";
 import { z } from "zod";
 export const settingSchema = z.object({
   firstName: z
@@ -10,9 +11,9 @@ export const settingSchema = z.object({
     .trim()
     .max(50, "Must be at most 50 characters")
     .optional(),
-
-  password: z
-    .string()
-    .min(8, "Must be at least 8 characters")
-    .max(72, "Must be at most 72 characters"),
+  timezone: z.string().refine((tz) => tz === "" || isValidTimeZone(tz), {
+    error: "Invalid timezone",
+  }),
 });
+
+export type SettingFormValues = z.infer<typeof settingSchema>;
