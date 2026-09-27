@@ -38,10 +38,17 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
     @Body() signIn: SignIn
   ) {
-    const { accessToken, refreshToken } = await this.authService.signIn(signIn);
-    response.cookie("refreshToken", refreshToken, REFRESH_COOKIE_OPTIONS);
-    response.cookie("accessToken", accessToken, ACCESS_COOKIE_OPTIONS);
-    return { message: "SignIn successful" };
+    const result = await this.authService.signIn(signIn);
+    if (!result.success) {
+      return { success: false, message: result.message };
+    }
+    response.cookie(
+      "refreshToken",
+      result.refreshToken,
+      REFRESH_COOKIE_OPTIONS
+    );
+    response.cookie("accessToken", result.accessToken, ACCESS_COOKIE_OPTIONS);
+    return { success: true };
   }
 
   @HttpCode(HttpStatus.OK)

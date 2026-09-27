@@ -6,10 +6,10 @@ import { Input } from "@/components/ui/input";
 import { AuthCard } from "../components/AuthCard";
 import useSignIn from "../hooks/useSignIn";
 function getErrorMessage(error: Error) {
-  if (axios.isAxiosError<{ message?: string }>(error)) {
-    return error.response?.data?.message ?? "Sign in failed";
+  if (axios.isAxiosError(error)) {
+    return "Something went wrong. Please try again.";
   }
-  return "Sign in failed";
+  return error.message;
 }
 export default function SignIn() {
   const { mutate, isPending, error } = useSignIn();
