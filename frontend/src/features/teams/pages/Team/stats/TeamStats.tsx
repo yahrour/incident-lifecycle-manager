@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchStats } from "../../api/teams";
-import { useErrorToast } from "../../hooks";
+import { fetchStats } from "../../../api/teams";
+import { useErrorToast } from "../../../hooks";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
-import type { Team } from "../../types";
+import type { Team } from "../../../types";
 import { StatBlock } from "./StatBlock";
 
 export function TeamStats({ team }: { team: Team }) {
@@ -22,7 +22,7 @@ export function TeamStats({ team }: { team: Team }) {
     );
   }
 
-  const stats = data.data;
+  const stats = data?.data;
 
   if (isError || !stats) {
     return (

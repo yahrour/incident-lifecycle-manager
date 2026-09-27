@@ -11,14 +11,14 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { EmptyState } from "./EmptyState";
-import { DeleteTeamDialog } from "./DeleteTeamDialog";
-import { EditTeamDialog } from "./EditTeamDialog";
-import { MembersPreview } from "./MembersPreview";
-import { OnCallPreview } from "./OnCallPreview";
-import { UnavailabilitiesPreview } from "./UnavailabilitiesPreview";
-import { ServicesPreview } from "./ServicesPreview";
 import { useErrorToast } from "../../hooks";
-import { TeamStats } from "./TeamStats";
+import { TeamStats } from "./stats/TeamStats";
+import { EditTeamDialog } from "./dialogs/EditTeamDialog";
+import { DeleteTeamDialog } from "./dialogs/DeleteTeamDialog";
+import { MembersPreview } from "./previews/MembersPreview";
+import { OnCallPreview } from "./previews/OnCallPreview";
+import { UnavailabilitiesPreview } from "./previews/UnavailabilitiesPreview";
+import { ServicesPreview } from "./previews/ServicesPreview";
 
 export function Team() {
   const params = useParams();

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Mail } from "lucide-react";
-import { fetchOnCall } from "../../api/teams";
-import type { Engineer } from "../../types";
+import { fetchOnCall } from "../../../api/teams";
+import type { Engineer } from "../../../types";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router";
 

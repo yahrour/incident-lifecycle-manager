@@ -1,9 +1,9 @@
 import { Controller, useForm } from "react-hook-form";
-import { servicesSchema, updateTeamSchema } from "../../schemas";
+import { servicesSchema, updateTeamSchema } from "../../../schemas";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { updateTeam } from "../../api/teams";
+import { updateTeam } from "../../../api/teams";
 import { useState } from "react";
 import { toast } from "@/components/ui/toast";
 import { Info, Pen, Plus, XIcon } from "lucide-react";
@@ -26,16 +26,16 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ErrorSection } from "../../components/ErrorSection";
+import { ErrorSection } from "../../../components/ErrorSection";
 import { queryClient } from "@/lib/queryClient";
-import type { Team } from "../../types";
+import type { Team } from "../../../types";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { parseApiError } from "../../utils";
+import { parseApiError } from "../../../utils";
 
 export function EditTeamDialog({ team }: { team: Team }) {
   const [errors, setErrors] = useState<string[]>([]);
