@@ -40,6 +40,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
+import { useLogout } from "@/features/auth";
 
 const managerItems = {
   respondItems: [
@@ -77,6 +78,7 @@ const engineerItems = {
 export function AppSidebar() {
   const location = useLocation();
   const { user, isLoading } = useAuth();
+  const { mutate: logout, isPending } = useLogout();
 
   if (isLoading) {
     return <p>Loading...</p>;
@@ -230,9 +232,11 @@ export function AppSidebar() {
               <DropdownMenuItem
                 variant="destructive"
                 className="cursor-pointer"
+                disabled={isPending}
+                onClick={() => logout()}
               >
                 <LogOut />
-                Log out
+                {isPending ? "Logging out..." : "Log out"}
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
