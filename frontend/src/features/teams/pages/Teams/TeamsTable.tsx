@@ -80,7 +80,7 @@ export function TeamsTable({
     <>
       <Table>
         <TableHeader>
-          <TableRow className="uppercase">
+          <TableRow className="uppercase hover:bg-transparent">
             <TableHead className="w-2/5">team</TableHead>
             <TableHead>services</TableHead>
             <TableHead>members</TableHead>
