@@ -13,7 +13,11 @@ export async function signIn({
   email,
   password,
 }: SignInCredentials): Promise<void> {
-  await apiClient.post("/auth/sign-in", { email, password });
+  const { data } = await apiClient.post<{ success: boolean; message?: string }>(
+    "/auth/sign-in",
+    { email, password }
+  );
+  if (!data.success) throw new Error(data.message ?? "Invalid credentials");
 }
 
 export async function signUp(
