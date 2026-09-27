@@ -1,5 +1,4 @@
 import { TeamsTable } from "./TeamsTable";
-import { CreateTeam } from "./CreateTeam";
 import {
   InputGroup,
   InputGroupAddon,
@@ -7,6 +6,7 @@ import {
 } from "@/components/ui/input-group";
 import { Search, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import { CreateTeamDialog } from "./dialogs/CreateTeamDialog";
 
 export function Teams() {
   const [search, setSearch] = useState("");
@@ -53,7 +53,7 @@ export function Teams() {
             )}
           </InputGroup>
 
-          <CreateTeam />
+          <CreateTeamDialog />
         </div>
 
         <TeamsTable search={debouncedSearch} page={page} setPage={setPage} />

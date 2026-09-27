@@ -129,6 +129,12 @@ export class TeamsService {
         this.prisma.team.count({
           where: {
             ownerId,
+            ...(query.search && {
+              name: {
+                contains: query.search,
+                mode: "insensitive",
+              },
+            }),
           },
         }),
       ]);
