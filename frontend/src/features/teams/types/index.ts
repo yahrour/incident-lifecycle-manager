@@ -1,3 +1,5 @@
+import { Role } from "@/types";
+
 export type Team = {
   id: string;
   name: string;
@@ -8,6 +10,16 @@ export type Team = {
   escalationTimeoutMinutes: number;
   webhookUrl: string | null;
 };
+
+type User = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  specialty: string | null;
+};
+
+export type UserWithRole = User & { role: typeof Role.ENGINEER };
 
 export type Metrics = {
   organization: {
@@ -20,14 +32,7 @@ export type Metrics = {
     teamsCurrentOnCall: {
       id: string;
       name: string;
-      onCall: {
-        id: string;
-        firstName: string;
-        lastName: string;
-        email: string;
-        specialty: string | null;
-        role: string;
-      }[];
+      onCall: UserWithRole[];
     }[];
     totalUnavailabilities: number;
     activeUnavailabilities: number;
@@ -41,13 +46,7 @@ export type Stats = {
 };
 
 export type Member = {
-  user: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    specialty: string | null;
-  };
+  user: User;
   teamId: string;
   id: number;
   joinedAt: Date;
@@ -63,34 +62,14 @@ export type Unavailability = {
   memberId: number;
   teamMember: {
     id: number;
-    user: {
-      id: string;
-      firstName: string;
-      lastName: string;
-      email: string;
-      specialty: string | null;
-    };
+    user: User;
   };
 };
 
 export type OnCall = {
   teamId: string;
   escalationTimeoutMinutes: number;
-  chain: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    specialty: string | null;
-    role: string;
-  }[];
+  chain: UserWithRole[];
 } | null;
 
-export type Engineer = {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  specialty: string | null;
-  role: string;
-};
+export type Engineer = UserWithRole;
