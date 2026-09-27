@@ -10,7 +10,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { EmptyState } from "./EmptyState";
 import { useErrorToast } from "../../hooks";
 import { TeamStats } from "./stats/TeamStats";
 import { EditTeamDialog } from "./dialogs/EditTeamDialog";
@@ -19,6 +18,7 @@ import { MembersPreview } from "./previews/MembersPreview";
 import { OnCallPreview } from "./previews/OnCallPreview";
 import { UnavailabilitiesPreview } from "./previews/UnavailabilitiesPreview";
 import { ServicesPreview } from "./previews/ServicesPreview";
+import { TeamNotFound } from "../../components/TeamNotFound";
 
 export function Team() {
   const params = useParams();
@@ -40,7 +40,7 @@ export function Team() {
   const team = data?.data;
 
   if (!team) {
-    return <EmptyState />;
+    return <TeamNotFound />;
   }
 
   return (

@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 
-export function EmptyState() {
+export function TeamNotFound() {
   return (
     <div>
       <div className="bg-white flex items-center gap-2 px-4 py-3 border-b">
