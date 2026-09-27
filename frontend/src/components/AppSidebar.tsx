@@ -40,6 +40,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
+import { useLogout } from "@/features/auth";
 
 const managerItems = {
   respondItems: [
@@ -77,6 +78,7 @@ const engineerItems = {
 export function AppSidebar() {
   const location = useLocation();
   const { user, isLoading } = useAuth();
+  const { mutate: logout, isPending } = useLogout();
 
   if (isLoading) {
     return <p>Loading...</p>;
@@ -212,23 +214,29 @@ export function AppSidebar() {
                 <p className="text-sm font-medium text-foreground">
                   {user.firstName + " " + user.lastName}
                 </p>
-                <p>
-                  {user.email}
-                </p>
+                <p>{user.email}</p>
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup className="py-2">
-              <DropdownMenuItem className="cursor-pointer hover:bg-muted-foreground/10!" render={<Link to={"/settings"}/>} >
+              <DropdownMenuItem
+                className="cursor-pointer hover:bg-muted-foreground/10!"
+                render={<Link to={"/settings"} />}
+              >
                 <Settings />
                 Settings
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup className="py-2">
-              <DropdownMenuItem variant="destructive" className="cursor-pointer">
+              <DropdownMenuItem
+                variant="destructive"
+                className="cursor-pointer"
+                disabled={isPending}
+                onClick={() => logout()}
+              >
                 <LogOut />
-                Log out
+                {isPending ? "Logging out..." : "Log out"}
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
