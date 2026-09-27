@@ -36,23 +36,28 @@ export class AuthService {
   async signIn(signIn: SignIn) {
     const user = await this.userService.findByEmail(signIn.email);
     if (!user) {
-      throw new UnauthorizedException("Invalid credentials");
+      return { success: false as const, message: "Invalid credentials" };
     }
+
     if (!user.passwordHash) {
-      throw new UnauthorizedException(
-        "This account was created with Google. Please sign in with Google."
-      );
+      return {
+        success: false as const,
+        message:
+          "This account was created with Google. Please sign in with Google.",
+      };
     }
+
     const isMatch = await this.bcrypt.compare(
       signIn.password,
       user.passwordHash
     );
 
     if (!isMatch) {
-      throw new UnauthorizedException("Invalid credentials");
+      return { success: false as const, message: "Invalid credentials" };
     }
 
-    return this.generateTokens(user);
+    const tokens = await this.generateTokens(user);
+    return { success: true as const, ...tokens };
   }
 
   async generateTokens(user: User) {
