@@ -1,4 +1,4 @@
-export function EmptyTeamsState() {
+export function EmptyState() {
   return (
     <div className="mt-4 text-muted-foreground uppercase text-center font-medium text-sm w-full!">
       No Teams Yet

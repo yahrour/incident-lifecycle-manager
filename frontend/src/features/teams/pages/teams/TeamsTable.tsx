@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/pagination";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DEFAULT_LIMIT } from "../../constants";
-import { EmptyTeamsState } from "./EmptyState";
+import { EmptyState } from "./EmptyState";
 import { useErrorToast } from "../../hooks";
 
 export function TeamsTable({
@@ -70,7 +70,7 @@ export function TeamsTable({
   );
 
   if (!teams || teams?.data.length === 0) {
-    return <EmptyTeamsState />;
+    return <EmptyState />;
   }
 
   const isFirstPage = page === 1;

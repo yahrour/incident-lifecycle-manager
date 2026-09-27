@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchUnavailabilities } from "../../../api/unavailability";
+import { fetchUnavailabilities } from "../../../api/unavailabilities";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router";
 import { DEFAULT_PREVIEW_LIMIT } from "@/features/teams/constants";

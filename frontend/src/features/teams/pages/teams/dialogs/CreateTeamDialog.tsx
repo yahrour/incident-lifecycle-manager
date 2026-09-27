@@ -1,9 +1,9 @@
 import { Controller, useForm } from "react-hook-form";
-import { createTeamSchema, servicesSchema } from "../../schemas";
+import { createTeamSchema, servicesSchema } from "../../../schemas";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { createTeam } from "../../api/teams";
+import { createTeam } from "../../../api/teams";
 import { useState } from "react";
 import { toast } from "@/components/ui/toast";
 import { CalendarIcon, Plus, XIcon } from "lucide-react";
@@ -11,7 +11,7 @@ import { format } from "date-fns";
 import {
   DEFAULT_ESCALATION_TIMEOUT_MINUTES,
   DEFAULT_ROTATION_PERIOD_DAYS,
-} from "../../constants";
+} from "../../../constants";
 
 import {
   Dialog,
@@ -46,14 +46,14 @@ import { Calendar } from "@/components/ui/calendar";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ErrorSection } from "../../components/ErrorSection";
+import { ErrorSection } from "../../../components/ErrorSection";
 import { queryClient } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
-import { parseApiError } from "../../utils";
+import { parseApiError } from "../../../utils";
 
 const TIMEZONES = Intl.supportedValuesOf("timeZone");
 
-export function CreateTeam() {
+export function CreateTeamDialog() {
   type CreateTeamInput = z.input<typeof createTeamSchema>;
   type CreateTeamOutput = z.output<typeof createTeamSchema>;
 
