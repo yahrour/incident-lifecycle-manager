@@ -40,7 +40,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
-import useLogout from "@/features/auth/hooks/useLogout";
+import { useLogout } from "@/features/auth";
 
 const managerItems = {
   respondItems: [
