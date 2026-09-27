@@ -133,7 +133,7 @@ export class AuthService {
       }
       await this.prisma.refreshToken.delete({ where: { id: stored.id } });
       const tokens = await this.generateTokens(user);
-      return { ...tokens, userId: user.id }; // ← changed
+      return { ...tokens, userId: user.id };
     } catch {
       throw new UnauthorizedException("Invalid or expired refresh token");
     }
