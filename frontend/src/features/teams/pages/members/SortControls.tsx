@@ -7,8 +7,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-
-type SortState = { field: string; order: "asc" | "desc" } | null;
+import { SortOrder, type SortState } from "../../types";
 
 export function SortControls({
   sort,
@@ -20,9 +19,12 @@ export function SortControls({
   return (
     <div className="flex items-center gap-2">
       <Select
-        value={sort?.field ?? "name"}
+        value={sort.field}
         onValueChange={(field) =>
-          onSortChange({ field: field as string, order: sort?.order ?? "asc" })
+          onSortChange({
+            field,
+            order: sort.order,
+          })
         }
       >
         <SelectTrigger className="w-40">
@@ -40,8 +42,9 @@ export function SortControls({
         size="icon"
         onClick={() =>
           onSortChange({
-            field: sort?.field ?? "name",
-            order: sort?.order === "asc" ? "desc" : "asc",
+            field: sort.field,
+            order:
+              sort.order === SortOrder.ASC ? SortOrder.DESC : SortOrder.ASC,
           })
         }
       >

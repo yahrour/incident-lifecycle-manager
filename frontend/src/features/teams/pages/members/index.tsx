@@ -19,11 +19,13 @@ import { MembersTable } from "./MembersTable";
 import { Mail } from "lucide-react";
 import { SortControls } from "./SortControls";
 import { useState } from "react";
-
-type SortState = { field: string; order: "asc" | "desc" } | null;
+import { SortOrder, type SortState } from "../../types";
 
 export function Members() {
-  const [sort, setSort] = useState<SortState>({ field: "name", order: "asc" });
+  const [sort, setSort] = useState<SortState>({
+    field: "name",
+    order: SortOrder.ASC,
+  });
   const { id: teamId } = useParams();
   const [membersQuery, teamQuery] = useQueries({
     queries: [
@@ -53,6 +55,8 @@ export function Members() {
   if (!team) {
     return <TeamNotFound />;
   }
+
+  console.log(sort);
 
   return (
     <div className="w-full">

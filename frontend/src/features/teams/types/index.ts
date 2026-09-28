@@ -73,3 +73,12 @@ export type OnCall = {
 } | null;
 
 export type Engineer = UserWithRole;
+
+export const SortOrder = {
+  ASC: "asc",
+  DESC: "desc",
+} as const;
+
+export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder];
+
+export type SortState = { field: string; order: SortOrder };
