@@ -6,7 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { Member } from "../../types";
+import type { Member } from "../types";
 import { EmptyState } from "./EmptyState";
 
 export function MembersTable({ members }: { members: Member[] | undefined }) {

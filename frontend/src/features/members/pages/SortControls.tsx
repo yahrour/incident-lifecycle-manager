@@ -7,7 +7,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { SortOrder, type SortState } from "../../types";
+import { SortOrder, type SortState } from "../types";
 
 export function SortControls({
   sort,

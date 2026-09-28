@@ -1,8 +1,8 @@
 import { useQueries } from "@tanstack/react-query";
 import { Link, useParams } from "react-router";
-import { fetchMembers } from "../../api/members";
-import { DEFAULT_LIMIT } from "../../constants";
-import { useErrorToast } from "../../hooks";
+import { fetchMembers } from "../api/members";
+import { DEFAULT_LIMIT } from "../constants";
+import { useErrorToast } from "@/hooks/use-error-toast";
 import { Spinner } from "@/components/ui/spinner";
 import {
   Breadcrumb,
@@ -12,12 +12,12 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { fetchTeam } from "../../api/teams";
-import { TeamNotFound } from "../../components/TeamNotFound";
+import { fetchTeam } from "../api/teams";
+import { TeamNotFound } from "../components/TeamNotFound";
 import { MembersTable } from "./MembersTable";
 import { SortControls } from "./SortControls";
 import { useState } from "react";
-import { SortOrder, type SortState } from "../../types";
+import { SortOrder, type SortState } from "../types";
 import { InviteDialog } from "./dialogs/Invite/InviteDialog";
 
 export function Members() {
