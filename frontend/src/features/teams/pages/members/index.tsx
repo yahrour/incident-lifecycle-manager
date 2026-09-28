@@ -39,8 +39,8 @@ export function Members() {
     ],
   });
 
-  useErrorToast(membersQuery.isError, "team doesn't exist");
-  useErrorToast(teamQuery.isError, "failed to load members");
+  useErrorToast(teamQuery.isError, "team doesn't exist");
+  useErrorToast(membersQuery.isError, "failed to load members");
 
   if (membersQuery.isPending || teamQuery.isPending) {
     return (
