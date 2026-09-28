@@ -4,7 +4,6 @@ import {
   IsInt,
   IsNotEmpty,
   IsOptional,
-  IsString,
   IsUUID,
 } from "class-validator";
 import { Transform } from "class-transformer";
@@ -20,10 +19,6 @@ export class CreateInvite {
   @IsUUID()
   @IsNotEmpty()
   teamId: string;
-
-  @IsString()
-  @IsNotEmpty()
-  speaciality: string;
 
   @IsOptional()
   @IsInt()
