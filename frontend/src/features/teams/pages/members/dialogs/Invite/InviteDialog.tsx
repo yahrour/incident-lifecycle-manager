@@ -1,11 +1,7 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
-import {  useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import z from "zod";
 import { inviteSchema } from "@/features/teams/schemas/invite.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,7 +9,6 @@ import { useState } from "react";
 import type { Team } from "@/features/teams/types";
 import { InviteLink } from "./InviteLink";
 import { InviteForm } from "./InviteForm";
-
 
 export function InviteDialog({ team }: { team: Team }) {
   const inviteSchemaWithoutTeamId = inviteSchema.omit({ teamId: true });
@@ -31,7 +26,7 @@ export function InviteDialog({ team }: { team: Team }) {
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-      setTimeout(() => setInviteUrl(null), 200)
+      setTimeout(() => setInviteUrl(null), 200);
       setErrors([]);
       form.reset();
     }
@@ -48,7 +43,12 @@ export function InviteDialog({ team }: { team: Team }) {
         {inviteUrl ? (
           <InviteLink url={inviteUrl} email={form.getValues("inviteEmail")} />
         ) : (
-          <InviteForm team={team} setInviteUrl={setInviteUrl} errors={errors} setErrors={setErrors} />
+          <InviteForm
+            team={team}
+            setInviteUrl={setInviteUrl}
+            errors={errors}
+            setErrors={setErrors}
+          />
         )}
       </DialogContent>
     </Dialog>

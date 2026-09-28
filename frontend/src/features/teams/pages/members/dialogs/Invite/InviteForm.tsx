@@ -41,7 +41,17 @@ const EXPIRY_OPTIONS = [
   { value: 168, label: "7 days" },
 ];
 
-export function InviteForm({ team, setInviteUrl, errors, setErrors}: { team: Team, setInviteUrl: React.Dispatch<React.SetStateAction<string | null>>, errors: string[], setErrors:  React.Dispatch<React.SetStateAction<string[]>>}) {
+export function InviteForm({
+  team,
+  setInviteUrl,
+  errors,
+  setErrors,
+}: {
+  team: Team;
+  setInviteUrl: React.Dispatch<React.SetStateAction<string | null>>;
+  errors: string[];
+  setErrors: React.Dispatch<React.SetStateAction<string[]>>;
+}) {
   const inviteSchemaWithoutTeamId = inviteSchema.omit({ teamId: true });
   type InviteSchema = z.infer<typeof inviteSchemaWithoutTeamId>;
   const form = useForm<InviteSchema>({
@@ -69,7 +79,6 @@ export function InviteForm({ team, setInviteUrl, errors, setErrors}: { team: Tea
       teamId: team.id,
     });
   };
-
 
   return (
     <>
