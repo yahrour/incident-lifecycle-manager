@@ -14,7 +14,6 @@ export default function AppRoutes() {
     <Routes>
       {/* Public — must stay outside RequireAuth */}
       <Route path="/unauthorized" element={<div>Not allowed</div>} />
-      <Route path="/settings" element={<SettingPage />} />
       <Route element={<GuestOnly />}>
         <Route path="/login" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
@@ -53,6 +52,9 @@ export default function AppRoutes() {
             />
             <Route path="/engineer/team" element={<div>manage team</div>} />
           </Route>
+        </Route>
+        <Route element={<AppLayout />}>
+          <Route path="/settings" element={<SettingPage />} />
         </Route>
       </Route>
 
