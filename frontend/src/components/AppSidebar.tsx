@@ -56,7 +56,7 @@ const managerItems = {
   ],
   setupItems: [
     { label: "Integrations", href: "/manager/integrations", icon: Plug },
-    { label: "Settings", href: "/manager/settings", icon: Settings },
+    { label: "Settings", href: "/settings", icon: Settings },
   ],
 };
 
