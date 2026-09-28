@@ -14,12 +14,11 @@ import {
 } from "@/components/ui/breadcrumb";
 import { fetchTeam } from "../../api/teams";
 import { TeamNotFound } from "../../components/TeamNotFound";
-import { Button } from "@/components/ui/button";
 import { MembersTable } from "./MembersTable";
-import { Mail } from "lucide-react";
 import { SortControls } from "./SortControls";
 import { useState } from "react";
 import { SortOrder, type SortState } from "../../types";
+import { InviteDialog } from "./dialogs/InviteDialog";
 
 export function Members() {
   const [sort, setSort] = useState<SortState>({
@@ -56,8 +55,6 @@ export function Members() {
     return <TeamNotFound />;
   }
 
-  console.log(sort);
-
   return (
     <div className="w-full">
       <div className="bg-white flex items-center gap-2 px-4 py-3 border-b">
@@ -88,10 +85,7 @@ export function Members() {
         {members && (
           <div className="flex justify-end items-center gap-2">
             <SortControls sort={sort} onSortChange={setSort} />
-            <Button variant="secondary">
-              <Mail />
-              Invite engineer
-            </Button>
+            <InviteDialog teamId={team.id} />
           </div>
         )}
         <MembersTable members={members} />
