@@ -9,7 +9,7 @@ import { toast } from "@/components/ui/toast";
 import { Copy, CopyCheck } from "lucide-react";
 import { useState } from "react";
 
-export function InviteLink({ url, email }: { url: string; email: string }) {
+export function InviteLink({ url }: { url: string }) {
   const [copied, setCopied] = useState(false);
 
   const copyLink = async () => {
@@ -53,8 +53,7 @@ export function InviteLink({ url, email }: { url: string; email: string }) {
         </Button>
       </div>
       <p className="text-xs text-muted-foreground">
-        This link only works for{" "}
-        <span className="font-medium text-foreground">{email}</span>
+        This link only works for the invited email.
       </p>
     </>
   );
