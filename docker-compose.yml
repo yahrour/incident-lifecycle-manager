@@ -90,6 +90,21 @@ services:
     networks:
       - incident_network
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: incident_frontend
+    ports:
+      - "4173:80"
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - incident_network
+
   grafana:
     image: grafana/grafana:13.2.2
     container_name: grafana
@@ -114,9 +129,9 @@ services:
     ports:
       - "8080:80"
       - "8443:443"
-    volumes:
-      - ./frontend/dist:/usr/share/nginx/html:ro
     depends_on:
+      frontend:
+        condition: service_started
       backend:
         condition: service_healthy
     healthcheck:

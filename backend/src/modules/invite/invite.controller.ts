@@ -7,6 +7,7 @@ import type { ActiveUserData } from "@/common/interfaces/active-user.interface";
 import { Public } from "@/common/decorators/public.decorator";
 import { Roles } from "@/common/decorators/roles.decorator";
 import { Role } from "@/generated/prisma/enums";
+import { apiResponse } from "@/common/utils/api-response";
 
 @Controller({
   path: "invite",
@@ -17,11 +18,15 @@ export class InviteController {
 
   @Roles(Role.SRE)
   @Post("create")
-  create(
+  async create(
     @Body() createInvite: CreateInvite,
     @ActiveUser() activeUser: ActiveUserData
   ) {
-    return this.inviteService.createInvite(createInvite, activeUser);
+    const result = await this.inviteService.createInvite(
+      createInvite,
+      activeUser
+    );
+    return apiResponse(result);
   }
 
   @Public()
