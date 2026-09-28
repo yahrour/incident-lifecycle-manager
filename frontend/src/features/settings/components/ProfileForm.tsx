@@ -30,16 +30,7 @@ import {
 } from "@/components/ui/combobox";
 import { settingSchema, type SettingFormValues } from "../schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-
-type ProfileFormProps = {
-  user: {
-    email: string;
-    firstName: string;
-    lastName: string;
-    timezone: string;
-    specialty: string;
-  };
-};
+import type { ProfileFormProps } from "../types";
 
 export function ProfileForm({ user }: ProfileFormProps) {
   const timezones = Intl.supportedValuesOf("timeZone");

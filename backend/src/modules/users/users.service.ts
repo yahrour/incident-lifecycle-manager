@@ -105,6 +105,15 @@ export class UsersService {
   async getProfile(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        role: true,
+        timezone: true,
+        specialty: true,
+      },
     });
 
     if (!user) {
@@ -115,19 +124,19 @@ export class UsersService {
     const avatarInitials =
       `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase();
 
-    // TODO: add timezone and organizationName to return payload
     return {
       id: user.id,
       firstName: user.firstName,
       lastName: user.lastName,
-      avatarInitials,
       email: user.email,
       role: user.role,
+      timezone: user.timezone,
+      specialty: user.specialty,
+      avatarInitials,
     };
   }
 
   async updateProfile(userId: string, updateProfileDto: UpdateProfileDto) {
-    // TODO: validate timezone before storing it if it's provided
     try {
       return await this.prisma.user.update({
         where: { id: userId },
@@ -138,6 +147,7 @@ export class UsersService {
           lastName: true,
           email: true,
           role: true,
+          timezone: true,
         },
       });
     } catch (error) {
