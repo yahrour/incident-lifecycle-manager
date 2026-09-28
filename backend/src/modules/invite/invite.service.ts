@@ -196,7 +196,6 @@ export class InviteService {
     const frontUrl = this.configService.get<string>("FRONTEND_URL");
     const inviteLink = `${frontUrl}/register?token=${rawToken}`;
     return {
-      success: true,
       inviteLink,
     };
   }
