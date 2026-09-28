@@ -18,7 +18,7 @@ import { MembersTable } from "./MembersTable";
 import { SortControls } from "./SortControls";
 import { useState } from "react";
 import { SortOrder, type SortState } from "../../types";
-import { InviteDialog } from "./dialogs/InviteDialog";
+import { InviteDialog } from "./dialogs/Invite/InviteDialog";
 
 export function Members() {
   const [sort, setSort] = useState<SortState>({
@@ -85,7 +85,7 @@ export function Members() {
         {members && (
           <div className="flex justify-end items-center gap-2">
             <SortControls sort={sort} onSortChange={setSort} />
-            <InviteDialog teamId={team.id} />
+            <InviteDialog team={team} />
           </div>
         )}
         <MembersTable members={members} />

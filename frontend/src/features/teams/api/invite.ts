@@ -1,12 +1,13 @@
 import z from "zod";
 import type { inviteSchema } from "../schemas/invite.schema";
 import { apiClient } from "@/lib/apiClient";
+import type { ApiResponse } from "@/types";
+import type { InviteEngineer } from "../types";
 
-type ApiResponse = {
-  success: boolean;
-  inviteLink: string;
-};
 export async function createInvite(invite: z.infer<typeof inviteSchema>) {
-  const response = await apiClient.post<ApiResponse>("/invite/create", invite);
+  const response = await apiClient.post<ApiResponse<InviteEngineer>>(
+    "/invite/create",
+    invite
+  );
   return response.data;
 }

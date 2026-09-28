@@ -1,9 +1,8 @@
 import z from "zod";
 
 export const inviteSchema = z.object({
-  email: z.email("Invalid email address"),
+  inviteEmail: z.email("Invalid email address"),
   teamId: z.uuid(),
-  specialty: z.string("Cannot be empty").trim().min(1).max(25),
   expiresIn: z
     .union([
       z.literal(1),
