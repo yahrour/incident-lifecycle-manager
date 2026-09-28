@@ -1,14 +1,18 @@
 import { toast } from "@/components/ui/toast";
 import { useEffect } from "react";
 
-export function useErrorToast(isError: boolean, message: string) {
+export function useErrorToast(
+  isError: boolean,
+  message: string,
+  title = "failed to fetch"
+) {
   useEffect(() => {
     if (isError) {
       toast.add({
         type: "error",
-        title: "failed to fetch",
+        title,
         description: message,
       });
     }
-  }, [isError, message]);
+  }, [isError, message, title]);
 }

@@ -3,7 +3,7 @@ import { Route, Routes } from "react-router";
 import { AppLayout } from "./AppLayout";
 import { RequireAuth } from "./RequireAuth";
 import { ProtectedRoute } from "./ProtectedRoute";
-import { Team, Teams } from "@/features/teams";
+import { Members, Team, Teams } from "@/features/teams";
 import SignIn from "@/features/auth/pages/SignIn";
 import SignUp from "@/features/auth/pages/signUp";
 import { GuestOnly } from "./GuestOnly";
@@ -25,6 +25,7 @@ export default function AppRoutes() {
             <Route path="/" element={<div>Home</div>} />
             <Route path="/manager/teams" element={<Teams />} />
             <Route path="/manager/teams/:id" element={<Team />} />
+            <Route path="/manager/teams/:id/members" element={<Members />} />
             <Route
               path="/manager/engineers"
               element={<div>manage engineers</div>}
