@@ -22,11 +22,11 @@ export class InviteController {
     @Body() createInvite: CreateInvite,
     @ActiveUser() activeUser: ActiveUserData
   ) {
-    const inviteLink = await this.inviteService.createInvite(
+    const result = await this.inviteService.createInvite(
       createInvite,
       activeUser
     );
-    return apiResponse(inviteLink);
+    return apiResponse(result);
   }
 
   @Public()
