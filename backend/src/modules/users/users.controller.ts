@@ -29,6 +29,7 @@ export class UsersController {
     @ActiveUser() user: ActiveUserData,
     @Body() dto: UpdateProfileDto
   ) {
-    return this.usersService.updateProfile(user.sub, dto);
+    const profile = await this.usersService.updateProfile(user.sub, dto);
+    return apiResponse(profile);
   }
 }
