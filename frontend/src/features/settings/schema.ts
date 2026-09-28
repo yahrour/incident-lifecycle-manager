@@ -6,6 +6,11 @@ export const settingSchema = z.object({
     .trim()
     .max(50, "Must be at most 50 characters")
     .optional(),
+  specialty: z
+    .string()
+    .trim()
+    .max(50, "Must be at most 50 characters")
+    .optional(),
   lastName: z
     .string()
     .trim()
