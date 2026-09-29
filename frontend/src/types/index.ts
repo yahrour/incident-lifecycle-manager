@@ -9,9 +9,11 @@ export type User = {
   id: string;
   firstName: string;
   lastName: string;
-  avatarInitials: string;
   email: string;
   role: Role;
+  timezone: string;
+  specialty: string;
+  avatarInitials: string;
 };
 
 export type ApiResponse<T> = {

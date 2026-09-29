@@ -56,7 +56,7 @@ const managerItems = {
   ],
   setupItems: [
     { label: "Integrations", href: "/manager/integrations", icon: Plug },
-    { label: "Settings", href: "/manager/settings", icon: Settings },
+    { label: "Settings", href: "/settings", icon: Settings },
   ],
 };
 
@@ -196,7 +196,7 @@ export function AppSidebar() {
             <div className="relative">
               <Avatar className="h-8 w-8 bg-purple-400 text-white">
                 <AvatarFallback className="bg-purple-400 text-xs text-white">
-                  {user.firstName.charAt(0) + user.lastName.charAt(0)}
+                  {user.avatarInitials}
                 </AvatarFallback>
               </Avatar>
             </div>
