@@ -28,18 +28,19 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-import { settingSchema, type SettingFormValues } from "../schema";
+import { settingsSchema, type SettingsFormValues } from "../schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { ProfileFormProps } from "../types";
 import useUpdateProfile from "../hooks/useUpdateProfile";
 import { toast } from "@/components/ui/toast";
 
+const timezones = Intl.supportedValuesOf("timeZone");
+
 export function ProfileForm({ user }: ProfileFormProps) {
-  const timezones = Intl.supportedValuesOf("timeZone");
   const { mutate: updateProfile, isPending } = useUpdateProfile();
 
-  const form = useForm<SettingFormValues>({
-    resolver: zodResolver(settingSchema),
+  const form = useForm<SettingsFormValues>({
+    resolver: zodResolver(settingsSchema),
     defaultValues: {
       firstName: user.firstName ?? "",
       lastName: user.lastName ?? "",
@@ -48,12 +49,12 @@ export function ProfileForm({ user }: ProfileFormProps) {
     },
   });
 
-  function onSubmit(data: SettingFormValues) {
+  function onSubmit(data: SettingsFormValues) {
     const { dirtyFields } = form.formState;
 
     const changed = Object.fromEntries(
       Object.entries(data).filter(
-        ([key]) => dirtyFields[key as keyof SettingFormValues]
+        ([key]) => dirtyFields[key as keyof SettingsFormValues]
       )
     );
 
@@ -188,7 +189,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
         </CardContent>
         <CardFooter className="justify-end">
           <Button type="submit" disabled={!form.formState.isDirty || isPending}>
-            {isPending ? "Saving" : "Save changes"}
+            {isPending ? "Saving..." : "Save changes"}
           </Button>
         </CardFooter>
       </form>
