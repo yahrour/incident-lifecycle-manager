@@ -1,4 +1,4 @@
-import type { UserWithRole } from "../../shared/types";
+import type { User } from "../../shared/types";
 
 export type Metrics = {
   organization: {
@@ -11,7 +11,7 @@ export type Metrics = {
     teamsCurrentOnCall: {
       id: string;
       name: string;
-      onCall: UserWithRole[];
+      onCall: User[];
     }[];
     totalUnavailabilities: number;
     activeUnavailabilities: number;
@@ -24,10 +24,14 @@ export type Stats = {
   activeUnavailabilityCount: number;
 };
 
+type OnCallRole = "PRIMARY" | "SECONDARY";
+type ChainUser = Omit<User, "role"> & {
+  role: OnCallRole;
+};
 export type OnCall = {
   teamId: string;
   escalationTimeoutMinutes: number;
-  chain: UserWithRole[];
+  chain: ChainUser[];
 } | null;
 
-export type Engineer = UserWithRole;
+export type Engineer = User;

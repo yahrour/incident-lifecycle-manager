@@ -11,22 +11,22 @@ export type Team = {
   webhookUrl: string | null;
 };
 
-export type Member = {
-  user: User;
-  teamId: string;
-  id: number;
-  joinedAt: Date;
-};
-
-type User = {
+export type User = {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
   specialty: string | null;
+  role: typeof Role.ENGINEER;
 };
 
-export type UserWithRole = User & { role: typeof Role.ENGINEER };
+export type Member = {
+  user: User;
+  teamId: string;
+  id: number;
+  joinedAt: Date;
+  role: User;
+};
 
 export type Unavailability = {
   id: number;
