@@ -8,7 +8,7 @@ import SignIn from "@/features/auth/pages/SignIn";
 import SignUp from "@/features/auth/pages/signUp";
 import { GuestOnly } from "./GuestOnly";
 import SettingPage from "@/features/settings/pages/settingPage";
-import InvitePage from "@/features/auth/pages/Invite";
+import InvitePage from "@/features/invite/pages/Invite";
 
 export default function AppRoutes() {
   return (

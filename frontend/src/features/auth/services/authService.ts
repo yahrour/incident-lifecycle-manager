@@ -2,7 +2,6 @@ import { apiClient } from "@/lib/apiClient";
 import type { User } from "@/types";
 import { type SignInCredentials } from "../types";
 import { type SignUpResponse } from "../types";
-import { type ValidateInviteResponse } from "../types";
 import { type SignUpCredentials } from "../schemas";
 import type { ApiResponse } from "@/types";
 
@@ -29,15 +28,5 @@ export async function signUp(
     ...credentials,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   });
-  return data;
-}
-
-export async function validateInvite(
-  token: string
-): Promise<ValidateInviteResponse> {
-  const { data } = await apiClient.get<ValidateInviteResponse>(
-    "/invite/validate",
-    { params: { token } }
-  );
   return data;
 }
