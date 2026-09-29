@@ -1,4 +1,4 @@
-import { getMe } from "@/features/auth/services/authService";
+import { getMe } from "@/features/auth";
 import { useQuery } from "@tanstack/react-query";
 
 export function useUserSettings() {

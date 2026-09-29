@@ -4,6 +4,7 @@ import { type SignInCredentials } from "../types";
 import { type SignUpResponse } from "../types";
 import { type SignUpCredentials } from "../schemas";
 import type { ApiResponse } from "@/types";
+
 export async function getMe(): Promise<User | null> {
   const { data } = await apiClient.get<ApiResponse<User>>("/users/me");
   return data.data;
