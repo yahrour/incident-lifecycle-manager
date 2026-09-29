@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router";
 import { fetchUnavailabilitiesPreview } from "../../api/unavailabilities";
-import { DEFAULT_PREVIEW_LIMIT } from "@/features/organization/shared/constants";
 
 const formatDay = (date: Date | string) => {
   const d = new Date(date);
@@ -17,7 +16,7 @@ const formatDay = (date: Date | string) => {
 export function UnavailabilitiesPreview({ teamId }: { teamId: string }) {
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["unavailabilities", teamId],
-    queryFn: () => fetchUnavailabilitiesPreview(teamId, DEFAULT_PREVIEW_LIMIT),
+    queryFn: () => fetchUnavailabilitiesPreview(teamId),
   });
 
   // sort by the soonest first
