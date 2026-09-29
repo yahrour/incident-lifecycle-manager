@@ -88,6 +88,7 @@ export class MembersService {
               lastName: true,
               email: true,
               specialty: true,
+              role: true,
             },
           },
         },
