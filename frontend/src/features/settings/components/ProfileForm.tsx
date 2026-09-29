@@ -31,9 +31,12 @@ import {
 import { settingSchema, type SettingFormValues } from "../schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { ProfileFormProps } from "../types";
+import useUpdateProfile from "../hooks/useUpdateProfile";
+import { toast } from "@/components/ui/toast";
 
 export function ProfileForm({ user }: ProfileFormProps) {
   const timezones = Intl.supportedValuesOf("timeZone");
+  const { mutate: updateProfile, isPending } = useUpdateProfile();
 
   const form = useForm<SettingFormValues>({
     resolver: zodResolver(settingSchema),
@@ -46,7 +49,30 @@ export function ProfileForm({ user }: ProfileFormProps) {
   });
 
   function onSubmit(data: SettingFormValues) {
-    console.log("submitting", data);
+    const { dirtyFields } = form.formState;
+
+    const changed = Object.fromEntries(
+      Object.entries(data).filter(
+        ([key]) => dirtyFields[key as keyof SettingFormValues]
+      )
+    );
+
+    updateProfile(changed, {
+      onSuccess: (updatedUser) => {
+        form.reset({
+          firstName: updatedUser.firstName ?? "",
+          lastName: updatedUser.lastName ?? "",
+          timezone: updatedUser.timezone ?? "",
+          specialty: updatedUser.specialty ?? "",
+        });
+        toast.add({ title: "Profile updated", type: "success" });
+        toast.add({
+          title: "Couldn't update your profile",
+          description: "Try again.",
+          type: "error",
+        });
+      },
+    });
   }
   return (
     <Card className="w-full">
@@ -161,8 +187,8 @@ export function ProfileForm({ user }: ProfileFormProps) {
           </FieldGroup>
         </CardContent>
         <CardFooter className="justify-end">
-          <Button type="submit" disabled={!form.formState.isDirty}>
-            Save changes
+          <Button type="submit" disabled={!form.formState.isDirty || isPending}>
+            {isPending ? "Saving" : "Save changes"}
           </Button>
         </CardFooter>
       </form>
