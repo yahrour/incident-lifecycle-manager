@@ -7,7 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { Member } from "../types";
-import { EmptyState } from "../components/EmptyState";
+import { EmptyState } from "./EmptyState";
 
 export function MembersTable({ members }: { members: Member[] | undefined }) {
   if (!members) {

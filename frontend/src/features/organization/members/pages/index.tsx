@@ -10,14 +10,14 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { MembersTable } from "./MembersTable";
+import { MembersTable } from "../components/MembersTable";
 import { SortControls } from "../components/SortControls";
 import { useState } from "react";
 import { SortOrder, type SortState } from "../types";
-import { InviteDialog } from "./dialogs/Invite/InviteDialog";
 import { fetchMembers } from "../api/members";
 import { fetchTeam } from "../../teams";
 import { TeamNotFound } from "../../shared/components/TeamNotFound";
+import { InviteDialog } from "../components/InviteDialog";
 
 export function Members() {
   const [sort, setSort] = useState<SortState>({

@@ -27,10 +27,10 @@ import { useMutation } from "@tanstack/react-query";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
-import { inviteSchema } from "../../../schemas";
 import { parseApiError } from "@/utils/api";
 import type { Team } from "@/features/organization/shared/types";
 import { ErrorSection } from "@/features/organization/shared/components/ErrorSection";
+import { inviteSchema } from "../../schemas";
 
 const EXPIRY_OPTIONS = [
   { value: 1, label: "1 hour" },
