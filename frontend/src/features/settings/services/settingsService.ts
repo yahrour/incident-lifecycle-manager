@@ -1,7 +1,6 @@
 import { apiClient } from "@/lib/apiClient";
-import type { ApiResponse } from "@/types";
+import type { ApiResponse, User } from "@/types";
 import type { SettingFormValues } from "../schema";
-import type { User } from "@/types";
 
 export async function updateProfile(data: Partial<SettingFormValues>) {
   const response = await apiClient.patch<ApiResponse<User>>("/users/me", data);
