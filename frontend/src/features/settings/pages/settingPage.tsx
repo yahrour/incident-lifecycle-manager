@@ -1,7 +1,7 @@
 import { ProfileForm } from "../components/ProfileForm";
 import { useUserSettings } from "../hooks/useUserSettings";
 
-export default function SettingPage() {
+export default function SettingsPage() {
   const { data: user, isLoading, isError } = useUserSettings();
   if (isLoading) return <p>Loading...</p>;
   if (isError || !user) return <p>Couldn't load your profile.</p>;

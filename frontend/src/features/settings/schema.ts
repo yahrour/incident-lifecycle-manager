@@ -1,6 +1,6 @@
 import { isValidTimeZone } from "@/utils/timezone";
 import { z } from "zod";
-export const settingSchema = z.object({
+export const settingsSchema = z.object({
   firstName: z
     .string()
     .trim()
@@ -21,4 +21,4 @@ export const settingSchema = z.object({
   }),
 });
 
-export type SettingFormValues = z.infer<typeof settingSchema>;
+export type SettingsFormValues = z.infer<typeof settingsSchema>;
