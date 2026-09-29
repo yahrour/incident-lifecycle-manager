@@ -346,6 +346,7 @@ export class UnavailabilityService {
                   lastName: true,
                   email: true,
                   specialty: true,
+                  role: true,
                 },
               },
             },
