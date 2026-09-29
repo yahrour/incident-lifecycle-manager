@@ -3,12 +3,11 @@ import { Route, Routes } from "react-router";
 import { AppLayout } from "./AppLayout";
 import { RequireAuth } from "./RequireAuth";
 import { ProtectedRoute } from "./ProtectedRoute";
-import { Team, Teams } from "@/features/organization/teams";
 import SignIn from "@/features/auth/pages/SignIn";
 import SignUp from "@/features/auth/pages/signUp";
 import { GuestOnly } from "./GuestOnly";
-import { Members } from "@/features/organization/members";
 import SettingPage from "@/features/settings/pages/settingPage";
+import { Members, Team, Teams } from "@/features/organization";
 
 export default function AppRoutes() {
   return (
