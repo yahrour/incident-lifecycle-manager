@@ -7,11 +7,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { Member } from "../types";
-import { EmptyState } from "./EmptyState";
+import { NoMembersState } from "./NoMembersState";
 
 export function MembersTable({ members }: { members: Member[] | undefined }) {
   if (!members) {
-    return <EmptyState />;
+    return <NoMembersState />;
   }
 
   return (

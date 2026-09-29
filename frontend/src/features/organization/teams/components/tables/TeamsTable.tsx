@@ -20,9 +20,9 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { TeamsEmptyState } from "../TeamsEmptyState";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { DEFAULT_LIMIT } from "@/features/organization/shared/constants";
+import { NoTeamsState } from "../NoTeamsState";
 
 export function TeamsTable({
   search,
@@ -70,7 +70,7 @@ export function TeamsTable({
   );
 
   if (!teams || teams?.data.length === 0) {
-    return <TeamsEmptyState />;
+    return <NoTeamsState />;
   }
 
   const isFirstPage = page === 1;
