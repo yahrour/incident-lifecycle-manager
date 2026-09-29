@@ -6,8 +6,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { Member } from "../../types";
 import { NoMembersState } from "../NoMembersState";
+import type { Member } from "@/features/organization/shared/types";
 
 export function MembersTable({ members }: { members: Member[] | undefined }) {
   if (!members) {

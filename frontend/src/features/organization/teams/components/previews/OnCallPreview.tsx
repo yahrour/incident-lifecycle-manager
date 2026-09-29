@@ -3,7 +3,7 @@ import { Mail } from "lucide-react";
 import { fetchOnCall } from "../../api/teams";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router";
-import type { Engineer } from "@/features/organization/shared/types";
+import type { Engineer } from "../../types";
 
 export function OnCallPreview({ teamId }: { teamId: string }) {
   const { data, isPending, isError, refetch } = useQuery({

@@ -29,3 +29,5 @@ export type OnCall = {
   escalationTimeoutMinutes: number;
   chain: UserWithRole[];
 } | null;
+
+export type Engineer = UserWithRole;

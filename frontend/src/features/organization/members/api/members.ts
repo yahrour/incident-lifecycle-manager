@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/apiClient";
 import type { ApiResponse } from "@/types";
-import type { Member } from "../types";
 import { DEFAULT_PREVIEW_LIMIT } from "../../shared/constants";
+import type { Member } from "../../shared/types";
 
 export async function fetchMembersPreview(id: string) {
   const response = await apiClient.get<ApiResponse<Member[]>>(
