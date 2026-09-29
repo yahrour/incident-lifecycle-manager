@@ -88,8 +88,8 @@ export class OnCallService {
       teamId: team.id,
       escalationTimeoutMinutes: team.escalationTimeoutMinutes,
       chain: [
-        { position: "PRIMARY", ...primary.user },
-        { position: "SECONDARY", ...secondary.user },
+        { ...primary.user, position: "PRIMARY" },
+        { ...secondary.user, position: "SECONDARY" },
       ],
     };
   }
