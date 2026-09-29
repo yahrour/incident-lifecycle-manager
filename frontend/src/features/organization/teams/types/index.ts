@@ -25,13 +25,12 @@ export type Stats = {
 };
 
 type OnCallPosition = "PRIMARY" | "SECONDARY";
-type ChainUser = User & {
+export type ChainUser = User & {
   position: OnCallPosition;
 };
+
 export type OnCall = {
   teamId: string;
   escalationTimeoutMinutes: number;
   chain: ChainUser[];
 } | null;
-
-export type Engineer = User;

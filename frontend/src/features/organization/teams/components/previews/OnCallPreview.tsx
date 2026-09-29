@@ -3,7 +3,7 @@ import { Mail } from "lucide-react";
 import { fetchOnCall } from "../../api/teams";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router";
-import type { Engineer } from "../../types";
+import type { ChainUser } from "../../types";
 
 export function OnCallPreview({ teamId }: { teamId: string }) {
   const { data, isPending, isError, refetch } = useQuery({
@@ -64,7 +64,7 @@ export function OnCallPreview({ teamId }: { teamId: string }) {
   );
 }
 
-function Person({ engineer, label }: { engineer: Engineer; label: string }) {
+function Person({ engineer, label }: { engineer: ChainUser; label: string }) {
   const name = `${engineer.firstName} ${engineer.lastName}`;
   const initials = engineer.firstName[0] + engineer.lastName[0];
 
