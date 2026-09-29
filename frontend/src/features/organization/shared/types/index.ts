@@ -25,7 +25,6 @@ export type Member = {
   teamId: string;
   id: number;
   joinedAt: Date;
-  role: User;
 };
 
 export type Unavailability = {

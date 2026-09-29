@@ -24,9 +24,9 @@ export type Stats = {
   activeUnavailabilityCount: number;
 };
 
-type OnCallRole = "PRIMARY" | "SECONDARY";
-type ChainUser = Omit<User, "role"> & {
-  role: OnCallRole;
+type OnCallPosition = "PRIMARY" | "SECONDARY";
+type ChainUser = User & {
+  position: OnCallPosition;
 };
 export type OnCall = {
   teamId: string;

@@ -25,6 +25,7 @@ export class OnCallService {
                 lastName: true,
                 email: true,
                 specialty: true,
+                role: true,
               },
             },
             unavailabilities: {
@@ -87,8 +88,8 @@ export class OnCallService {
       teamId: team.id,
       escalationTimeoutMinutes: team.escalationTimeoutMinutes,
       chain: [
-        { role: "PRIMARY", ...primary.user },
-        { role: "SECONDARY", ...secondary.user },
+        { position: "PRIMARY", ...primary.user },
+        { position: "SECONDARY", ...secondary.user },
       ],
     };
   }
