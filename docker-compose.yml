@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql 
+      - postgres_data:/var/lib/postgresql
     networks:
       - incident_network
     healthcheck:
@@ -35,7 +35,7 @@ services:
       - incident_network
     depends_on:
       - postgres
-  
+
   vault:
     build:
       context: ./vault
@@ -82,11 +82,17 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3000/api/v1/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "fetch(''http://localhost:3000/api/v1/health'').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"',
+        ]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 20s
+    ports:
+      - "3000:3000"
     networks:
       - incident_network
 

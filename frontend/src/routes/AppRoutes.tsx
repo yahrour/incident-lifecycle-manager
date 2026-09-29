@@ -8,6 +8,7 @@ import SignIn from "@/features/auth/pages/SignIn";
 import SignUp from "@/features/auth/pages/signUp";
 import { GuestOnly } from "./GuestOnly";
 import { Members } from "@/features/organization/members";
+import SettingPage from "@/features/settings/pages/settingPage";
 
 export default function AppRoutes() {
   return (
@@ -52,6 +53,9 @@ export default function AppRoutes() {
             />
             <Route path="/engineer/team" element={<div>manage team</div>} />
           </Route>
+        </Route>
+        <Route element={<AppLayout />}>
+          <Route path="/settings" element={<SettingPage />} />
         </Route>
       </Route>
 
