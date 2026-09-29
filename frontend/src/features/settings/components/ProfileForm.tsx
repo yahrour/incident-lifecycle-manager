@@ -67,6 +67,8 @@ export function ProfileForm({ user }: ProfileFormProps) {
           specialty: updatedUser.specialty ?? "",
         });
         toast.add({ title: "Profile updated", type: "success" });
+      },
+      onError: () => {
         toast.add({
           title: "Couldn't update your profile",
           description: "Try again.",
