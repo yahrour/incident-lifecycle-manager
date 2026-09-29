@@ -10,7 +10,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { MembersTable } from "../components/MembersTable";
+import { MembersTable } from "../components/tables/MembersTable";
 import { SortControls } from "../components/SortControls";
 import { useState } from "react";
 import { SortOrder, type SortState } from "../types";
