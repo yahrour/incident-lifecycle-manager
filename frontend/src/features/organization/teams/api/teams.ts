@@ -21,11 +21,6 @@ export async function createTeam(team: z.infer<typeof createTeamSchema>) {
   return response.data;
 }
 
-export async function fetchTeam(id: string) {
-  const response = await apiClient.get<ApiResponse<Team>>(`/teams/${id}`);
-  return response.data;
-}
-
 export async function fetchStats(id: string) {
   const response = await apiClient.get<ApiResponse<Stats>>(
     `/teams/${id}/stats`

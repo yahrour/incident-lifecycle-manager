@@ -15,9 +15,9 @@ import { SortControls } from "../components/SortControls";
 import { useState } from "react";
 import { SortOrder, type SortState } from "../types";
 import { fetchMembers } from "../api/members";
-import { fetchTeam } from "../../teams";
 import { TeamNotFound } from "../../shared/components/TeamNotFound";
 import { InviteDialog } from "../components/InviteDialog";
+import { fetchTeam } from "../../shared/api/teams";
 
 export function Members() {
   const [sort, setSort] = useState<SortState>({

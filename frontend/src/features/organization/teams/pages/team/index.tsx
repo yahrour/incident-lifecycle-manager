@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router";
 import { Spinner } from "@/components/ui/spinner";
-import { fetchTeam } from "../../api/teams";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -19,6 +18,7 @@ import { OnCallPreview } from "../../components/previews/OnCallPreview";
 import { UnavailabilitiesPreview } from "../../components/previews/UnavailabilitiesPreview";
 import { ServicesPreview } from "../../components/previews/ServicesPreview";
 import { MembersPreview } from "@/features/organization/members";
+import { fetchTeam } from "@/features/organization/shared/api/teams";
 
 export function Team() {
   const params = useParams();
