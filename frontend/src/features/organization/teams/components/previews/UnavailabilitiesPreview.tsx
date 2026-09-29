@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router";
-import { fetchUnavailabilitiesPreview } from "../../../api/unavailabilities";
+import { fetchUnavailabilitiesPreview } from "../../api/unavailabilities";
 import { DEFAULT_PREVIEW_LIMIT } from "@/features/organization/shared/constants";
 
 const formatDay = (date: Date | string) => {

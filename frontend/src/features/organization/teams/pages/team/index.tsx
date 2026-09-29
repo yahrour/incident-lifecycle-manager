@@ -10,15 +10,15 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { TeamStats } from "./stats/TeamStats";
-import { EditTeamDialog } from "./dialogs/EditTeamDialog";
-import { DeleteTeamDialog } from "./dialogs/DeleteTeamDialog";
-import { MembersPreview } from "./previews/MembersPreview";
-import { OnCallPreview } from "./previews/OnCallPreview";
-import { UnavailabilitiesPreview } from "./previews/UnavailabilitiesPreview";
-import { ServicesPreview } from "./previews/ServicesPreview";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { TeamNotFound } from "@/features/organization/shared/components/TeamNotFound";
+import { EditTeamDialog } from "../../components/dialogs/EditTeamDialog";
+import { DeleteTeamDialog } from "../../components/dialogs/DeleteTeamDialog";
+import { TeamStats } from "../../components/stats/TeamStats";
+import { MembersPreview } from "../../components/previews/MembersPreview";
+import { OnCallPreview } from "../../components/previews/OnCallPreview";
+import { UnavailabilitiesPreview } from "../../components/previews/UnavailabilitiesPreview";
+import { ServicesPreview } from "../../components/previews/ServicesPreview";
 
 export function Team() {
   const params = useParams();

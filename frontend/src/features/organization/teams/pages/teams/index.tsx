@@ -1,4 +1,4 @@
-import { TeamsTable } from "./TeamsTable";
+import { TeamsTable } from "../../components/tables/TeamsTable";
 import {
   InputGroup,
   InputGroupAddon,
@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/input-group";
 import { Search, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { CreateTeamDialog } from "./dialogs/CreateTeamDialog";
+import { CreateTeamDialog } from "../../components/dialogs/CreateTeamDialog";
 
 export function Teams() {
   const [search, setSearch] = useState("");

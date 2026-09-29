@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchStats } from "../../../api/teams";
+import { fetchStats } from "../../api/teams";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { StatBlock } from "./StatBlock";
