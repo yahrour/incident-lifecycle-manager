@@ -30,22 +30,22 @@ import {
 } from "@/components/ui/combobox";
 import { settingsSchema, type SettingsFormValues } from "../schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { ProfileFormProps } from "../types";
+import type { User } from "@/types";
 import useUpdateProfile from "../hooks/useUpdateProfile";
 import { toast } from "@/components/ui/toast";
 
 const timezones = Intl.supportedValuesOf("timeZone");
 
-export function ProfileForm({ user }: ProfileFormProps) {
+export function ProfileForm({ user }: { user: User }) {
   const { mutate: updateProfile, isPending } = useUpdateProfile();
 
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
-      firstName: user.firstName ?? "",
-      lastName: user.lastName ?? "",
-      timezone: user.timezone ?? "",
-      specialty: user.specialty ?? "",
+      firstName: user.firstName,
+      lastName: user.lastName,
+      timezone: user.timezone,
+      specialty: user.specialty,
     },
   });
 
@@ -61,10 +61,10 @@ export function ProfileForm({ user }: ProfileFormProps) {
     updateProfile(changed, {
       onSuccess: (updatedUser) => {
         form.reset({
-          firstName: updatedUser.firstName ?? "",
-          lastName: updatedUser.lastName ?? "",
-          timezone: updatedUser.timezone ?? "",
-          specialty: updatedUser.specialty ?? "",
+          firstName: updatedUser.firstName,
+          lastName: updatedUser.lastName,
+          timezone: updatedUser.timezone,
+          specialty: updatedUser.specialty,
         });
         toast.add({ title: "Profile updated", type: "success" });
       },

@@ -11,8 +11,8 @@ export type User = {
   lastName: string;
   email: string;
   role: Role;
-  timezone: string | null;
-  specialty: string | null;
+  timezone: string;
+  specialty: string;
   avatarInitials: string;
 };
 

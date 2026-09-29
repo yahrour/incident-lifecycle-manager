@@ -7,7 +7,7 @@ import { Members, Team, Teams } from "@/features/teams";
 import SignIn from "@/features/auth/pages/SignIn";
 import SignUp from "@/features/auth/pages/signUp";
 import { GuestOnly } from "./GuestOnly";
-import SettingPage from "@/features/settings/pages/settings-page";
+import SettingPage from "@/features/settings/pages/settingPage";
 
 export default function AppRoutes() {
   return (
