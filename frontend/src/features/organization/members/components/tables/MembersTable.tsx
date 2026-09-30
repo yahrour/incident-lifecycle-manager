@@ -75,20 +75,19 @@ export function MembersTable({
               <TableCell>
                 {member.user.firstName + " " + member.user.lastName}
               </TableCell>
-              <TableCell>
-                <Badge variant={"warning"} className="uppercase">
+              <TableCell className="text-xs text-muted-foreground">
                   {member.user.role}
-                </Badge>
+                
               </TableCell>
               <TableCell className="text-xs text-muted-foreground">
                 {member.user.specialty}
               </TableCell>
               <TableCell>
                 <Badge
-                  variant={member ? "success" : "warning"}
+                  variant={member.unavailabilities?.length > 0 ? "success" : "warning"}
                   className="uppercase"
                 >
-                  {member ? "Approved" : "Pending"}
+                  {member.unavailabilities.length > 0 ? "AVAILABLE" : "AWAY"}
                 </Badge>
               </TableCell>
               <TableCell className="text-xs text-muted-foreground">
