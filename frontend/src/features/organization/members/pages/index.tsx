@@ -21,7 +21,7 @@ import { fetchTeam } from "../../shared/api/teams";
 export function Members() {
   const { id: teamId } = useParams();
   const [sort, setSort] = useState<SortState>({
-    field: "name",
+    field: "joinedAt",
     order: SortOrder.ASC,
   });
   const [page, setPage] = useState(1);
@@ -76,7 +76,12 @@ export function Members() {
           <SortControls sort={sort} onSortChange={setSort} />
           <InviteDialog team={team} />
         </div>
-        <MembersTable page={page} setPage={setPage} teamId={team.id} />
+        <MembersTable
+          page={page}
+          setPage={setPage}
+          sort={sort}
+          teamId={team.id}
+        />
       </div>
     </div>
   );
