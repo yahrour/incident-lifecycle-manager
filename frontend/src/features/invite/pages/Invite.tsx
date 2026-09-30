@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
-import { useSearchParams } from "react-router";
+import { useSearchParams, Navigate } from "react-router";
 import { XCircle, Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { AcceptInvite } from "../components/AcceptInvite";
 import { useValidateInvite } from "../hooks/useValidate";
+import { RegisterViaInvite } from "../components/RegisterViaInvite";
 
 const muted = "text-center text-sm text-muted-foreground";
 
@@ -68,11 +69,11 @@ export default function InvitePage() {
   if (user) {
     return <AcceptInvite token={token} email={data.email} />;
   }
-  // if (data.isAlreadyRegistered) {
-  //   const back = `/invite?token=${encodeURIComponent(token)}`;
-  //   return (
-  //     <Navigate to={`/login?redirect=${encodeURIComponent(back)}`} replace />
-  //   );
-  // }
-  // return <RegisterViaInvite token={token} email={data.email} />;
+  if (data.isAlreadyRegistered) {
+    const back = `/invite?token=${encodeURIComponent(token)}`;
+    return (
+      <Navigate to={`/login?redirect=${encodeURIComponent(back)}`} replace />
+    );
+  }
+  return <RegisterViaInvite token={token} email={data.email} />;
 }

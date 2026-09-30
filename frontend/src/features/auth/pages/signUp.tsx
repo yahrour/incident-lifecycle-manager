@@ -8,7 +8,7 @@ import {
   FieldError,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { AuthCard } from "../components/AuthCard";
+import { AuthCard } from "@/components/AuthCard";
 import useSignUp from "../hooks/useSignUp";
 import { signUpSchema, type SignUpCredentials } from "../schemas";
 type FieldErrors = Partial<Record<keyof SignUpCredentials, string>>;
