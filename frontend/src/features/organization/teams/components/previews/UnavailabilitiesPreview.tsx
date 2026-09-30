@@ -81,7 +81,7 @@ export function UnavailabilitiesPreview({ teamId }: { teamId: string }) {
                 <div className="shrink-0 text-right">
                   <Badge
                     variant={item.confirmed ? "success" : "warning"}
-                    className={`rounded px-1.5 py-px font-mono text-[10px] uppercase tracking-wide cursor-default`}
+                    className="uppercase"
                   >
                     {item.confirmed ? "Approved" : "Pending"}
                   </Badge>
