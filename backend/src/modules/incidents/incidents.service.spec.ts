@@ -63,7 +63,9 @@ describe("IncidentsService", () => {
     const create = jest.fn();
     const prisma = { incident: { create } } as unknown as PrismaService;
     const getCurrentOnCall = jest.fn().mockResolvedValue({
-      chain: [{ role: "PRIMARY", id: "11111111-1111-4111-8111-111111111111" }],
+      chain: [
+        { position: "PRIMARY", id: "11111111-1111-4111-8111-111111111111" },
+      ],
     });
     const onCall = { getCurrentOnCall } as unknown as OnCallService;
     const service = new IncidentsService(prisma, onCall);
@@ -280,23 +282,23 @@ describe("IncidentsService", () => {
   });
 
   it("acknowledges an open incident and records MTTA", async () => {
+    const findFirst = jest.fn().mockResolvedValue({
+      id: "incident-id",
+      status: "open",
+      assignedToId: "engineer-id",
+      createdAt: new Date(Date.now() - 5_000),
+      team: null,
+    });
     const findUnique = jest
       .fn()
-      .mockResolvedValueOnce({
-        id: "incident-id",
-        status: "open",
-        assignedToId: "engineer-id",
-        createdAt: new Date(Date.now() - 5_000),
-        team: null,
-      })
-      .mockResolvedValueOnce({ id: "incident-id", status: "acknowledged" });
+      .mockResolvedValue({ id: "incident-id", status: "acknowledged" });
     const updates: unknown[] = [];
     const updateMany = jest.fn((args: unknown) => {
       updates.push(args);
       return Promise.resolve({ count: 1 });
     });
     const prisma = {
-      incident: { create: jest.fn(), findUnique, updateMany },
+      incident: { create: jest.fn(), findFirst, findUnique, updateMany },
     } as unknown as PrismaService;
     const onCall = {} as OnCallService;
     const service = new IncidentsService(prisma, onCall);
@@ -325,7 +327,7 @@ describe("IncidentsService", () => {
   });
 
   it("rejects acknowledgement when the incident is reassigned during the update", async () => {
-    const findUnique = jest.fn().mockResolvedValue({
+    const findFirst = jest.fn().mockResolvedValue({
       id: "incident-id",
       status: "open",
       assignedToId: "engineer-id",
@@ -334,7 +336,7 @@ describe("IncidentsService", () => {
     });
     const updateMany = jest.fn().mockResolvedValue({ count: 0 });
     const prisma = {
-      incident: { findUnique, updateMany },
+      incident: { findFirst, updateMany },
     } as unknown as PrismaService;
     const service = new IncidentsService(prisma, {} as OnCallService);
 
@@ -348,18 +350,18 @@ describe("IncidentsService", () => {
   });
 
   it("resolves an acknowledged incident and records MTTR", async () => {
+    const findFirst = jest.fn().mockResolvedValue({
+      id: "incident-id",
+      status: "acknowledged",
+      assignedToId: "engineer-id",
+      createdAt: new Date(Date.now() - 5_000),
+    });
     const findUnique = jest
       .fn()
-      .mockResolvedValueOnce({
-        id: "incident-id",
-        status: "acknowledged",
-        assignedToId: "engineer-id",
-        createdAt: new Date(Date.now() - 5_000),
-      })
-      .mockResolvedValueOnce({ id: "incident-id", status: "resolved" });
+      .mockResolvedValue({ id: "incident-id", status: "resolved" });
     const updateMany = jest.fn().mockResolvedValue({ count: 1 });
     const prisma = {
-      incident: { create: jest.fn(), findUnique, updateMany },
+      incident: { create: jest.fn(), findFirst, findUnique, updateMany },
     } as unknown as PrismaService;
     const onCall = {} as OnCallService;
     const service = new IncidentsService(prisma, onCall);
@@ -404,7 +406,7 @@ describe("IncidentsService", () => {
       incidentAlert: { create: incidentAlertCreate },
     } as unknown as PrismaService;
     const getCurrentOnCall = jest.fn().mockResolvedValue({
-      chain: [{ role: "PRIMARY", id: "primary-id" }],
+      chain: [{ position: "PRIMARY", id: "primary-id" }],
     });
     const service = new IncidentsService(prisma, {
       getCurrentOnCall,
@@ -558,7 +560,7 @@ describe("IncidentsService", () => {
     const updateMany = jest.fn();
     const prisma = {
       incident: {
-        findUnique: jest.fn().mockResolvedValue({
+        findFirst: jest.fn().mockResolvedValue({
           id: "incident-id",
           status: "open",
           assignedToId: "engineer-id",
@@ -573,5 +575,37 @@ describe("IncidentsService", () => {
       service.resolve("engineer-id", "incident-id")
     ).rejects.toBeInstanceOf(ConflictException);
     expect(updateMany).not.toHaveBeenCalled();
+  });
+
+  it("hides inaccessible incidents from acknowledge and resolve", async () => {
+    // The lookup is scoped to incidents the user may see, so an outsider gets a
+    // 404 and cannot tell a real incident id from a made-up one.
+    const findFirst = jest.fn().mockResolvedValue(null);
+    const updateMany = jest.fn();
+    const prisma = {
+      incident: { findFirst, updateMany },
+    } as unknown as PrismaService;
+    const service = new IncidentsService(prisma, {} as OnCallService);
+
+    await expect(
+      service.acknowledge("outsider-id", "incident-id")
+    ).rejects.toBeInstanceOf(NotFoundException);
+    await expect(
+      service.resolve("outsider-id", "incident-id")
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    expect(updateMany).not.toHaveBeenCalled();
+    expect(findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          id: "incident-id",
+          OR: [
+            { assignedToId: "outsider-id" },
+            { team: { ownerId: "outsider-id" } },
+            { team: { teamMembers: { some: { userId: "outsider-id" } } } },
+          ],
+        }) as unknown,
+      })
+    );
   });
 });

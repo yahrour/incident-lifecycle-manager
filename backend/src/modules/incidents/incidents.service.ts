@@ -46,17 +46,23 @@ export class IncidentsService {
     }
   }
 
+  // Incidents a user may see: their own, or any belonging to a team they own or
+  // are a member of.
+  private accessibleBy(userId: string): Prisma.IncidentWhereInput {
+    return {
+      OR: [
+        { assignedToId: userId },
+        { team: { ownerId: userId } },
+        { team: { teamMembers: { some: { userId } } } },
+      ],
+    };
+  }
+
   async findAll(userId: string, query: FindIncidentsDto) {
     const cursor = query.cursor ? this.decodeCursor(query.cursor) : undefined;
     const where: Prisma.IncidentWhereInput = {
       AND: [
-        {
-          OR: [
-            { assignedToId: userId },
-            { team: { ownerId: userId } },
-            { team: { teamMembers: { some: { userId } } } },
-          ],
-        },
+        this.accessibleBy(userId),
         ...(query.status ? [{ status: query.status }] : []),
         ...(query.severity ? [{ severity: query.severity }] : []),
         ...(query.teamId ? [{ teamId: query.teamId }] : []),
@@ -112,14 +118,7 @@ export class IncidentsService {
 
   async findOne(userId: string, incidentId: string) {
     const incident = await this.prisma.incident.findFirst({
-      where: {
-        id: incidentId,
-        OR: [
-          { assignedToId: userId },
-          { team: { ownerId: userId } },
-          { team: { teamMembers: { some: { userId } } } },
-        ],
-      },
+      where: { id: incidentId, ...this.accessibleBy(userId) },
       include: {
         team: true,
         assignedTo: {
@@ -171,14 +170,7 @@ export class IncidentsService {
 
   async createNote(userId: string, incidentId: string, content: string) {
     const incident = await this.prisma.incident.findFirst({
-      where: {
-        id: incidentId,
-        OR: [
-          { assignedToId: userId },
-          { team: { ownerId: userId } },
-          { team: { teamMembers: { some: { userId } } } },
-        ],
-      },
+      where: { id: incidentId, ...this.accessibleBy(userId) },
       select: { id: true },
     });
 
@@ -200,7 +192,7 @@ export class IncidentsService {
       ownerId
     );
     const assigneeUserId = onCall?.chain.find(
-      ({ role }) => role === "PRIMARY"
+      ({ position }) => position === "PRIMARY"
     )?.id;
 
     if (!assigneeUserId) {
@@ -275,8 +267,9 @@ export class IncidentsService {
             "low",
           fingerprint,
           openFingerprint: fingerprint,
-          assignedToId: onCall?.chain.find(({ role }) => role === "PRIMARY")
-            ?.id,
+          assignedToId: onCall?.chain.find(
+            ({ position }) => position === "PRIMARY"
+          )?.id,
         },
         select: { id: true },
       });
@@ -337,8 +330,8 @@ export class IncidentsService {
   }
 
   async acknowledge(userId: string, incidentId: string) {
-    const incident = await this.prisma.incident.findUnique({
-      where: { id: incidentId },
+    const incident = await this.prisma.incident.findFirst({
+      where: { id: incidentId, ...this.accessibleBy(userId) },
       include: { team: true },
     });
 
@@ -374,8 +367,8 @@ export class IncidentsService {
   }
 
   async resolve(userId: string, incidentId: string) {
-    const incident = await this.prisma.incident.findUnique({
-      where: { id: incidentId },
+    const incident = await this.prisma.incident.findFirst({
+      where: { id: incidentId, ...this.accessibleBy(userId) },
     });
 
     if (!incident) {
