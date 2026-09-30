@@ -17,3 +17,13 @@ export async function fetchMembers(id: string, page: number) {
   );
   return response.data;
 }
+
+export async function removeMember({
+  teamId,
+  memberId,
+}: {
+  teamId: string;
+  memberId: number;
+}) {
+  await apiClient.delete(`/teams/${teamId}/members/${memberId}`);
+}
