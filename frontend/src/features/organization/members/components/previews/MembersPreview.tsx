@@ -10,14 +10,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router";
 import { fetchMembersPreview } from "@/features/organization/members/api/members";
-
-const formatJoined = (date: Date | string) => {
-  return new Date(date).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-};
+import { formatJoined } from "../../utils/time";
 
 export function MembersPreview({ teamId }: { teamId: string }) {
   const { data, isPending, isError, refetch } = useQuery({

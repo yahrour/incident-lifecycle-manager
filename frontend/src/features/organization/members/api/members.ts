@@ -1,6 +1,6 @@
 import { apiClient } from "@/lib/apiClient";
 import type { ApiResponse } from "@/types";
-import { DEFAULT_PREVIEW_LIMIT } from "../../shared/constants";
+import { DEFAULT_LIMIT, DEFAULT_PREVIEW_LIMIT } from "../../shared/constants";
 import type { Member } from "../../shared/types";
 
 export async function fetchMembersPreview(id: string) {
@@ -10,9 +10,10 @@ export async function fetchMembersPreview(id: string) {
   return response.data;
 }
 
-export async function fetchMembers(id: string) {
+export async function fetchMembers(id: string, page: number) {
+  const offset = (page - 1) * DEFAULT_LIMIT;
   const response = await apiClient.get<ApiResponse<Member[]>>(
-    `/teams/${id}/members`
+    `/teams/${id}/members?offset=${offset}&limit=${DEFAULT_LIMIT}`
   );
   return response.data;
 }
