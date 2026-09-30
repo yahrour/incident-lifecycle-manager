@@ -16,12 +16,16 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { DEFAULT_LIMIT } from "@/features/organization/shared/constants";
-import { useQuery } from "@tanstack/react-query";
-import { fetchMembers } from "../../api/members";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { fetchMembers, removeMember } from "../../api/members";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
 import { formatJoined } from "../../utils/time";
+import { Trash } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/toast";
+import { queryClient } from "@/lib/queryClient";
 
 export function MembersTable({
   teamId,
@@ -35,6 +39,34 @@ export function MembersTable({
   const { data, isPending, isError } = useQuery({
     queryKey: ["teams", "members", teamId, page],
     queryFn: () => fetchMembers(teamId, page),
+  });
+
+  const mutation = useMutation({
+    mutationFn: ({ teamId, memberId }: { teamId: string; memberId: number }) =>
+      removeMember({ teamId, memberId }),
+    onSuccess: () => {
+      toast.add({
+        type: "success",
+        title: "Team member removed",
+        description: "The team member was successfully removed from your team",
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ["teams"],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ["team", teamId],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ["members", teamId],
+      });
+    },
+    onError: () => {
+      toast.add({
+        type: "error",
+        title: "Failed to remove team member",
+        description: "We couldn't remove the team member. Please try again",
+      });
+    },
   });
 
   useErrorToast(isError, "failed to load members");
@@ -55,6 +87,11 @@ export function MembersTable({
   const isFirstPage = page === 1;
   const isLastPage = page * DEFAULT_LIMIT >= totalMembers;
 
+  const handleRemove = (memberId: number) => {
+    console.log({ teamId, memberId });
+    mutation.mutate({ teamId, memberId });
+  };
+
   return (
     <>
       <Table>
@@ -65,6 +102,7 @@ export function MembersTable({
             <TableHead>Specialty</TableHead>
             <TableHead>Availability</TableHead>
             <TableHead>Joined</TableHead>
+            <TableHead className="w-16">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -73,29 +111,38 @@ export function MembersTable({
 
             return (
               <TableRow key={member.id}>
-              <TableCell>
-                {member.user.firstName + " " + member.user.lastName}
-              </TableCell>
-              <TableCell className="text-xs text-muted-foreground">
+                <TableCell>
+                  {member.user.firstName + " " + member.user.lastName}
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">
                   {member.user.role}
-                
-              </TableCell>
-              <TableCell className="text-xs text-muted-foreground">
-                {member.user.specialty}
-              </TableCell>
-              <TableCell>
-                <Badge
-                  variant={isAway ? "warning" : "success"}
-                  className="uppercase"
-                >
-                  {isAway ? "AWAY" : "AVAILABLE"}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-xs text-muted-foreground">
-                {formatJoined(member.joinedAt)}
-              </TableCell>
-            </TableRow>
-            )
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  {member.user.specialty}
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    variant={isAway ? "warning" : "success"}
+                    className="uppercase"
+                  >
+                    {isAway ? "AWAY" : "AVAILABLE"}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  {formatJoined(member.joinedAt)}
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="destructive"
+                    className="bg-transparent"
+                    onClick={() => handleRemove(member.id)}
+                    disabled={mutation.isPending}
+                  >
+                    {mutation.isPending ? <Spinner /> : <Trash />}
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
           })}
         </TableBody>
       </Table>
