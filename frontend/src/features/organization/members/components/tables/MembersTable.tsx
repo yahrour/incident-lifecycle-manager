@@ -28,13 +28,13 @@ export function MembersTable({
   page,
   setPage,
 }: {
-  teamId: string | undefined;
+  teamId: string;
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
 }) {
   const { data, isPending, isError } = useQuery({
     queryKey: ["teams", "members", teamId, page],
-    queryFn: () => fetchMembers(teamId as string, page),
+    queryFn: () => fetchMembers(teamId, page),
   });
 
   useErrorToast(isError, "failed to load members");
@@ -55,8 +55,6 @@ export function MembersTable({
   const isFirstPage = page === 1;
   const isLastPage = page * DEFAULT_LIMIT >= totalMembers;
 
-  console.log("members: ", members);
-
   return (
     <>
       <Table>
@@ -70,32 +68,34 @@ export function MembersTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {members.map((member) => (
-            <TableRow key={member.id}>
-              <TableCell>
-                {member.user.firstName + " " + member.user.lastName}
-              </TableCell>
-              <TableCell>
-                <Badge variant={"warning"} className="uppercase">
+          {members.map((member) => {
+            const isAway = member.unavailabilities.length > 0;
+
+            return (
+              <TableRow key={member.id}>
+                <TableCell>
+                  {member.user.firstName + " " + member.user.lastName}
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">
                   {member.user.role}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-xs text-muted-foreground">
-                {member.user.specialty}
-              </TableCell>
-              <TableCell>
-                <Badge
-                  variant={member ? "success" : "warning"}
-                  className="uppercase"
-                >
-                  {member ? "Approved" : "Pending"}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-xs text-muted-foreground">
-                {formatJoined(member.joinedAt)}
-              </TableCell>
-            </TableRow>
-          ))}
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  {member.user.specialty}
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    variant={isAway ? "warning" : "success"}
+                    className="uppercase"
+                  >
+                    {isAway ? "AWAY" : "AVAILABLE"}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  {formatJoined(member.joinedAt)}
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
       <Pagination>

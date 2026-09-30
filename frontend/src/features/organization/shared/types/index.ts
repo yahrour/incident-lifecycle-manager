@@ -25,16 +25,17 @@ export type Member = {
   teamId: string;
   id: number;
   joinedAt: Date;
+  unavailabilities: Omit<Unavailability, "teamMember">[];
 };
 
 export type Unavailability = {
   id: number;
+  memberId: number;
   startDate: Date;
   endDate: Date;
   reason: string | null;
-  confirmed: boolean;
   createdAt: Date;
-  memberId: number;
+  confirmed: boolean;
   teamMember: {
     id: number;
     user: User;
