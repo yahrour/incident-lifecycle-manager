@@ -26,6 +26,7 @@ import { Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { queryClient } from "@/lib/queryClient";
+import { useState } from "react";
 
 export function MembersTable({
   teamId,
@@ -36,6 +37,7 @@ export function MembersTable({
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
 }) {
+  const [pendingMemberId, setPendingMemberId] = useState<number | null>(null);
   const { data, isPending, isError } = useQuery({
     queryKey: ["teams", "members", teamId, page],
     queryFn: () => fetchMembers(teamId, page),
@@ -67,6 +69,9 @@ export function MembersTable({
         description: "We couldn't remove the team member. Please try again",
       });
     },
+    onSettled: () => {
+      setPendingMemberId(null);
+    },
   });
 
   useErrorToast(isError, "failed to load members");
@@ -89,6 +94,7 @@ export function MembersTable({
 
   const handleRemove = (memberId: number) => {
     console.log({ teamId, memberId });
+    setPendingMemberId(memberId);
     mutation.mutate({ teamId, memberId });
   };
 
@@ -138,7 +144,11 @@ export function MembersTable({
                     onClick={() => handleRemove(member.id)}
                     disabled={mutation.isPending}
                   >
-                    {mutation.isPending ? <Spinner /> : <Trash />}
+                    {pendingMemberId === member.id && mutation.isPending ? (
+                      <Spinner />
+                    ) : (
+                      <Trash />
+                    )}
                   </Button>
                 </TableCell>
               </TableRow>
