@@ -31,8 +31,9 @@ export class InviteController {
 
   @Public()
   @Get("validate")
-  validate(@Query("token") token: string) {
-    return this.inviteService.validateToken(token);
+  async validate(@Query("token") token: string) {
+    const data = await this.inviteService.validateToken(token);
+    return apiResponse(data);
   }
 
   @Public()

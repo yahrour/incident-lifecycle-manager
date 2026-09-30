@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useSearchParams } from "react-router";
 import { XCircle, Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth";
+import { useValidateInvite } from "../hooks/useValidate";
 
 const muted = "text-center text-sm text-muted-foreground";
 
@@ -27,7 +28,7 @@ export default function InvitePage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
   const { user, isLoading: authLoading } = useAuth();
-  // const { data, isPending, error } = useValidateInvite(token);
+  const { isPending } = useValidateInvite(token);
 
   if (!token) {
     return (
@@ -40,7 +41,7 @@ export default function InvitePage() {
     );
   }
 
-  if (authLoading) {
+  if (authLoading || isPending) {
     return (
       <StatusScreen
         icon={
