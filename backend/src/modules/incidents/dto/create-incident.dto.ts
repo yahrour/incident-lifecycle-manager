@@ -19,7 +19,7 @@ export class CreateIncidentDto {
   @Transform(trim)
   @IsString()
   @IsNotEmpty()
-  @MaxLength(100, { message: "service must not exceed 100 characters" })
+  @MaxLength(25, { message: "service must not exceed 25 characters" })
   service: string;
 
   @IsIn(INCIDENT_SEVERITIES)
