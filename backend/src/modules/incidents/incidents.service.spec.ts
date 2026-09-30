@@ -63,7 +63,9 @@ describe("IncidentsService", () => {
     const create = jest.fn();
     const prisma = { incident: { create } } as unknown as PrismaService;
     const getCurrentOnCall = jest.fn().mockResolvedValue({
-      chain: [{ role: "PRIMARY", id: "11111111-1111-4111-8111-111111111111" }],
+      chain: [
+        { position: "PRIMARY", id: "11111111-1111-4111-8111-111111111111" },
+      ],
     });
     const onCall = { getCurrentOnCall } as unknown as OnCallService;
     const service = new IncidentsService(prisma, onCall);
@@ -404,7 +406,7 @@ describe("IncidentsService", () => {
       incidentAlert: { create: incidentAlertCreate },
     } as unknown as PrismaService;
     const getCurrentOnCall = jest.fn().mockResolvedValue({
-      chain: [{ role: "PRIMARY", id: "primary-id" }],
+      chain: [{ position: "PRIMARY", id: "primary-id" }],
     });
     const service = new IncidentsService(prisma, {
       getCurrentOnCall,
