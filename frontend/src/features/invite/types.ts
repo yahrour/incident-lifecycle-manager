@@ -1,4 +1,4 @@
-export type InviteValidation = {
+export type InviteProps = {
   email: string;
   isAlreadyRegistered: boolean;
 };

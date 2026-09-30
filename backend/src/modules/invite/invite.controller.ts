@@ -43,10 +43,10 @@ export class InviteController {
   }
 
   @Post("accept")
-  acceptInvite(
+  async acceptInvite(
     @Body("token") token: string,
     @ActiveUser() activeUser: ActiveUserData
   ) {
-    return this.inviteService.accept(token, activeUser);
+    await this.inviteService.accept(token, activeUser);
   }
 }
