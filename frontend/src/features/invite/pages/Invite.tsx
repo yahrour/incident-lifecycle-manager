@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useSearchParams } from "react-router";
 import { XCircle, Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth";
+import { AcceptInvite } from "../components/AcceptInvite";
 import { useValidateInvite } from "../hooks/useValidate";
 
 const muted = "text-center text-sm text-muted-foreground";
@@ -28,7 +29,7 @@ export default function InvitePage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
   const { user, isLoading: authLoading } = useAuth();
-  const { isPending } = useValidateInvite(token);
+  const { data, isPending, isError } = useValidateInvite(token);
 
   if (!token) {
     return (
@@ -54,8 +55,18 @@ export default function InvitePage() {
     );
   }
 
+  if (isError) {
+    return (
+      <StatusScreen
+        icon={<XCircle className="mx-auto size-12 text-destructive" />}
+        title="Invalid invite link"
+      >
+        <p className={muted}>This invite is invalid or has expired.</p>
+      </StatusScreen>
+    );
+  }
   if (user) {
-    // return <AcceptInvite token={token} email={data.email} />;
+    return <AcceptInvite token={token} email={data.email} />;
   }
   // if (data.isAlreadyRegistered) {
   //   const back = `/invite?token=${encodeURIComponent(token)}`;

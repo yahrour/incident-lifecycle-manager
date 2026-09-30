@@ -163,14 +163,13 @@ export class InviteService {
           data: { used: true },
         });
       });
-
-      return { success: true, message: "Successfully joined the team!" };
     } catch {
       throw new InternalServerErrorException(
         "Failed to join the team. Please try again."
       );
     }
   }
+
   private async findAndValidateToken(rawToken: string): Promise<InviteToken> {
     const hashedToken = hashToken(rawToken);
 
