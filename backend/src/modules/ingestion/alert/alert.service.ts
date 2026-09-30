@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { createHash } from "crypto";
 import { PrismaService } from "@/common/prisma/prisma.service";
+import { IncidentsService } from "@/modules/incidents/incidents.service";
 import { CommonAlert } from "./common/common-alert";
 import { PrometheusAdapter } from "./providers/prometheus/prometheus.adapter";
 import { PrometheusAlertmanagerPayload } from "./providers/prometheus/dto/prometheus-alertmanager.dto";
@@ -9,15 +10,16 @@ import { PrometheusAlertmanagerPayload } from "./providers/prometheus/dto/promet
 export class AlertService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly prometheusAdapter: PrometheusAdapter
+    private readonly prometheusAdapter: PrometheusAdapter,
+    private readonly incidents: IncidentsService
   ) {}
 
   private hashApiKey(rawKey: string) {
     return createHash("sha256").update(rawKey).digest("hex");
   }
 
-  async verifyApiKey(providedKey?: string): Promise<boolean> {
-    if (!providedKey) return false;
+  async verifyApiKey(providedKey?: string): Promise<string | null> {
+    if (!providedKey) return null;
 
     const keyHash = this.hashApiKey(providedKey);
 
@@ -25,14 +27,14 @@ export class AlertService {
       where: { keyHash },
     });
 
-    if (!apiKey || !apiKey.enabled) return false;
+    if (!apiKey || !apiKey.enabled) return null;
 
-    if (apiKey.expiresAt && new Date() > apiKey.expiresAt) return false;
+    if (apiKey.expiresAt && new Date() > apiKey.expiresAt) return null;
 
-    return true;
+    return apiKey.ownerId;
   }
 
-  async ingestAlert(provider: string, payload: unknown) {
+  async ingestAlert(ownerId: string, provider: string, payload: unknown) {
     const normalized = this.normalizeAlert(provider, payload);
     const alert = await this.prisma.alert.create({
       data: {
@@ -41,15 +43,23 @@ export class AlertService {
         service: normalized.serviceName,
         message: normalized.message,
         severity: normalized.severity,
+        status: normalized.status,
         occurredAt: normalized.occurredAt,
         payload: payload as object,
       },
     });
 
+    const incidentId = await this.incidents.createFromAlert(
+      ownerId,
+      alert.id,
+      normalized
+    );
+
     return {
       ...normalized,
       id: alert.id,
       receivedAt: alert.receivedAt,
+      incidentId,
     };
   }
 

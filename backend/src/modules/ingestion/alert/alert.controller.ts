@@ -23,10 +23,10 @@ export class AlertController {
     @Headers("x-api-key") apiKey: string,
     @Body() payload: unknown
   ) {
-    const trusted = await this.alert.verifyApiKey(apiKey);
+    const ownerId = await this.alert.verifyApiKey(apiKey);
 
-    if (!trusted) throw new UnauthorizedException("Invalid ingestion API key");
+    if (!ownerId) throw new UnauthorizedException("Invalid ingestion API key");
 
-    return this.alert.ingestAlert(provider, payload);
+    return this.alert.ingestAlert(ownerId, provider, payload);
   }
 }
