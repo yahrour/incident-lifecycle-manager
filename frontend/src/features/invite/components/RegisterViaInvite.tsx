@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { AuthCard } from "@/components/AuthCard";
 
-import { useRegisterViaInvite } from "../hooks/useAccpetInvite";
+import { useRegisterViaInvite } from "../hooks/useRegisterViaInvite";
 import {
   registerViaInviteSchema,
   type RegisterViaInviteValues,
