@@ -32,8 +32,8 @@ export class InviteController {
 
   @Public()
   @Get("validate")
-  async validate(@Query("token") token: string) {
-    const data = await this.inviteService.validateToken(token);
+  async validate(@Query() dto: AcceptInviteDto) {
+    const data = await this.inviteService.validateToken(dto.token);
     return apiResponse(data);
   }
 
@@ -45,7 +45,7 @@ export class InviteController {
 
   @Post("accept")
   async acceptInvite(
-    @Body("token") dto: AcceptInviteDto,
+    @Body() dto: AcceptInviteDto,
     @ActiveUser() activeUser: ActiveUserData
   ) {
     await this.inviteService.accept(dto.token, activeUser);
