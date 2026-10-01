@@ -3,22 +3,15 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { isAxiosError } from "axios";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { AuthCard } from "@/components/AuthCard";
 
 import { useRegisterViaInvite } from "../hooks/useAccpetInvite";
 import {
@@ -62,130 +55,159 @@ export function RegisterViaInvite({ email, token }: RegisterViaInviteProps) {
   }
 
   if (isSuccess) {
-    return <div>Succes</div>;
+    return (
+      <AuthCard>
+        <h1 className="font-heading tracking-tight">Account created</h1>
+        <p className="text-center text-sm text-muted-foreground">
+          Sign in with {email} to join your team.
+        </p>
+        <Link
+          to="/login"
+          className="text-center text-sm font-medium text-primary hover:underline"
+        >
+          Sign in
+        </Link>
+      </AuthCard>
+    );
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Create an account</CardTitle>
-        <CardDescription>You have been invited to join a team.</CardDescription>
-      </CardHeader>
+    <AuthCard>
+      <h1 className="font-heading tracking-tight">Join your team</h1>
 
-      <form onSubmit={(e) => void form.handleSubmit(onSubmit)(e)} noValidate>
-        <CardContent>
-          <FieldGroup>
-            <div className="grid gap-4 md:grid-cols-2">
-              <Controller
-                name="firstName"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="firstName">First name</FieldLabel>
-                    <Input
-                      {...field}
-                      id="firstName"
-                      autoComplete="given-name"
-                      aria-invalid={fieldState.invalid}
-                    />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
-              <Controller
-                name="lastName"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="lastName">Last name</FieldLabel>
-                    <Input
-                      {...field}
-                      id="lastName"
-                      autoComplete="family-name"
-                      aria-invalid={fieldState.invalid}
-                    />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
-            </div>
-
-            <Field>
-              <FieldLabel htmlFor="email">Work email</FieldLabel>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                readOnly
-                className="bg-muted text-muted-foreground"
-              />
-            </Field>
-
+      <form
+        onSubmit={(e) => void form.handleSubmit(onSubmit)(e)}
+        noValidate
+        className="flex flex-col gap-4"
+      >
+        <FieldGroup className="gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <Controller
-              name="password"
+              name="firstName"
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
+                  <FieldLabel htmlFor="firstName" className="text-foreground">
+                    First name
+                  </FieldLabel>
                   <Input
                     {...field}
-                    id="password"
-                    type="password"
-                    autoComplete="new-password"
+                    id="firstName"
+                    autoComplete="given-name"
                     aria-invalid={fieldState.invalid}
                   />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
+                  {fieldState.error && (
+                    <FieldError className="flex items-center gap-1.5">
+                      {fieldState.error.message}
+                    </FieldError>
                   )}
                 </Field>
               )}
             />
 
             <Controller
-              name="specialty"
+              name="lastName"
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="specialty">Specialty</FieldLabel>
+                  <FieldLabel htmlFor="lastName" className="text-foreground">
+                    Last name
+                  </FieldLabel>
                   <Input
                     {...field}
-                    id="specialty"
-                    placeholder="e.g. Backend, Frontend, DevOps"
+                    id="lastName"
+                    autoComplete="family-name"
                     aria-invalid={fieldState.invalid}
                   />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
+                  {fieldState.error && (
+                    <FieldError className="flex items-center gap-1.5">
+                      {fieldState.error.message}
+                    </FieldError>
                   )}
                 </Field>
               )}
             />
-          </FieldGroup>
-        </CardContent>
+          </div>
 
-        <CardFooter className="flex flex-col gap-4">
-          {error && (
-            <p className="text-sm text-destructive">
-              {getRegisterErrorMessage(error)}
-            </p>
-          )}
-          <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? "Creating account..." : "Create account"}
-          </Button>
-          <p className="text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              className="font-medium text-primary hover:underline"
-            >
-              Sign in
-            </Link>
+          <Field>
+            <FieldLabel htmlFor="email" className="text-foreground">
+              Work email
+            </FieldLabel>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              readOnly
+              tabIndex={-1}
+              className="bg-muted text-muted-foreground"
+            />
+          </Field>
+
+          <Controller
+            name="password"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="password" className="text-foreground">
+                  Password
+                </FieldLabel>
+                <Input
+                  {...field}
+                  id="password"
+                  type="password"
+                  autoComplete="new-password"
+                  aria-invalid={fieldState.invalid}
+                />
+                {fieldState.error && (
+                  <FieldError className="flex items-center gap-1.5">
+                    {fieldState.error.message}
+                  </FieldError>
+                )}
+              </Field>
+            )}
+          />
+
+          <Controller
+            name="specialty"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="specialty" className="text-foreground">
+                  Specialty
+                </FieldLabel>
+                <Input
+                  {...field}
+                  id="specialty"
+                  placeholder="e.g. Backend, Frontend, DevOps"
+                  aria-invalid={fieldState.invalid}
+                />
+                {fieldState.error && (
+                  <FieldError className="flex items-center gap-1.5">
+                    {fieldState.error.message}
+                  </FieldError>
+                )}
+              </Field>
+            )}
+          />
+        </FieldGroup>
+
+        {error && (
+          <p role="alert" className="text-sm text-destructive">
+            {getRegisterErrorMessage(error)}
           </p>
-        </CardFooter>
+        )}
+
+        <Button type="submit" className="w-full" disabled={isPending}>
+          {isPending ? "Creating account..." : "Create account"}
+        </Button>
       </form>
-    </Card>
+
+      <p className="text-center text-sm text-muted-foreground">
+        Already have an account?{" "}
+        <Link to="/login" className="font-medium text-primary hover:underline">
+          Sign in
+        </Link>
+      </p>
+    </AuthCard>
   );
 }
