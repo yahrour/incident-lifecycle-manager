@@ -6,7 +6,7 @@ function useAuthSuccess() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   return async () => {
-    await queryClient.invalidateQueries({ queryKey: ["me"] });
+    await queryClient.invalidateQueries({ queryKey: ["session"] });
     await navigate("/", { replace: true });
   };
 }

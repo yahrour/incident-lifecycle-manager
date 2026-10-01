@@ -10,6 +10,11 @@ export async function getMe(): Promise<User | null> {
   return data.data;
 }
 
+export async function getSession(): Promise<User | null> {
+  const { data } = await apiClient.get<{ user: User | null }>("/auth/session");
+  return data.user;
+}
+
 export async function signIn({
   email,
   password,
