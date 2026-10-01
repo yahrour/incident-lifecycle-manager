@@ -9,7 +9,7 @@ export default function useLogout() {
   return useMutation({
     mutationFn: logout,
     onSettled: () => {
-      queryClient.setQueryData(["me"], null);
+      queryClient.setQueryData(["session"], null);
       void navigate("/login", { replace: true });
     },
   });
