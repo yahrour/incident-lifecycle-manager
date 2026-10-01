@@ -21,15 +21,13 @@ export function SortControls({
       <Select
         value={sort.field}
         onValueChange={(field) => {
-          if (field) onSortChange({ field, order: sort.order });
+          if (field) onSortChange({ field: "joinedAt", order: sort.order });
         }}
       >
         <SelectTrigger className="w-40">
           <SelectValue placeholder="Sort by" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="name">Name</SelectItem>
-          <SelectItem value="specialty">Specialty</SelectItem>
           <SelectItem value="joinedAt">Date joined</SelectItem>
         </SelectContent>
       </Select>
