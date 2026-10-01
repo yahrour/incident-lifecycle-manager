@@ -6,22 +6,61 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useQuery } from "@tanstack/react-query";
-import { fetchUnavailabilities } from "../../api/unavailabilities";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  confirmUnavailability,
+  fetchUnavailabilities,
+  rejectUnavailability,
+} from "../../api/unavailabilities";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { Spinner } from "@/components/ui/spinner";
 import { NoUnavailabilitiesState } from "../NoUnavailabilitiesState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDuration } from "../../utils/time";
+import { queryClient } from "@/lib/queryClient";
 
-export function UnavailabilitiesTable({teamId}: {teamId: string}) {
+export function UnavailabilitiesTable({ teamId }: { teamId: string }) {
   const { data, isPending, isError } = useQuery({
     queryKey: ["teams", "unavailabilities", teamId],
-    queryFn: () => fetchUnavailabilities(teamId, {field: "confirmed", order: "desc"})
-  })
+    queryFn: () =>
+      fetchUnavailabilities(teamId, { field: "confirmed", order: "desc" }),
+  });
 
-    useErrorToast(isError, "failed to load members");
+  const confirmMutation = useMutation({
+    mutationFn: ({
+      teamId,
+      memberId,
+      unavailabilityId,
+    }: {
+      teamId: string;
+      memberId: number;
+      unavailabilityId: number;
+    }) => confirmUnavailability(teamId, memberId, unavailabilityId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["teams", "unavailabilities", teamId],
+      });
+    },
+  });
+  const rejectMutation = useMutation({
+    mutationFn: ({
+      teamId,
+      memberId,
+      unavailabilityId,
+    }: {
+      teamId: string;
+      memberId: number;
+      unavailabilityId: number;
+    }) => rejectUnavailability(teamId, memberId, unavailabilityId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["teams", "unavailabilities", teamId],
+      });
+    },
+  });
+
+  useErrorToast(isError, "failed to load members");
 
   if (isPending) {
     return (
@@ -35,8 +74,14 @@ export function UnavailabilitiesTable({teamId}: {teamId: string}) {
     return <NoUnavailabilitiesState />;
   }
 
-  console.log("unavailabil: ", unavailabilities)
+  console.log("unavailabil: ", unavailabilities);
 
+  const handleConfirm = (unavailabilityId: number, memberId: number) => {
+    confirmMutation.mutate({ teamId, memberId, unavailabilityId });
+  };
+  const handleReject = (unavailabilityId: number, memberId: number) => {
+    rejectMutation.mutate({ teamId, memberId, unavailabilityId });
+  };
 
   return (
     <Table>
@@ -50,31 +95,53 @@ export function UnavailabilitiesTable({teamId}: {teamId: string}) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {
-          unavailabilities.map((unavailability) => (
-            <TableRow
-                key={unavailability.id}
-                className="w-full"
+        {unavailabilities.map((unavailability) => (
+          <TableRow key={unavailability.id} className="w-full">
+            <TableCell className="font-medium text-sm flex-1">
+              {unavailability.teamMember.user.firstName +
+                " " +
+                unavailability.teamMember.user.lastName}
+            </TableCell>
+            <TableCell className="text-xs">
+              {formatDuration(unavailability.startDate, unavailability.endDate)}
+            </TableCell>
+            <TableCell className="text-xs text-muted-foreground">
+              {unavailability.reason}
+            </TableCell>
+            <TableCell>
+              {unavailability.status === "PENDING" ? (
+                <Badge variant="warning">PENDING</Badge>
+              ) : unavailability.status === "APPROVED" ? (
+                <Badge variant="success">APPROVED</Badge>
+              ) : (
+                <Badge variant="destructive">REJECTED</Badge>
+              )}
+            </TableCell>
+            <TableCell className="text-xs text-right text-muted-foreground space-x-2">
+              <Button
+                size={"xs"}
+                className="bg-success text-xs hover:bg-success/90"
+                onClick={() =>
+                  handleConfirm(unavailability.id, unavailability.memberId)
+                }
+                disabled={unavailability.status !== "PENDING"}
               >
-                <TableCell className="font-medium text-sm flex-1">
-                  {unavailability.teamMember.user.firstName + " " + unavailability.teamMember.user.lastName}
-                </TableCell>
-                <TableCell className="text-xs">
-                  {formatDuration(unavailability.startDate, unavailability.endDate)}
-                </TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {unavailability.reason}
-                </TableCell>
-                <TableCell>
-                  {unavailability.status === "PENDING" ? <Badge variant="warning">PENDING</Badge> : unavailability.status === "APPROVED" ? <Badge variant="success">APPROVED</Badge> : <Badge variant="destructive">REJECTED</Badge>}
-                </TableCell>
-                <TableCell className="text-xs text-right text-muted-foreground space-x-2">
-                  <Button size={"xs"} className="bg-success text-xs hover:bg-success/90">Confirm</Button>
-                  <Button size={"xs"} variant="destructive" className="text-xs">Reject</Button>
-                </TableCell>
-              </TableRow>
-          ))
-        }
+                Confirm
+              </Button>
+              <Button
+                size={"xs"}
+                variant="destructive"
+                className="text-xs"
+                onClick={() =>
+                  handleReject(unavailability.id, unavailability.memberId)
+                }
+                disabled={unavailability.status !== "PENDING"}
+              >
+                Reject
+              </Button>
+            </TableCell>
+          </TableRow>
+        ))}
       </TableBody>
     </Table>
   );

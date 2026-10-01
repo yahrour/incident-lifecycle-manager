@@ -8,7 +8,6 @@ export function NoUnavailabilitiesState() {
         <h3 className="font-medium text-sm">No unavailability recorded</h3>
         <p className="text-sm text-muted-foreground">
           Everyone on this team is currently available.
-
         </p>
       </div>
     </div>
