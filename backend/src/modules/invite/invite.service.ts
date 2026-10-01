@@ -3,6 +3,7 @@ import {
   ConflictException,
   ForbiddenException,
   GoneException,
+  HttpException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -152,18 +153,22 @@ export class InviteService {
       );
     }
     try {
-      // OPEN THE TRANSACTION BUBBLE
       await this.prisma.$transaction(async (tx) => {
-        // 1. Add them to the team (Pass 'tx')
         await this.membersService.add(tx, invite.teamId, activeUser.sub);
 
         // 2. Mark the token as used (Use 'tx' instead of this.prisma)
-        await tx.inviteToken.update({
-          where: { id: invite.id },
+        const { count } = await tx.inviteToken.updateMany({
+          where: { id: invite.id, used: false }, // filter here
           data: { used: true },
         });
+        if (count === 0) {
+          throw new ConflictException(
+            "This invite link has already been used."
+          );
+        }
       });
-    } catch {
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
       throw new InternalServerErrorException(
         "Failed to join the team. Please try again."
       );
