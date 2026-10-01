@@ -27,20 +27,23 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { queryClient } from "@/lib/queryClient";
 import { useState } from "react";
+import type { SortState } from "../../types";
 
 export function MembersTable({
   teamId,
   page,
   setPage,
+  sort,
 }: {
   teamId: string;
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
+  sort: SortState;
 }) {
   const [pendingMemberId, setPendingMemberId] = useState<number | null>(null);
   const { data, isPending, isError } = useQuery({
-    queryKey: ["teams", "members", teamId, page],
-    queryFn: () => fetchMembers(teamId, page),
+    queryKey: ["teams", "members", teamId, page, sort],
+    queryFn: () => fetchMembers(teamId, page, sort),
   });
 
   const mutation = useMutation({
@@ -93,7 +96,6 @@ export function MembersTable({
   const isLastPage = page * DEFAULT_LIMIT >= totalMembers;
 
   const handleRemove = (memberId: number) => {
-    console.log({ teamId, memberId });
     setPendingMemberId(memberId);
     mutation.mutate({ teamId, memberId });
   };
