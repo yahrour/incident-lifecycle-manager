@@ -8,6 +8,7 @@ import { Public } from "@/common/decorators/public.decorator";
 import { Roles } from "@/common/decorators/roles.decorator";
 import { Role } from "@/generated/prisma/enums";
 import { apiResponse } from "@/common/utils/api-response";
+import { AcceptInviteDto } from "./dto/accept-invite.dto";
 
 @Controller({
   path: "invite",
@@ -44,9 +45,9 @@ export class InviteController {
 
   @Post("accept")
   async acceptInvite(
-    @Body("token") token: string,
+    @Body("token") dto: AcceptInviteDto,
     @ActiveUser() activeUser: ActiveUserData
   ) {
-    await this.inviteService.accept(token, activeUser);
+    await this.inviteService.accept(dto.token, activeUser);
   }
 }
