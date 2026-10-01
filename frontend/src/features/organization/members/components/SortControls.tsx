@@ -7,7 +7,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { SortOrder, type SortState } from "../types";
+import { type SortState } from "../types";
+import { SortOrder } from "../../shared/types";
 
 export function SortControls({
   sort,
@@ -28,7 +29,7 @@ export function SortControls({
           <SelectValue placeholder="Sort by" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="joinedAt">Date joined</SelectItem>
+          <SelectItem value="joinedAt">Joined at</SelectItem>
         </SelectContent>
       </Select>
 
