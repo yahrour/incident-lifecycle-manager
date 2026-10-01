@@ -1,4 +1,4 @@
-import type { User } from "../../shared/types";
+import type { SortOrder, User } from "../../shared/types";
 
 export type Metrics = {
   organization: {
@@ -34,3 +34,6 @@ export type OnCall = {
   escalationTimeoutMinutes: number;
   chain: ChainUser[];
 } | null;
+
+type SortField = "name" | "rotationPeriodDays" | "createdAt";
+export type SortState = { field: SortField; order: SortOrder };
