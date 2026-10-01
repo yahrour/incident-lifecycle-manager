@@ -34,6 +34,14 @@ model TeamMember {
   @@schema("organization")
 }
 
+enum UnavailabilityStatus {
+  APPROVED
+  PENDING
+  REJECTED
+
+  @@schema("organization")
+}
+
 model Unavailability {
   id         Int        @id @default(autoincrement())
   memberId   Int        @map("member_id")
@@ -43,6 +51,7 @@ model Unavailability {
   reason     String?    @db.VarChar(255)
   createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz
   confirmed  Boolean    @default(false)
+  status    UnavailabilityStatus @default(PENDING)
 
   @@unique([memberId, startDate, endDate], name: "unique_unavailability_window")
   @@map("unavailabilities")
