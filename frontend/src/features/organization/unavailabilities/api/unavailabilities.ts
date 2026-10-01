@@ -21,3 +21,23 @@ export async function fetchUnavailabilities(id: string, sort: SortState) {
   );
   return response.data;
 }
+
+export async function confirmUnavailability(
+  teamId: string,
+  memberId: number,
+  unavailabilityId: number
+) {
+  await apiClient.post(
+    `/teams/${teamId}/members/${memberId}/unavailabilities/${unavailabilityId}/confirm`
+  );
+}
+
+export async function rejectUnavailability(
+  teamId: string,
+  memberId: number,
+  unavailabilityId: number
+) {
+  await apiClient.post(
+    `/teams/${teamId}/members/${memberId}/unavailabilities/${unavailabilityId}/reject`
+  );
+}
