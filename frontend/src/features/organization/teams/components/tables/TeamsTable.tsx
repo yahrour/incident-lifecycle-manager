@@ -23,13 +23,16 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { DEFAULT_LIMIT } from "@/features/organization/shared/constants";
 import { NoTeamsState } from "../NoTeamsState";
+import type { SortState } from "../../types";
 
 export function TeamsTable({
   search,
+  sort,
   page,
   setPage,
 }: {
   search: string;
+  sort: SortState;
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
 }) {
@@ -37,8 +40,8 @@ export function TeamsTable({
   const [teamsQuery, metricsQuery] = useQueries({
     queries: [
       {
-        queryKey: ["teams", page, search],
-        queryFn: () => fetchTeams(page, search),
+        queryKey: ["teams", page, search, sort],
+        queryFn: () => fetchTeams(page, search, sort),
       },
       {
         queryKey: ["teamsMetrics"],
