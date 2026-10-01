@@ -194,7 +194,7 @@ export class InviteService {
 
   private buildInviteLinkResponse(rawToken: string) {
     const frontUrl = this.configService.get<string>("FRONTEND_URL");
-    const inviteLink = `${frontUrl}/register?token=${rawToken}`;
+    const inviteLink = `${frontUrl}/invite?token=${rawToken}`;
     return {
       inviteLink,
     };
