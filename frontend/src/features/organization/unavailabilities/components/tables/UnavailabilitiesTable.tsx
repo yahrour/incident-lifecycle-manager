@@ -23,8 +23,7 @@ import { queryClient } from "@/lib/queryClient";
 export function UnavailabilitiesTable({ teamId }: { teamId: string }) {
   const { data, isPending, isError } = useQuery({
     queryKey: ["teams", "unavailabilities", teamId],
-    queryFn: () =>
-      fetchUnavailabilities(teamId, { field: "confirmed", order: "desc" }),
+    queryFn: () => fetchUnavailabilities(teamId),
   });
 
   const confirmMutation = useMutation({

@@ -2,7 +2,6 @@ import { apiClient } from "@/lib/apiClient";
 import type { ApiResponse } from "@/types";
 import type { Unavailability } from "../../shared/types";
 import { DEFAULT_PREVIEW_LIMIT } from "../../shared/constants";
-import type { SortState } from "../types";
 
 export async function fetchUnavailabilitiesPreview(id: string) {
   const response = await apiClient.get<ApiResponse<Unavailability[]>>(
@@ -11,13 +10,9 @@ export async function fetchUnavailabilitiesPreview(id: string) {
   return response.data;
 }
 
-export async function fetchUnavailabilities(id: string, sort: SortState) {
-  const params = new URLSearchParams({
-    sortField: sort.field,
-    sortOrder: sort.order,
-  });
+export async function fetchUnavailabilities(id: string) {
   const response = await apiClient.get<ApiResponse<Unavailability[]>>(
-    `/teams/${id}/unavailabilities?${params.toString()}`
+    `/teams/${id}/unavailabilities`
   );
   return response.data;
 }

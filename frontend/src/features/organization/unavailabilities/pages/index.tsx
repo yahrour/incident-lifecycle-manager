@@ -12,7 +12,6 @@ import { fetchTeam } from "../../shared/api/teams";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { Spinner } from "@/components/ui/spinner";
 import { TeamNotFound } from "../../shared/components/TeamNotFound";
-import { CreateUnavailabilityDialog } from "../components/dialogs/CreateUnavailabilityDialog";
 import { UnavailabilitiesTable } from "../components/tables/UnavailabilitiesTable";
 
 export function Unavailabilities() {
@@ -62,11 +61,7 @@ export function Unavailabilities() {
         </Breadcrumb>
       </div>
 
-      <div className="p-6 space-y-6">
-        <div className="flex justify-end items-center">
-          <CreateUnavailabilityDialog />
-        </div>
-
+      <div className="p-6">
         <UnavailabilitiesTable teamId={team.id} />
       </div>
     </div>
