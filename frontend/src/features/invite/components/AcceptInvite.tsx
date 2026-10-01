@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { UserPlus } from "lucide-react";
-import useAccept from "../hooks/useAccept";
+import { useAccept } from "../hooks/useAccept";
 import { Button } from "@/components/ui/button";
 import { isAxiosError } from "axios";
 

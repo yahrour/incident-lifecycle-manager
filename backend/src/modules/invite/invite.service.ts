@@ -54,7 +54,6 @@ export class InviteService {
       });
     }
 
-    // generate new token
     const { rawToken, hashedToken } = generateSecureToken();
 
     const inviteTtlDays = this.configService.getOrThrow<number>(
@@ -94,7 +93,6 @@ export class InviteService {
     }
     try {
       await this.prisma.$transaction(async (tx) => {
-        // 2. Create the user (passing 'tx' as the second argument)
         const newUser = await this.userService.create(
           {
             email: invite.email,
@@ -108,11 +106,7 @@ export class InviteService {
           tx
         );
 
-        // 3. Add the user to the team
         await this.membersService.add(tx, invite.teamId, newUser.id);
-
-        // 4. Mark the token as used IN THE SAME TRANSACTION
-        // the user and team assignment are rolled back too!
         await tx.inviteToken.update({
           where: { id: invite.id },
           data: { used: true },
@@ -154,11 +148,8 @@ export class InviteService {
     }
     try {
       await this.prisma.$transaction(async (tx) => {
-        await this.membersService.add(tx, invite.teamId, activeUser.sub);
-
-        // 2. Mark the token as used (Use 'tx' instead of this.prisma)
         const { count } = await tx.inviteToken.updateMany({
-          where: { id: invite.id, used: false }, // filter here
+          where: { id: invite.id, used: false },
           data: { used: true },
         });
         if (count === 0) {
@@ -166,6 +157,7 @@ export class InviteService {
             "This invite link has already been used."
           );
         }
+        await this.membersService.add(tx, invite.teamId, activeUser.sub);
       });
     } catch (error) {
       if (error instanceof HttpException) throw error;

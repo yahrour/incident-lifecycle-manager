@@ -59,7 +59,7 @@ export function RegisterViaInvite({ email, token }: RegisterViaInviteProps) {
       <AuthCard>
         <h1 className="font-heading tracking-tight">Account created</h1>
         <p className="text-center text-sm text-muted-foreground">
-          Sign in with {email} to join your team.
+          You've joined the team, sign in to continue.
         </p>
         <Link
           to="/login"
