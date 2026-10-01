@@ -5,18 +5,18 @@ import type { RegisterViaInvitePayload } from "../schemas";
 
 export async function validateInviteToken(token: string): Promise<InviteProps> {
   const { data } = await apiClient.get<ApiResponse<InviteProps>>(
-    "invites/validate",
+    "invite/validate",
     { params: { token } }
   );
   return data.data;
 }
 
 export async function acceptInvite(token: string): Promise<void> {
-  await apiClient.post("invites/accept", { token });
+  await apiClient.post("invite/accept", { token });
 }
 
 export async function registerViaInvite(
   payload: RegisterViaInvitePayload
 ): Promise<void> {
-  await apiClient.post("invites/register", payload);
+  await apiClient.post("invite/register", payload);
 }
