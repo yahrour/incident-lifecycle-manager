@@ -5,6 +5,8 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { AuthCard } from "../components/AuthCard";
 import useSignIn from "../hooks/useSignIn";
+import useGoogleSignIn from "../hooks/useGoogleSignIn";
+import { GoogleButton } from "../components/GoogleButton";
 function getErrorMessage(error: Error) {
   if (axios.isAxiosError(error)) {
     return "Something went wrong. Please try again.";
@@ -12,6 +14,7 @@ function getErrorMessage(error: Error) {
   return error.message;
 }
 export default function SignIn() {
+  const googleSignIn = useGoogleSignIn();
   const { mutate, isPending, error } = useSignIn();
   function submit(formData: FormData) {
     const email = formData.get("email") as string;
@@ -61,6 +64,15 @@ export default function SignIn() {
           Create an account
         </Link>
       </p>
+      <GoogleButton
+        text="signin_with"
+        onCredential={(credential) => googleSignIn.mutate(credential)}
+      />
+      {googleSignIn.error && (
+        <p className="text-sm text-destructive">
+          Google sign-in failed. Try again.
+        </p>
+      )}
     </AuthCard>
   );
 }

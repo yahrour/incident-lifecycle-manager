@@ -13,14 +13,20 @@ export function GoogleButton({
   loginHint,
 }: GoogleButtonProps) {
   return (
-    <GoogleLogin
-      onSuccess={({ credential }) => {
-        if (credential) onCredential(credential);
-      }}
-      onError={() => console.error("Google login failed")}
-      text={text}
-      login_hint={loginHint}
-      width="400"
-    />
+    <div className="flex justify-center">
+      <GoogleLogin
+        onSuccess={({ credential }) => {
+          if (credential) onCredential(credential);
+        }}
+        onError={() => console.error("Google login failed")}
+        text={text}
+        login_hint={loginHint}
+        theme="outline"
+        size="large"
+        shape="rectangular"
+        logo_alignment="center"
+        width="320"
+      />
+    </div>
   );
 }
