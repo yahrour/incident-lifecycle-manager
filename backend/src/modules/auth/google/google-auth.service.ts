@@ -47,6 +47,13 @@ export class GoogleAuthService implements OnModuleInit {
 
     let user = await this.usersService.findGoogleId(googleId);
     if (!user) {
+      const existing = await this.usersService.findByEmail(email);
+      if (existing) {
+        user = await this.usersService.linkGoogleId(existing.id, googleId);
+      }
+    }
+
+    if (!user) {
       const assignedRole: Role = Role.SRE;
       user = await this.usersService.createWithGoogle(
         email,
