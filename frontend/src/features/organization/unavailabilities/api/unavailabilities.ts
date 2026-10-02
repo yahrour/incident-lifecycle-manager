@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/apiClient";
 import type { ApiResponse } from "@/types";
 import type { Unavailability } from "../../shared/types";
-import { DEFAULT_PREVIEW_LIMIT } from "../../shared/constants";
+import { DEFAULT_LIMIT, DEFAULT_PREVIEW_LIMIT } from "../../shared/constants";
 
 export async function fetchUnavailabilitiesPreview(id: string) {
   const response = await apiClient.get<ApiResponse<Unavailability[]>>(
@@ -10,9 +10,12 @@ export async function fetchUnavailabilitiesPreview(id: string) {
   return response.data;
 }
 
-export async function fetchUnavailabilities(id: string) {
+export async function fetchUnavailabilities(
+  id: string,
+  nextCursor: string | null
+) {
   const response = await apiClient.get<ApiResponse<Unavailability[]>>(
-    `/teams/${id}/unavailabilities`
+    `/teams/${id}/unavailabilities?limit=${DEFAULT_LIMIT}${nextCursor ? `&cursor=${nextCursor}` : ""}`
   );
   return response.data;
 }

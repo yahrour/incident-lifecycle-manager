@@ -6,7 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
 import {
   confirmUnavailability,
   fetchUnavailabilities,
@@ -21,10 +21,13 @@ import { formatDuration } from "../../utils/time";
 import { queryClient } from "@/lib/queryClient";
 
 export function UnavailabilitiesTable({ teamId }: { teamId: string }) {
-  const { data, isPending, isError } = useQuery({
-    queryKey: ["teams", "unavailabilities", teamId],
-    queryFn: () => fetchUnavailabilities(teamId),
-  });
+  const { data, isError, isPending, fetchNextPage, hasNextPage, isFetching } =
+    useInfiniteQuery({
+      queryKey: ["teams", "unavailabilities", teamId],
+      queryFn: ({ pageParam }) => fetchUnavailabilities(teamId, pageParam),
+      initialPageParam: null as string | null,
+      getNextPageParam: (lastPage) => lastPage.meta?.nextCursor ?? undefined,
+    });
 
   const confirmMutation = useMutation({
     mutationFn: ({
@@ -67,7 +70,7 @@ export function UnavailabilitiesTable({ teamId }: { teamId: string }) {
     );
   }
 
-  const unavailabilities = data?.data;
+  const unavailabilities = data?.pages.flatMap((page) => page.data) ?? [];
 
   if (!unavailabilities || unavailabilities.length === 0) {
     return <NoUnavailabilitiesState />;
@@ -83,65 +86,78 @@ export function UnavailabilitiesTable({ teamId }: { teamId: string }) {
   };
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow className="uppercase hover:bg-transparent">
-          <TableHead className="w-2/5">Engineer</TableHead>
-          <TableHead>Dates</TableHead>
-          <TableHead>Reason</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {unavailabilities.map((unavailability) => (
-          <TableRow key={unavailability.id} className="w-full">
-            <TableCell className="font-medium text-sm flex-1">
-              {unavailability.teamMember.user.firstName +
-                " " +
-                unavailability.teamMember.user.lastName}
-            </TableCell>
-            <TableCell className="text-xs">
-              {formatDuration(unavailability.startDate, unavailability.endDate)}
-            </TableCell>
-            <TableCell className="text-xs text-muted-foreground">
-              {unavailability.reason}
-            </TableCell>
-            <TableCell>
-              {unavailability.status === "PENDING" ? (
-                <Badge variant="warning">PENDING</Badge>
-              ) : unavailability.status === "APPROVED" ? (
-                <Badge variant="success">APPROVED</Badge>
-              ) : (
-                <Badge variant="destructive">REJECTED</Badge>
-              )}
-            </TableCell>
-            <TableCell className="text-xs text-right text-muted-foreground space-x-2">
-              <Button
-                size={"xs"}
-                className="bg-success text-xs hover:bg-success/90"
-                onClick={() =>
-                  handleConfirm(unavailability.id, unavailability.memberId)
-                }
-                disabled={unavailability.status !== "PENDING"}
-              >
-                Confirm
-              </Button>
-              <Button
-                size={"xs"}
-                variant="destructive"
-                className="text-xs"
-                onClick={() =>
-                  handleReject(unavailability.id, unavailability.memberId)
-                }
-                disabled={unavailability.status !== "PENDING"}
-              >
-                Reject
-              </Button>
-            </TableCell>
+    <div className="space-y-4">
+      <Table>
+        <TableHeader>
+          <TableRow className="uppercase hover:bg-transparent">
+            <TableHead className="w-2/5">Engineer</TableHead>
+            <TableHead>Dates</TableHead>
+            <TableHead>Reason</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {unavailabilities.map((unavailability) => (
+            <TableRow key={unavailability.id} className="w-full">
+              <TableCell className="font-medium text-sm flex-1">
+                {unavailability.teamMember.user.firstName +
+                  " " +
+                  unavailability.teamMember.user.lastName}
+              </TableCell>
+              <TableCell className="text-xs">
+                {formatDuration(
+                  unavailability.startDate,
+                  unavailability.endDate
+                )}
+              </TableCell>
+              <TableCell className="text-xs text-muted-foreground">
+                {unavailability.reason}
+              </TableCell>
+              <TableCell>
+                {unavailability.status === "PENDING" ? (
+                  <Badge variant="warning">PENDING</Badge>
+                ) : unavailability.status === "APPROVED" ? (
+                  <Badge variant="success">APPROVED</Badge>
+                ) : (
+                  <Badge variant="destructive">REJECTED</Badge>
+                )}
+              </TableCell>
+              <TableCell className="text-xs text-right text-muted-foreground space-x-2">
+                <Button
+                  size={"xs"}
+                  className="bg-success text-xs hover:bg-success/90"
+                  onClick={() =>
+                    handleConfirm(unavailability.id, unavailability.memberId)
+                  }
+                  disabled={unavailability.status !== "PENDING"}
+                >
+                  Confirm
+                </Button>
+                <Button
+                  size={"xs"}
+                  variant="destructive"
+                  className="text-xs"
+                  onClick={() =>
+                    handleReject(unavailability.id, unavailability.memberId)
+                  }
+                  disabled={unavailability.status !== "PENDING"}
+                >
+                  Reject
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      <div className="flex justify-center">
+        <Button
+          onClick={() => fetchNextPage()}
+          disabled={!hasNextPage || isFetching}
+        >
+          {isFetching ? "Loading more..." : "Load More"}
+        </Button>
+      </div>
+    </div>
   );
 }
