@@ -1,9 +1,6 @@
-import { IsNotEmpty, IsString, IsOptional } from "class-validator";
+import { IsNotEmpty } from "class-validator";
 
 export class GoogleToken {
   @IsNotEmpty()
   token: string;
-  @IsString()
-  @IsOptional()
-  inviteToken?: string;
 }
