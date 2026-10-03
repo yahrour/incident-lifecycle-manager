@@ -21,6 +21,7 @@ import { formatDuration } from "../../utils/time";
 import { queryClient } from "@/lib/queryClient";
 import type { SortState } from "../../types";
 import { toast } from "@/components/ui/toast";
+import { ErrorUnavailabilitiesState } from "../ErrorUnavailabilitiesState";
 
 export function UnavailabilitiesTable({
   teamId,
@@ -29,7 +30,7 @@ export function UnavailabilitiesTable({
   teamId: string;
   sort: SortState;
 }) {
-  const { data, isError, isPending, fetchNextPage, hasNextPage, isFetchingNextPage } =
+  const { data, isError, isSuccess, isPending, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteQuery({
       queryKey: ["teams", "unavailabilities", teamId, sort],
       queryFn: ({ pageParam }) =>
@@ -59,7 +60,7 @@ export function UnavailabilitiesTable({
     onError: () => {
       toast.add({
         type: "error",
-        title: "failed to reject",
+        title: "failed to approve",
         description: "something went wrong, try again."
       })
     }
@@ -101,10 +102,13 @@ export function UnavailabilitiesTable({
 
   const unavailabilities = data?.pages.flatMap((page) => page.data) ?? [];
 
-  if (!unavailabilities || unavailabilities.length === 0) {
+  if ((!unavailabilities || unavailabilities.length === 0) && isSuccess) {
     return <NoUnavailabilitiesState />;
   }
-
+  else if ((!unavailabilities || unavailabilities.length === 0) && isError) {
+    return <ErrorUnavailabilitiesState />
+  }
+  
   const handleConfirm = (unavailabilityId: number, memberId: number) => {
     confirmMutation.mutate({ teamId, memberId, unavailabilityId });
   };
@@ -159,7 +163,7 @@ export function UnavailabilitiesTable({
                   }
                   disabled={unavailability.status !== "PENDING" || confirmMutation.isPending || rejectMutation.isPending}
                 >
-                  Confirm
+                  Approve
                 </Button>
                 <Button
                   size={"xs"}

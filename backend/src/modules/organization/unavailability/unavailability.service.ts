@@ -423,6 +423,7 @@ export class UnavailabilityService {
       this.prisma.unavailability.count({
         where: {
           confirmed: false,
+          status: "PENDING",
           teamMember: {
             teamId,
             team: { ownerId: requesterId },

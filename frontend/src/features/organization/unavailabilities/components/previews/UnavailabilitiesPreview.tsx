@@ -60,7 +60,7 @@ export function UnavailabilitiesPreview({ teamId }: { teamId: string }) {
         <ul className="divide-y divide-border/50">
           {items.map((item) => {
             const { user } = item.teamMember;
-
+            
             return (
               <li key={item.id} className="flex items-center gap-3 px-4 py-2.5">
                 <span
