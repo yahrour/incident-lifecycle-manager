@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { formatDuration } from "../../utils/time";
 import { queryClient } from "@/lib/queryClient";
 import type { SortState } from "../../types";
+import { toast } from "@/components/ui/toast";
 
 export function UnavailabilitiesTable({
   teamId,
@@ -28,7 +29,7 @@ export function UnavailabilitiesTable({
   teamId: string;
   sort: SortState;
 }) {
-  const { data, isError, isPending, fetchNextPage, hasNextPage, isFetching } =
+  const { data, isError, isPending, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteQuery({
       queryKey: ["teams", "unavailabilities", teamId, sort],
       queryFn: ({ pageParam }) =>
@@ -51,7 +52,17 @@ export function UnavailabilitiesTable({
       void queryClient.invalidateQueries({
         queryKey: ["teams", "unavailabilities", teamId],
       });
+      void queryClient.invalidateQueries({
+        queryKey: ["unavailabilities", teamId],
+      });
     },
+    onError: () => {
+      toast.add({
+        type: "error",
+        title: "failed to reject",
+        description: "something went wrong, try again."
+      })
+    }
   });
   const rejectMutation = useMutation({
     mutationFn: ({
@@ -67,10 +78,20 @@ export function UnavailabilitiesTable({
       void queryClient.invalidateQueries({
         queryKey: ["teams", "unavailabilities", teamId],
       });
+      void queryClient.invalidateQueries({
+        queryKey: ["unavailabilities", teamId],
+      });
     },
+    onError: () => {
+      toast.add({
+        type: "error",
+        title: "failed to reject",
+        description: "something went wrong, try again."
+      })
+    }
   });
 
-  useErrorToast(isError, "failed to load members");
+  useErrorToast(isError, "failed to load unavailabilities");
 
   if (isPending) {
     return (
@@ -83,8 +104,6 @@ export function UnavailabilitiesTable({
   if (!unavailabilities || unavailabilities.length === 0) {
     return <NoUnavailabilitiesState />;
   }
-
-  console.log("unavailabil: ", unavailabilities);
 
   const handleConfirm = (unavailabilityId: number, memberId: number) => {
     confirmMutation.mutate({ teamId, memberId, unavailabilityId });
@@ -138,7 +157,7 @@ export function UnavailabilitiesTable({
                   onClick={() =>
                     handleConfirm(unavailability.id, unavailability.memberId)
                   }
-                  disabled={unavailability.status !== "PENDING"}
+                  disabled={unavailability.status !== "PENDING" || confirmMutation.isPending || rejectMutation.isPending}
                 >
                   Confirm
                 </Button>
@@ -149,7 +168,7 @@ export function UnavailabilitiesTable({
                   onClick={() =>
                     handleReject(unavailability.id, unavailability.memberId)
                   }
-                  disabled={unavailability.status !== "PENDING"}
+                  disabled={unavailability.status !== "PENDING" || confirmMutation.isPending || rejectMutation.isPending}
                 >
                   Reject
                 </Button>
@@ -161,9 +180,9 @@ export function UnavailabilitiesTable({
       <div className="flex justify-center">
         <Button
           onClick={() => fetchNextPage()}
-          disabled={!hasNextPage || isFetching}
+          disabled={!hasNextPage || isFetchingNextPage}
         >
-          {isFetching ? "Loading more..." : "Load More"}
+          {isFetchingNextPage ? "Loading more..." : "Load More"}
         </Button>
       </div>
     </div>

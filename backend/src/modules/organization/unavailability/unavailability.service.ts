@@ -118,6 +118,7 @@ export class UnavailabilityService {
           ),
           reason: createUnavailabilityDto.reason,
           confirmed: isTeamOwner, // if the requester is the team owner, confirm unavailability automatically
+          status: isTeamOwner ? "APPROVED" : "PENDING",
         },
       });
     } catch (error) {
@@ -221,6 +222,7 @@ export class UnavailabilityService {
             : isDateChanged
               ? false
               : currentUnavailability.confirmed,
+          status: isTeamOwner ? "APPROVED" : isDateChanged ? "PENDING" : currentUnavailability.status,
         },
       });
     } catch (error) {
@@ -404,6 +406,7 @@ export class UnavailabilityService {
       this.prisma.unavailability.findMany({
         where: {
           confirmed: false,
+          status: "PENDING",
           teamMember: {
             teamId,
             team: { ownerId: requesterId },

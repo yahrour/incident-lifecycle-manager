@@ -65,7 +65,7 @@ export function UnavailabilitiesPreview({ teamId }: { teamId: string }) {
               <li key={item.id} className="flex items-center gap-3 px-4 py-2.5">
                 <span
                   className={`h-8 w-0.5 shrink-0 rounded-full ${
-                    item.confirmed ? "bg-success" : "bg-warning"
+                    item.status === "APPROVED" ? "bg-success" : item.status === "PENDING" ? "bg-warning" : "bg-destructive"
                   }`}
                 />
 
@@ -80,10 +80,10 @@ export function UnavailabilitiesPreview({ teamId }: { teamId: string }) {
 
                 <div className="shrink-0 text-right">
                   <Badge
-                    variant={item.confirmed ? "success" : "warning"}
+                    variant={item.status === "APPROVED" ? "success" : item.status === "PENDING" ? "warning" : "destructive"}
                     className="uppercase"
                   >
-                    {item.confirmed ? "Approved" : "Pending"}
+                    {item.status}
                   </Badge>
                   <p className="mt-1 text-xs">
                     {formatDay(item.startDate)} - {formatDay(item.endDate)}
