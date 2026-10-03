@@ -7,8 +7,7 @@ interface VaultKvV2Response<T> {
   };
 }
 
-interface AppSecrets
-{
+interface AppSecrets {
   DATABASE_URL: string;
   JWT_SECRET: string;
   JWT_REFRESH_SECRET: string;
