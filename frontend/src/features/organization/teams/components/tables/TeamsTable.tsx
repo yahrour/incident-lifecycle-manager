@@ -89,7 +89,7 @@ export function TeamsTable({
             <TableHead>members</TableHead>
             <TableHead>rotation</TableHead>
             <TableHead>on-call now</TableHead>
-            <TableHead>escalates</TableHead>
+            <TableHead>escalates(min)</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -135,8 +135,8 @@ export function TeamsTable({
                   )}
                   {fullName.length > 1 ? fullName : "no members yet"}
                 </TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {team.escalationTimeoutMinutes}m
+                <TableCell className="text-left text-xs text-muted-foreground">
+                  {team.escalationTimeoutMinutes}
                 </TableCell>
               </TableRow>
             );
