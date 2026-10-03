@@ -6,14 +6,12 @@ import { ProtectedRoute } from "./ProtectedRoute";
 import { SignIn, SignUp } from "@/features/auth";
 import { SettingPage } from "@/features/settings";
 import { GuestOnly } from "./GuestOnly";
-import SettingPage from "@/features/settings/pages/settingPage";
 import {
   Members,
   Team,
   Teams,
   Unavailabilities,
 } from "@/features/organization";
-import { Members, Team, Teams } from "@/features/organization";
 import { InvitePage } from "@/features/invite";
 
 export default function AppRoutes() {

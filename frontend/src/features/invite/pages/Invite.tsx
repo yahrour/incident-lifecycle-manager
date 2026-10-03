@@ -4,7 +4,7 @@ import { XCircle, Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { AuthCard } from "@/components/AuthCard";
 import { AcceptInvite } from "../components/AcceptInvite";
-import { useValidateInvite } from "../hooks/useValidate";
+import { useValidateInvite } from "../hooks/useValidateInvite";
 import { RegisterViaInvite } from "../components/RegisterViaInvite";
 
 const muted = "text-center text-sm text-muted-foreground";
