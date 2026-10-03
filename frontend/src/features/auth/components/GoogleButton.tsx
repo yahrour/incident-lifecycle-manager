@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
 import googleLogo from "@/assets/google.svg";
+import { env } from "@/config/env";
 
 export function GoogleButton({ text = "Continue with Google" }) {
   const url = new URL(
-    "http://localhost:3000/api/v1/auth/google",
+    `${env.VITE_API_URL}/auth/google`,
     window.location.origin
   );
 
