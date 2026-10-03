@@ -1,10 +1,5 @@
-export const SortOrder = {
-  ASC: "asc",
-  DESC: "desc",
-} as const;
+import type { SortOrder } from "../../shared/types";
 
-export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder];
-
-export type SortState = { field: string; order: SortOrder };
+export type SortState = { field: "joinedAt"; order: SortOrder };
 
 export type InviteEngineer = { inviteLink: string };

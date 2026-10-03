@@ -3,10 +3,9 @@ import { Route, Routes } from "react-router";
 import { AppLayout } from "./AppLayout";
 import { RequireAuth } from "./RequireAuth";
 import { ProtectedRoute } from "./ProtectedRoute";
-import SignIn from "@/features/auth/pages/SignIn";
-import SignUp from "@/features/auth/pages/signUp";
+import { SignIn, SignUp } from "@/features/auth";
+import { SettingPage } from "@/features/settings";
 import { GuestOnly } from "./GuestOnly";
-import SettingPage from "@/features/settings/pages/settingPage";
 import { Members, Team, Teams } from "@/features/organization";
 import { InvitePage } from "@/features/invite";
 

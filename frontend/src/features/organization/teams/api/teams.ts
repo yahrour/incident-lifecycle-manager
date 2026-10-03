@@ -1,17 +1,23 @@
 import { apiClient } from "@/lib/apiClient";
 import type { ApiResponse } from "@/types";
-import type { OnCall, Stats } from "../types";
+import type { OnCall, SortState, Stats } from "../types";
 import type { createTeamSchema, updateTeamSchema } from "../schemas";
 import z from "zod";
 import type { Team } from "../../shared/types";
 import { DEFAULT_LIMIT } from "../../shared/constants";
 
-export async function fetchTeams(page: number, search: string) {
+export async function fetchTeams(
+  page: number,
+  search: string,
+  sort: SortState
+) {
   const offset = (page - 1) * DEFAULT_LIMIT;
   const params = new URLSearchParams({
-    search: search,
+    ...(search.length > 0 && { search: search }),
+    sortField: sort.field,
+    sortOrder: sort.order,
   });
-  const apiEndpoint = `/teams?offset=${offset}&limit=${DEFAULT_LIMIT}${search.length > 0 ? `&${params.toString()}` : ""}`;
+  const apiEndpoint = `/teams?offset=${offset}&limit=${DEFAULT_LIMIT}&${params.toString()}`;
   const response = await apiClient.get<ApiResponse<Team[]>>(apiEndpoint);
   return response.data;
 }
