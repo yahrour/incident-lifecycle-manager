@@ -101,6 +101,12 @@ export class UsersService {
       where: { googleId },
     });
   }
+  linkGoogleId(userId: string, googleId: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { googleId },
+    });
+  }
 
   async getProfile(userId: string) {
     const user = await this.prisma.user.findUnique({

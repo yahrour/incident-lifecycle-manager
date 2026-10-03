@@ -26,7 +26,7 @@ export class GoogleAuthService implements OnModuleInit {
     this.oauthClient = new OAuth2Client(clientId, clientSecret);
   }
 
-  async authentificate(token: string) {
+  async authenticate(token: string) {
     const loginTicket = await this.oauthClient.verifyIdToken({
       audience: this.configueService.getOrThrow<string>("GOOGLE_CLIENT_ID"),
       idToken: token,
