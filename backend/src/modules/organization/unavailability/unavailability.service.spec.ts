@@ -657,7 +657,7 @@ describe("UnavailabilityService", () => {
 
       expect(prisma.unavailability.update).toHaveBeenCalledWith({
         where: { id: UNAVAILABILITY_ID, memberId: MEMBER_ID },
-        data: { confirmed: true },
+        data: { confirmed: true, status: "APPROVED" },
       });
     });
 
@@ -665,7 +665,7 @@ describe("UnavailabilityService", () => {
       prisma.team.findUnique.mockResolvedValue(makeTeam());
       prisma.teamMember.findUnique.mockResolvedValue(makeTeamMember());
       prisma.unavailability.findUnique.mockResolvedValue(
-        makeUnavailability({ confirmed: true })
+        makeUnavailability({ confirmed: true, status: "APPROVED" })
       );
 
       await expect(
