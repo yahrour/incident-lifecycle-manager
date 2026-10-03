@@ -13,7 +13,7 @@ import {
 import { MembersTable } from "../components/tables/MembersTable";
 import { SortControls } from "../components/SortControls";
 import { useState } from "react";
-import { SortOrder, type SortState } from "../types";
+import { type SortState } from "../types";
 import { TeamNotFound } from "../../shared/components/TeamNotFound";
 import { InviteDialog } from "../components/InviteDialog";
 import { fetchTeam } from "../../shared/api/teams";
@@ -21,8 +21,8 @@ import { fetchTeam } from "../../shared/api/teams";
 export function Members() {
   const { id: teamId } = useParams();
   const [sort, setSort] = useState<SortState>({
-    field: "name",
-    order: SortOrder.ASC,
+    field: "joinedAt",
+    order: "asc",
   });
   const [page, setPage] = useState(1);
 
@@ -76,7 +76,12 @@ export function Members() {
           <SortControls sort={sort} onSortChange={setSort} />
           <InviteDialog team={team} />
         </div>
-        <MembersTable page={page} setPage={setPage} teamId={team.id} />
+        <MembersTable
+          page={page}
+          setPage={setPage}
+          sort={sort}
+          teamId={team.id}
+        />
       </div>
     </div>
   );
