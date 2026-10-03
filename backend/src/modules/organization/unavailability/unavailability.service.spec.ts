@@ -136,6 +136,7 @@ describe("UnavailabilityService", () => {
           ),
           reason: createUnavailabilityDto.reason,
           confirmed: true,
+          status: "APPROVED",
         },
       });
     });
@@ -454,6 +455,7 @@ describe("UnavailabilityService", () => {
         expect.objectContaining({
           where: {
             confirmed: false,
+            status: "PENDING",
             teamMember: {
               teamId: TEAM_ID,
               team: { ownerId: OWNER_ID },
