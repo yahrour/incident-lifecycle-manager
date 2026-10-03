@@ -41,6 +41,12 @@ import {
 } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
 import { useLogout } from "@/features/auth";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+
 
 const managerItems = {
   respondItems: [
@@ -201,9 +207,14 @@ export function AppSidebar() {
               </Avatar>
             </div>
             <div className="flex-1 text-left group-data-[collapsible=icon]:hidden">
-              <p className="text-sm font-medium text-[#e8ddd3]">
-                {user.firstName + " " + user.lastName}
-              </p>
+              <Tooltip>
+                <TooltipTrigger render={<p className="text-sm font-medium" />}>
+                  {(user.firstName + " " + user.lastName).substring(0, 20)}
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{user.firstName + " " + user.lastName}</p>
+                </TooltipContent>
+              </Tooltip>
               <p className="text-xs text-muted-foreground">{user.role}</p>
             </div>
             <ChevronDown className="group-aria-expanded:rotate-180 transition-all duration-300" />
