@@ -4,6 +4,7 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { ActiveUser } from "@/common/decorators/active-user.decorator";
 import type { ActiveUserData } from "@/common/interfaces/active-user.interface";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
+import { apiResponse } from "@/common/utils/api-response";
 
 @Controller({
   path: "users",
@@ -19,7 +20,8 @@ export class UsersController {
 
   @Get("me")
   async getProfile(@ActiveUser() user: ActiveUserData) {
-    return this.usersService.getProfile(user.sub);
+    const profile = await this.usersService.getProfile(user.sub);
+    return apiResponse(profile);
   }
 
   @Patch("me")
@@ -27,6 +29,7 @@ export class UsersController {
     @ActiveUser() user: ActiveUserData,
     @Body() dto: UpdateProfileDto
   ) {
-    return this.usersService.updateProfile(user.sub, dto);
+    const profile = await this.usersService.updateProfile(user.sub, dto);
+    return apiResponse(profile);
   }
 }

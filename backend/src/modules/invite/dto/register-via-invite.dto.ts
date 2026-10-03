@@ -1,3 +1,4 @@
+import { Trim } from "@/common/transformers/trim.transformer";
 import {
   IsNotEmpty,
   IsOptional,
@@ -5,16 +6,15 @@ import {
   IsTimeZone,
   MinLength,
 } from "class-validator";
+import { AcceptInviteDto } from "./accept-invite.dto";
 
-export class RegisterViaInviteDto {
-  @IsString()
-  @IsNotEmpty()
-  token: string;
-
+export class RegisterViaInviteDto extends AcceptInviteDto {
+  @Trim()
   @IsString()
   @IsNotEmpty()
   firstName: string;
 
+  @Trim()
   @IsString()
   @IsNotEmpty()
   lastName: string;
@@ -24,6 +24,7 @@ export class RegisterViaInviteDto {
   @MinLength(8)
   password: string;
 
+  @Trim()
   @IsString()
   @IsNotEmpty()
   specialty: string;

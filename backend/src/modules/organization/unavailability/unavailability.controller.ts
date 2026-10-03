@@ -153,4 +153,21 @@ export class UnavailabilityController {
       unavailabilityId
     );
   }
+
+  @Post(":teamId/members/:memberId/unavailabilities/:unavailabilityId/reject")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Roles(Role.SRE)
+  async reject(
+    @Param("teamId", ParseUUIDPipe) teamId: string,
+    @Param("memberId", ParseIntPipe) memberId: number,
+    @Param("unavailabilityId", ParseIntPipe) unavailabilityId: number,
+    @ActiveUser() user: ActiveUserData
+  ) {
+    await this.unavailabilityService.reject(
+      user.sub,
+      teamId,
+      memberId,
+      unavailabilityId
+    );
+  }
 }

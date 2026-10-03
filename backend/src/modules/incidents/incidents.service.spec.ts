@@ -63,7 +63,9 @@ describe("IncidentsService", () => {
     const create = jest.fn();
     const prisma = { incident: { create } } as unknown as PrismaService;
     const getCurrentOnCall = jest.fn().mockResolvedValue({
-      chain: [{ role: "PRIMARY", id: "11111111-1111-4111-8111-111111111111" }],
+      chain: [
+        { position: "PRIMARY", id: "11111111-1111-4111-8111-111111111111" },
+      ],
     });
     const onCall = { getCurrentOnCall } as unknown as OnCallService;
     const service = new IncidentsService(prisma, onCall);
@@ -280,23 +282,23 @@ describe("IncidentsService", () => {
   });
 
   it("acknowledges an open incident and records MTTA", async () => {
+    const findFirst = jest.fn().mockResolvedValue({
+      id: "incident-id",
+      status: "open",
+      assignedToId: "engineer-id",
+      createdAt: new Date(Date.now() - 5_000),
+      team: null,
+    });
     const findUnique = jest
       .fn()
-      .mockResolvedValueOnce({
-        id: "incident-id",
-        status: "open",
-        assignedToId: "engineer-id",
-        createdAt: new Date(Date.now() - 5_000),
-        team: null,
-      })
-      .mockResolvedValueOnce({ id: "incident-id", status: "acknowledged" });
+      .mockResolvedValue({ id: "incident-id", status: "acknowledged" });
     const updates: unknown[] = [];
     const updateMany = jest.fn((args: unknown) => {
       updates.push(args);
       return Promise.resolve({ count: 1 });
     });
     const prisma = {
-      incident: { create: jest.fn(), findUnique, updateMany },
+      incident: { create: jest.fn(), findFirst, findUnique, updateMany },
     } as unknown as PrismaService;
     const onCall = {} as OnCallService;
     const service = new IncidentsService(prisma, onCall);
@@ -325,7 +327,7 @@ describe("IncidentsService", () => {
   });
 
   it("rejects acknowledgement when the incident is reassigned during the update", async () => {
-    const findUnique = jest.fn().mockResolvedValue({
+    const findFirst = jest.fn().mockResolvedValue({
       id: "incident-id",
       status: "open",
       assignedToId: "engineer-id",
@@ -334,7 +336,7 @@ describe("IncidentsService", () => {
     });
     const updateMany = jest.fn().mockResolvedValue({ count: 0 });
     const prisma = {
-      incident: { findUnique, updateMany },
+      incident: { findFirst, updateMany },
     } as unknown as PrismaService;
     const service = new IncidentsService(prisma, {} as OnCallService);
 
@@ -348,18 +350,18 @@ describe("IncidentsService", () => {
   });
 
   it("resolves an acknowledged incident and records MTTR", async () => {
+    const findFirst = jest.fn().mockResolvedValue({
+      id: "incident-id",
+      status: "acknowledged",
+      assignedToId: "engineer-id",
+      createdAt: new Date(Date.now() - 5_000),
+    });
     const findUnique = jest
       .fn()
-      .mockResolvedValueOnce({
-        id: "incident-id",
-        status: "acknowledged",
-        assignedToId: "engineer-id",
-        createdAt: new Date(Date.now() - 5_000),
-      })
-      .mockResolvedValueOnce({ id: "incident-id", status: "resolved" });
+      .mockResolvedValue({ id: "incident-id", status: "resolved" });
     const updateMany = jest.fn().mockResolvedValue({ count: 1 });
     const prisma = {
-      incident: { create: jest.fn(), findUnique, updateMany },
+      incident: { create: jest.fn(), findFirst, findUnique, updateMany },
     } as unknown as PrismaService;
     const onCall = {} as OnCallService;
     const service = new IncidentsService(prisma, onCall);
@@ -383,5 +385,227 @@ describe("IncidentsService", () => {
     expect(update?.data.status).toBe("resolved");
     expect(update?.data.resolvedAt).toBeInstanceOf(Date);
     expect(update?.data.mttrSeconds).toEqual(expect.any(Number));
+  });
+
+  it("creates an incident from an alert, attaches repeats, skips unrouted and resolved", async () => {
+    const alert = {
+      provider: "prometheus",
+      title: "HighErrorRate",
+      serviceName: "checkout-api",
+      severity: "critical" as const,
+      status: "firing" as const,
+      team: "frontend",
+      occurredAt: new Date(),
+    };
+    const findUnique = jest.fn().mockResolvedValue(null);
+    const upsert = jest.fn().mockResolvedValue({ id: "incident-id" });
+    const incidentAlertCreate = jest.fn();
+    const prisma = {
+      team: { findFirst: jest.fn().mockResolvedValue({ id: "team-id" }) },
+      incident: { findUnique, upsert },
+      incidentAlert: { create: incidentAlertCreate },
+    } as unknown as PrismaService;
+    const getCurrentOnCall = jest.fn().mockResolvedValue({
+      chain: [{ position: "PRIMARY", id: "primary-id" }],
+    });
+    const service = new IncidentsService(prisma, {
+      getCurrentOnCall,
+    } as unknown as OnCallService);
+
+    await expect(
+      service.createFromAlert("owner-id", "a1", alert)
+    ).resolves.toBe("incident-id");
+    expect(upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({
+          teamId: "team-id",
+          severity: "critical",
+          assignedToId: "primary-id",
+        }) as unknown,
+      })
+    );
+
+    findUnique.mockResolvedValue({ id: "incident-id" });
+    await service.createFromAlert("owner-id", "a2", alert);
+    expect(upsert).toHaveBeenCalledTimes(1);
+    expect(incidentAlertCreate).toHaveBeenLastCalledWith({
+      data: { alertId: "a2", incidentId: "incident-id" },
+    });
+
+    findUnique.mockResolvedValue(null);
+    await expect(
+      service.createFromAlert("owner-id", "a3", {
+        ...alert,
+        status: "resolved",
+      })
+    ).resolves.toBeNull();
+    await expect(
+      service.createFromAlert("owner-id", "a4", { ...alert, team: undefined })
+    ).resolves.toBeNull();
+    expect(upsert).toHaveBeenCalledTimes(1);
+  });
+
+  it("filters incidents by exact service for related incidents", async () => {
+    const findMany = jest.fn().mockResolvedValue([]);
+    const count = jest.fn().mockResolvedValue(0);
+    const prisma = {
+      incident: { findMany, count },
+    } as unknown as PrismaService;
+    const service = new IncidentsService(prisma, {} as OnCallService);
+
+    await service.findAll("viewer-id", {
+      service: "checkout-api",
+      limit: 10,
+    } as never);
+
+    const where = (
+      findMany.mock.calls as unknown as Array<[{ where: { AND: unknown[] } }]>
+    )[0]?.[0]?.where;
+    expect(where?.AND).toEqual(
+      expect.arrayContaining([{ service: "checkout-api" }])
+    );
+  });
+
+  it("adds notes to the timeline in chronological order", async () => {
+    const createdAt = new Date("2026-01-01T00:00:00.000Z");
+    const noteAt = new Date("2026-01-01T00:02:00.000Z");
+    const acknowledgedAt = new Date("2026-01-01T00:05:00.000Z");
+    const author = {
+      id: "user-id",
+      firstName: "Ada",
+      lastName: "Lovelace",
+      email: "ada@example.com",
+    };
+    const findFirst = jest.fn().mockResolvedValue({
+      id: "incident-id",
+      createdAt,
+      acknowledgedAt,
+      resolvedAt: null,
+      mttaSeconds: 300,
+      mttrSeconds: null,
+      notes: [{ id: "note-id", createdAt: noteAt, author }],
+    });
+    const prisma = { incident: { findFirst } } as unknown as PrismaService;
+    const service = new IncidentsService(prisma, {} as OnCallService);
+
+    const result = await service.findOne("user-id", "incident-id");
+
+    expect(result.timeline).toEqual([
+      { type: "created", at: createdAt },
+      { type: "note_added", at: noteAt, noteId: "note-id", actor: author },
+      { type: "acknowledged", at: acknowledgedAt },
+    ]);
+  });
+
+  it("rejects reassignment of a resolved incident", async () => {
+    const update = jest.fn();
+    const prisma = {
+      incident: {
+        findFirst: jest.fn().mockResolvedValue({
+          id: "incident-id",
+          teamId: "team-id",
+          status: "resolved",
+        }),
+        update,
+      },
+      teamMember: { findFirst: jest.fn() },
+    } as unknown as PrismaService;
+    const service = new IncidentsService(prisma, {} as OnCallService);
+
+    await expect(
+      service.reassign("owner-id", "incident-id", "engineer-id")
+    ).rejects.toBeInstanceOf(ConflictException);
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it("writes the handover note alongside the reassignment", async () => {
+    const updateQuery = { kind: "update" };
+    const noteQuery = { kind: "note" };
+    const update = jest.fn().mockReturnValue(updateQuery);
+    const createNote = jest.fn().mockReturnValue(noteQuery);
+    const $transaction = jest
+      .fn()
+      .mockResolvedValue([{ id: "incident-id" }, { id: "note-id" }]);
+    const prisma = {
+      incident: {
+        findFirst: jest.fn().mockResolvedValue({
+          id: "incident-id",
+          teamId: "team-id",
+          status: "open",
+        }),
+        update,
+      },
+      teamMember: {
+        findFirst: jest.fn().mockResolvedValue({ userId: "engineer-id" }),
+      },
+      incidentNote: { create: createNote },
+      $transaction,
+    } as unknown as PrismaService;
+    const service = new IncidentsService(prisma, {} as OnCallService);
+
+    await expect(
+      service.reassign("owner-id", "incident-id", "engineer-id", "Handover")
+    ).resolves.toEqual({ id: "incident-id" });
+    expect(createNote).toHaveBeenCalledWith({
+      data: {
+        incidentId: "incident-id",
+        authorId: "owner-id",
+        content: "Handover",
+      },
+    });
+    expect($transaction).toHaveBeenCalledWith([updateQuery, noteQuery]);
+  });
+
+  it("rejects resolving an open incident", async () => {
+    const updateMany = jest.fn();
+    const prisma = {
+      incident: {
+        findFirst: jest.fn().mockResolvedValue({
+          id: "incident-id",
+          status: "open",
+          assignedToId: "engineer-id",
+          createdAt: new Date(),
+        }),
+        updateMany,
+      },
+    } as unknown as PrismaService;
+    const service = new IncidentsService(prisma, {} as OnCallService);
+
+    await expect(
+      service.resolve("engineer-id", "incident-id")
+    ).rejects.toBeInstanceOf(ConflictException);
+    expect(updateMany).not.toHaveBeenCalled();
+  });
+
+  it("hides inaccessible incidents from acknowledge and resolve", async () => {
+    // The lookup is scoped to incidents the user may see, so an outsider gets a
+    // 404 and cannot tell a real incident id from a made-up one.
+    const findFirst = jest.fn().mockResolvedValue(null);
+    const updateMany = jest.fn();
+    const prisma = {
+      incident: { findFirst, updateMany },
+    } as unknown as PrismaService;
+    const service = new IncidentsService(prisma, {} as OnCallService);
+
+    await expect(
+      service.acknowledge("outsider-id", "incident-id")
+    ).rejects.toBeInstanceOf(NotFoundException);
+    await expect(
+      service.resolve("outsider-id", "incident-id")
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    expect(updateMany).not.toHaveBeenCalled();
+    expect(findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          id: "incident-id",
+          OR: [
+            { assignedToId: "outsider-id" },
+            { team: { ownerId: "outsider-id" } },
+            { team: { teamMembers: { some: { userId: "outsider-id" } } } },
+          ],
+        }) as unknown,
+      })
+    );
   });
 });

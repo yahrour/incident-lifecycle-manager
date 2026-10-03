@@ -9,6 +9,7 @@ import {
 } from "class-validator";
 import { Type } from "class-transformer";
 import { PAGINATION } from "@/common/constants";
+import { INCIDENT_SEVERITIES, INCIDENT_STATUS } from "../constants";
 
 export class FindIncidentsDto {
   @IsOptional()
@@ -16,11 +17,15 @@ export class FindIncidentsDto {
   search?: string;
 
   @IsOptional()
-  @IsIn(["open", "acknowledged", "in_progress", "resolved"])
+  @IsString()
+  service?: string;
+
+  @IsOptional()
+  @IsIn(Object.values(INCIDENT_STATUS))
   status?: string;
 
   @IsOptional()
-  @IsIn(["low", "medium", "high", "critical"])
+  @IsIn(INCIDENT_SEVERITIES)
   severity?: string;
 
   @IsOptional()

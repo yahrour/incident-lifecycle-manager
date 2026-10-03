@@ -56,5 +56,8 @@ export function getDiscordCredentials(): {
   clientSecret: string;
 } {
   const s = requireSecrets();
-  return { clientId: s.DISCORD_CLIENT_ID, clientSecret: s.DISCORD_CLIENT_SECRET };
+  return {
+    clientId: s.DISCORD_CLIENT_ID,
+    clientSecret: s.DISCORD_CLIENT_SECRET,
+  };
 }

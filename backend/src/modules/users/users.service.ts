@@ -20,8 +20,6 @@ export class UsersService {
     data: CreateUserDto,
     tx: Prisma.TransactionClient = this.prisma
   ) {
-    const { password } = data;
-    const passwordHash = await this.bcrypt.hash(password);
     const existing = await tx.user.findUnique({
       where: { email: data.email },
     });
@@ -29,6 +27,8 @@ export class UsersService {
     if (existing) {
       throw new ConflictException("Email already in use");
     }
+    const { password } = data;
+    const passwordHash = await this.bcrypt.hash(password);
 
     return tx.user.create({
       data: {
@@ -101,10 +101,25 @@ export class UsersService {
       where: { googleId },
     });
   }
+  linkGoogleId(userId: string, googleId: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { googleId },
+    });
+  }
 
   async getProfile(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        role: true,
+        timezone: true,
+        specialty: true,
+      },
     });
 
     if (!user) {
@@ -115,19 +130,19 @@ export class UsersService {
     const avatarInitials =
       `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase();
 
-    // TODO: add timezone and organizationName to return payload
     return {
       id: user.id,
       firstName: user.firstName,
       lastName: user.lastName,
-      avatarInitials,
       email: user.email,
       role: user.role,
+      timezone: user.timezone,
+      specialty: user.specialty,
+      avatarInitials,
     };
   }
 
   async updateProfile(userId: string, updateProfileDto: UpdateProfileDto) {
-    // TODO: validate timezone before storing it if it's provided
     try {
       return await this.prisma.user.update({
         where: { id: userId },
@@ -138,6 +153,7 @@ export class UsersService {
           lastName: true,
           email: true,
           role: true,
+          timezone: true,
         },
       });
     } catch (error) {

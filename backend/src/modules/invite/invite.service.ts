@@ -1,7 +1,9 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   GoneException,
+  HttpException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -28,7 +30,15 @@ export class InviteService {
 
   // ─── Public Methods ───────────────────────────────────────────────
 
-  async createInvite(createInvite: CreateInvite) {
+  async createInvite(createInvite: CreateInvite, activeUser: ActiveUserData) {
+    const currUser = await this.userService.findById(activeUser.sub);
+    if (!currUser) {
+      throw new NotFoundException("User not found");
+    }
+    if (currUser.email === createInvite.inviteEmail) {
+      throw new BadRequestException("You can't invite yourself to a team.");
+    }
+
     const existingInvite = await this.prisma.inviteToken.findFirst({
       where: {
         email: createInvite.inviteEmail,
@@ -44,7 +54,6 @@ export class InviteService {
       });
     }
 
-    // generate new token
     const { rawToken, hashedToken } = generateSecureToken();
 
     const inviteTtlDays = this.configService.getOrThrow<number>(
@@ -84,7 +93,15 @@ export class InviteService {
     }
     try {
       await this.prisma.$transaction(async (tx) => {
-        // 2. Create the user (passing 'tx' as the second argument)
+        const { count } = await tx.inviteToken.updateMany({
+          where: { id: invite.id, used: false },
+          data: { used: true },
+        });
+        if (count === 0) {
+          throw new ConflictException(
+            "This invite link has already been used."
+          );
+        }
         const newUser = await this.userService.create(
           {
             email: invite.email,
@@ -97,25 +114,16 @@ export class InviteService {
           },
           tx
         );
-
-        // 3. Add the user to the team
         await this.membersService.add(tx, invite.teamId, newUser.id);
-
-        // 4. Mark the token as used IN THE SAME TRANSACTION
-        // the user and team assignment are rolled back too!
-        await tx.inviteToken.update({
-          where: { id: invite.id },
-          data: { used: true },
-        });
       });
-
       return {
         success: true,
-        message: "Registration successful. Please login.",
+        message: "Registration successful. Please log in.",
       };
-    } catch {
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
       throw new InternalServerErrorException(
-        "Failed to complete registration and team assignment. Please try again."
+        "Failed to join the team. Please try again."
       );
     }
   }
@@ -133,27 +141,36 @@ export class InviteService {
         "You can only accept invites sent to your registered email address."
       );
     }
-
+    if (user.role !== Role.ENGINEER) {
+      throw new ForbiddenException("Only engineers can join a team.");
+    }
+    const isMember = await this.membersService.hasTeam(user.id);
+    if (isMember) {
+      throw new ConflictException(
+        "You're already in a team. Leave it before joining a new one."
+      );
+    }
     try {
-      // OPEN THE TRANSACTION BUBBLE
       await this.prisma.$transaction(async (tx) => {
-        // 1. Add them to the team (Pass 'tx')
-        await this.membersService.add(tx, invite.teamId, activeUser.sub);
-
-        // 2. Mark the token as used (Use 'tx' instead of this.prisma)
-        await tx.inviteToken.update({
-          where: { id: invite.id },
+        const { count } = await tx.inviteToken.updateMany({
+          where: { id: invite.id, used: false },
           data: { used: true },
         });
+        if (count === 0) {
+          throw new ConflictException(
+            "This invite link has already been used."
+          );
+        }
+        await this.membersService.add(tx, invite.teamId, activeUser.sub);
       });
-
-      return { success: true, message: "Successfully joined the team!" };
-    } catch {
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
       throw new InternalServerErrorException(
         "Failed to join the team. Please try again."
       );
     }
   }
+
   private async findAndValidateToken(rawToken: string): Promise<InviteToken> {
     const hashedToken = hashToken(rawToken);
 
@@ -176,10 +193,9 @@ export class InviteService {
   }
 
   private buildInviteLinkResponse(rawToken: string) {
-    const appUrl = this.configService.get<string>("APP_URL");
-    const inviteLink = `${appUrl}/register?token=${rawToken}`;
+    const frontUrl = this.configService.get<string>("FRONTEND_URL");
+    const inviteLink = `${frontUrl}/invite?token=${rawToken}`;
     return {
-      success: true,
       inviteLink,
     };
   }

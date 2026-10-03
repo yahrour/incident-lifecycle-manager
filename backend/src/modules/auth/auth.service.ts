@@ -36,23 +36,28 @@ export class AuthService {
   async signIn(signIn: SignIn) {
     const user = await this.userService.findByEmail(signIn.email);
     if (!user) {
-      throw new UnauthorizedException("Invalid credentials");
+      return { success: false as const, message: "Invalid credentials" };
     }
+
     if (!user.passwordHash) {
-      throw new UnauthorizedException(
-        "This account was created with Google. Please sign in with Google."
-      );
+      return {
+        success: false as const,
+        message:
+          "This account was created with Google. Please sign in with Google.",
+      };
     }
+
     const isMatch = await this.bcrypt.compare(
       signIn.password,
       user.passwordHash
     );
 
     if (!isMatch) {
-      throw new UnauthorizedException("Invalid credentials");
+      return { success: false as const, message: "Invalid credentials" };
     }
 
-    return this.generateTokens(user);
+    const tokens = await this.generateTokens(user);
+    return { success: true as const, ...tokens };
   }
 
   async generateTokens(user: User) {
@@ -132,10 +137,44 @@ export class AuthService {
         throw new UnauthorizedException("User not found");
       }
       await this.prisma.refreshToken.delete({ where: { id: stored.id } });
-      return this.generateTokens(user);
+      const tokens = await this.generateTokens(user);
+      return { ...tokens, userId: user.id };
     } catch {
       throw new UnauthorizedException("Invalid or expired refresh token");
     }
+  }
+
+  async getSession(accessToken?: string, refreshToken?: string) {
+    // Step 1: is the access token still valid?
+    if (accessToken) {
+      try {
+        const { sub } = await this.jwtService.verifyAsync<
+          Pick<ActiveUserData, "sub">
+        >(accessToken, {
+          secret: this.configService.getOrThrow<string>("JWT_SECRET"),
+          audience: this.configService.getOrThrow<string>("JWT_AUDIENCE"),
+          issuer: this.configService.getOrThrow<string>("JWT_ISSUER"),
+        });
+        const user = await this.userService.getProfile(sub);
+        return { user, tokens: null };
+      } catch {
+        // expired or invalid: continue to step 2
+      }
+    }
+
+    // Step 2: can the refresh token get us new tokens?
+    if (refreshToken) {
+      try {
+        const { userId, ...tokens } = await this.refrechTokens(refreshToken);
+        const user = await this.userService.getProfile(userId);
+        return { user, tokens };
+      } catch {
+        // refresh failed too: continue to step 3
+      }
+    }
+
+    // Step 3: nobody is logged in
+    return { user: null, tokens: null };
   }
 
   async logout(refreshToken?: string) {
