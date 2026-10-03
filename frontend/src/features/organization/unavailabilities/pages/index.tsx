@@ -13,8 +13,15 @@ import { useErrorToast } from "@/hooks/use-error-toast";
 import { Spinner } from "@/components/ui/spinner";
 import { TeamNotFound } from "../../shared/components/TeamNotFound";
 import { UnavailabilitiesTable } from "../components/tables/UnavailabilitiesTable";
+import { SortControls } from "../components/SortControls";
+import { useState } from "react";
+import type { SortState } from "../types";
 
 export function Unavailabilities() {
+  const [sort, setSort] = useState<SortState>({
+    field: "createdAt",
+    order: "desc",
+  });
   const { id: teamId } = useParams();
   const { data, isPending, isError } = useQuery({
     queryKey: ["team", teamId],
@@ -61,8 +68,11 @@ export function Unavailabilities() {
         </Breadcrumb>
       </div>
 
-      <div className="p-6">
-        <UnavailabilitiesTable teamId={team.id} />
+      <div className="p-6 space-y-4">
+        <div className="flex justify-end">
+          <SortControls sort={sort} onSortChange={setSort} />
+        </div>
+        <UnavailabilitiesTable teamId={team.id} sort={sort} />
       </div>
     </div>
   );

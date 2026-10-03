@@ -2,6 +2,7 @@ import { apiClient } from "@/lib/apiClient";
 import type { ApiResponse } from "@/types";
 import type { Unavailability } from "../../shared/types";
 import { DEFAULT_LIMIT, DEFAULT_PREVIEW_LIMIT } from "../../shared/constants";
+import type { SortState } from "../types";
 
 export async function fetchUnavailabilitiesPreview(id: string) {
   const response = await apiClient.get<ApiResponse<Unavailability[]>>(
@@ -12,10 +13,16 @@ export async function fetchUnavailabilitiesPreview(id: string) {
 
 export async function fetchUnavailabilities(
   id: string,
-  nextCursor: string | null
+  nextCursor: string | null,
+  sort: SortState
 ) {
+  const params = new URLSearchParams({
+    ...(nextCursor && { cursor: nextCursor }),
+    sortField: sort.field,
+    sortOrder: sort.order,
+  });
   const response = await apiClient.get<ApiResponse<Unavailability[]>>(
-    `/teams/${id}/unavailabilities?limit=${DEFAULT_LIMIT}${nextCursor ? `&cursor=${nextCursor}` : ""}`
+    `/teams/${id}/unavailabilities?limit=${DEFAULT_LIMIT}&${params.toString()}`
   );
   return response.data;
 }

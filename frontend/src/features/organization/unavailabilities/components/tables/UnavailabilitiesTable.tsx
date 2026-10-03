@@ -19,12 +19,20 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDuration } from "../../utils/time";
 import { queryClient } from "@/lib/queryClient";
+import type { SortState } from "../../types";
 
-export function UnavailabilitiesTable({ teamId }: { teamId: string }) {
+export function UnavailabilitiesTable({
+  teamId,
+  sort,
+}: {
+  teamId: string;
+  sort: SortState;
+}) {
   const { data, isError, isPending, fetchNextPage, hasNextPage, isFetching } =
     useInfiniteQuery({
-      queryKey: ["teams", "unavailabilities", teamId],
-      queryFn: ({ pageParam }) => fetchUnavailabilities(teamId, pageParam),
+      queryKey: ["teams", "unavailabilities", teamId, sort],
+      queryFn: ({ pageParam }) =>
+        fetchUnavailabilities(teamId, pageParam, sort),
       initialPageParam: null as string | null,
       getNextPageParam: (lastPage) => lastPage.meta?.nextCursor ?? undefined,
     });

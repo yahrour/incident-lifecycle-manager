@@ -1,4 +1,4 @@
 import type { SortOrder } from "../../shared/types";
 
-type SortField = "confirmed" | "createdAt";
+type SortField = "status" | "createdAt";
 export type SortState = { field: SortField; order: SortOrder };
