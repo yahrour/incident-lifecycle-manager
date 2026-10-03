@@ -28,6 +28,7 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
+
 import { settingsSchema, type SettingsFormValues } from "../schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { User } from "@/types";
@@ -83,7 +84,7 @@ export function ProfileForm({ user }: { user: User }) {
         <CardTitle>Profile</CardTitle>
         <CardDescription>Manage your account preferences.</CardDescription>
       </CardHeader>
-      <form onSubmit={(e) => void form.handleSubmit(onSubmit)(e)}>
+      <form onSubmit={(e) => void form.handleSubmit(onSubmit)(e)} noValidate>
         <CardContent>
           <FieldGroup>
             <FieldSet>
