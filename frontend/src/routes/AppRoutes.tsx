@@ -7,12 +7,14 @@ import { SignIn, SignUp } from "@/features/auth";
 import { SettingPage } from "@/features/settings";
 import { GuestOnly } from "./GuestOnly";
 import { Members, Team, Teams } from "@/features/organization";
+import { InvitePage } from "@/features/invite";
 
 export default function AppRoutes() {
   return (
     <Routes>
       {/* Public — must stay outside RequireAuth */}
       <Route path="/unauthorized" element={<div>Not allowed</div>} />
+      <Route path="/invite" element={<InvitePage />} />
       <Route element={<GuestOnly />}>
         <Route path="/login" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
