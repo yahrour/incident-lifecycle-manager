@@ -1,2 +1,4 @@
 export { default as useLogout } from "./hooks/useLogout";
 export { getMe } from "./services/authService";
+export { default as SignIn } from "./pages/SignIn";
+export { default as SignUp } from "./pages/signUp";
