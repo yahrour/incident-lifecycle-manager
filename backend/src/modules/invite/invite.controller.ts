@@ -7,6 +7,8 @@ import type { ActiveUserData } from "@/common/interfaces/active-user.interface";
 import { Public } from "@/common/decorators/public.decorator";
 import { Roles } from "@/common/decorators/roles.decorator";
 import { Role } from "@/generated/prisma/enums";
+import { apiResponse } from "@/common/utils/api-response";
+import { AcceptInviteDto } from "./dto/accept-invite.dto";
 
 @Controller({
   path: "invite",
@@ -17,14 +19,22 @@ export class InviteController {
 
   @Roles(Role.SRE)
   @Post("create")
-  create(@Body() createInvite: CreateInvite) {
-    return this.inviteService.createInvite(createInvite);
+  async create(
+    @Body() createInvite: CreateInvite,
+    @ActiveUser() activeUser: ActiveUserData
+  ) {
+    const result = await this.inviteService.createInvite(
+      createInvite,
+      activeUser
+    );
+    return apiResponse(result);
   }
 
   @Public()
   @Get("validate")
-  validate(@Query("token") token: string) {
-    return this.inviteService.validateToken(token);
+  async validate(@Query() dto: AcceptInviteDto) {
+    const data = await this.inviteService.validateToken(dto.token);
+    return apiResponse(data);
   }
 
   @Public()
@@ -34,10 +44,10 @@ export class InviteController {
   }
 
   @Post("accept")
-  acceptInvite(
-    @Body("token") token: string,
+  async acceptInvite(
+    @Body() dto: AcceptInviteDto,
     @ActiveUser() activeUser: ActiveUserData
   ) {
-    return this.inviteService.accept(token, activeUser);
+    await this.inviteService.accept(dto.token, activeUser);
   }
 }

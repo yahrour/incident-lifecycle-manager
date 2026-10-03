@@ -118,6 +118,7 @@ export class UnavailabilityService {
           ),
           reason: createUnavailabilityDto.reason,
           confirmed: isTeamOwner, // if the requester is the team owner, confirm unavailability automatically
+          status: isTeamOwner ? "APPROVED" : "PENDING",
         },
       });
     } catch (error) {
@@ -221,6 +222,7 @@ export class UnavailabilityService {
             : isDateChanged
               ? false
               : currentUnavailability.confirmed,
+          status: isTeamOwner ? "APPROVED" : isDateChanged ? "PENDING" : currentUnavailability.status,
         },
       });
     } catch (error) {
@@ -346,6 +348,7 @@ export class UnavailabilityService {
                   lastName: true,
                   email: true,
                   specialty: true,
+                  role: true,
                 },
               },
             },
@@ -403,6 +406,7 @@ export class UnavailabilityService {
       this.prisma.unavailability.findMany({
         where: {
           confirmed: false,
+          status: "PENDING",
           teamMember: {
             teamId,
             team: { ownerId: requesterId },
@@ -419,6 +423,7 @@ export class UnavailabilityService {
       this.prisma.unavailability.count({
         where: {
           confirmed: false,
+          status: "PENDING",
           teamMember: {
             teamId,
             team: { ownerId: requesterId },
@@ -456,8 +461,11 @@ export class UnavailabilityService {
       throw new NotFoundException("Unavailability not found");
     }
 
-    if (unavailability.confirmed) {
-      throw new BadRequestException("Unavailability is already confirmed");
+    if (unavailability.status === "APPROVED") {
+      throw new BadRequestException("Unavailability is already approved");
+    }
+    if (unavailability.status === "REJECTED") {
+      throw new BadRequestException("Cannot approve a rejected unavailability");
     }
 
     await this.prisma.unavailability.update({
@@ -467,6 +475,53 @@ export class UnavailabilityService {
       },
       data: {
         confirmed: true,
+        status: "APPROVED",
+      },
+    });
+  }
+
+  async reject(
+    requesterId: string,
+    teamId: string,
+    memberId: number,
+    unavailabilityId: number
+  ) {
+    await this.verifyTeamOwnership(teamId, requesterId);
+    const member = await this.prisma.teamMember.findUnique({
+      where: { id: memberId, teamId },
+    });
+
+    if (!member) {
+      throw new NotFoundException("Team member not found in this team");
+    }
+
+    const unavailability = await this.prisma.unavailability.findUnique({
+      where: {
+        id: unavailabilityId,
+        memberId,
+      },
+    });
+
+    if (!unavailability) {
+      throw new NotFoundException("Unavailability not found");
+    }
+
+    if (unavailability.status === "APPROVED") {
+      throw new BadRequestException("Cannot reject an approved unavailability");
+    }
+
+    if (unavailability.status === "REJECTED") {
+      throw new BadRequestException("Unavailability is already rejected");
+    }
+
+    await this.prisma.unavailability.update({
+      where: {
+        id: unavailabilityId,
+        memberId,
+      },
+      data: {
+        confirmed: false,
+        status: "REJECTED",
       },
     });
   }

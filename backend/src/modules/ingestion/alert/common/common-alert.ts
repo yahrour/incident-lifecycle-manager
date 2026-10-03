@@ -7,4 +7,6 @@ export interface CommonAlert {
   message?: string;
   severity: AlertSeverity;
   occurredAt: Date;
+  team?: string;
+  status?: string;
 }

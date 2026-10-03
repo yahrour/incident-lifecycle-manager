@@ -46,20 +46,27 @@ export class IncidentsService {
     }
   }
 
+  // Incidents a user may see: their own, or any belonging to a team they own or
+  // are a member of.
+  private accessibleBy(userId: string): Prisma.IncidentWhereInput {
+    return {
+      OR: [
+        { assignedToId: userId },
+        { team: { ownerId: userId } },
+        { team: { teamMembers: { some: { userId } } } },
+      ],
+    };
+  }
+
   async findAll(userId: string, query: FindIncidentsDto) {
     const cursor = query.cursor ? this.decodeCursor(query.cursor) : undefined;
     const where: Prisma.IncidentWhereInput = {
       AND: [
-        {
-          OR: [
-            { assignedToId: userId },
-            { team: { ownerId: userId } },
-            { team: { teamMembers: { some: { userId } } } },
-          ],
-        },
+        this.accessibleBy(userId),
         ...(query.status ? [{ status: query.status }] : []),
         ...(query.severity ? [{ severity: query.severity }] : []),
         ...(query.teamId ? [{ teamId: query.teamId }] : []),
+        ...(query.service ? [{ service: query.service }] : []),
         ...(query.assigneeId ? [{ assignedToId: query.assigneeId }] : []),
         ...(query.search
           ? [
@@ -111,14 +118,7 @@ export class IncidentsService {
 
   async findOne(userId: string, incidentId: string) {
     const incident = await this.prisma.incident.findFirst({
-      where: {
-        id: incidentId,
-        OR: [
-          { assignedToId: userId },
-          { team: { ownerId: userId } },
-          { team: { teamMembers: { some: { userId } } } },
-        ],
-      },
+      where: { id: incidentId, ...this.accessibleBy(userId) },
       include: {
         team: true,
         assignedTo: {
@@ -150,7 +150,13 @@ export class IncidentsService {
       ...(incident.resolvedAt
         ? [{ type: "resolved", at: incident.resolvedAt }]
         : []),
-    ];
+      ...(incident.notes ?? []).map((note) => ({
+        type: "note_added",
+        at: note.createdAt,
+        noteId: note.id,
+        actor: note.author,
+      })),
+    ].sort((a, b) => a.at.getTime() - b.at.getTime());
 
     return {
       ...incident,
@@ -164,14 +170,7 @@ export class IncidentsService {
 
   async createNote(userId: string, incidentId: string, content: string) {
     const incident = await this.prisma.incident.findFirst({
-      where: {
-        id: incidentId,
-        OR: [
-          { assignedToId: userId },
-          { team: { ownerId: userId } },
-          { team: { teamMembers: { some: { userId } } } },
-        ],
-      },
+      where: { id: incidentId, ...this.accessibleBy(userId) },
       select: { id: true },
     });
 
@@ -193,7 +192,7 @@ export class IncidentsService {
       ownerId
     );
     const assigneeUserId = onCall?.chain.find(
-      ({ role }) => role === "PRIMARY"
+      ({ position }) => position === "PRIMARY"
     )?.id;
 
     if (!assigneeUserId) {
@@ -213,14 +212,91 @@ export class IncidentsService {
     });
   }
 
-  async reassign(ownerId: string, incidentId: string, assigneeId: string) {
+  async createFromAlert(
+    ownerId: string,
+    alertId: string,
+    alert: {
+      provider: string;
+      title: string;
+      serviceName?: string;
+      severity: string;
+      status?: string;
+      team?: string;
+    }
+  ) {
+    const team =
+      alert.team &&
+      (await this.prisma.team.findFirst({
+        where: { ownerId, name: alert.team },
+        select: { id: true },
+      }));
+    if (!team) return null;
+
+    const service = alert.serviceName ?? "unknown";
+    const fingerprint = createIncidentFingerprint(
+      alert.provider,
+      service,
+      alert.title
+    );
+    const where = {
+      unique_team_open_fingerprint: {
+        teamId: team.id,
+        openFingerprint: fingerprint,
+      },
+    };
+
+    let incident = await this.prisma.incident.findUnique({
+      where,
+      select: { id: true },
+    });
+    if (!incident) {
+      if (alert.status === "resolved") return null;
+      const onCall = await this.onCallService.getCurrentOnCall(
+        team.id,
+        ownerId
+      );
+      incident = await this.prisma.incident.upsert({
+        where,
+        update: {},
+        create: {
+          teamId: team.id,
+          title: alert.title,
+          service,
+          severity:
+            { critical: "critical", warning: "medium" }[alert.severity] ??
+            "low",
+          fingerprint,
+          openFingerprint: fingerprint,
+          assignedToId: onCall?.chain.find(
+            ({ position }) => position === "PRIMARY"
+          )?.id,
+        },
+        select: { id: true },
+      });
+    }
+
+    await this.prisma.incidentAlert.create({
+      data: { alertId, incidentId: incident.id },
+    });
+    return incident.id;
+  }
+
+  async reassign(
+    ownerId: string,
+    incidentId: string,
+    assigneeId: string,
+    note?: string
+  ) {
     const incident = await this.prisma.incident.findFirst({
       where: { id: incidentId, team: { ownerId } },
-      select: { id: true, teamId: true },
+      select: { id: true, teamId: true, status: true },
     });
 
     if (!incident) throw new NotFoundException("Incident doesn't exist");
     if (!incident.teamId) throw new ConflictException("Incident has no team");
+    if (incident.status === INCIDENT_STATUS.RESOLVED) {
+      throw new ConflictException("Resolved incidents cannot be reassigned");
+    }
 
     const member = await this.prisma.teamMember.findFirst({
       where: { teamId: incident.teamId, userId: assigneeId },
@@ -231,7 +307,7 @@ export class IncidentsService {
       );
     }
 
-    return this.prisma.incident.update({
+    const update = this.prisma.incident.update({
       where: { id: incidentId },
       data: { assignedToId: assigneeId },
       include: {
@@ -241,11 +317,21 @@ export class IncidentsService {
         },
       },
     });
+
+    if (!note) return update;
+
+    const [updated] = await this.prisma.$transaction([
+      update,
+      this.prisma.incidentNote.create({
+        data: { incidentId, authorId: ownerId, content: note },
+      }),
+    ]);
+    return updated;
   }
 
   async acknowledge(userId: string, incidentId: string) {
-    const incident = await this.prisma.incident.findUnique({
-      where: { id: incidentId },
+    const incident = await this.prisma.incident.findFirst({
+      where: { id: incidentId, ...this.accessibleBy(userId) },
       include: { team: true },
     });
 
@@ -281,8 +367,8 @@ export class IncidentsService {
   }
 
   async resolve(userId: string, incidentId: string) {
-    const incident = await this.prisma.incident.findUnique({
-      where: { id: incidentId },
+    const incident = await this.prisma.incident.findFirst({
+      where: { id: incidentId, ...this.accessibleBy(userId) },
     });
 
     if (!incident) {
@@ -307,6 +393,7 @@ export class IncidentsService {
       data: {
         status: INCIDENT_STATUS.RESOLVED,
         resolvedAt,
+        openFingerprint: null,
         mttrSeconds: Math.floor(
           (resolvedAt.getTime() - incident.createdAt.getTime()) / 1000
         ),

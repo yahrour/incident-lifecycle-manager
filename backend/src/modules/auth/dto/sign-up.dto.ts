@@ -8,6 +8,7 @@ import {
   IsTimeZone,
 } from "class-validator";
 import { Trim } from "src/common/transformers/trim.transformer";
+import { Transform } from "class-transformer";
 
 export class SignUp {
   @Trim()
@@ -22,7 +23,9 @@ export class SignUp {
   @MaxLength(50)
   lastName: string;
 
-  @Trim()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === "string" ? value.trim().toLowerCase() : value
+  )
   @IsNotEmpty()
   @IsEmail()
   @MaxLength(255)

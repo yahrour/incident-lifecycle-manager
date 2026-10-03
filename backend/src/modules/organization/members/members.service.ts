@@ -54,6 +54,8 @@ export class MembersService {
     ownerId: string,
     query: OffsetPaginationSearchParams
   ) {
+    const now = new Date();
+
     const [total, members] = await Promise.all([
       this.prisma.teamMember.count({
         where: {
@@ -88,6 +90,18 @@ export class MembersService {
               lastName: true,
               email: true,
               specialty: true,
+              role: true,
+            },
+          },
+          unavailabilities: {
+            where: {
+              confirmed: true,
+              startDate: {
+                lte: now,
+              },
+              endDate: {
+                gte: now,
+              },
             },
           },
         },
@@ -149,5 +163,16 @@ export class MembersService {
 
       throw error;
     }
+  }
+
+  async hasTeam(userId: string) {
+    const hasTeam = await this.prisma.teamMember.findUnique({
+      where: {
+        userId,
+      },
+      select: { id: true },
+    });
+
+    return hasTeam !== null;
   }
 }

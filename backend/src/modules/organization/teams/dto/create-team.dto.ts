@@ -1,4 +1,9 @@
+import { Transform } from "class-transformer";
 import {
+  ArrayMaxSize,
+  ArrayNotEmpty,
+  ArrayUnique,
+  IsArray,
   IsDate,
   IsNotEmpty,
   IsNumber,
@@ -7,14 +12,18 @@ import {
   IsString,
   IsTimeZone,
   IsUrl,
+  Matches,
   Max,
   MaxLength,
   ValidateIf,
 } from "class-validator";
 
 export class CreateTeamDto {
-  @IsNotEmpty()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === "string" ? value.trim() : value
+  )
   @IsString()
+  @IsNotEmpty()
   @MaxLength(50, { message: "name must not exceed 50 characters" })
   name: string;
 
@@ -54,6 +63,34 @@ export class CreateTeamDto {
 
   @IsOptional()
   @IsUrl()
+  @Matches(/^https:\/\/discord\.com\/api\/webhooks\//, {
+    message: "URL must be a Discord webhook URL",
+  })
   @MaxLength(255, { message: "webhook url must not exceed 255 characters" })
   webhookUrl?: string;
+
+  @IsArray()
+  @ArrayNotEmpty()
+  @ArrayMaxSize(20, {
+    message: "You can have a maximum of 20 services",
+  })
+  @IsString({ each: true })
+  @Transform(({ value }: { value: unknown }) =>
+    Array.isArray(value)
+      ? value.map((v: unknown) => (typeof v === "string" ? v.trim() : v))
+      : value
+  )
+  @IsNotEmpty({ each: true })
+  @MaxLength(25, {
+    each: true,
+    message: "Each service must not exceed 25 characters",
+  })
+  @ArrayUnique(
+    (service: unknown) =>
+      typeof service === "string" ? service.toLowerCase() : service,
+    {
+      message: "Services must be unique (case-insensitive)",
+    }
+  )
+  services: string[];
 }

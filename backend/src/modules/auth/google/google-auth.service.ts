@@ -1,61 +1,43 @@
-import {
-  Injectable,
-  OnModuleInit,
-  UnauthorizedException,
-} from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { OAuth2Client } from "google-auth-library";
-import { AuthService } from "../auth.service";
+import { Injectable } from "@nestjs/common";
 import { Role } from "@/generated/prisma/client";
 import { UsersService } from "@/modules/users/users.service";
+import type { GoogleProfile } from "./google.strategy";
+import { AuthService } from "../auth.service";
 
 @Injectable()
-export class GoogleAuthService implements OnModuleInit {
-  private oauthClient: OAuth2Client;
+export class GoogleAuthService {
   constructor(
-    private readonly configueService: ConfigService,
-    private readonly authService: AuthService,
-    private readonly usersService: UsersService
+    private readonly usersService: UsersService,
+    private readonly authService: AuthService
   ) {}
-  onModuleInit() {
-    const clientId =
-      this.configueService.getOrThrow<string>("GOOGLE_CLIENT_ID");
-    const clientSecret = this.configueService.getOrThrow<string>(
-      "GOOGLE_CLIENT_SECRET"
-    );
-    this.oauthClient = new OAuth2Client(clientId, clientSecret);
+
+  async login(profile: GoogleProfile) {
+    if (!profile.email || !profile.emailVerified) {
+      return {
+        success: false as const,
+        message: "Google email is not verified",
+      };
+    }
+    const user = await this.findOrCreateUser(profile, profile.email);
+    const tokens = await this.authService.generateTokens(user);
+    return { success: true as const, ...tokens };
   }
 
-  async authentificate(token: string) {
-    const loginTicket = await this.oauthClient.verifyIdToken({
-      audience: this.configueService.getOrThrow<string>("GOOGLE_CLIENT_ID"),
-      idToken: token,
-    });
-    const payload = loginTicket.getPayload();
-    if (!payload) {
-      throw new UnauthorizedException("Invalid Google token payload");
-    }
-    const {
-      email,
-      sub: googleId,
-      given_name: firstName,
-      family_name: lastName,
-    } = payload;
-    if (!email || !googleId) {
-      throw new UnauthorizedException("Google token is missing required data");
+  private async findOrCreateUser(profile: GoogleProfile, email: string) {
+    const byGoogleId = await this.usersService.findGoogleId(profile.googleId);
+    if (byGoogleId) return byGoogleId;
+
+    const byEmail = await this.usersService.findByEmail(email);
+    if (byEmail) {
+      return this.usersService.linkGoogleId(byEmail.id, profile.googleId);
     }
 
-    let user = await this.usersService.findGoogleId(googleId);
-    if (!user) {
-      const assignedRole: Role = Role.SRE;
-      user = await this.usersService.createWithGoogle(
-        email,
-        googleId,
-        firstName || "Unknown",
-        lastName || "Unknown",
-        assignedRole
-      );
-    }
-    return this.authService.generateTokens(user);
+    return this.usersService.createWithGoogle(
+      email,
+      profile.googleId,
+      profile.firstName,
+      profile.lastName,
+      Role.SRE
+    );
   }
 }

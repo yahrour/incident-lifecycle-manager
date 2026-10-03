@@ -185,10 +185,10 @@ describe("OnCallService", () => {
       expect(result?.chain).toHaveLength(2);
       // @ts-expect-error ignore
       // eslint-disable-next-line
-      const { role: primaryRole, ...primary } = result?.chain[0];
+      const { position: primaryRole, ...primary } = result?.chain[0];
       // @ts-expect-error ignore
       // eslint-disable-next-line
-      const { role: secondaryRole, ...secondary } = result?.chain[1];
+      const { position: secondaryRole, ...secondary } = result?.chain[1];
       expect(primary).toEqual(secondary);
     });
 
@@ -241,12 +241,12 @@ describe("OnCallService", () => {
       expect(result?.chain).not.toBeNull();
       expect(result?.chain).toHaveLength(2);
       expect(result?.chain[0]).toEqual({
-        role: "PRIMARY",
         ...team.teamMembers[0].user,
+        position: "PRIMARY",
       });
       expect(result?.chain[1]).toEqual({
-        role: "SECONDARY",
         ...team.teamMembers[1].user,
+        position: "SECONDARY",
       });
     });
 
@@ -320,11 +320,11 @@ describe("OnCallService", () => {
       expect(result?.chain).not.toBeNull();
       expect(result?.chain).toHaveLength(2);
       expect(result?.chain[0]).toEqual({
-        role: "PRIMARY",
+        position: "PRIMARY",
         ...team.teamMembers[1].user,
       });
       expect(result?.chain[1]).toEqual({
-        role: "SECONDARY",
+        position: "SECONDARY",
         ...team.teamMembers[2].user,
       });
     });

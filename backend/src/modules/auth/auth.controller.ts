@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -37,26 +38,64 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
     @Body() signIn: SignIn
   ) {
-    const { accessToken, refreshToken } = await this.authService.signIn(signIn);
-    response.cookie("refreshToken", refreshToken, REFRESH_COOKIE_OPTIONS);
-    response.cookie("accessToken", accessToken, ACCESS_COOKIE_OPTIONS);
-    return { message: "SignIn successful" };
+    const result = await this.authService.signIn(signIn);
+    if (!result.success) {
+      return { success: false, message: result.message };
+    }
+    response.cookie(
+      "refreshToken",
+      result.refreshToken,
+      REFRESH_COOKIE_OPTIONS
+    );
+    response.cookie("accessToken", result.accessToken, ACCESS_COOKIE_OPTIONS);
+    return { success: true };
   }
 
   @HttpCode(HttpStatus.OK)
   @Post("refresh-tokens")
-  refreshTokens(
+  async refreshTokens(
     @Req() request: Request,
-    @Body() refrechTokenDto: RefrechTokenDto
+    @Body() refrechTokenDto: RefrechTokenDto,
+    @Res({ passthrough: true }) response: Response
   ) {
     const cookies = request.cookies as Record<string, string> | undefined;
-    const refreshToken =
+    const oldRefreshToken =
       cookies?.["refreshToken"] ?? refrechTokenDto.refreshToken;
-
-    if (!refreshToken) {
+    if (!oldRefreshToken) {
       throw new UnauthorizedException("No refresh token provided");
     }
-    return this.authService.refrechTokens(refreshToken);
+
+    const { accessToken, refreshToken } =
+      await this.authService.refrechTokens(oldRefreshToken);
+
+    response.cookie("refreshToken", refreshToken, REFRESH_COOKIE_OPTIONS);
+    response.cookie("accessToken", accessToken, ACCESS_COOKIE_OPTIONS);
+
+    return { message: "Tokens refreshed" };
+  }
+
+  @Get("session")
+  async session(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response
+  ) {
+    const cookies = request.cookies as Record<string, string> | undefined;
+
+    const { user, tokens } = await this.authService.getSession(
+      cookies?.["accessToken"],
+      cookies?.["refreshToken"]
+    );
+
+    if (tokens) {
+      response.cookie(
+        "refreshToken",
+        tokens.refreshToken,
+        REFRESH_COOKIE_OPTIONS
+      );
+      response.cookie("accessToken", tokens.accessToken, ACCESS_COOKIE_OPTIONS);
+    }
+
+    return { user };
   }
 
   @HttpCode(HttpStatus.OK)

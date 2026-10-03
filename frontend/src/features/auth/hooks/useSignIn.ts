@@ -1,13 +1,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { signIn } from "../services/authService";
+import { getSafeRedirect } from "@/lib/redirect";
 
 function useAuthSuccess() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const redirect = getSafeRedirect(searchParams.get("redirect"));
   return async () => {
-    await queryClient.invalidateQueries({ queryKey: ["me"] });
-    await navigate("/", { replace: true });
+    await queryClient.invalidateQueries({ queryKey: ["session"] });
+    await navigate(redirect ?? "/", { replace: true });
   };
 }
 

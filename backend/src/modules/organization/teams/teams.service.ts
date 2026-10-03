@@ -23,6 +23,7 @@ export class TeamsService {
           ownerId,
           name: createTeamDto.name,
           description: createTeamDto.description,
+          services: createTeamDto.services,
           rotationPeriodDays: createTeamDto.rotationPeriodDays,
           rotationStartDate:
             createTeamDto.rotationStartDate &&
@@ -128,6 +129,12 @@ export class TeamsService {
         this.prisma.team.count({
           where: {
             ownerId,
+            ...(query.search && {
+              name: {
+                contains: query.search,
+                mode: "insensitive",
+              },
+            }),
           },
         }),
       ]);

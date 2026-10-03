@@ -3,16 +3,23 @@ import { Route, Routes } from "react-router";
 import { AppLayout } from "./AppLayout";
 import { RequireAuth } from "./RequireAuth";
 import { ProtectedRoute } from "./ProtectedRoute";
-import { Team, Teams } from "@/features/teams";
-import SignIn from "@/features/auth/pages/SignIn";
-import SignUp from "@/features/auth/pages/signUp";
+import { SignIn, SignUp } from "@/features/auth";
+import { SettingPage } from "@/features/settings";
 import { GuestOnly } from "./GuestOnly";
+import {
+  Members,
+  Team,
+  Teams,
+  Unavailabilities,
+} from "@/features/organization";
+import { InvitePage } from "@/features/invite";
 
 export default function AppRoutes() {
   return (
     <Routes>
       {/* Public — must stay outside RequireAuth */}
       <Route path="/unauthorized" element={<div>Not allowed</div>} />
+      <Route path="/invite" element={<InvitePage />} />
       <Route element={<GuestOnly />}>
         <Route path="/login" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
@@ -25,6 +32,11 @@ export default function AppRoutes() {
             <Route path="/" element={<div>Home</div>} />
             <Route path="/manager/teams" element={<Teams />} />
             <Route path="/manager/teams/:id" element={<Team />} />
+            <Route path="/manager/teams/:id/members" element={<Members />} />
+            <Route
+              path="/manager/teams/:id/unavailabilities"
+              element={<Unavailabilities />}
+            />
             <Route
               path="/manager/engineers"
               element={<div>manage engineers</div>}
@@ -50,6 +62,9 @@ export default function AppRoutes() {
             />
             <Route path="/engineer/team" element={<div>manage team</div>} />
           </Route>
+        </Route>
+        <Route element={<AppLayout />}>
+          <Route path="/settings" element={<SettingPage />} />
         </Route>
       </Route>
 
