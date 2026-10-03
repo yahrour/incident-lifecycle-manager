@@ -9,7 +9,7 @@ import {
 } from "../auth-cookie.constants";
 
 @Controller({
-  path: "authentication/google",
+  path: "auth/google",
   version: "1",
 })
 export class GoogleAuthController {
@@ -21,7 +21,7 @@ export class GoogleAuthController {
     @Body() googleToken: GoogleToken
   ) {
     const { accessToken, refreshToken } =
-      await this.googleAuthService.authentificate(googleToken.token);
+      await this.googleAuthService.authenticate(googleToken.token);
     response.cookie("accessToken", accessToken, ACCESS_COOKIE_OPTIONS);
 
     response.cookie("refreshToken", refreshToken, REFRESH_COOKIE_OPTIONS);
