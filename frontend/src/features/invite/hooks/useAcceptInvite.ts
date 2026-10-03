@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { acceptInvite } from "../services/inviteService";
 import { useNavigate } from "react-router";
 
-export function useAccept() {
+export function useAcceptInvite() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   return useMutation({
