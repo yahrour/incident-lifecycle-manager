@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { UserPlus } from "lucide-react";
-import { useAccept } from "../hooks/useAccept";
+import { useAcceptInvite } from "../hooks/useAcceptInvite";
 import { Button } from "@/components/ui/button";
 import { isAxiosError } from "axios";
 
@@ -33,7 +33,7 @@ function getAcceptErrorMessage(error: unknown): string {
 }
 
 export function AcceptInvite({ token, email }: AcceptInviteProps) {
-  const { mutate, isPending, error } = useAccept();
+  const { mutate, isPending, error } = useAcceptInvite();
   const status = isAxiosError(error) ? error.response?.status : undefined;
 
   const canRetry = !status || status >= 500;

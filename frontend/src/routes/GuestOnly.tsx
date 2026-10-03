@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useSearchParams } from "react-router";
-import { useAuth } from "@/features/auth/context/AuthContext";
+import { useAuth } from "@/features/auth";
 import { getSafeRedirect } from "@/lib/redirect";
 export function GuestOnly() {
   const [searchParams] = useSearchParams();
