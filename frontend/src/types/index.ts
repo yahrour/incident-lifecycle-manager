@@ -18,7 +18,10 @@ export type User = {
 
 export type ApiResponse<T> = {
   data: T;
-  meta?: Record<string, unknown>;
+  meta?: {
+    nextCursor?: string | null;
+    total?: number;
+  };
 };
 
 export type ApiError = {
