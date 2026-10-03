@@ -35,6 +35,7 @@ function getAcceptErrorMessage(error: unknown): string {
 export function AcceptInvite({ token, email }: AcceptInviteProps) {
   const { mutate, isPending, error } = useAccept();
   const status = isAxiosError(error) ? error.response?.status : undefined;
+
   const canRetry = !status || status >= 500;
   return (
     <div className="flex flex-col items-center justify-center gap-8 px-4 py-10">

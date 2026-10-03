@@ -93,6 +93,15 @@ export class InviteService {
     }
     try {
       await this.prisma.$transaction(async (tx) => {
+        const { count } = await tx.inviteToken.updateMany({
+          where: { id: invite.id, used: false },
+          data: { used: true },
+        });
+        if (count === 0) {
+          throw new ConflictException(
+            "This invite link has already been used."
+          );
+        }
         const newUser = await this.userService.create(
           {
             email: invite.email,
@@ -105,21 +114,16 @@ export class InviteService {
           },
           tx
         );
-
         await this.membersService.add(tx, invite.teamId, newUser.id);
-        await tx.inviteToken.update({
-          where: { id: invite.id },
-          data: { used: true },
-        });
       });
-
       return {
         success: true,
-        message: "Registration successful. Please login.",
+        message: "Registration successful. Please log in.",
       };
-    } catch {
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
       throw new InternalServerErrorException(
-        "Failed to complete registration and team assignment. Please try again."
+        "Failed to join the team. Please try again."
       );
     }
   }
