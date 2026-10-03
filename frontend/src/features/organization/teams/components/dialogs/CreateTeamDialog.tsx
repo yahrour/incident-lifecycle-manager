@@ -439,9 +439,7 @@ export function CreateTeamDialog() {
               type="button"
               variant="outline"
               onClick={() => {
-                form.reset();
-                setErrors([]);
-                setService("");
+                resetForm();
                 setOpen(false);
               }}
               disabled={isPending}
