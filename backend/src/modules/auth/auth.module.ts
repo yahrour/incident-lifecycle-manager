@@ -7,6 +7,7 @@ import { UsersModule } from "../users/users.module";
 import { SecurityModule } from "../security/security.module";
 import { PassportModule } from "@nestjs/passport";
 import { GoogleStrategy } from "./google/google.strategy";
+import { GoogleAuthService } from "./google/google-auth.service";
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { GoogleStrategy } from "./google/google.strategy";
     UsersModule,
     JwtModule.register({}),
   ],
-  providers: [AuthService, GoogleStrategy],
+  providers: [AuthService, GoogleStrategy, GoogleAuthService],
   exports: [JwtModule],
   controllers: [AuthController, GoogleAuthController],
 })
