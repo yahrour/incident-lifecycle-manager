@@ -89,13 +89,14 @@ export function TeamsTable({
             <TableHead>members</TableHead>
             <TableHead>rotation</TableHead>
             <TableHead>on-call now</TableHead>
-            <TableHead>escalates</TableHead>
+            <TableHead>escalates(min)</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {teams?.data.map((team) => {
             const onCall = onCallByTeam.get(team.id);
-
+            const fullName = (onCall?.firstName ?? "") + " " + (onCall?.lastName ?? "");
+            const initials = (onCall?.firstName.charAt(0) ?? "") + (onCall?.lastName.charAt(0) ?? "");
             return (
               <TableRow
                 key={team.id}
@@ -128,14 +129,14 @@ export function TeamsTable({
                   {onCall && (
                     <Avatar className="h-6 w-6">
                       <AvatarFallback className="text-xs">
-                        {onCall.firstName.charAt(0) + onCall.lastName.charAt(0)}
+                        {initials.length > 0 ? initials : "?"}
                       </AvatarFallback>
                     </Avatar>
                   )}
-                  {onCall?.firstName + " " + onCall?.lastName}
+                  {fullName.length > 1 ? fullName : "no members yet"}
                 </TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {team.escalationTimeoutMinutes}m
+                <TableCell className="text-left text-xs text-muted-foreground">
+                  {team.escalationTimeoutMinutes}
                 </TableCell>
               </TableRow>
             );
