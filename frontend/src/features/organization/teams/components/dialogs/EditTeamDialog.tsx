@@ -53,7 +53,6 @@ export function EditTeamDialog({ team }: { team: Team }) {
       services: team.services,
       escalationTimeoutMinutes: team.escalationTimeoutMinutes,
       rotationPeriodDays: team.rotationPeriodDays,
-      webhookUrl: team.webhookUrl || "",
     },
   });
 
@@ -320,37 +319,6 @@ export function EditTeamDialog({ team }: { team: Team }) {
                 )}
               />
             </div>
-
-            <Controller
-              name="webhookUrl"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="webhookurl">
-                    Discord webhook URL
-                  </FieldLabel>
-                  <FieldDescription>
-                    Notifies this Discord channel when a shift starts. Create
-                    one under{" "}
-                    <span className="font-medium">
-                      Server Settings → Integrations → Webhooks
-                    </span>
-                    .
-                  </FieldDescription>
-                  <Input
-                    {...field}
-                    value={field.value ?? ""}
-                    id="webhookurl"
-                    aria-invalid={fieldState.invalid}
-                    placeholder="Paste your Discord webhook URL"
-                    autoComplete="off"
-                  />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
           </FieldGroup>
 
           {/* Show API response errors */}
