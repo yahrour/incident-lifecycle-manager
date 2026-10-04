@@ -95,8 +95,11 @@ export function TeamsTable({
         <TableBody>
           {teams?.data.map((team) => {
             const onCall = onCallByTeam.get(team.id);
-            const fullName = (onCall?.firstName ?? "") + " " + (onCall?.lastName ?? "");
-            const initials = (onCall?.firstName.charAt(0) ?? "") + (onCall?.lastName.charAt(0) ?? "");
+            const fullName =
+              (onCall?.firstName ?? "") + " " + (onCall?.lastName ?? "");
+            const initials =
+              (onCall?.firstName.charAt(0) ?? "") +
+              (onCall?.lastName.charAt(0) ?? "");
             return (
               <TableRow
                 key={team.id}
