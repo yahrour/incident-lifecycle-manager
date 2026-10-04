@@ -54,11 +54,35 @@ export class UnavailabilityService {
       where: { id: teamMemberId, teamId },
       include: { team: true },
     });
-
     if (!targetMember)
       throw new NotFoundException("Team member not found in this team");
 
     this.verifyAuthority(targetMember, requesterUserId);
+
+    return targetMember;
+  }
+
+  private verifySelf(targetMember: TeamMember, requesterUserId: string) {
+    if (targetMember.userId !== requesterUserId) {
+      throw new ForbiddenException(
+        "You can only manage your own unavailability"
+      );
+    }
+  }
+
+  private async getSelfMember(
+    teamMemberId: number,
+    teamId: string,
+    requesterUserId: string
+  ) {
+    const targetMember = await this.prisma.teamMember.findUnique({
+      where: { id: teamMemberId, teamId },
+    });
+
+    if (!targetMember)
+      throw new NotFoundException("Team member not found in this team");
+
+    this.verifySelf(targetMember, requesterUserId);
 
     return targetMember;
   }
@@ -96,12 +120,7 @@ export class UnavailabilityService {
       throw new BadRequestException("Start date must be before end date");
     }
 
-    const targetMember = await this.getAuthorizedMember(
-      teamMemberId,
-      teamId,
-      requesterUserId
-    );
-    const isTeamOwner = targetMember.team.ownerId === requesterUserId;
+    await this.getSelfMember(teamMemberId, teamId, requesterUserId);
 
     try {
       return await this.prisma.unavailability.create({
@@ -117,8 +136,6 @@ export class UnavailabilityService {
             true
           ),
           reason: createUnavailabilityDto.reason,
-          confirmed: isTeamOwner, // if the requester is the team owner, confirm unavailability automatically
-          status: isTeamOwner ? "APPROVED" : "PENDING",
         },
       });
     } catch (error) {
@@ -139,11 +156,7 @@ export class UnavailabilityService {
     unavailabilityId: number,
     updateUnavailabilityDto: UpdateUnavailabilityDto
   ) {
-    const targetMember = await this.getAuthorizedMember(
-      memberId,
-      teamId,
-      requesterUserId
-    );
+    await this.getSelfMember(memberId, teamId, requesterUserId);
 
     if (
       updateUnavailabilityDto.startDate &&
@@ -202,27 +215,14 @@ export class UnavailabilityService {
         }
       }
 
-      const isTeamOwner = targetMember.team.ownerId === requesterUserId;
-      const isDateChanged =
-        (updateUnavailabilityDto.startDate !== undefined &&
-          updateUnavailabilityDto.startDate.getTime() !==
-            currentUnavailability.startDate.getTime()) ||
-        (updateUnavailabilityDto.endDate !== undefined &&
-          updateUnavailabilityDto.endDate.getTime() !==
-            currentUnavailability.endDate.getTime());
-
       return await this.prisma.unavailability.update({
         where: { id: unavailabilityId, memberId },
         data: {
           startDate: updateUnavailabilityDto.startDate,
           endDate: updateUnavailabilityDto.endDate,
           reason: updateUnavailabilityDto.reason,
-          confirmed: isTeamOwner
-            ? true
-            : isDateChanged
-              ? false
-              : currentUnavailability.confirmed,
-          status: isTeamOwner ? "APPROVED" : isDateChanged ? "PENDING" : currentUnavailability.status,
+          confirmed: false,
+          status: "PENDING",
         },
       });
     } catch (error) {

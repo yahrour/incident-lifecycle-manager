@@ -103,18 +103,21 @@ describe("UnavailabilityService", () => {
       reason: "sick leave",
     };
 
-    it("should create a confirmed unavailability when the requester is the team owner", async () => {
-      // requester is the team owner
+    it("should create a pending unavailability when the requester is the member themself", async () => {
+      // requester is the member creating their own unavailability
       prisma.teamMember.findUnique.mockResolvedValue(
-        makeTeamMember({ userId: OWNER_ID })
+        makeTeamMember({ userId: "userId" })
       );
 
-      const created = makeUnavailability({ confirmed: true });
+      const created = makeUnavailability({
+        confirmed: false,
+        status: "PENDING",
+      });
 
       prisma.unavailability.create.mockResolvedValue(created);
 
       const result = await service.create(
-        OWNER_ID,
+        "userId",
         TEAM_ID,
         MEMBER_ID,
         createUnavailabilityDto
@@ -135,42 +138,26 @@ describe("UnavailabilityService", () => {
             true
           ),
           reason: createUnavailabilityDto.reason,
-          confirmed: true,
-          status: "APPROVED",
         },
       });
     });
 
-    it("should create an unconfirmed unavailability when the requester is not the team owner", async () => {
-      // requester is an ordinary member, not the owner
-      prisma.teamMember.findUnique.mockResolvedValue(makeTeamMember());
-
-      const created = makeUnavailability({ confirmed: false });
-
-      prisma.unavailability.create.mockResolvedValue(created);
-
-      // requester is the member themselves (authorized but not the owner)
-      prisma.unavailability.create.mockResolvedValue(
-        makeUnavailability({ confirmed: false })
+    it("should throw ForbiddenException when the requester is the team owner, not the member", async () => {
+      // requester is the team owner, not the member themself
+      prisma.teamMember.findUnique.mockResolvedValue(
+        makeTeamMember({ userId: MEMBER_ID })
       );
 
-      await service.create(
-        "userId",
-        TEAM_ID,
-        MEMBER_ID,
-        createUnavailabilityDto
-      );
+      await expect(
+        service.create(OWNER_ID, TEAM_ID, MEMBER_ID, createUnavailabilityDto)
+      ).rejects.toThrow(ForbiddenException);
 
-      expect(prisma.unavailability.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({ confirmed: false }),
-        })
-      );
+      expect(prisma.unavailability.create).not.toHaveBeenCalled();
     });
 
     it("should throw BadRequestException when start date is after end date", async () => {
       await expect(
-        service.create(OWNER_ID, TEAM_ID, MEMBER_ID, {
+        service.create("userId", TEAM_ID, MEMBER_ID, {
           ...createUnavailabilityDto,
           startDate: new Date("2026-01-22T10:00:00.000Z"), // after endDate
         })
@@ -179,18 +166,20 @@ describe("UnavailabilityService", () => {
       expect(prisma.unavailability.create).not.toHaveBeenCalled();
     });
 
-    it("should throw ForbiddenException when the requester is unauthorized", async () => {
+    it("should throw NotFoundException when the team member doesn't exist", async () => {
       prisma.teamMember.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.create("other", TEAM_ID, MEMBER_ID, createUnavailabilityDto)
+        service.create("userId", TEAM_ID, MEMBER_ID, createUnavailabilityDto)
       ).rejects.toThrow(NotFoundException);
 
       expect(prisma.unavailability.create).not.toHaveBeenCalled();
     });
 
     it("should throw ConflictException when an overlapping unavailability exists", async () => {
-      prisma.teamMember.findUnique.mockResolvedValue(makeTeamMember());
+      prisma.teamMember.findUnique.mockResolvedValue(
+        makeTeamMember({ userId: "userId" })
+      );
 
       prisma.unavailability.create.mockRejectedValue(
         new PrismaClientKnownRequestError("window exists", {
@@ -200,7 +189,7 @@ describe("UnavailabilityService", () => {
       );
 
       await expect(
-        service.create(OWNER_ID, TEAM_ID, MEMBER_ID, createUnavailabilityDto)
+        service.create("userId", TEAM_ID, MEMBER_ID, createUnavailabilityDto)
       ).rejects.toThrow(ConflictException);
     });
   });
@@ -563,11 +552,19 @@ describe("UnavailabilityService", () => {
   });
 
   describe("update", () => {
-    it("should update reason without touching confirmation for an ordinary member", async () => {
-      prisma.teamMember.findUnique.mockResolvedValue(makeTeamMember());
-      prisma.unavailability.findUnique.mockResolvedValue(makeUnavailability());
+    it("should reset confirmation to pending when the member updates their own unavailability", async () => {
+      prisma.teamMember.findUnique.mockResolvedValue(
+        makeTeamMember({ userId: "userId" })
+      );
+      prisma.unavailability.findUnique.mockResolvedValue(
+        makeUnavailability({ confirmed: true, status: "APPROVED" })
+      );
 
-      const updated = makeUnavailability({ reason: "family" });
+      const updated = makeUnavailability({
+        reason: "family",
+        confirmed: false,
+        status: "PENDING",
+      });
 
       prisma.unavailability.update.mockResolvedValue(updated);
 
@@ -585,47 +582,56 @@ describe("UnavailabilityService", () => {
         expect.objectContaining({
           where: { id: UNAVAILABILITY_ID, memberId: MEMBER_ID },
           data: expect.objectContaining({
-            confirmed: false, // unchanged (no date change, requester not owner)
+            confirmed: false,
+            status: "PENDING",
           }),
         })
       );
     });
 
-    it("should mark as confirmed when the requester is the team owner", async () => {
-      // requester is the owner
+    it("should throw ForbiddenException when the requester is the team owner, not the member", async () => {
       prisma.teamMember.findUnique.mockResolvedValue(
-        makeTeamMember({ userId: OWNER_ID })
+        makeTeamMember({ userId: MEMBER_ID })
       );
-      prisma.unavailability.findUnique.mockResolvedValue(makeUnavailability());
-
-      const updated = makeUnavailability({ confirmed: true });
-
-      prisma.unavailability.update.mockResolvedValue(updated);
-
-      await service.update(OWNER_ID, TEAM_ID, MEMBER_ID, UNAVAILABILITY_ID, {
-        reason: "family",
-      });
-
-      expect(prisma.unavailability.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({ confirmed: true }),
-        })
-      );
-    });
-
-    it("should throw BadRequestException when the unavailability does not exist", async () => {
-      prisma.teamMember.findUnique.mockResolvedValue(makeTeamMember());
-      prisma.unavailability.findUnique.mockResolvedValue(null);
 
       await expect(
         service.update(OWNER_ID, TEAM_ID, MEMBER_ID, UNAVAILABILITY_ID, {
           reason: "family",
         })
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(prisma.unavailability.update).not.toHaveBeenCalled();
+    });
+
+    it("should throw NotFoundException when the unavailability does not exist", async () => {
+      prisma.teamMember.findUnique.mockResolvedValue(
+        makeTeamMember({ userId: "userId" })
+      );
+      prisma.unavailability.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.update("userId", TEAM_ID, MEMBER_ID, UNAVAILABILITY_ID, {
+          reason: "family",
+        })
       ).rejects.toThrow(NotFoundException);
     });
 
+    it("should throw NotFoundException when the team member doesn't exist", async () => {
+      prisma.teamMember.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.update("userId", TEAM_ID, MEMBER_ID, UNAVAILABILITY_ID, {
+          reason: "family",
+        })
+      ).rejects.toThrow(NotFoundException);
+
+      expect(prisma.unavailability.update).not.toHaveBeenCalled();
+    });
+
     it("should convert dates to UTC and keep them within the existing window", async () => {
-      prisma.teamMember.findUnique.mockResolvedValue(makeTeamMember());
+      prisma.teamMember.findUnique.mockResolvedValue(
+        makeTeamMember({ userId: "userId" })
+      );
       prisma.unavailability.findUnique.mockResolvedValue(makeUnavailability());
 
       prisma.unavailability.update.mockResolvedValue(
@@ -633,7 +639,7 @@ describe("UnavailabilityService", () => {
       );
 
       const startDate = new Date("2026-01-15T12:00:00.000Z");
-      await service.update(OWNER_ID, TEAM_ID, MEMBER_ID, UNAVAILABILITY_ID, {
+      await service.update("userId", TEAM_ID, MEMBER_ID, UNAVAILABILITY_ID, {
         startDate,
         timezone: "America/New_York",
       });
