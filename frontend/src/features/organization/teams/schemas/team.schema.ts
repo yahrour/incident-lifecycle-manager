@@ -43,22 +43,6 @@ export const createTeamSchema = z
       .max(1440, "Escalation timeout must not exceed 1440 minutes (24 hours)")
       .positive("Escalation timeout must be at least 1 minute")
       .optional(),
-
-    webhookUrl: z
-      .union([
-        z
-          .url("Enter a valid Discord webhook URL")
-          .max(255, "webhook URL must not exceed 255 characters")
-          .refine(
-            (url) => url.startsWith("https://discord.com/api/webhooks/"),
-            {
-              error: "Must be a Discord webhook URL",
-            }
-          ),
-        z.literal(""),
-      ])
-      .optional()
-      .transform((val) => (val?.trim() === "" ? undefined : val)),
   })
   .superRefine((data, ctx) => {
     const hasStartDate = data.rotationStartDate !== undefined;
@@ -124,23 +108,6 @@ export const updateTeamSchema = z
       .max(1440, "Escalation timeout must not exceed 1440 minutes (24 hours)")
       .positive("Escalation timeout must be at least 1 minute")
       .optional(),
-
-    webhookUrl: z
-      .union([
-        z
-          .url("Enter a valid Discord webhook URL")
-          .max(255, "webhook URL must not exceed 255 characters")
-          .refine(
-            (url) => url.startsWith("https://discord.com/api/webhooks/"),
-            {
-              error: "Must be a Discord webhook URL",
-            }
-          ),
-        z.literal(""),
-      ])
-      .optional()
-      .nullable()
-      .transform((val) => (val?.trim() === "" ? null : val)),
   })
   .superRefine((data, ctx) => {
     const providedFields = Object.values(data).filter((v) => v !== undefined);
