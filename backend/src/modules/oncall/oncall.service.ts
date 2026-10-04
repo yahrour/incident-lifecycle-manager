@@ -135,7 +135,7 @@ export class OnCallService {
         const outgoingIndex = team.currentRotationIndex;
         const incomingIndex = (outgoingIndex + 1) % totalTeamMembers;
 
-        const result = await this.prisma.team.updateMany({
+        await this.prisma.team.updateMany({
           where: {
             id: team.id,
             lastRotatedAt: team.lastRotatedAt,
@@ -145,12 +145,6 @@ export class OnCallService {
             currentRotationIndex: incomingIndex,
           },
         });
-
-        if (result.count === 0) {
-          continue;
-        }
-
-        continue;
       }
     }
   }
