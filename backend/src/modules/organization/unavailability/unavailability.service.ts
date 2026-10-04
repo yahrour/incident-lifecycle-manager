@@ -65,7 +65,7 @@ export class UnavailabilityService {
   private verifySelf(targetMember: TeamMember, requesterUserId: string) {
     if (targetMember.userId !== requesterUserId) {
       throw new ForbiddenException(
-        "You can only create an unavailability for yourself"
+        "You can only manage your own unavailability"
       );
     }
   }
