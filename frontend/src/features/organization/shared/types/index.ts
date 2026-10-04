@@ -25,6 +25,10 @@ export type Member = {
   id: number;
   joinedAt: Date;
   unavailabilities: Omit<Unavailability, "teamMember">[];
+  team?: {
+    id: string;
+    name: string;
+  };
 };
 
 export type Unavailability = {

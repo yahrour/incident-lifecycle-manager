@@ -13,6 +13,7 @@ import {
   Unavailabilities,
 } from "@/features/organization";
 import { InvitePage } from "@/features/invite";
+import { Engineers } from "@/features/organization/members";
 
 export default function AppRoutes() {
   return (
@@ -37,10 +38,7 @@ export default function AppRoutes() {
               path="/manager/teams/:id/unavailabilities"
               element={<Unavailabilities />}
             />
-            <Route
-              path="/manager/engineers"
-              element={<div>manage engineers</div>}
-            />
+            <Route path="/manager/engineers" element={<Engineers />} />
             <Route
               path="/manager/availability"
               element={<div>manage availability</div>}
