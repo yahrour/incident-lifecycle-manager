@@ -30,14 +30,20 @@ export function UnavailabilitiesTable({
   teamId: string;
   sort: SortState;
 }) {
-  const { data, isError, isSuccess, isPending, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useInfiniteQuery({
-      queryKey: ["teams", "unavailabilities", teamId, sort],
-      queryFn: ({ pageParam }) =>
-        fetchUnavailabilities(teamId, pageParam, sort),
-      initialPageParam: null as string | null,
-      getNextPageParam: (lastPage) => lastPage.meta?.nextCursor ?? undefined,
-    });
+  const {
+    data,
+    isError,
+    isSuccess,
+    isPending,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["teams", "unavailabilities", teamId, sort],
+    queryFn: ({ pageParam }) => fetchUnavailabilities(teamId, pageParam, sort),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.meta?.nextCursor ?? undefined,
+  });
 
   const confirmMutation = useMutation({
     mutationFn: ({
@@ -61,9 +67,9 @@ export function UnavailabilitiesTable({
       toast.add({
         type: "error",
         title: "failed to approve",
-        description: "something went wrong, try again."
-      })
-    }
+        description: "something went wrong, try again.",
+      });
+    },
   });
   const rejectMutation = useMutation({
     mutationFn: ({
@@ -87,9 +93,9 @@ export function UnavailabilitiesTable({
       toast.add({
         type: "error",
         title: "failed to reject",
-        description: "something went wrong, try again."
-      })
-    }
+        description: "something went wrong, try again.",
+      });
+    },
   });
 
   useErrorToast(isError, "failed to load unavailabilities");
@@ -104,11 +110,10 @@ export function UnavailabilitiesTable({
 
   if ((!unavailabilities || unavailabilities.length === 0) && isSuccess) {
     return <NoUnavailabilitiesState />;
+  } else if ((!unavailabilities || unavailabilities.length === 0) && isError) {
+    return <ErrorUnavailabilitiesState />;
   }
-  else if ((!unavailabilities || unavailabilities.length === 0) && isError) {
-    return <ErrorUnavailabilitiesState />
-  }
-  
+
   const handleConfirm = (unavailabilityId: number, memberId: number) => {
     confirmMutation.mutate({ teamId, memberId, unavailabilityId });
   };
@@ -150,6 +155,8 @@ export function UnavailabilitiesTable({
                   <Badge variant="warning">PENDING</Badge>
                 ) : unavailability.status === "APPROVED" ? (
                   <Badge variant="success">APPROVED</Badge>
+                ) : unavailability.status === "EXPIRED" ? (
+                  <Badge variant="destructive">EXPIRED</Badge>
                 ) : (
                   <Badge variant="destructive">REJECTED</Badge>
                 )}
@@ -161,7 +168,11 @@ export function UnavailabilitiesTable({
                   onClick={() =>
                     handleConfirm(unavailability.id, unavailability.memberId)
                   }
-                  disabled={unavailability.status !== "PENDING" || confirmMutation.isPending || rejectMutation.isPending}
+                  disabled={
+                    unavailability.status !== "PENDING" ||
+                    confirmMutation.isPending ||
+                    rejectMutation.isPending
+                  }
                 >
                   Approve
                 </Button>
@@ -172,7 +183,11 @@ export function UnavailabilitiesTable({
                   onClick={() =>
                     handleReject(unavailability.id, unavailability.memberId)
                   }
-                  disabled={unavailability.status !== "PENDING" || confirmMutation.isPending || rejectMutation.isPending}
+                  disabled={
+                    unavailability.status !== "PENDING" ||
+                    confirmMutation.isPending ||
+                    rejectMutation.isPending
+                  }
                 >
                   Reject
                 </Button>
@@ -183,7 +198,7 @@ export function UnavailabilitiesTable({
       </Table>
       <div className="flex justify-center">
         <Button
-          onClick={() => fetchNextPage()}
+          onClick={() => void fetchNextPage()}
           disabled={!hasNextPage || isFetchingNextPage}
         >
           {isFetchingNextPage ? "Loading more..." : "Load More"}
