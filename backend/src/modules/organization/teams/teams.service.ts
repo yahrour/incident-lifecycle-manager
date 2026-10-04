@@ -32,7 +32,6 @@ export class TeamsService {
               createTeamDto.timezone
             ),
           escalationTimeoutMinutes: createTeamDto.escalationTimeoutMinutes,
-          webhookUrl: createTeamDto.webhookUrl,
         },
         omit: {
           ownerId: true,
@@ -56,18 +55,15 @@ export class TeamsService {
   async update(id: string, ownerId: string, updateTeamDto: UpdateTeamDto) {
     const data: UpdateTeamDto & {
       currentRotationIndex: number | undefined;
-      lastNotifiedRotationIndex: number | undefined;
       lastRotatedAt: Date | undefined;
     } = {
       ...updateTeamDto,
       currentRotationIndex: undefined,
-      lastNotifiedRotationIndex: undefined,
       lastRotatedAt: undefined,
     };
 
     if (updateTeamDto.rotationPeriodDays !== undefined) {
       data.currentRotationIndex = 0;
-      data.lastNotifiedRotationIndex = -1;
       data.lastRotatedAt = new Date();
     }
 
@@ -123,7 +119,6 @@ export class TeamsService {
             ownerId: true,
             updatedAt: true,
             currentRotationIndex: true,
-            lastNotifiedRotationIndex: true,
           },
         }),
         this.prisma.team.count({

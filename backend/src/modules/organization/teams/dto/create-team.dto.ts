@@ -11,8 +11,6 @@ import {
   IsPositive,
   IsString,
   IsTimeZone,
-  IsUrl,
-  Matches,
   Max,
   MaxLength,
   ValidateIf,
@@ -60,14 +58,6 @@ export class CreateTeamDto {
     message: "escalation timeout must not exceed 1440 minutes (24 hours)",
   })
   escalationTimeoutMinutes?: number;
-
-  @IsOptional()
-  @IsUrl()
-  @Matches(/^https:\/\/discord\.com\/api\/webhooks\//, {
-    message: "URL must be a Discord webhook URL",
-  })
-  @MaxLength(255, { message: "webhook url must not exceed 255 characters" })
-  webhookUrl?: string;
 
   @IsArray()
   @ArrayNotEmpty()
