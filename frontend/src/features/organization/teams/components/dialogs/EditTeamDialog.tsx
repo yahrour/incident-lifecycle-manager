@@ -142,7 +142,7 @@ export function EditTeamDialog({ team }: { team: Team }) {
             Edit
           </Button>
         }
-      ></DialogTrigger>
+      />
       <DialogContent className="max-w-lg!">
         <DialogHeader>
           <DialogTitle>Edit team</DialogTitle>
