@@ -1,14 +1,10 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { PrismaService } from "@/common/prisma/prisma.service";
-import { DiscordService } from "@/modules/discord/discord.service";
 
 @Injectable()
 export class OnCallService {
-  constructor(
-    private prisma: PrismaService,
-    private discordService: DiscordService
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   async getCurrentOnCall(teamId: string, ownerId: string) {
     const now = new Date();
@@ -102,10 +98,8 @@ export class OnCallService {
         name: true,
         lastRotatedAt: true,
         currentRotationIndex: true,
-        lastNotifiedRotationIndex: true,
         rotationPeriodDays: true,
         rotationStartDate: true,
-        webhookUrl: true,
         _count: {
           select: { teamMembers: true },
         },
@@ -136,9 +130,8 @@ export class OnCallService {
       const daysSinceLastRotation =
         (now.getTime() - baseTime) / (1000 * 60 * 60 * 24);
 
-      // A rotation is due: advance the index and notify the outgoing and incoming engineers.
+      // A rotation is due: advance the index.
       if (daysSinceLastRotation >= team.rotationPeriodDays) {
-        console.log(`Rotation due for team ${team.id}`);
         const outgoingIndex = team.currentRotationIndex;
         const incomingIndex = (outgoingIndex + 1) % totalTeamMembers;
 
@@ -150,7 +143,6 @@ export class OnCallService {
           data: {
             lastRotatedAt: now,
             currentRotationIndex: incomingIndex,
-            lastNotifiedRotationIndex: incomingIndex,
           },
         });
 
@@ -158,58 +150,8 @@ export class OnCallService {
           continue;
         }
 
-        await this.notifyMember(
-          team,
-          team.teamMembers[incomingIndex],
-          `You are on call for **${team.name}** starting today for ${team.rotationPeriodDays} days`
-        );
-
         continue;
       }
-
-      // No rotation is due yet, but the current on-call engineer may not have been
-      // notified yet (e.g. right after the team was created). Notify them once.
-      if (team.lastNotifiedRotationIndex !== team.currentRotationIndex) {
-        await this.prisma.team.update({
-          where: { id: team.id },
-          data: { lastNotifiedRotationIndex: team.currentRotationIndex },
-        });
-
-        await this.notifyMember(
-          team,
-          team.teamMembers[team.currentRotationIndex],
-          `You are on call for **${team.name}** starting today for ${team.rotationPeriodDays} days`
-        );
-      }
     }
-  }
-
-  private async notifyMember(
-    team: {
-      id: string;
-      name: string;
-      webhookUrl: string | null;
-      teamMembers: { userId: string }[];
-    },
-    member: { userId: string } | undefined,
-    message: string
-  ) {
-    if (!team.webhookUrl || !member) {
-      return;
-    }
-
-    const userDiscordId = (
-      await this.prisma.user.findUnique({
-        where: { id: member.userId },
-      })
-    )?.discordId;
-
-    if (!userDiscordId) {
-      return;
-    }
-
-    await this.discordService.sendWebhookNotification(team.webhookUrl, {
-      content: `<@${userDiscordId}> ${message}`,
-    });
   }
 }

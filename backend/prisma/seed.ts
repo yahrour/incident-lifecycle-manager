@@ -4,7 +4,7 @@
  * Creates:
  * - 1 SRE user (with a linked Google account)
  * - 20 ENGINEER users, distributed across teams (2 per team)
- * - 10 teams, each with on-call rotation settings, owned services, and a webhook
+ * - 10 teams, each with on-call rotation settings, owned services
  * - Unavailability windows for a handful of team members (different dates/reasons)
  * - Several API keys with different names (one disabled, to show that state too)
  * - A handful of ingested alerts from Prometheus/Grafana/Datadog (frontend/backend teams)
@@ -140,7 +140,6 @@ const TEAM_DEFINITIONS = [
     rotationStartDaysAgo: 14,
     currentRotationIndex: 0,
     escalationTimeoutMinutes: 5,
-    webhookUrl: "https://discord.com/api/webhooks/T00000/B00000/frontendwebhook",
   },
   {
     name: "backend",
@@ -150,7 +149,6 @@ const TEAM_DEFINITIONS = [
     rotationStartDaysAgo: 30,
     currentRotationIndex: 1,
     escalationTimeoutMinutes: 10,
-    webhookUrl: "https://discord.com/api/webhooks/T00000/B00000/backendwebhook",
   },
   {
     name: "mobile",
@@ -160,7 +158,6 @@ const TEAM_DEFINITIONS = [
     rotationStartDaysAgo: 10,
     currentRotationIndex: 0,
     escalationTimeoutMinutes: 5,
-    webhookUrl: "https://discord.com/api/webhooks/T00000/B00000/mobilewebhook",
   },
   {
     name: "platform",
@@ -170,7 +167,6 @@ const TEAM_DEFINITIONS = [
     rotationStartDaysAgo: 20,
     currentRotationIndex: 0,
     escalationTimeoutMinutes: 15,
-    webhookUrl: "https://discord.com/api/webhooks/T00000/B00000/platformwebhook",
   },
   {
     name: "data",
@@ -180,7 +176,6 @@ const TEAM_DEFINITIONS = [
     rotationStartDaysAgo: 7,
     currentRotationIndex: 1,
     escalationTimeoutMinutes: 10,
-    webhookUrl: "https://discord.com/api/webhooks/T00000/B00000/datawebhook",
   },
   {
     name: "security",
@@ -190,7 +185,6 @@ const TEAM_DEFINITIONS = [
     rotationStartDaysAgo: 3,
     currentRotationIndex: 0,
     escalationTimeoutMinutes: 5,
-    webhookUrl: "https://discord.com/api/webhooks/T00000/B00000/securitywebhook",
   },
   {
     name: "infrastructure",
@@ -200,7 +194,6 @@ const TEAM_DEFINITIONS = [
     rotationStartDaysAgo: 25,
     currentRotationIndex: 1,
     escalationTimeoutMinutes: 10,
-    webhookUrl: "https://discord.com/api/webhooks/T00000/B00000/infrawebhook",
   },
   {
     name: "growth",
@@ -210,7 +203,6 @@ const TEAM_DEFINITIONS = [
     rotationStartDaysAgo: 5,
     currentRotationIndex: 0,
     escalationTimeoutMinutes: 15,
-    webhookUrl: "https://discord.com/api/webhooks/T00000/B00000/growthwebhook",
   },
   {
     name: "billing",
@@ -220,7 +212,6 @@ const TEAM_DEFINITIONS = [
     rotationStartDaysAgo: 18,
     currentRotationIndex: 0,
     escalationTimeoutMinutes: 5,
-    webhookUrl: "https://discord.com/api/webhooks/T00000/B00000/billingwebhook",
   },
   {
     name: "support-tools",
@@ -230,7 +221,6 @@ const TEAM_DEFINITIONS = [
     rotationStartDaysAgo: 9,
     currentRotationIndex: 1,
     escalationTimeoutMinutes: 10,
-    webhookUrl: "https://discord.com/api/webhooks/T00000/B00000/supportwebhook",
   },
 ] as const;
 
@@ -242,7 +232,6 @@ const ENGINEER_NAMES: Array<{ firstName: string; lastName: string; specialty: st
   { firstName: "Alice", lastName: "Nguyen", specialty: "Frontend" },
   { firstName: "Ben", lastName: "Carter", specialty: "Frontend" },
   { firstName: "Chloe", lastName: "Dubois", specialty: "Backend" },
-  { firstName: "David", lastName: "Okafor", specialty: "Backend" },
   { firstName: "Emma", lastName: "Silva", specialty: "Mobile" },
   { firstName: "Felix", lastName: "Wagner", specialty: "Mobile" },
   { firstName: "Grace", lastName: "Kim", specialty: "Platform" },
@@ -326,7 +315,6 @@ async function main() {
           rotationStartDate: daysFromNow(-def.rotationStartDaysAgo),
           currentRotationIndex: def.currentRotationIndex,
           escalationTimeoutMinutes: def.escalationTimeoutMinutes,
-          webhookUrl: def.webhookUrl,
         },
       })
     )
@@ -363,8 +351,7 @@ async function main() {
   const aliceMember = membersByUserId.get(engineers[0].id)!;
   const benMember = membersByUserId.get(engineers[1].id)!;
   const chloeMember = membersByUserId.get(engineers[2].id)!;
-  const davidMember = membersByUserId.get(engineers[3].id)!;
-  const [alice, ben, chloe, david] = engineers;
+  const [alice, ben, chloe] = engineers;
 
   console.log(
     `Added ${teamMembers.length} team members (2 per team, ${TEAM_DEFINITIONS.length} teams)`
@@ -394,13 +381,6 @@ async function main() {
       endDate: daysFromNow(5),
       reason: "Medical leave",
       confirmed: true,
-    },
-    {
-      member: davidMember,
-      startDate: daysFromNow(20),
-      endDate: daysFromNow(27),
-      reason: "Parental leave",
-      confirmed: false,
     },
   ];
 

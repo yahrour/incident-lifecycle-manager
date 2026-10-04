@@ -8,7 +8,6 @@ export type Team = {
   rotationPeriodDays: number;
   rotationStartDate: Date;
   escalationTimeoutMinutes: number;
-  webhookUrl: string | null;
 };
 
 export type User = {
