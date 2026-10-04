@@ -36,7 +36,7 @@ export type Unavailability = {
   reason: string | null;
   createdAt: Date;
   confirmed: boolean;
-  status: "PENDING" | "APPROVED" | "REJECTED";
+  status: "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED";
   teamMember: {
     id: number;
     user: User;
