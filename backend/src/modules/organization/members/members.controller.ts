@@ -39,6 +39,19 @@ export class MembersController {
     return apiResponse(members, { total });
   }
 
+  @Get("members")
+  @Roles(Role.SRE)
+  async findAllRandom(
+    @Query() query: OffsetPaginationSearchParams,
+    @ActiveUser() user: ActiveUserData
+  ) {
+    const { members, total } = await this.membersService.findAllRandom(
+      user.sub,
+      query
+    );
+    return apiResponse(members, { total });
+  }
+
   @Get(":id/members/:memberId")
   @Roles(Role.SRE)
   async findOne(
