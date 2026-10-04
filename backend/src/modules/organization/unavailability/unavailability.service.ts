@@ -54,7 +54,6 @@ export class UnavailabilityService {
       where: { id: teamMemberId, teamId },
       include: { team: true },
     });
-
     if (!targetMember)
       throw new NotFoundException("Team member not found in this team");
 
