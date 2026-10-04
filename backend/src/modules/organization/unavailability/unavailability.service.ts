@@ -16,6 +16,7 @@ import { PrismaService } from "@/common/prisma/prisma.service";
 import { Team, TeamMember } from "@/generated/prisma/client";
 import { Cursor, cursorSchema } from "./types";
 import { convertDateToUtc } from "@/common/utils/timezone";
+import { Cron, CronExpression } from "@nestjs/schedule";
 
 @Injectable()
 export class UnavailabilityService {
@@ -192,6 +193,12 @@ export class UnavailabilityService {
 
       if (!currentUnavailability) {
         throw new NotFoundException("Unavailability doesn't exist");
+      }
+
+      if (currentUnavailability.status === "EXPIRED") {
+        throw new BadRequestException(
+          "Cannot update an expired unavailability"
+        );
       }
 
       // if one of the dates is present and the other one is missing
@@ -467,6 +474,9 @@ export class UnavailabilityService {
     if (unavailability.status === "REJECTED") {
       throw new BadRequestException("Cannot approve a rejected unavailability");
     }
+    if (unavailability.status === "EXPIRED") {
+      throw new BadRequestException("Cannot approve an expired unavailability");
+    }
 
     await this.prisma.unavailability.update({
       where: {
@@ -509,9 +519,11 @@ export class UnavailabilityService {
     if (unavailability.status === "APPROVED") {
       throw new BadRequestException("Cannot reject an approved unavailability");
     }
-
     if (unavailability.status === "REJECTED") {
       throw new BadRequestException("Unavailability is already rejected");
+    }
+    if (unavailability.status === "EXPIRED") {
+      throw new BadRequestException("Cannot reject an expired unavailability");
     }
 
     await this.prisma.unavailability.update({
@@ -522,6 +534,23 @@ export class UnavailabilityService {
       data: {
         confirmed: false,
         status: "REJECTED",
+      },
+    });
+  }
+
+  @Cron(CronExpression.EVERY_MINUTE)
+  async expireStaleUnavailabilities() {
+    const now = new Date();
+
+    await this.prisma.unavailability.updateMany({
+      where: {
+        status: "PENDING",
+        endDate: {
+          lt: now,
+        },
+      },
+      data: {
+        status: "EXPIRED",
       },
     });
   }
