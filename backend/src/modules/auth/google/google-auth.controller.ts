@@ -1,5 +1,4 @@
 import { Controller, Get, Req, Res, UseGuards } from "@nestjs/common";
-import { AuthGuard } from "@nestjs/passport";
 import type { Request, Response } from "express";
 import { Public } from "@/common/decorators/public.decorator";
 import { GoogleAuthService } from "./google-auth.service";
@@ -9,6 +8,7 @@ import {
   ACCESS_COOKIE_OPTIONS,
   REFRESH_COOKIE_OPTIONS,
 } from "../auth-cookie.constants";
+import { GoogleOAuthGuard } from "./google-oauth.guard";
 
 @Public()
 @Controller({ path: "auth/google", version: "1" })
@@ -17,14 +17,13 @@ export class GoogleAuthController {
     private readonly googleAuthService: GoogleAuthService,
     private readonly configService: ConfigService
   ) {}
-  // The guard redirects to Google, so this body never runs
+
   @Get()
-  @UseGuards(AuthGuard("google"))
+  @UseGuards(GoogleOAuthGuard)
   start() {}
 
-  // The guard has already exchanged the code; the profile is on req.user
   @Get("callback")
-  @UseGuards(AuthGuard("google"))
+  @UseGuards(GoogleOAuthGuard)
   async callback(
     @Req() req: Request,
     @Res({ passthrough: true }) response: Response
