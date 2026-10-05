@@ -6,7 +6,7 @@ export default function useUpdateProfile() {
   return useMutation({
     mutationFn: updateProfile,
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["me"] });
+      void queryClient.invalidateQueries({ queryKey: ["session"] });
     },
   });
 }
