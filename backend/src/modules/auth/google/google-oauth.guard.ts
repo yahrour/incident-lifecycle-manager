@@ -16,7 +16,19 @@ export class GoogleOAuthGuard extends AuthGuard("google") {
     const req = context.switchToHttp().getRequest<Request>();
 
     if (req.query.code || req.query.error) return {};
+
     const redirect = safeRedirect(req.query.redirect);
-    return { state: redirect, prompt: "select_account" };
+
+    return {
+      state: redirect,
+      prompt: "select_account",
+    };
+  }
+
+  handleRequest<TUser>(
+    error: unknown,
+    user: TUser | false
+  ): TUser | null {
+    return error || !user ? null : user;
   }
 }

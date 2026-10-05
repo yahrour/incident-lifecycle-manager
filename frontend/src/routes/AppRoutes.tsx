@@ -13,6 +13,7 @@ import {
   Unavailabilities,
 } from "@/features/organization";
 import { InvitePage } from "@/features/invite";
+import { HomeRedirect } from "./HomeRedirect";
 
 export default function AppRoutes() {
   return (
@@ -26,10 +27,10 @@ export default function AppRoutes() {
       </Route>
       {/* Everything below requires being logged in */}
       <Route element={<RequireAuth />}>
+        <Route path="/" element={<HomeRedirect />} />
         {/* Manager only */}
         <Route element={<ProtectedRoute allowedRole="SRE" />}>
           <Route element={<AppLayout />}>
-            <Route path="/" element={<div>Home</div>} />
             <Route path="/manager/teams" element={<Teams />} />
             <Route path="/manager/teams/:id" element={<Team />} />
             <Route path="/manager/teams/:id/members" element={<Members />} />
