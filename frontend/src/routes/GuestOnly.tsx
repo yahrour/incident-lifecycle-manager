@@ -7,7 +7,7 @@ export function GuestOnly() {
   const { user, isLoading } = useAuth();
   if (isLoading) return null;
   if (user) {
-    return <Navigate to={redirect ?? "/engineer/my-shift"} replace />;
+    return <Navigate to={redirect ?? "/"} replace />;
   }
   return <Outlet />;
 }
