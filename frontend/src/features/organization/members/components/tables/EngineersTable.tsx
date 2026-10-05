@@ -38,6 +38,7 @@ export function EngineersTable({
   setPage: React.Dispatch<React.SetStateAction<number>>;
   sort: SortState;
 }) {
+  const [teamId, setTeamId] = useState<string | null>(null);
   const [pendingMemberId, setPendingMemberId] = useState<number | null>(null);
   const { data, isPending, isError } = useQuery({
     queryKey: ["teams", "members", page, sort],
@@ -51,7 +52,7 @@ export function EngineersTable({
       toast.add({
         type: "success",
         title: "Team member removed",
-        description: "The team member was successfully removed from your team",
+        description: "The team member was successfully removed",
       });
       void queryClient.invalidateQueries({
         queryKey: ["teams"],
@@ -72,6 +73,7 @@ export function EngineersTable({
     },
     onSettled: () => {
       setPendingMemberId(null);
+      setTeamId(null);
     },
   });
 
@@ -93,9 +95,9 @@ export function EngineersTable({
   const isFirstPage = page === 1;
   const isLastPage = page * DEFAULT_LIMIT >= totalMembers;
 
-  const handleRemove = (memberId: number) => {
+  const handleRemove = (teamId: string, memberId: number) => {
     setPendingMemberId(memberId);
-    // mutation.mutate({ teamId, memberId });
+    mutation.mutate({ teamId, memberId });
   };
 
   return (
@@ -143,7 +145,10 @@ export function EngineersTable({
                   <Button
                     variant="destructive"
                     className="bg-transparent"
-                    onClick={() => handleRemove(member.id)}
+                    onClick={() => {
+                      setTeamId(member.teamId);
+                      handleRemove(member.teamId, member.id);
+                    }}
                     disabled={mutation.isPending}
                   >
                     {pendingMemberId === member.id && mutation.isPending ? (
