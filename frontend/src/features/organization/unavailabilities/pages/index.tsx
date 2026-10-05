@@ -76,7 +76,16 @@ export function Unavailabilities() {
         <div className="flex justify-between">
           <Tabs
             value={filter}
-            onValueChange={(v: "all" | "pending") => setFilter(v)}
+            onValueChange={(v: "all" | "pending") => {
+              setFilter(v);
+              setPage(1);
+              if (v === "pending") {
+                setSort({
+                  field: "createdAt",
+                  order: "desc",
+                });
+              }
+            }}
           >
             <TabsList>
               <TabsTrigger value="all" className="cursor-pointer">

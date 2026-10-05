@@ -21,7 +21,7 @@ import { queryClient } from "@/lib/queryClient";
 import type { SortState } from "../../types";
 import { toast } from "@/components/ui/toast";
 import { ErrorUnavailabilitiesState } from "../ErrorUnavailabilitiesState";
-import { NoUnavailabilitiesState } from "../EmptyStates/NoUnavailabilitiesState";
+import { NoUnavailabilitiesState } from "../emptyStates/NoUnavailabilitiesState";
 
 export function UnavailabilitiesTable({
   teamId,
