@@ -7,6 +7,7 @@ import { SignIn, SignUp } from "@/features/auth";
 import { SettingPage } from "@/features/settings";
 import { GuestOnly } from "./GuestOnly";
 import {
+  Engineers,
   Members,
   Team,
   Teams,
@@ -38,10 +39,7 @@ export default function AppRoutes() {
               path="/manager/teams/:id/unavailabilities"
               element={<Unavailabilities />}
             />
-            <Route
-              path="/manager/engineers"
-              element={<div>manage engineers</div>}
-            />
+            <Route path="/manager/engineers" element={<Engineers />} />
             <Route
               path="/manager/availability"
               element={<div>manage availability</div>}

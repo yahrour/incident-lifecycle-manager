@@ -111,6 +111,68 @@ export class MembersService {
     return { members, total };
   }
 
+  async findAllForOwner(ownerId: string, query: OffsetPaginationSearchParams) {
+    const now = new Date();
+
+    const [total, members] = await Promise.all([
+      this.prisma.teamMember.count({
+        where: {
+          team: {
+            ownerId,
+          },
+        },
+      }),
+      this.prisma.teamMember.findMany({
+        take: query.limit,
+        skip: query.offset,
+        where: {
+          team: {
+            ownerId,
+          },
+        },
+        ...(query.sortField && {
+          orderBy: {
+            [query.sortField]: query.sortOrder,
+          },
+        }),
+        omit: {
+          userId: true,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              specialty: true,
+              role: true,
+            },
+          },
+          unavailabilities: {
+            where: {
+              confirmed: true,
+              startDate: {
+                lte: now,
+              },
+              endDate: {
+                gte: now,
+              },
+            },
+          },
+          team: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+    return { members, total };
+  }
+
   async findOne(teamId: string, memberId: number, ownerId: string) {
     const member = await this.prisma.teamMember.findUnique({
       where: {
