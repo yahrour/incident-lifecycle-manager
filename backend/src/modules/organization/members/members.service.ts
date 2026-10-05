@@ -111,7 +111,7 @@ export class MembersService {
     return { members, total };
   }
 
-  async findAllRandom(ownerId: string, query: OffsetPaginationSearchParams) {
+  async findAllForOwner(ownerId: string, query: OffsetPaginationSearchParams) {
     const now = new Date();
 
     const [total, members] = await Promise.all([

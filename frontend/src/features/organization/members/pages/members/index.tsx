@@ -73,7 +73,7 @@ export function Members() {
 
       <div className="p-6 space-y-2">
         <div className="flex justify-end items-center gap-2">
-          <SortControls sort={sort} onSortChange={setSort} />
+          <SortControls sort={sort} onSortChange={setSort} setPage={setPage} />
           <InviteDialog team={team} />
         </div>
         <MembersTable

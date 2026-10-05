@@ -41,11 +41,11 @@ export class MembersController {
 
   @Get("members")
   @Roles(Role.SRE)
-  async findAllRandom(
+  async findAllForOwner(
     @Query() query: OffsetPaginationSearchParams,
     @ActiveUser() user: ActiveUserData
   ) {
-    const { members, total } = await this.membersService.findAllRandom(
+    const { members, total } = await this.membersService.findAllForOwner(
       user.sub,
       query
     );
