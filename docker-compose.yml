@@ -132,6 +132,8 @@ services:
       context: ./waf
       dockerfile: Dockerfile
     container_name: incident_waf
+    environment:
+      ALLOWED_METHODS: "GET HEAD POST OPTIONS PUT PATCH DELETE"
     ports:
       - "8080:80"
       - "8443:443"
