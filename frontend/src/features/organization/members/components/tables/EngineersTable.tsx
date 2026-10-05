@@ -38,7 +38,6 @@ export function EngineersTable({
   setPage: React.Dispatch<React.SetStateAction<number>>;
   sort: SortState;
 }) {
-  const [teamId, setTeamId] = useState<string | null>(null);
   const [pendingMemberId, setPendingMemberId] = useState<number | null>(null);
   const { data, isPending, isError } = useQuery({
     queryKey: ["teams", "members", page, sort],
@@ -48,7 +47,7 @@ export function EngineersTable({
   const mutation = useMutation({
     mutationFn: ({ teamId, memberId }: { teamId: string; memberId: number }) =>
       removeMember({ teamId, memberId }),
-    onSuccess: () => {
+    onSuccess: (_data, { teamId }) => {
       toast.add({
         type: "success",
         title: "Team member removed",
@@ -73,7 +72,6 @@ export function EngineersTable({
     },
     onSettled: () => {
       setPendingMemberId(null);
-      setTeamId(null);
     },
   });
 
@@ -87,6 +85,10 @@ export function EngineersTable({
 
   const members = data?.data;
   const totalMembers = data?.meta?.total as number;
+
+  if (members.length === 0 && page > 1) {
+    setPage(page - 1);
+  }
 
   if (!members || members.length === 0) {
     return <NoMembersState />;
@@ -107,7 +109,6 @@ export function EngineersTable({
           <TableRow>
             <TableHead className="w-2/5">Engineer</TableHead>
             <TableHead>Team</TableHead>
-            <TableHead>Role</TableHead>
             <TableHead>Specialty</TableHead>
             <TableHead>Availability</TableHead>
             <TableHead>Joined</TableHead>
@@ -124,9 +125,6 @@ export function EngineersTable({
                   {member.user.firstName + " " + member.user.lastName}
                 </TableCell>
                 <TableCell>{member.team?.name}</TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {member.user.role}
-                </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
                   {member.user.specialty}
                 </TableCell>
@@ -145,10 +143,7 @@ export function EngineersTable({
                   <Button
                     variant="destructive"
                     className="bg-transparent"
-                    onClick={() => {
-                      setTeamId(member.teamId);
-                      handleRemove(member.teamId, member.id);
-                    }}
+                    onClick={() => handleRemove(member.teamId, member.id)}
                     disabled={mutation.isPending}
                   >
                     {pendingMemberId === member.id && mutation.isPending ? (

@@ -30,8 +30,7 @@ export function Engineers() {
 
       <div className="p-6 space-y-2">
         <div className="flex justify-end items-center gap-2">
-          <SortControls sort={sort} onSortChange={setSort} />
-          {/* <InviteDialog team={team} /> */}
+          <SortControls sort={sort} onSortChange={setSort} setPage={setPage} />
         </div>
         <EngineersTable page={page} setPage={setPage} sort={sort} />
       </div>
