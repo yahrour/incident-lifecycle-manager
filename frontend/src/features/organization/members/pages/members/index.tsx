@@ -10,13 +10,13 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { MembersTable } from "../components/tables/MembersTable";
-import { SortControls } from "../components/SortControls";
+import { MembersTable } from "../../components/tables/MembersTable";
+import { SortControls } from "../../components/SortControls";
 import { useState } from "react";
-import { type SortState } from "../types";
-import { TeamNotFound } from "../../shared/components/TeamNotFound";
-import { InviteDialog } from "../components/InviteDialog";
-import { fetchTeam } from "../../shared/api/teams";
+import { type SortState } from "../../types";
+import { TeamNotFound } from "../../../shared/components/TeamNotFound";
+import { InviteDialog } from "../../components/InviteDialog";
+import { fetchTeam } from "../../../shared/api/teams";
 
 export function Members() {
   const { id: teamId } = useParams();
@@ -73,7 +73,7 @@ export function Members() {
 
       <div className="p-6 space-y-2">
         <div className="flex justify-end items-center gap-2">
-          <SortControls sort={sort} onSortChange={setSort} />
+          <SortControls sort={sort} onSortChange={setSort} setPage={setPage} />
           <InviteDialog team={team} />
         </div>
         <MembersTable
