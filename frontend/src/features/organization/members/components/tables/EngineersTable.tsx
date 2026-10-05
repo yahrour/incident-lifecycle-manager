@@ -57,6 +57,9 @@ export function EngineersTable({
         queryKey: ["teams"],
       });
       void queryClient.invalidateQueries({
+        queryKey: ["teamsMetrics"],
+      });
+      void queryClient.invalidateQueries({
         queryKey: ["team", teamId],
       });
       void queryClient.invalidateQueries({
