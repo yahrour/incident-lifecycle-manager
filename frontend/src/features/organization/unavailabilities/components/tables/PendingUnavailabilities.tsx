@@ -31,7 +31,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { DEFAULT_LIMIT } from "@/features/organization/shared/constants";
-import { NoPendingUnavailabilitiesState } from "../EmptyStates/NoPendingUnavailabilities";
+import { NoPendingUnavailabilitiesState } from "../emptyStates/NoPendingUnavailabilitiesState";
 
 export function PendingUnavailabilitiesTable({
   teamId,

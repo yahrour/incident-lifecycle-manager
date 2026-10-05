@@ -18,11 +18,12 @@ export async function fetchUnavailabilities(
 ) {
   const params = new URLSearchParams({
     ...(nextCursor && { cursor: nextCursor }),
+    limit: String(DEFAULT_LIMIT),
     sortField: sort.field,
     sortOrder: sort.order,
   });
   const response = await apiClient.get<ApiResponse<Unavailability[]>>(
-    `/teams/${id}/unavailabilities?limit=${DEFAULT_LIMIT}&${params.toString()}`
+    `/teams/${id}/unavailabilities?${params.toString()}`
   );
   return response.data;
 }
@@ -34,11 +35,13 @@ export async function fetchPendingUnavailabilities(
 ) {
   const offset = (page - 1) * DEFAULT_LIMIT;
   const params = new URLSearchParams({
+    offset: String(offset),
+    limit: String(DEFAULT_LIMIT),
     sortField: sort.field,
     sortOrder: sort.order,
   });
   const response = await apiClient.get<ApiResponse<Unavailability[]>>(
-    `/teams/${id}/unavailabilities/pending?limit=${DEFAULT_LIMIT}&offset=${offset}&${params.toString()}`
+    `/teams/${id}/unavailabilities/pending?${params.toString()}`
   );
   return response.data;
 }
