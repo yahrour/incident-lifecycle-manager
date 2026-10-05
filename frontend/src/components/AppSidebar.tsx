@@ -75,9 +75,7 @@ const engineerItems = {
     { label: "Team", href: "/engineer/team", icon: Users },
     { label: "Time Off", href: "/engineer/time-off", icon: CalendarOff },
   ],
-  setupItems: [
-    { label: "Settings", href: "/engineer/settings", icon: Settings },
-  ],
+  setupItems: [{ label: "Settings", href: "/settings", icon: Settings }],
 };
 
 export function AppSidebar() {
