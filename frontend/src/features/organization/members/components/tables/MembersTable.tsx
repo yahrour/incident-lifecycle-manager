@@ -88,7 +88,7 @@ export function MembersTable({
   const members = data?.data;
   const totalMembers = data?.meta?.total as number;
 
-  if (members.length === 0 && page > 1) {
+  if (members && members.length === 0 && page > 1) {
     setPage(page - 1);
   }
   if (!members || members.length === 0) {
