@@ -7,8 +7,8 @@ import { SignIn, SignUp } from "@/features/auth";
 import { SettingPage } from "@/features/settings";
 import { GuestOnly } from "./GuestOnly";
 import {
-  Engineers,
-  Members,
+  AllMembers,
+  TeamMembers,
   Team,
   Teams,
   Unavailabilities,
@@ -34,12 +34,15 @@ export default function AppRoutes() {
           <Route element={<AppLayout />}>
             <Route path="/manager/teams" element={<Teams />} />
             <Route path="/manager/teams/:id" element={<Team />} />
-            <Route path="/manager/teams/:id/members" element={<Members />} />
+            <Route
+              path="/manager/teams/:id/members"
+              element={<TeamMembers />}
+            />
             <Route
               path="/manager/teams/:id/unavailabilities"
               element={<Unavailabilities />}
             />
-            <Route path="/manager/engineers" element={<Engineers />} />
+            <Route path="/manager/engineers" element={<AllMembers />} />
             <Route
               path="/manager/availability"
               element={<div>manage availability</div>}
