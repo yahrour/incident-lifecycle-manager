@@ -26,8 +26,9 @@ import { Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { queryClient } from "@/lib/queryClient";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { SortState } from "../../types";
+import { Link } from "react-router";
 
 export function EngineersTable({
   page,
@@ -80,17 +81,19 @@ export function EngineersTable({
 
   useErrorToast(isError, "failed to load members");
 
+  const members = data?.data;
+  const totalMembers = data?.meta?.total ?? 0;
+
+  useEffect(() => {
+    if (members && members.length === 0 && page > 1) {
+      setPage(page - 1);
+    }
+  }, [members, page, setPage]);
+
   if (isPending) {
     return (
       <Spinner className="size-5 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
     );
-  }
-
-  const members = data?.data;
-  const totalMembers = data?.meta?.total as number;
-
-  if (members && members.length === 0 && page > 1) {
-    setPage(page - 1);
   }
 
   if (!members || members.length === 0) {
@@ -127,7 +130,18 @@ export function EngineersTable({
                 <TableCell>
                   {member.user.firstName + " " + member.user.lastName}
                 </TableCell>
-                <TableCell>{member.team?.name}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {member.team ? (
+                    <Link
+                      to={`/manager/teams/${member.teamId}`}
+                      className="hover:underline hover:text-foreground"
+                    >
+                      {member.team.name}
+                    </Link>
+                  ) : (
+                    "—"
+                  )}
+                </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
                   {member.user.specialty}
                 </TableCell>
