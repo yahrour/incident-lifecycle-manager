@@ -12,12 +12,16 @@ import { fetchTeam } from "../../shared/api/teams";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { Spinner } from "@/components/ui/spinner";
 import { TeamNotFound } from "../../shared/components/TeamNotFound";
-import { UnavailabilitiesTable } from "../components/tables/UnavailabilitiesTable";
 import { SortControls } from "../components/SortControls";
 import { useState } from "react";
 import type { SortState } from "../types";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UnavailabilitiesTable } from "../components/tables/UnavailabilitiesTable";
+import { PendingUnavailabilitiesTable } from "../components/tables/PendingUnavailabilities";
 
 export function Unavailabilities() {
+  const [page, setPage] = useState(1);
+  const [filter, setFilter] = useState<"all" | "pending">("all");
   const [sort, setSort] = useState<SortState>({
     field: "createdAt",
     order: "desc",
@@ -69,10 +73,37 @@ export function Unavailabilities() {
       </div>
 
       <div className="p-6 space-y-4">
-        <div className="flex justify-end">
-          <SortControls sort={sort} onSortChange={setSort} />
+        <div className="flex justify-between">
+          <Tabs
+            value={filter}
+            onValueChange={(v: "all" | "pending") => setFilter(v)}
+          >
+            <TabsList>
+              <TabsTrigger value="all" className="cursor-pointer">
+                All
+              </TabsTrigger>
+              <TabsTrigger value="pending" className="cursor-pointer">
+                Pending
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <SortControls
+            sort={sort}
+            onSortChange={setSort}
+            setPage={setPage}
+            filter={filter}
+          />
         </div>
-        <UnavailabilitiesTable teamId={team.id} sort={sort} />
+        {filter === "all" ? (
+          <UnavailabilitiesTable teamId={team.id} sort={sort} />
+        ) : (
+          <PendingUnavailabilitiesTable
+            teamId={team.id}
+            sort={sort}
+            page={page}
+            setPage={setPage}
+          />
+        )}
       </div>
     </div>
   );

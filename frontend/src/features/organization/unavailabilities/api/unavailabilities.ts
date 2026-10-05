@@ -27,6 +27,22 @@ export async function fetchUnavailabilities(
   return response.data;
 }
 
+export async function fetchPendingUnavailabilities(
+  id: string,
+  page: number,
+  sort: SortState
+) {
+  const offset = (page - 1) * DEFAULT_LIMIT;
+  const params = new URLSearchParams({
+    sortField: sort.field,
+    sortOrder: sort.order,
+  });
+  const response = await apiClient.get<ApiResponse<Unavailability[]>>(
+    `/teams/${id}/unavailabilities/pending?limit=${DEFAULT_LIMIT}&offset=${offset}&${params.toString()}`
+  );
+  return response.data;
+}
+
 export async function confirmUnavailability(
   teamId: string,
   memberId: number,

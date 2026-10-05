@@ -419,6 +419,23 @@ export class UnavailabilityService {
             team: { ownerId: requesterId },
           },
         },
+        include: {
+          teamMember: {
+            select: {
+              id: true,
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                  specialty: true,
+                  role: true,
+                },
+              },
+            },
+          },
+        },
         ...(query.sortField && {
           orderBy: {
             [query.sortField]: query.sortOrder,
