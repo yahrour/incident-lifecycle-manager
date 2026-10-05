@@ -14,7 +14,6 @@ import {
 } from "../../api/unavailabilities";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { Spinner } from "@/components/ui/spinner";
-import { NoUnavailabilitiesState } from "../NoUnavailabilitiesState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDuration } from "../../utils/time";
@@ -22,6 +21,7 @@ import { queryClient } from "@/lib/queryClient";
 import type { SortState } from "../../types";
 import { toast } from "@/components/ui/toast";
 import { ErrorUnavailabilitiesState } from "../ErrorUnavailabilitiesState";
+import { NoUnavailabilitiesState } from "../emptyStates/NoUnavailabilitiesState";
 
 export function UnavailabilitiesTable({
   teamId,
@@ -71,6 +71,7 @@ export function UnavailabilitiesTable({
       });
     },
   });
+
   const rejectMutation = useMutation({
     mutationFn: ({
       teamId,
