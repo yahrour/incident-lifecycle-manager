@@ -13,9 +13,13 @@ import { SortOrder } from "../../shared/types";
 export function SortControls({
   sort,
   onSortChange,
+  setPage,
+  filter,
 }: {
   sort: SortState;
   onSortChange: React.Dispatch<React.SetStateAction<SortState>>;
+  setPage: React.Dispatch<React.SetStateAction<number>>;
+  filter: "all" | "pending";
 }) {
   return (
     <div className="flex items-center gap-2">
@@ -23,6 +27,7 @@ export function SortControls({
         value={sort.field}
         onValueChange={(field) => {
           if (field) onSortChange({ field, order: sort.order });
+          setPage(1);
         }}
       >
         <SelectTrigger className="w-40">
@@ -30,20 +35,21 @@ export function SortControls({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="createdAt">Created at</SelectItem>
-          <SelectItem value="status">Status</SelectItem>
+          {filter === "all" && <SelectItem value="status">Status</SelectItem>}
         </SelectContent>
       </Select>
 
       <Button
         variant="outline"
         size="icon"
-        onClick={() =>
+        onClick={() => {
           onSortChange({
             field: sort.field,
             order:
               sort.order === SortOrder.ASC ? SortOrder.DESC : SortOrder.ASC,
-          })
-        }
+          });
+          setPage(1);
+        }}
       >
         <ArrowUpDown size={16} />
       </Button>
