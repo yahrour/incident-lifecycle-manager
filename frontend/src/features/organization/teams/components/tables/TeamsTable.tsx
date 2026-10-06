@@ -22,7 +22,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { DEFAULT_LIMIT } from "@/features/organization/shared/constants";
-import { NoTeamsState } from "../NoTeamsState";
+import { NoTeamsState } from "../empty-states/NoTeamsState";
 import type { SortState } from "../../types";
 
 export function TeamsTable({

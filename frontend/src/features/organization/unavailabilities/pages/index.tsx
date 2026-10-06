@@ -11,7 +11,7 @@ import { Link, useParams } from "react-router";
 import { fetchTeam } from "../../shared/api/teams";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { Spinner } from "@/components/ui/spinner";
-import { TeamNotFound } from "../../shared/components/TeamNotFound";
+import { TeamNotFound } from "../../shared/components/empty-states/TeamNotFound";
 import { SortControls } from "../components/SortControls";
 import { useState } from "react";
 import type { SortState } from "../types";

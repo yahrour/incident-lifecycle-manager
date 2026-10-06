@@ -21,8 +21,8 @@ import { formatDuration } from "../../utils/time";
 import { queryClient } from "@/lib/queryClient";
 import type { SortState } from "../../types";
 import { toast } from "@/components/ui/toast";
-import { ErrorUnavailabilitiesState } from "../ErrorUnavailabilitiesState";
-import { NoUnavailabilitiesState } from "../emptyStates/NoUnavailabilitiesState";
+import { ErrorUnavailabilitiesState } from "../error-states/ErrorUnavailabilitiesState";
+import { NoUnavailabilitiesState } from "../empty-states/NoUnavailabilitiesState";
 import {
   Pagination,
   PaginationContent,
@@ -32,7 +32,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { DEFAULT_LIMIT } from "@/features/organization/shared/constants";
-import { NoPendingUnavailabilitiesState } from "../emptyStates/NoPendingUnavailabilitiesState";
+import { NoPendingUnavailabilitiesState } from "../empty-states/NoPendingUnavailabilitiesState";
 import type { UnavailabilityStatus } from "@/features/organization/shared/types";
 
 const statusVariant: Record<
