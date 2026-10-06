@@ -1,6 +1,5 @@
-// src/routes/ProtectedRoute.tsx
 import { Navigate, Outlet } from "react-router";
-import { useAuth } from "@/features/auth/context/AuthContext";
+import { useAuth } from "@/features/auth";
 import type { Role } from "@/types";
 
 export function ProtectedRoute({ allowedRole }: { allowedRole: Role }) {
