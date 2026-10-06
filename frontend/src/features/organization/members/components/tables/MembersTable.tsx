@@ -121,8 +121,8 @@ export function MembersTable({
             const isAway = member.unavailabilities.length > 0;
 
             return (
-              <TableRow key={member.id}>
-                <TableCell>
+              <TableRow key={member.id} className="p-0!">
+                <TableCell className="font-medium text-sm flex-1">
                   {member.user.firstName + " " + member.user.lastName}
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
@@ -142,12 +142,13 @@ export function MembersTable({
                 <TableCell className="text-xs text-muted-foreground">
                   {formatJoined(member.joinedAt)}
                 </TableCell>
-                <TableCell>
+                <TableCell className="p-0! m-0!">
                   <Button
                     variant="destructive"
                     className="bg-transparent"
                     onClick={() => handleRemove(member.id)}
                     disabled={mutation.isPending}
+                    size="sm"
                   >
                     {pendingMemberId === member.id && mutation.isPending ? (
                       <Spinner />

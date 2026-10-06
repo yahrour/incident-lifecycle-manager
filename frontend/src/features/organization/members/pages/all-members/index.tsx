@@ -28,7 +28,7 @@ export function AllMembers() {
         </Breadcrumb>
       </div>
 
-      <div className="p-6 space-y-2">
+      <div className="mt-2 p-4 space-y-4">
         <div className="flex justify-end items-center gap-2">
           <SortControls sort={sort} onSortChange={setSort} setPage={setPage} />
         </div>
