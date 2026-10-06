@@ -35,6 +35,7 @@ import { DEFAULT_LIMIT } from "@/features/organization/shared/constants";
 import { NoPendingUnavailabilitiesState } from "../empty-states/NoPendingUnavailabilitiesState";
 import type { UnavailabilityStatus } from "@/features/organization/shared/types";
 import { Link } from "react-router";
+import { useEffect } from "react";
 
 const statusVariant: Record<
   UnavailabilityStatus,
@@ -77,7 +78,7 @@ export function AllUnavailabilitiesTable({
     }) => confirmUnavailability(teamId, memberId, unavailabilityId),
     onSuccess: (_data, { teamId }) => {
       void queryClient.invalidateQueries({
-        queryKey: ["teams", "unavailabilities", teamId],
+        queryKey: ["teams", "unavailabilities"],
       });
       void queryClient.invalidateQueries({
         queryKey: ["unavailabilities", teamId],
@@ -104,7 +105,7 @@ export function AllUnavailabilitiesTable({
     }) => rejectUnavailability(teamId, memberId, unavailabilityId),
     onSuccess: (_data, { teamId }) => {
       void queryClient.invalidateQueries({
-        queryKey: ["teams", "unavailabilities", teamId],
+        queryKey: ["teams", "unavailabilities"],
       });
       void queryClient.invalidateQueries({
         queryKey: ["unavailabilities", teamId],
@@ -121,14 +122,20 @@ export function AllUnavailabilitiesTable({
 
   useErrorToast(isError, "failed to load unavailabilities");
 
+  const unavailabilities = data?.data;
+  const totalUnavailabilities = data?.meta?.total ?? 0;
+
+  useEffect(() => {
+    if (unavailabilities && unavailabilities.length === 0 && page > 1) {
+      setPage(page - 1);
+    }
+  }, [unavailabilities, page, setPage]);
+
   if (isPending) {
     return (
       <Spinner className="size-5 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
     );
   }
-
-  const unavailabilities = data?.data;
-  const totalUnavailabilities = data?.meta?.total ?? 0;
 
   if (!unavailabilities || isError) {
     return <ErrorUnavailabilitiesState />;
