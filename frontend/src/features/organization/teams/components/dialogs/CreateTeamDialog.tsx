@@ -43,13 +43,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { queryClient } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
 import { parseApiError } from "@/utils/api";
-import { ErrorSection } from "@/features/organization/shared/components/error-states/ErrorSection";
 import { createTeamSchema, servicesSchema } from "../../schemas";
 import { createTeam } from "../../api/teams";
 import {
   DEFAULT_ESCALATION_TIMEOUT_MINUTES,
   DEFAULT_ROTATION_PERIOD_DAYS,
 } from "../../constants";
+import { ErrorSection } from "@/components/ErrorSection";
 
 const TIMEZONES = Intl.supportedValuesOf("timeZone");
 

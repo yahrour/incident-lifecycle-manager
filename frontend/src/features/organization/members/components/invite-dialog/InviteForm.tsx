@@ -29,8 +29,8 @@ import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 import { parseApiError } from "@/utils/api";
 import type { Team } from "@/features/organization/shared/types";
-import { ErrorSection } from "@/features/organization/shared/components/error-states/ErrorSection";
 import { inviteSchema } from "../../schemas";
+import { ErrorSection } from "@/components/ErrorSection";
 
 const EXPIRY_OPTIONS = [
   { value: 1, label: "1 hour" },
