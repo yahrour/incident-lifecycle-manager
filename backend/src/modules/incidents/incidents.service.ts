@@ -3,6 +3,7 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
@@ -16,6 +17,8 @@ import { createIncidentFingerprint } from "./utils/incident-fingerprint";
 
 @Injectable()
 export class IncidentsService {
+  private readonly logger = new Logger(IncidentsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly onCallService: OnCallService
@@ -429,27 +432,34 @@ export class IncidentsService {
         incident.team.escalationTimeoutMinutes * 60 * 1000;
 
       if (waited >= escalationTimeout) {
-        const onCall = await this.onCallService.getCurrentOnCall(
-          incident.team.id,
-          incident.team.ownerId
-        );
+        try {
+          const onCall = await this.onCallService.getCurrentOnCall(
+            incident.team.id,
+            incident.team.ownerId
+          );
 
-        const secondary = onCall?.chain.find((engineer) => {
-          return engineer.position === "SECONDARY";
-        });
-        if (!secondary || secondary.id === incident.assignedToId) {
-          continue;
+          const secondary = onCall?.chain.find((engineer) => {
+            return engineer.position === "SECONDARY";
+          });
+          if (!secondary || secondary.id === incident.assignedToId) {
+            continue;
+          }
+
+          await this.prisma.incident.updateMany({
+            where: {
+              id: incident.id,
+              status: INCIDENT_STATUS.OPEN,
+              assignedToId: incident.assignedToId,
+            },
+
+            data: { assignedToId: secondary.id, escalatedAt: new Date() },
+          });
+        } catch (error) {
+          this.logger.error(
+            `Failed to escalate incident ${incident.id}`,
+            error
+          );
         }
-
-        await this.prisma.incident.updateMany({
-          where: {
-            id: incident.id,
-            status: INCIDENT_STATUS.OPEN,
-            assignedToId: incident.assignedToId,
-          },
-
-          data: { assignedToId: secondary.id, escalatedAt: new Date() },
-        });
       }
     }
   }
