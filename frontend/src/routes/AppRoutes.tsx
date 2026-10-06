@@ -15,6 +15,7 @@ import {
 } from "@/features/organization";
 import { InvitePage } from "@/features/invite";
 import { HomeRedirect } from "./HomeRedirect";
+import { Integrations } from "@/features/integrations";
 
 export default function AppRoutes() {
   return (
@@ -51,6 +52,7 @@ export default function AppRoutes() {
               path="/manager/time-off"
               element={<div>manage time-off</div>}
             />
+            <Route path="/manager/integrations" element={<Integrations />} />
           </Route>
         </Route>
 
