@@ -18,7 +18,7 @@ import { TeamNotFound } from "../../../shared/components/TeamNotFound";
 import { InviteDialog } from "../../components/InviteDialog";
 import { fetchTeam } from "../../../shared/api/teams";
 
-export function Members() {
+export function TeamMembers() {
   const { id: teamId } = useParams();
   const [sort, setSort] = useState<SortState>({
     field: "joinedAt",

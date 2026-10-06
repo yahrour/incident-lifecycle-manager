@@ -1,3 +1,3 @@
 export { Teams, Team } from "./teams";
-export { Members, Engineers } from "./members";
+export { AllMembers, TeamMembers } from "./members";
 export { Unavailabilities } from "./unavailabilities";
