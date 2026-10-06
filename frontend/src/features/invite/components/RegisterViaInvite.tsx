@@ -1,7 +1,6 @@
 import { Link } from "react-router";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { isAxiosError } from "axios";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -18,33 +17,17 @@ import {
   registerViaInviteSchema,
   type RegisterViaInviteValues,
 } from "../schemas";
+import { parseApiError } from "@/utils/api";
+import { ErrorSection } from "@/components/ErrorSection";
 
 type RegisterViaInviteProps = {
   token: string;
   email: string;
 };
 
-function getRegisterErrorMessage(error: unknown): string {
-  if (!isAxiosError<{ message?: string }>(error)) {
-    return "Something went wrong. Try again.";
-  }
-  switch (error.response?.status) {
-    case 409:
-      return (
-        error.response?.data?.message ?? "This invite can't be used anymore."
-      );
-    case 410:
-      return "This invite has expired. Ask your team admin for a new one.";
-    case 404:
-      return "This invite is no longer valid.";
-    default:
-      return "We couldn't create your account. Try again.";
-  }
-}
-
 export function RegisterViaInvite({ email, token }: RegisterViaInviteProps) {
   const { mutate, isPending, error, isSuccess } = useRegisterViaInvite();
-
+  const errors = error ? parseApiError(error) : [];
   const form = useForm<RegisterViaInviteValues>({
     resolver: zodResolver(registerViaInviteSchema),
     defaultValues: { firstName: "", lastName: "", password: "", specialty: "" },
@@ -191,10 +174,10 @@ export function RegisterViaInvite({ email, token }: RegisterViaInviteProps) {
           />
         </FieldGroup>
 
-        {error && (
-          <p role="alert" className="text-sm text-destructive">
-            {getRegisterErrorMessage(error)}
-          </p>
+        {errors.length > 0 && (
+          <div className="mt-5 w-full">
+            <ErrorSection errors={errors} />
+          </div>
         )}
 
         <Button type="submit" className="w-full" disabled={isPending}>
