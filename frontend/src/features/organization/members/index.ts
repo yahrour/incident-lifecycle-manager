@@ -1,3 +1,3 @@
-export { TeamMembers } from "./pages/teamMembers";
+export { TeamMembers } from "./pages/team-members";
 export { MembersPreview } from "./components/previews/MembersPreview";
-export { AllMembers } from "./pages/allMembers";
+export { AllMembers } from "./pages/all-members";
