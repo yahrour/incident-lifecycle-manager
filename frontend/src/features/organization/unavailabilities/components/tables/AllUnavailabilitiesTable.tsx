@@ -66,7 +66,7 @@ export function AllUnavailabilitiesTable({
         : fetchAllPendingUnavailabilities(page, sort),
   });
 
-  const confirmMutation = useMutation({
+  const approveMutation = useMutation({
     mutationFn: ({
       teamId,
       memberId,
@@ -147,12 +147,12 @@ export function AllUnavailabilitiesTable({
     );
   }
 
-  const handleConfirm = (
+  const handleApprove = (
     teamId: string,
     unavailabilityId: number,
     memberId: number
   ) => {
-    confirmMutation.mutate({ teamId, memberId, unavailabilityId });
+    approveMutation.mutate({ teamId, memberId, unavailabilityId });
   };
   const handleReject = (
     teamId: string,
@@ -182,7 +182,7 @@ export function AllUnavailabilitiesTable({
           {unavailabilities.map((unavailability) => {
             const isActionDisabled =
               unavailability.status !== "PENDING" ||
-              confirmMutation.isPending ||
+              approveMutation.isPending ||
               rejectMutation.isPending;
             return (
               <TableRow key={unavailability.id} className="w-full">
@@ -218,7 +218,7 @@ export function AllUnavailabilitiesTable({
                     size={"xs"}
                     className="bg-success text-xs hover:bg-success/90"
                     onClick={() =>
-                      handleConfirm(
+                      handleApprove(
                         unavailability.teamMember.team.id,
                         unavailability.id,
                         unavailability.memberId
