@@ -43,7 +43,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { queryClient } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
 import { parseApiError } from "@/utils/api";
-import { ErrorSection } from "@/features/organization/shared/components/ErrorSection";
+import { ErrorSection } from "@/features/organization/shared/components/error-states/ErrorSection";
 import { createTeamSchema, servicesSchema } from "../../schemas";
 import { createTeam } from "../../api/teams";
 import {

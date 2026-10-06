@@ -10,7 +10,6 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { useErrorToast } from "@/hooks/use-error-toast";
-import { TeamNotFound } from "@/features/organization/shared/components/TeamNotFound";
 import { EditTeamDialog } from "../../components/dialogs/EditTeamDialog";
 import { DeleteTeamDialog } from "../../components/dialogs/DeleteTeamDialog";
 import { TeamStats } from "../../components/stats/TeamStats";
@@ -19,6 +18,7 @@ import { ServicesPreview } from "../../components/previews/ServicesPreview";
 import { MembersPreview } from "@/features/organization/members";
 import { fetchTeam } from "@/features/organization/shared/api/teams";
 import { UnavailabilitiesPreview } from "@/features/organization/unavailabilities";
+import { TeamNotFound } from "@/features/organization/shared/components/empty-states/TeamNotFound";
 
 export function Team() {
   const params = useParams();
