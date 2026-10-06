@@ -17,10 +17,11 @@ import { queryClient } from "@/lib/queryClient";
 import { disableApiKey, enableApiKey, fetchApiKeys } from "../api/apiKeys";
 import type { ApiKey } from "../types";
 import { DeleteApiKeyDialog } from "./DeleteApiKeyDialog";
+import { Lock, LockOpen } from "lucide-react";
 
 function StatusBadge({ apiKey }: { apiKey: ApiKey }) {
   if (apiKey.isExpired) return <Badge variant="destructive">Expired</Badge>;
-  if (!apiKey.enabled) return <Badge variant="outline">Disabled</Badge>;
+  if (!apiKey.enabled) return <Badge variant="warning">Disabled</Badge>;
   return <Badge variant="success">Active</Badge>;
 }
 
@@ -105,8 +106,7 @@ export function ApiKeysTable() {
                     disabled={isToggling}
                     onClick={() => toggleMutation.mutate(apiKey)}
                   >
-                    {isToggling && <Spinner />}
-                    {apiKey.enabled ? "Disable" : "Enable"}
+                    {isToggling ? <Spinner /> : apiKey.enabled ? <Lock /> : <LockOpen />}
                   </Button>
                   <DeleteApiKeyDialog id={apiKey.id} name={apiKey.name} />
                 </div>
