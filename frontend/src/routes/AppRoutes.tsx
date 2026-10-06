@@ -11,7 +11,8 @@ import {
   TeamMembers,
   Team,
   Teams,
-  Unavailabilities,
+  TeamUnavailabilities,
+  AllUnavailabilities,
 } from "@/features/organization";
 import { InvitePage } from "@/features/invite";
 import { HomeRedirect } from "./HomeRedirect";
@@ -40,12 +41,12 @@ export default function AppRoutes() {
             />
             <Route
               path="/manager/teams/:id/unavailabilities"
-              element={<Unavailabilities />}
+              element={<TeamUnavailabilities />}
             />
             <Route path="/manager/engineers" element={<AllMembers />} />
             <Route
-              path="/manager/availability"
-              element={<div>manage availability</div>}
+              path="/manager/unavailabilities"
+              element={<AllUnavailabilities />}
             />
             <Route
               path="/manager/time-off"

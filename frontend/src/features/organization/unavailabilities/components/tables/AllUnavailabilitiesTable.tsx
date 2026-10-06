@@ -9,8 +9,8 @@ import {
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   confirmUnavailability,
-  fetchPendingUnavailabilities,
-  fetchUnavailabilities,
+  fetchAllPendingUnavailabilities,
+  fetchAllUnavailabilities,
   rejectUnavailability,
 } from "../../api/unavailabilities";
 import { useErrorToast } from "@/hooks/use-error-toast";
@@ -34,6 +34,8 @@ import {
 import { DEFAULT_LIMIT } from "@/features/organization/shared/constants";
 import { NoPendingUnavailabilitiesState } from "../empty-states/NoPendingUnavailabilitiesState";
 import type { UnavailabilityStatus } from "@/features/organization/shared/types";
+import { Link } from "react-router";
+import { useEffect } from "react";
 
 const statusVariant: Record<
   UnavailabilityStatus,
@@ -45,28 +47,26 @@ const statusVariant: Record<
   REJECTED: "destructive",
 };
 
-export function UnavailabilitiesTable({
-  teamId,
+export function AllUnavailabilitiesTable({
   sort,
   page,
   setPage,
   filter,
 }: {
-  teamId: string;
   sort: SortState;
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
   filter: "all" | "pending";
 }) {
   const { data, isError, isPending } = useQuery({
-    queryKey: ["teams", "unavailabilities", teamId, page, sort, filter],
+    queryKey: ["teams", "unavailabilities", page, sort, filter],
     queryFn: () =>
       filter === "all"
-        ? fetchUnavailabilities(teamId, page, sort)
-        : fetchPendingUnavailabilities(teamId, page, sort),
+        ? fetchAllUnavailabilities(page, sort)
+        : fetchAllPendingUnavailabilities(page, sort),
   });
 
-  const confirmMutation = useMutation({
+  const approveMutation = useMutation({
     mutationFn: ({
       teamId,
       memberId,
@@ -76,9 +76,9 @@ export function UnavailabilitiesTable({
       memberId: number;
       unavailabilityId: number;
     }) => confirmUnavailability(teamId, memberId, unavailabilityId),
-    onSuccess: () => {
+    onSuccess: (_data, { teamId }) => {
       void queryClient.invalidateQueries({
-        queryKey: ["teams", "unavailabilities", teamId],
+        queryKey: ["teams", "unavailabilities"],
       });
       void queryClient.invalidateQueries({
         queryKey: ["unavailabilities", teamId],
@@ -103,9 +103,9 @@ export function UnavailabilitiesTable({
       memberId: number;
       unavailabilityId: number;
     }) => rejectUnavailability(teamId, memberId, unavailabilityId),
-    onSuccess: () => {
+    onSuccess: (_data, { teamId }) => {
       void queryClient.invalidateQueries({
-        queryKey: ["teams", "unavailabilities", teamId],
+        queryKey: ["teams", "unavailabilities"],
       });
       void queryClient.invalidateQueries({
         queryKey: ["unavailabilities", teamId],
@@ -122,14 +122,20 @@ export function UnavailabilitiesTable({
 
   useErrorToast(isError, "failed to load unavailabilities");
 
+  const unavailabilities = data?.data;
+  const totalUnavailabilities = data?.meta?.total ?? 0;
+
+  useEffect(() => {
+    if (unavailabilities && unavailabilities.length === 0 && page > 1) {
+      setPage(page - 1);
+    }
+  }, [unavailabilities, page, setPage]);
+
   if (isPending) {
     return (
       <Spinner className="size-5 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
     );
   }
-
-  const unavailabilities = data?.data;
-  const totalUnavailabilities = data?.meta?.total ?? 0;
 
   if (!unavailabilities || isError) {
     return <ErrorUnavailabilitiesState />;
@@ -141,10 +147,18 @@ export function UnavailabilitiesTable({
     );
   }
 
-  const handleConfirm = (unavailabilityId: number, memberId: number) => {
-    confirmMutation.mutate({ teamId, memberId, unavailabilityId });
+  const handleApprove = (
+    teamId: string,
+    unavailabilityId: number,
+    memberId: number
+  ) => {
+    approveMutation.mutate({ teamId, memberId, unavailabilityId });
   };
-  const handleReject = (unavailabilityId: number, memberId: number) => {
+  const handleReject = (
+    teamId: string,
+    unavailabilityId: number,
+    memberId: number
+  ) => {
     rejectMutation.mutate({ teamId, memberId, unavailabilityId });
   };
 
@@ -157,6 +171,7 @@ export function UnavailabilitiesTable({
         <TableHeader>
           <TableRow className="uppercase hover:bg-transparent">
             <TableHead className="w-2/5">Engineer</TableHead>
+            <TableHead>Team</TableHead>
             <TableHead>Dates</TableHead>
             <TableHead>Reason</TableHead>
             <TableHead>Status</TableHead>
@@ -167,7 +182,7 @@ export function UnavailabilitiesTable({
           {unavailabilities.map((unavailability) => {
             const isActionDisabled =
               unavailability.status !== "PENDING" ||
-              confirmMutation.isPending ||
+              approveMutation.isPending ||
               rejectMutation.isPending;
             return (
               <TableRow key={unavailability.id} className="w-full">
@@ -175,6 +190,14 @@ export function UnavailabilitiesTable({
                   {unavailability.teamMember.user.firstName +
                     " " +
                     unavailability.teamMember.user.lastName}
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  <Link
+                    to={`/manager/teams/${unavailability.teamMember.team.id}`}
+                    className="hover:underline hover:text-foreground"
+                  >
+                    {unavailability.teamMember.team.name}
+                  </Link>
                 </TableCell>
                 <TableCell className="text-xs">
                   {formatDuration(
@@ -195,7 +218,11 @@ export function UnavailabilitiesTable({
                     size={"xs"}
                     className="bg-success text-xs hover:bg-success/90"
                     onClick={() =>
-                      handleConfirm(unavailability.id, unavailability.memberId)
+                      handleApprove(
+                        unavailability.teamMember.team.id,
+                        unavailability.id,
+                        unavailability.memberId
+                      )
                     }
                     disabled={isActionDisabled}
                   >
@@ -206,7 +233,11 @@ export function UnavailabilitiesTable({
                     variant="destructive"
                     className="text-xs"
                     onClick={() =>
-                      handleReject(unavailability.id, unavailability.memberId)
+                      handleReject(
+                        unavailability.teamMember.team.id,
+                        unavailability.id,
+                        unavailability.memberId
+                      )
                     }
                     disabled={isActionDisabled}
                   >
