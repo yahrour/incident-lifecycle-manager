@@ -6,7 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { NoMembersState } from "../NoMembersState";
+import { NoMembersState } from "../empty-states/NoMembersState";
 import {
   Pagination,
   PaginationContent,
