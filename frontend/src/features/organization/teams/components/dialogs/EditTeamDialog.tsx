@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/tooltip";
 import type { Team } from "@/features/organization/shared/types";
 import { parseApiError } from "@/utils/api";
-import { ErrorSection } from "@/features/organization/shared/components/error-states/ErrorSection";
+import { ErrorSection } from "@/components/ErrorSection";
 
 export function EditTeamDialog({ team }: { team: Team }) {
   const [errors, setErrors] = useState<string[]>([]);
