@@ -9,8 +9,8 @@ import {
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   confirmUnavailability,
-  fetchPendingUnavailabilities,
-  fetchUnavailabilities,
+  fetchTeamPendingUnavailabilities,
+  fetchTeamUnavailabilities,
   rejectUnavailability,
 } from "../../api/unavailabilities";
 import { useErrorToast } from "@/hooks/use-error-toast";
@@ -45,7 +45,7 @@ const statusVariant: Record<
   REJECTED: "destructive",
 };
 
-export function UnavailabilitiesTable({
+export function TeamUnavailabilitiesTable({
   teamId,
   sort,
   page,
@@ -62,8 +62,8 @@ export function UnavailabilitiesTable({
     queryKey: ["teams", "unavailabilities", teamId, page, sort, filter],
     queryFn: () =>
       filter === "all"
-        ? fetchUnavailabilities(teamId, page, sort)
-        : fetchPendingUnavailabilities(teamId, page, sort),
+        ? fetchTeamUnavailabilities(teamId, page, sort)
+        : fetchTeamPendingUnavailabilities(teamId, page, sort),
   });
 
   const confirmMutation = useMutation({

@@ -313,6 +313,12 @@ export class UnavailabilityService {
             teamMember: {
               select: {
                 id: true,
+                team: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
                 user: {
                   select: {
                     id: true,
@@ -358,7 +364,7 @@ export class UnavailabilityService {
     }
   }
 
-  async findPending(
+  async findTeamPending(
     requesterId: string,
     teamId: string,
     query: OffsetPaginationSearchParams
@@ -379,6 +385,12 @@ export class UnavailabilityService {
           teamMember: {
             select: {
               id: true,
+              team: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
               user: {
                 select: {
                   id: true,
@@ -406,6 +418,124 @@ export class UnavailabilityService {
           status: "PENDING",
           teamMember: {
             teamId,
+            team: { ownerId: requesterId },
+          },
+        },
+      }),
+    ]);
+
+    return { unavailabilities, total };
+  }
+
+  async findAll(requesterId: string, query: OffsetPaginationSearchParams) {
+    try {
+      const [unavailabilities, total] = await Promise.all([
+        this.prisma.unavailability.findMany({
+          where: {
+            teamMember: {
+              team: { ownerId: requesterId },
+            },
+          },
+          include: {
+            teamMember: {
+              select: {
+                id: true,
+                team: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+                user: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                    specialty: true,
+                    role: true,
+                  },
+                },
+              },
+            },
+          },
+          skip: query.offset,
+          take: query.limit,
+          ...(query.sortField && {
+            orderBy: {
+              [query.sortField]: query.sortOrder,
+            },
+          }),
+        }),
+        this.prisma.unavailability.count({
+          where: {
+            teamMember: {
+              team: { ownerId: requesterId },
+            },
+          },
+        }),
+      ]);
+
+      return { unavailabilities, total };
+    } catch (error) {
+      if (
+        error instanceof PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        throw new NotFoundException(
+          "Cursor references a no-longer-existing unavailability"
+        );
+      }
+      throw error;
+    }
+  }
+
+  async findPending(requesterId: string, query: OffsetPaginationSearchParams) {
+    const [unavailabilities, total] = await Promise.all([
+      this.prisma.unavailability.findMany({
+        where: {
+          confirmed: false,
+          status: "PENDING",
+          teamMember: {
+            team: { ownerId: requesterId },
+          },
+        },
+        include: {
+          teamMember: {
+            select: {
+              id: true,
+              team: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                  specialty: true,
+                  role: true,
+                },
+              },
+            },
+          },
+        },
+        ...(query.sortField && {
+          orderBy: {
+            [query.sortField]: query.sortOrder,
+          },
+        }),
+        skip: query.offset,
+        take: query.limit,
+      }),
+      this.prisma.unavailability.count({
+        where: {
+          confirmed: false,
+          status: "PENDING",
+          teamMember: {
             team: { ownerId: requesterId },
           },
         },

@@ -21,7 +21,6 @@ import {
   CalendarOff,
   Plug,
   Settings,
-  Calendar,
   Home,
   ChevronDown,
   LogOut,
@@ -56,7 +55,11 @@ const managerItems = {
   orgItems: [
     { label: "Teams", href: "/manager/teams", icon: Users },
     { label: "Engineers", href: "/manager/engineers", icon: UserSquare2 },
-    { label: "Availability", href: "/manager/availability", icon: Calendar },
+    {
+      label: "Unavailabilities",
+      href: "/manager/unavailabilities",
+      icon: CalendarOff,
+    },
     { label: "Time Off", href: "/manager/time-off", icon: CalendarOff },
   ],
   setupItems: [

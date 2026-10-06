@@ -4,6 +4,6 @@ import { TeamsModule } from "./teams/teams.module";
 import { UnavailabilityModule } from "./unavailability/unavailability.module";
 
 @Module({
-  imports: [MembersModule, TeamsModule, UnavailabilityModule],
+  imports: [MembersModule, UnavailabilityModule, TeamsModule],
 })
 export class OrganizationModule {}

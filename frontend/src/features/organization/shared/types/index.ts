@@ -45,6 +45,10 @@ export type Unavailability = {
   teamMember: {
     id: number;
     user: User;
+    team: {
+      id: string;
+      name: string;
+    };
   };
 };
 
