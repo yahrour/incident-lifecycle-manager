@@ -9,7 +9,7 @@ import { useState } from "react";
 import { type SortState } from "../../types";
 import { EngineersTable } from "../../components/tables/EngineersTable";
 
-export function Engineers() {
+export function AllMembers() {
   const [sort, setSort] = useState<SortState>({
     field: "joinedAt",
     order: "asc",
