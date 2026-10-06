@@ -127,7 +127,7 @@ export function EngineersTable({
 
             return (
               <TableRow key={member.id}>
-                <TableCell>
+                <TableCell className="font-medium text-sm flex-1">
                   {member.user.firstName + " " + member.user.lastName}
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
@@ -156,7 +156,7 @@ export function EngineersTable({
                 <TableCell className="text-xs text-muted-foreground">
                   {formatJoined(member.joinedAt)}
                 </TableCell>
-                <TableCell>
+                <TableCell className="p-0! m-0!">
                   <Button
                     variant="destructive"
                     className="bg-transparent"

@@ -46,7 +46,7 @@ export function TeamMembers() {
   }
 
   return (
-    <div className="w-full">
+    <div>
       <div className="bg-white flex items-center gap-2 px-4 py-3 border-b">
         <Breadcrumb>
           <BreadcrumbList>
@@ -71,7 +71,7 @@ export function TeamMembers() {
         </Breadcrumb>
       </div>
 
-      <div className="p-6 space-y-2">
+      <div className="p-4 space-y-4 mt-2">
         <div className="flex justify-end items-center gap-2">
           <SortControls sort={sort} onSortChange={setSort} setPage={setPage} />
           <InviteDialog team={team} />
