@@ -18,7 +18,7 @@ import {
   type RegisterViaInviteValues,
 } from "../schemas";
 import { parseApiError } from "@/utils/api";
-import { ErrorSection } from "@/features/organization/shared/components/error-states/ErrorSection";
+import { ErrorSection } from "@/components/ErrorSection";
 
 type RegisterViaInviteProps = {
   token: string;

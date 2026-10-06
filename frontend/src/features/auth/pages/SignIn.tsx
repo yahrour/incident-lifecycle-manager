@@ -6,7 +6,7 @@ import { AuthCard } from "@/components/AuthCard";
 import useSignIn from "../hooks/useSignIn";
 import { GoogleButton } from "../components/GoogleButton";
 import { parseApiError } from "@/utils/api";
-import { ErrorSection } from "@/features/organization/shared/components/error-states/ErrorSection";
+import { ErrorSection } from "@/components/ErrorSection";
 
 export default function SignIn() {
   const { mutate, isPending, error } = useSignIn();

@@ -13,7 +13,7 @@ import useSignUp from "../hooks/useSignUp";
 import { signUpSchema, type SignUpCredentials } from "../schemas";
 import { GoogleButton } from "../components/GoogleButton";
 import { parseApiError } from "@/utils/api";
-import { ErrorSection } from "@/features/organization/shared/components/error-states/ErrorSection";
+import { ErrorSection } from "@/components/ErrorSection";
 
 type FieldErrors = Partial<Record<keyof SignUpCredentials, string>>;
 

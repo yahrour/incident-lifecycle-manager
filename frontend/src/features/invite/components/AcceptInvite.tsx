@@ -4,7 +4,7 @@ import { useAcceptInvite } from "../hooks/useAcceptInvite";
 import { Button } from "@/components/ui/button";
 import { isAxiosError } from "axios";
 import { parseApiError } from "@/utils/api";
-import { ErrorSection } from "@/features/organization/shared/components/error-states/ErrorSection";
+import { ErrorSection } from "@/components/ErrorSection";
 
 type AcceptInviteProps = {
   token: string;
