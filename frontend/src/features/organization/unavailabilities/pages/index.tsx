@@ -17,7 +17,6 @@ import { useState } from "react";
 import type { SortState } from "../types";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UnavailabilitiesTable } from "../components/tables/UnavailabilitiesTable";
-import { PendingUnavailabilitiesTable } from "../components/tables/PendingUnavailabilities";
 
 export function Unavailabilities() {
   const [page, setPage] = useState(1);
@@ -103,16 +102,13 @@ export function Unavailabilities() {
             filter={filter}
           />
         </div>
-        {filter === "all" ? (
-          <UnavailabilitiesTable teamId={team.id} sort={sort} />
-        ) : (
-          <PendingUnavailabilitiesTable
-            teamId={team.id}
-            sort={sort}
-            page={page}
-            setPage={setPage}
-          />
-        )}
+        <UnavailabilitiesTable
+          teamId={team.id}
+          sort={sort}
+          page={page}
+          setPage={setPage}
+          filter={filter}
+        />
       </div>
     </div>
   );
