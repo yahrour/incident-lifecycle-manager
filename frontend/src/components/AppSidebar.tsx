@@ -60,7 +60,6 @@ const managerItems = {
       href: "/manager/unavailabilities",
       icon: CalendarOff,
     },
-    { label: "Time Off", href: "/manager/time-off", icon: CalendarOff },
   ],
   setupItems: [
     { label: "Integrations", href: "/manager/integrations", icon: Plug },
