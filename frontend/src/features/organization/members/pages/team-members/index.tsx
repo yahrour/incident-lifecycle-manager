@@ -14,11 +14,11 @@ import { MembersTable } from "../../components/tables/MembersTable";
 import { SortControls } from "../../components/SortControls";
 import { useState } from "react";
 import { type SortState } from "../../types";
-import { TeamNotFound } from "../../../shared/components/TeamNotFound";
-import { InviteDialog } from "../../components/InviteDialog";
+import { TeamNotFound } from "../../../shared/components/empty-states/TeamNotFound";
+import { InviteDialog } from "../../components/invite-dialog";
 import { fetchTeam } from "../../../shared/api/teams";
 
-export function Members() {
+export function TeamMembers() {
   const { id: teamId } = useParams();
   const [sort, setSort] = useState<SortState>({
     field: "joinedAt",
