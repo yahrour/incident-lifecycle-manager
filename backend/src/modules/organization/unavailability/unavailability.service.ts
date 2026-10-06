@@ -9,12 +9,10 @@ import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prism
 import {
   CreateUnavailabilityDto,
   OffsetPaginationSearchParams,
-  CursorPaginationSearchParams,
   UpdateUnavailabilityDto,
 } from "./dto";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { Team, TeamMember } from "@/generated/prisma/client";
-import { Cursor, cursorSchema } from "./types";
 import { convertDateToUtc } from "@/common/utils/timezone";
 import { Cron, CronExpression } from "@nestjs/schedule";
 
@@ -86,29 +84,6 @@ export class UnavailabilityService {
     this.verifySelf(targetMember, requesterUserId);
 
     return targetMember;
-  }
-
-  private encodeCursor(cursor: Cursor): string {
-    return Buffer.from(JSON.stringify(cursor)).toString("base64url");
-  }
-
-  private decodeCursor(raw: string): Cursor {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(Buffer.from(raw, "base64url").toString("utf-8"));
-    } catch {
-      throw new BadRequestException("Invalid cursor");
-    }
-
-    const result = cursorSchema.validate(parsed, {
-      stripUnknown: true,
-    });
-
-    if (result.error) {
-      throw new BadRequestException("Invalid cursor");
-    }
-
-    return result.value;
   }
 
   async create(
@@ -321,74 +296,55 @@ export class UnavailabilityService {
   async findTeamAll(
     requesterId: string,
     teamId: string,
-    query: CursorPaginationSearchParams
+    query: OffsetPaginationSearchParams
   ) {
     await this.verifyTeamOwnership(teamId, requesterId);
 
-    const cursor = query.cursor ? this.decodeCursor(query.cursor) : null;
-    if (
-      cursor &&
-      (cursor.sortField !== query.sortField ||
-        cursor.sortOrder !== query.sortOrder)
-    ) {
-      throw new BadRequestException(
-        "Cursor sort parameters do not match query sort parameters"
-      );
-    }
-
     try {
-      const teamUnavailabilities = await this.prisma.unavailability.findMany({
-        where: {
-          teamMember: {
-            teamId,
-            team: { ownerId: requesterId },
+      const [unavailabilities, total] = await Promise.all([
+        this.prisma.unavailability.findMany({
+          where: {
+            teamMember: {
+              teamId,
+              team: { ownerId: requesterId },
+            },
           },
-        },
-        include: {
-          teamMember: {
-            select: {
-              id: true,
-              user: {
-                select: {
-                  id: true,
-                  firstName: true,
-                  lastName: true,
-                  email: true,
-                  specialty: true,
-                  role: true,
+          include: {
+            teamMember: {
+              select: {
+                id: true,
+                user: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                    specialty: true,
+                    role: true,
+                  },
                 },
               },
             },
           },
-        },
-        take: query.limit + 1,
-        ...(cursor && {
-          skip: 1,
-          cursor: {
-            id: cursor.id,
+          skip: query.offset,
+          take: query.limit,
+          ...(query.sortField && {
+            orderBy: {
+              [query.sortField]: query.sortOrder,
+            },
+          }),
+        }),
+        this.prisma.unavailability.count({
+          where: {
+            teamMember: {
+              teamId,
+              team: { ownerId: requesterId },
+            },
           },
         }),
-        orderBy: [
-          {
-            [query.sortField]: query.sortOrder,
-          },
-          { id: query.sortOrder },
-        ],
-      });
+      ]);
 
-      const hasNextPage = teamUnavailabilities.length > query.limit;
-      const unavailabilities = hasNextPage
-        ? teamUnavailabilities.slice(0, query.limit)
-        : teamUnavailabilities;
-      const nextCursor = hasNextPage
-        ? this.encodeCursor({
-            id: unavailabilities[unavailabilities.length - 1].id,
-            sortField: query.sortField,
-            sortOrder: query.sortOrder,
-          })
-        : null;
-
-      return { unavailabilities, nextCursor };
+      return { unavailabilities, total };
     } catch (error) {
       if (
         error instanceof PrismaClientKnownRequestError &&
