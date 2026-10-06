@@ -31,6 +31,8 @@ export type Member = {
   };
 };
 
+export type UnavailabilityStatus =
+  "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED";
 export type Unavailability = {
   id: number;
   memberId: number;
@@ -39,7 +41,7 @@ export type Unavailability = {
   reason: string | null;
   createdAt: Date;
   confirmed: boolean;
-  status: "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED";
+  status: UnavailabilityStatus;
   teamMember: {
     id: number;
     user: User;

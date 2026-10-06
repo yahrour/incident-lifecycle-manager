@@ -59,12 +59,6 @@ const makeUnavailability = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-const encodeCursor = (cursor: {
-  id: number;
-  sortField: SORT_FIELD;
-  sortOrder: SORT_ORDER;
-}) => Buffer.from(JSON.stringify(cursor)).toString("base64url");
-
 describe("UnavailabilityService", () => {
   let service: UnavailabilityService;
   let prisma: MockPrisma;
@@ -199,6 +193,7 @@ describe("UnavailabilityService", () => {
       await expect(
         service.findTeamAll(OWNER_ID, TEAM_ID, {
           limit: 20,
+          offset: 0,
           sortField: SORT_FIELD.CREATED_AT,
           sortOrder: SORT_ORDER.ASC,
         })
@@ -213,6 +208,7 @@ describe("UnavailabilityService", () => {
       await expect(
         service.findTeamAll("notTheOwner", TEAM_ID, {
           limit: 20,
+          offset: 0,
           sortField: SORT_FIELD.CREATED_AT,
           sortOrder: SORT_ORDER.ASC,
         })
@@ -223,6 +219,7 @@ describe("UnavailabilityService", () => {
   describe("findTeamAll", () => {
     const defaultQuery = {
       limit: 20,
+      offset: 0,
       sortField: SORT_FIELD.CREATED_AT,
       sortOrder: SORT_ORDER.ASC,
     };
@@ -231,181 +228,61 @@ describe("UnavailabilityService", () => {
       prisma.team.findUnique.mockResolvedValue(makeTeam());
     });
 
-    it("should return unavailabilities scoped to the team without a next cursor when there is no next page", async () => {
+    it("should return unavailabilities scoped to the team with a total count", async () => {
       const unavailabilities = [makeUnavailability({ id: 1 })];
 
       prisma.unavailability.findMany.mockResolvedValue(unavailabilities);
+      prisma.unavailability.count.mockResolvedValue(1);
 
       const result = await service.findTeamAll(OWNER_ID, TEAM_ID, defaultQuery);
 
-      expect(result).toEqual({ unavailabilities, nextCursor: null });
+      expect(result).toEqual({ unavailabilities, total: 1 });
+
+      const where = {
+        teamMember: {
+          teamId: TEAM_ID,
+          team: { ownerId: OWNER_ID },
+        },
+      };
 
       expect(prisma.unavailability.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: {
-            teamMember: {
-              teamId: TEAM_ID,
-              team: { ownerId: OWNER_ID },
-            },
-          },
-          take: defaultQuery.limit + 1,
-          orderBy: [
-            { [defaultQuery.sortField]: defaultQuery.sortOrder },
-            { id: defaultQuery.sortOrder },
-          ],
+          where,
+          skip: 0,
+          take: 20,
+          orderBy: { createdAt: SORT_ORDER.ASC },
         })
       );
+      expect(prisma.unavailability.count).toHaveBeenCalledWith({ where });
     });
 
-    it("should return an empty list and no next cursor when there are no unavailabilities", async () => {
+    it("should return an empty list and a zero total when there are no unavailabilities", async () => {
       prisma.unavailability.findMany.mockResolvedValue([]);
+      prisma.unavailability.count.mockResolvedValue(0);
 
       const result = await service.findTeamAll(OWNER_ID, TEAM_ID, defaultQuery);
 
-      expect(result).toEqual({ unavailabilities: [], nextCursor: null });
+      expect(result).toEqual({ unavailabilities: [], total: 0 });
     });
 
-    it("should truncate results to the limit and return a next cursor when more pages follow", async () => {
-      prisma.unavailability.findMany.mockResolvedValue([
-        makeUnavailability({ id: 1 }),
-        makeUnavailability({ id: 2 }),
-        makeUnavailability({ id: 3 }),
-      ]);
-
-      const result = await service.findTeamAll(OWNER_ID, TEAM_ID, {
-        ...defaultQuery,
-        limit: 2,
-      });
-
-      expect(result.unavailabilities).toEqual([
-        makeUnavailability({ id: 1 }),
-        makeUnavailability({ id: 2 }),
-      ]);
-
-      const decodedCursor = result.nextCursor
-        ? JSON.parse(
-            Buffer.from(result.nextCursor, "base64url").toString("utf-8")
-          )
-        : null;
-      expect(decodedCursor).toEqual({
-        id: 2,
-        sortField: defaultQuery.sortField,
-        sortOrder: defaultQuery.sortOrder,
-      });
-    });
-
-    it("should skip the cursor record when a cursor is provided", async () => {
-      const cursorId = 5;
-      const cursor = encodeCursor({
-        id: cursorId,
-        sortField: defaultQuery.sortField,
-        sortOrder: defaultQuery.sortOrder,
-      });
-
-      prisma.unavailability.findMany.mockResolvedValue([
-        makeUnavailability({ id: 6 }),
-      ]);
+    it("should pass the offset and limit through to the query", async () => {
+      prisma.unavailability.findMany.mockResolvedValue([]);
+      prisma.unavailability.count.mockResolvedValue(45);
 
       await service.findTeamAll(OWNER_ID, TEAM_ID, {
         ...defaultQuery,
-        cursor,
+        offset: 20,
+        limit: 10,
+        sortOrder: SORT_ORDER.DESC,
       });
 
       expect(prisma.unavailability.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          skip: 1,
-          cursor: { id: cursorId },
+          skip: 20,
+          take: 10,
+          orderBy: { createdAt: SORT_ORDER.DESC },
         })
       );
-    });
-
-    it("should combine cursor pagination with truncation and produce the next cursor", async () => {
-      const cursorId = 5;
-      const cursor = encodeCursor({
-        id: cursorId,
-        sortField: defaultQuery.sortField,
-        sortOrder: defaultQuery.sortOrder,
-      });
-
-      // 3 rows returned (2 fit the page, 1 signals a next page)
-      prisma.unavailability.findMany.mockResolvedValue([
-        makeUnavailability({ id: 6 }),
-        makeUnavailability({ id: 7 }),
-        makeUnavailability({ id: 8 }),
-      ]);
-
-      const result = await service.findTeamAll(OWNER_ID, TEAM_ID, {
-        ...defaultQuery,
-        cursor,
-        limit: 2,
-      });
-
-      expect(result.unavailabilities).toEqual([
-        makeUnavailability({ id: 6 }),
-        makeUnavailability({ id: 7 }),
-      ]);
-
-      const decodedCursor = result.nextCursor
-        ? JSON.parse(
-            Buffer.from(result.nextCursor, "base64url").toString("utf-8")
-          )
-        : null;
-      expect(decodedCursor).toEqual({
-        id: 7,
-        sortField: defaultQuery.sortField,
-        sortOrder: defaultQuery.sortOrder,
-      });
-    });
-
-    it("should throw BadRequestException when the cursor sort parameters do not match the query", async () => {
-      // sortOrder mismatch
-      const cursor = encodeCursor({
-        id: 5,
-        sortField: defaultQuery.sortField,
-        sortOrder: SORT_ORDER.DESC,
-      });
-
-      await expect(
-        service.findTeamAll(OWNER_ID, TEAM_ID, {
-          ...defaultQuery,
-          cursor,
-        })
-      ).rejects.toThrow(BadRequestException);
-
-      expect(prisma.unavailability.findMany).not.toHaveBeenCalled();
-    });
-
-    it("should throw BadRequestException when the cursor is invalid", async () => {
-      await expect(
-        service.findTeamAll(OWNER_ID, TEAM_ID, {
-          ...defaultQuery,
-          cursor: "not-a-valid-cursor",
-        })
-      ).rejects.toThrow(BadRequestException);
-
-      expect(prisma.unavailability.findMany).not.toHaveBeenCalled();
-    });
-
-    it("should throw NotFoundException when the cursor references a deleted unavailability", async () => {
-      const cursor = encodeCursor({
-        id: 5,
-        sortField: defaultQuery.sortField,
-        sortOrder: defaultQuery.sortOrder,
-      });
-
-      prisma.unavailability.findMany.mockRejectedValue(
-        new PrismaClientKnownRequestError("Record not found", {
-          code: "P2025",
-          clientVersion: "5.0.0",
-        })
-      );
-
-      await expect(
-        service.findTeamAll(OWNER_ID, TEAM_ID, {
-          ...defaultQuery,
-          cursor,
-        })
-      ).rejects.toThrow(NotFoundException);
     });
 
     it("should rethrow unexpected errors", async () => {

@@ -13,11 +13,12 @@ export async function fetchUnavailabilitiesPreview(id: string) {
 
 export async function fetchUnavailabilities(
   id: string,
-  nextCursor: string | null,
+  page: number,
   sort: SortState
 ) {
+  const offset = (page - 1) * DEFAULT_LIMIT;
   const params = new URLSearchParams({
-    ...(nextCursor && { cursor: nextCursor }),
+    offset: String(offset),
     limit: String(DEFAULT_LIMIT),
     sortField: sort.field,
     sortOrder: sort.order,
