@@ -11,7 +11,7 @@ export async function fetchUnavailabilitiesPreview(id: string) {
   return response.data;
 }
 
-export async function fetchUnavailabilities(
+export async function fetchTeamUnavailabilities(
   id: string,
   page: number,
   sort: SortState
@@ -29,7 +29,7 @@ export async function fetchUnavailabilities(
   return response.data;
 }
 
-export async function fetchPendingUnavailabilities(
+export async function fetchTeamPendingUnavailabilities(
   id: string,
   page: number,
   sort: SortState
@@ -65,4 +65,35 @@ export async function rejectUnavailability(
   await apiClient.post(
     `/teams/${teamId}/members/${memberId}/unavailabilities/${unavailabilityId}/reject`
   );
+}
+
+export async function fetchAllUnavailabilities(page: number, sort: SortState) {
+  const offset = (page - 1) * DEFAULT_LIMIT;
+  const params = new URLSearchParams({
+    offset: String(offset),
+    limit: String(DEFAULT_LIMIT),
+    sortField: sort.field,
+    sortOrder: sort.order,
+  });
+  const response = await apiClient.get<ApiResponse<Unavailability[]>>(
+    `/teams/unavailabilities?${params.toString()}`
+  );
+  return response.data;
+}
+
+export async function fetchAllPendingUnavailabilities(
+  page: number,
+  sort: SortState
+) {
+  const offset = (page - 1) * DEFAULT_LIMIT;
+  const params = new URLSearchParams({
+    offset: String(offset),
+    limit: String(DEFAULT_LIMIT),
+    sortField: sort.field,
+    sortOrder: sort.order,
+  });
+  const response = await apiClient.get<ApiResponse<Unavailability[]>>(
+    `/teams/unavailabilities/pending?${params.toString()}`
+  );
+  return response.data;
 }
