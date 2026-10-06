@@ -11,13 +11,12 @@ import { Link, useParams } from "react-router";
 import { fetchTeam } from "../../shared/api/teams";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { Spinner } from "@/components/ui/spinner";
-import { TeamNotFound } from "../../shared/components/TeamNotFound";
+import { TeamNotFound } from "../../shared/components/empty-states/TeamNotFound";
 import { SortControls } from "../components/SortControls";
 import { useState } from "react";
 import type { SortState } from "../types";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UnavailabilitiesTable } from "../components/tables/UnavailabilitiesTable";
-import { PendingUnavailabilitiesTable } from "../components/tables/PendingUnavailabilities";
 
 export function Unavailabilities() {
   const [page, setPage] = useState(1);
@@ -103,16 +102,13 @@ export function Unavailabilities() {
             filter={filter}
           />
         </div>
-        {filter === "all" ? (
-          <UnavailabilitiesTable teamId={team.id} sort={sort} />
-        ) : (
-          <PendingUnavailabilitiesTable
-            teamId={team.id}
-            sort={sort}
-            page={page}
-            setPage={setPage}
-          />
-        )}
+        <UnavailabilitiesTable
+          teamId={team.id}
+          sort={sort}
+          page={page}
+          setPage={setPage}
+          filter={filter}
+        />
       </div>
     </div>
   );

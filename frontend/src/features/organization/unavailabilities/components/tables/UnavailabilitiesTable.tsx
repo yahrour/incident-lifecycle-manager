@@ -6,9 +6,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   confirmUnavailability,
+  fetchPendingUnavailabilities,
   fetchUnavailabilities,
   rejectUnavailability,
 } from "../../api/unavailabilities";
@@ -20,29 +21,49 @@ import { formatDuration } from "../../utils/time";
 import { queryClient } from "@/lib/queryClient";
 import type { SortState } from "../../types";
 import { toast } from "@/components/ui/toast";
-import { ErrorUnavailabilitiesState } from "../ErrorUnavailabilitiesState";
-import { NoUnavailabilitiesState } from "../emptyStates/NoUnavailabilitiesState";
+import { ErrorUnavailabilitiesState } from "../error-states/ErrorUnavailabilitiesState";
+import { NoUnavailabilitiesState } from "../empty-states/NoUnavailabilitiesState";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { DEFAULT_LIMIT } from "@/features/organization/shared/constants";
+import { NoPendingUnavailabilitiesState } from "../empty-states/NoPendingUnavailabilitiesState";
+import type { UnavailabilityStatus } from "@/features/organization/shared/types";
+
+const statusVariant: Record<
+  UnavailabilityStatus,
+  "warning" | "success" | "destructive"
+> = {
+  PENDING: "warning",
+  APPROVED: "success",
+  EXPIRED: "destructive",
+  REJECTED: "destructive",
+};
 
 export function UnavailabilitiesTable({
   teamId,
   sort,
+  page,
+  setPage,
+  filter,
 }: {
   teamId: string;
   sort: SortState;
+  page: number;
+  setPage: React.Dispatch<React.SetStateAction<number>>;
+  filter: "all" | "pending";
 }) {
-  const {
-    data,
-    isError,
-    isSuccess,
-    isPending,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: ["teams", "unavailabilities", teamId, sort],
-    queryFn: ({ pageParam }) => fetchUnavailabilities(teamId, pageParam, sort),
-    initialPageParam: null as string | null,
-    getNextPageParam: (lastPage) => lastPage.meta?.nextCursor ?? undefined,
+  const { data, isError, isPending } = useQuery({
+    queryKey: ["teams", "unavailabilities", teamId, page, sort, filter],
+    queryFn: () =>
+      filter === "all"
+        ? fetchUnavailabilities(teamId, page, sort)
+        : fetchPendingUnavailabilities(teamId, page, sort),
   });
 
   const confirmMutation = useMutation({
@@ -107,12 +128,17 @@ export function UnavailabilitiesTable({
     );
   }
 
-  const unavailabilities = data?.pages.flatMap((page) => page.data) ?? [];
+  const unavailabilities = data?.data;
+  const totalUnavailabilities = data?.meta?.total ?? 0;
 
-  if ((!unavailabilities || unavailabilities.length === 0) && isSuccess) {
-    return <NoUnavailabilitiesState />;
-  } else if ((!unavailabilities || unavailabilities.length === 0) && isError) {
+  if (!unavailabilities || isError) {
     return <ErrorUnavailabilitiesState />;
+  } else if (unavailabilities && totalUnavailabilities === 0) {
+    return filter === "all" ? (
+      <NoUnavailabilitiesState />
+    ) : (
+      <NoPendingUnavailabilitiesState />
+    );
   }
 
   const handleConfirm = (unavailabilityId: number, memberId: number) => {
@@ -121,6 +147,9 @@ export function UnavailabilitiesTable({
   const handleReject = (unavailabilityId: number, memberId: number) => {
     rejectMutation.mutate({ teamId, memberId, unavailabilityId });
   };
+
+  const isFirstPage = page === 1;
+  const isLastPage = page * DEFAULT_LIMIT >= totalUnavailabilities;
 
   return (
     <div className="space-y-4">
@@ -135,76 +164,85 @@ export function UnavailabilitiesTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {unavailabilities.map((unavailability) => (
-            <TableRow key={unavailability.id} className="w-full">
-              <TableCell className="font-medium text-sm flex-1">
-                {unavailability.teamMember.user.firstName +
-                  " " +
-                  unavailability.teamMember.user.lastName}
-              </TableCell>
-              <TableCell className="text-xs">
-                {formatDuration(
-                  unavailability.startDate,
-                  unavailability.endDate
-                )}
-              </TableCell>
-              <TableCell className="text-xs text-muted-foreground">
-                {unavailability.reason}
-              </TableCell>
-              <TableCell>
-                {unavailability.status === "PENDING" ? (
-                  <Badge variant="warning">PENDING</Badge>
-                ) : unavailability.status === "APPROVED" ? (
-                  <Badge variant="success">APPROVED</Badge>
-                ) : unavailability.status === "EXPIRED" ? (
-                  <Badge variant="destructive">EXPIRED</Badge>
-                ) : (
-                  <Badge variant="destructive">REJECTED</Badge>
-                )}
-              </TableCell>
-              <TableCell className="text-xs text-right text-muted-foreground space-x-2">
-                <Button
-                  size={"xs"}
-                  className="bg-success text-xs hover:bg-success/90"
-                  onClick={() =>
-                    handleConfirm(unavailability.id, unavailability.memberId)
-                  }
-                  disabled={
-                    unavailability.status !== "PENDING" ||
-                    confirmMutation.isPending ||
-                    rejectMutation.isPending
-                  }
-                >
-                  Approve
-                </Button>
-                <Button
-                  size={"xs"}
-                  variant="destructive"
-                  className="text-xs"
-                  onClick={() =>
-                    handleReject(unavailability.id, unavailability.memberId)
-                  }
-                  disabled={
-                    unavailability.status !== "PENDING" ||
-                    confirmMutation.isPending ||
-                    rejectMutation.isPending
-                  }
-                >
-                  Reject
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
+          {unavailabilities.map((unavailability) => {
+            const isActionDisabled =
+              unavailability.status !== "PENDING" ||
+              confirmMutation.isPending ||
+              rejectMutation.isPending;
+            return (
+              <TableRow key={unavailability.id} className="w-full">
+                <TableCell className="font-medium text-sm flex-1">
+                  {unavailability.teamMember.user.firstName +
+                    " " +
+                    unavailability.teamMember.user.lastName}
+                </TableCell>
+                <TableCell className="text-xs">
+                  {formatDuration(
+                    unavailability.startDate,
+                    unavailability.endDate
+                  )}
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  {unavailability.reason}
+                </TableCell>
+                <TableCell>
+                  <Badge variant={statusVariant[unavailability.status]}>
+                    {unavailability.status}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-xs text-right text-muted-foreground space-x-2">
+                  <Button
+                    size={"xs"}
+                    className="bg-success text-xs hover:bg-success/90"
+                    onClick={() =>
+                      handleConfirm(unavailability.id, unavailability.memberId)
+                    }
+                    disabled={isActionDisabled}
+                  >
+                    Approve
+                  </Button>
+                  <Button
+                    size={"xs"}
+                    variant="destructive"
+                    className="text-xs"
+                    onClick={() =>
+                      handleReject(unavailability.id, unavailability.memberId)
+                    }
+                    disabled={isActionDisabled}
+                  >
+                    Reject
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
-      <div className="flex justify-center">
-        <Button
-          onClick={() => void fetchNextPage()}
-          disabled={!hasNextPage || isFetchingNextPage}
-        >
-          {isFetchingNextPage ? "Loading more..." : "Load More"}
-        </Button>
-      </div>
+      <Pagination>
+        <PaginationContent>
+          <PaginationItem
+            className={
+              isFirstPage ? "pointer-events-none opacity-50" : undefined
+            }
+            aria-disabled={isFirstPage}
+          >
+            <PaginationPrevious onClick={() => setPage(page - 1)} />
+          </PaginationItem>
+
+          <PaginationItem>
+            <PaginationLink isActive>{page}</PaginationLink>
+          </PaginationItem>
+
+          <PaginationItem
+            className={
+              isLastPage ? "pointer-events-none opacity-50" : undefined
+            }
+            aria-disabled={isLastPage}
+          >
+            <PaginationNext onClick={() => setPage(page + 1)} />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
     </div>
   );
 }
