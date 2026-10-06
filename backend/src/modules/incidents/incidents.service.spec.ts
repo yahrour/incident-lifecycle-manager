@@ -608,4 +608,67 @@ describe("IncidentsService", () => {
       })
     );
   });
+
+  it("escalates only overdue open incidents to the secondary on-call engineer", async () => {
+    const team = { id: "team-id", ownerId: "owner-id" };
+    const minutesAgo = (minutes: number) =>
+      new Date(Date.now() - minutes * 60 * 1000);
+    const findMany = jest.fn().mockResolvedValue([
+      {
+        id: "overdue",
+        assignedToId: "primary-id",
+        createdAt: minutesAgo(10),
+        team: { ...team, escalationTimeoutMinutes: 5 },
+      },
+      {
+        id: "fresh",
+        assignedToId: "primary-id",
+        createdAt: minutesAgo(1),
+        team: { ...team, escalationTimeoutMinutes: 5 },
+      },
+      {
+        // Already with the secondary (single-member team): nobody to hand over to.
+        id: "no-backup",
+        assignedToId: "secondary-id",
+        createdAt: minutesAgo(10),
+        team: { ...team, escalationTimeoutMinutes: 5 },
+      },
+      {
+        id: "teamless",
+        assignedToId: null,
+        createdAt: minutesAgo(10),
+        team: null,
+      },
+    ]);
+    const updateMany = jest.fn().mockResolvedValue({ count: 1 });
+    const prisma = {
+      incident: { findMany, updateMany },
+    } as unknown as PrismaService;
+    const getCurrentOnCall = jest.fn().mockResolvedValue({
+      chain: [
+        { position: "PRIMARY", id: "primary-id" },
+        { position: "SECONDARY", id: "secondary-id" },
+      ],
+    });
+    const service = new IncidentsService(prisma, {
+      getCurrentOnCall,
+    } as unknown as OnCallService);
+
+    await service.escalateUnacknowledged();
+
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { status: "open", escalatedAt: null },
+      })
+    );
+    expect(getCurrentOnCall).toHaveBeenCalledWith("team-id", "owner-id");
+    expect(updateMany).toHaveBeenCalledTimes(1);
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { id: "overdue", status: "open", assignedToId: "primary-id" },
+      data: {
+        assignedToId: "secondary-id",
+        escalatedAt: expect.any(Date) as Date,
+      },
+    });
+  });
 });
