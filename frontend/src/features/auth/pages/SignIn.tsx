@@ -1,4 +1,3 @@
-import axios from "axios";
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -6,12 +5,9 @@ import { Input } from "@/components/ui/input";
 import { AuthCard } from "@/components/AuthCard";
 import useSignIn from "../hooks/useSignIn";
 import { GoogleButton } from "../components/GoogleButton";
-function getErrorMessage(error: Error) {
-  if (axios.isAxiosError(error)) {
-    return "Something went wrong. Please try again.";
-  }
-  return error.message;
-}
+import { parseApiError } from "@/utils/api";
+import { ErrorSection } from "@/features/organization/shared/components/error-states/ErrorSection";
+
 export default function SignIn() {
   const { mutate, isPending, error } = useSignIn();
 
@@ -20,6 +16,8 @@ export default function SignIn() {
     const password = formData.get("password") as string;
     mutate({ email, password });
   }
+  const errors = error ? parseApiError(error) : [];
+
   return (
     <AuthCard>
       <h1 className="font-heading tracking-tight">Sign in</h1>
@@ -47,9 +45,7 @@ export default function SignIn() {
           </Field>
         </FieldGroup>
 
-        {error && (
-          <p className="text-sm text-destructive">{getErrorMessage(error)}</p>
-        )}
+        {errors.length > 0 && <ErrorSection errors={errors} />}
         <Button type="submit" className="w-full" disabled={isPending}>
           {isPending ? "Signing in..." : "Sign in"}
         </Button>
