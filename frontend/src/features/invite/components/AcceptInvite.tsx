@@ -3,38 +3,17 @@ import { UserPlus } from "lucide-react";
 import { useAcceptInvite } from "../hooks/useAcceptInvite";
 import { Button } from "@/components/ui/button";
 import { isAxiosError } from "axios";
+import { parseApiError } from "@/utils/api";
+import { ErrorSection } from "@/features/organization/shared/components/error-states/ErrorSection";
 
 type AcceptInviteProps = {
   token: string;
   email: string;
 };
 
-function getAcceptErrorMessage(error: unknown): string {
-  if (!isAxiosError<{ message?: string }>(error)) {
-    return "Something went wrong. Try again.";
-  }
-  switch (error.response?.status) {
-    case 403:
-      return (
-        error.response?.data?.message ??
-        "You don't have permission to accept this invite."
-      );
-    case 409:
-      return (
-        error.response?.data?.message ?? "You can't join this team right now."
-      );
-    case 410:
-      return "This invite has expired. Ask your team admin for a new one.";
-    case 404:
-      return "This invite is no longer valid.";
-    default:
-      return "We couldn't add you to the team. Try again.";
-  }
-}
-
 export function AcceptInvite({ token, email }: AcceptInviteProps) {
   const { mutate, isPending, error } = useAcceptInvite();
-
+  const errors = error ? parseApiError(error) : [];
   const status = isAxiosError(error) ? error.response?.status : undefined;
   const canRetry = !status || status >= 500;
 
@@ -55,11 +34,9 @@ export function AcceptInvite({ token, email }: AcceptInviteProps) {
 
         <p className="mt-1 font-medium">{email}</p>
 
-        {error && (
-          <div className="mt-5 w-full rounded-md bg-destructive/10 px-4 py-3">
-            <p className="text-sm text-destructive">
-              {getAcceptErrorMessage(error)}
-            </p>
+        {errors.length > 0 && (
+          <div className="mt-5 w-full">
+            <ErrorSection errors={errors} />
           </div>
         )}
 
