@@ -12,6 +12,7 @@ model Incident {
   assignedTo     User?          @relation("IncidentAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
   createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz
   acknowledgedAt DateTime?      @map("acknowledged_at") @db.Timestamptz
+  escalatedAt    DateTime?      @map("escalated_at") @db.Timestamptz
   resolvedAt     DateTime?      @map("resolved_at") @db.Timestamptz
   mttaSeconds    Int?           @map("mtta_seconds")
   mttrSeconds    Int?           @map("mttr_seconds")

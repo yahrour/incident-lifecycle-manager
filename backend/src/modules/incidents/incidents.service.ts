@@ -5,6 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import { Cron, CronExpression } from "@nestjs/schedule";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { Prisma } from "@/generated/prisma/client";
 import { OnCallService } from "@/modules/oncall/oncall.service";
@@ -146,6 +147,9 @@ export class IncidentsService {
       { type: "created", at: incident.createdAt },
       ...(incident.acknowledgedAt
         ? [{ type: "acknowledged", at: incident.acknowledgedAt }]
+        : []),
+      ...(incident.escalatedAt
+        ? [{ type: "escalated", at: incident.escalatedAt }]
         : []),
       ...(incident.resolvedAt
         ? [{ type: "resolved", at: incident.resolvedAt }]
@@ -405,5 +409,48 @@ export class IncidentsService {
     }
 
     return this.prisma.incident.findUnique({ where: { id: incidentId } });
+  }
+  @Cron(CronExpression.EVERY_MINUTE)
+  async escalateUnacknowledged() {
+    const openIncidents = await this.prisma.incident.findMany({
+      where: {
+        status: INCIDENT_STATUS.OPEN,
+        escalatedAt: null,
+      },
+      include: { team: true },
+    });
+
+    for (const incident of openIncidents) {
+      if (!incident.team) {
+        continue;
+      }
+      const waited = Date.now() - incident.createdAt.getTime();
+      const escalationTimeout =
+        incident.team.escalationTimeoutMinutes * 60 * 1000;
+
+      if (waited >= escalationTimeout) {
+        const onCall = await this.onCallService.getCurrentOnCall(
+          incident.team.id,
+          incident.team.ownerId
+        );
+
+        const secondary = onCall?.chain.find((engineer) => {
+          return engineer.position === "SECONDARY";
+        });
+        if (!secondary || secondary.id === incident.assignedToId) {
+          continue;
+        }
+
+        await this.prisma.incident.updateMany({
+          where: {
+            id: incident.id,
+            status: INCIDENT_STATUS.OPEN,
+            assignedToId: incident.assignedToId,
+          },
+
+          data: { assignedToId: secondary.id, escalatedAt: new Date() },
+        });
+      }
+    }
   }
 }
