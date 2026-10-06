@@ -28,6 +28,28 @@ import { apiResponse } from "@/common/utils/api-response";
 export class UnavailabilityController {
   constructor(private readonly unavailabilityService: UnavailabilityService) {}
 
+  @Get("unavailabilities")
+  @Roles(Role.SRE)
+  async findAll(
+    @Query() query: OffsetPaginationSearchParams,
+    @ActiveUser() user: ActiveUserData
+  ) {
+    const { unavailabilities, total } =
+      await this.unavailabilityService.findAll(user.sub, query);
+    return apiResponse(unavailabilities, { total });
+  }
+
+  @Get("unavailabilities/pending")
+  @Roles(Role.SRE)
+  async findPending(
+    @Query() query: OffsetPaginationSearchParams,
+    @ActiveUser() user: ActiveUserData
+  ) {
+    const { unavailabilities, total } =
+      await this.unavailabilityService.findPending(user.sub, query);
+    return apiResponse(unavailabilities, { total });
+  }
+
   @Post(":teamId/members/:memberId/unavailabilities")
   async create(
     @Param("teamId", ParseUUIDPipe) teamId: string,
@@ -123,13 +145,13 @@ export class UnavailabilityController {
 
   @Get(":teamId/unavailabilities/pending")
   @Roles(Role.SRE)
-  async findPending(
+  async findTeamPending(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Query() query: OffsetPaginationSearchParams,
     @ActiveUser() user: ActiveUserData
   ) {
     const { unavailabilities, total } =
-      await this.unavailabilityService.findPending(user.sub, teamId, query);
+      await this.unavailabilityService.findTeamPending(user.sub, teamId, query);
     return apiResponse(unavailabilities, { total });
   }
 

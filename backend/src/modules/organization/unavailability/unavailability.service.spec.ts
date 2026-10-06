@@ -311,7 +311,11 @@ describe("UnavailabilityService", () => {
       prisma.unavailability.findMany.mockResolvedValue(pending);
       prisma.unavailability.count.mockResolvedValue(1);
 
-      const result = await service.findPending(OWNER_ID, TEAM_ID, defaultQuery);
+      const result = await service.findTeamPending(
+        OWNER_ID,
+        TEAM_ID,
+        defaultQuery
+      );
 
       expect(result).toEqual({ unavailabilities: pending, total: 1 });
 
