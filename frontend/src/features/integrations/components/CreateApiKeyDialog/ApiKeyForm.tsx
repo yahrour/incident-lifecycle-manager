@@ -28,10 +28,10 @@ import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 import { parseApiError } from "@/utils/api";
 import { queryClient } from "@/lib/queryClient";
-import { ErrorSection } from "@/features/organization/shared/components/error-states/ErrorSection";
 
 import { createApiKey } from "../../api/apiKeys";
 import { createApiKeySchema } from "../../schemas";
+import { ErrorSection } from "@/components/ErrorSection";
 
 const EXPIRY_OPTIONS = [
   { value: 7, label: "7 days" },
