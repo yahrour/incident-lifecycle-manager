@@ -1,4 +1,4 @@
-import { Controller, Get, Req, Res, UseGuards } from "@nestjs/common";
+import { Controller, Get, Query, Req, Res, UseGuards } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { Public } from "@/common/decorators/public.decorator";
 import { GoogleAuthService } from "./google-auth.service";
@@ -8,7 +8,7 @@ import {
   ACCESS_COOKIE_OPTIONS,
   REFRESH_COOKIE_OPTIONS,
 } from "../auth-cookie.constants";
-import { GoogleOAuthGuard } from "./google-oauth.guard";
+import { GoogleOAuthGuard, safeRedirect } from "./google-oauth.guard";
 
 @Public()
 @Controller({ path: "auth/google", version: "1" })
@@ -17,7 +17,6 @@ export class GoogleAuthController {
     private readonly googleAuthService: GoogleAuthService,
     private readonly configService: ConfigService
   ) {}
-
   @Get()
   @UseGuards(GoogleOAuthGuard)
   start() {}
@@ -26,13 +25,17 @@ export class GoogleAuthController {
   @UseGuards(GoogleOAuthGuard)
   async callback(
     @Req() req: Request,
-    @Res({ passthrough: true }) response: Response
+    @Res() response: Response,
+    @Query("state") state?: string
   ) {
     const frontendUrl = this.configService.getOrThrow<string>("FRONTEND_URL");
+    const redirect = safeRedirect(state);
+    const profile = req.user as GoogleProfile | null;
+    if (!profile) {
+      return response.redirect(`${frontendUrl}/login?error=google`);
+    }
     try {
-      const result = await this.googleAuthService.login(
-        req.user as GoogleProfile
-      );
+      const result = await this.googleAuthService.login(profile);
       if (!result.success) {
         return response.redirect(`${frontendUrl}/login?error=google`);
       }
@@ -42,7 +45,7 @@ export class GoogleAuthController {
         REFRESH_COOKIE_OPTIONS
       );
       response.cookie("accessToken", result.accessToken, ACCESS_COOKIE_OPTIONS);
-      return response.redirect(`${frontendUrl}/`);
+      return response.redirect(`${frontendUrl}${redirect}`);
     } catch {
       return response.redirect(`${frontendUrl}/login?error=google`);
     }
