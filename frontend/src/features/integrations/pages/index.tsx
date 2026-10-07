@@ -17,18 +17,9 @@ export function Integrations() {
       <div className="bg-white flex items-center gap-2 px-4 py-3 border-b">
         <h1 className="font-medium text-sm">Integrations</h1>
       </div>
-      <div className="mt-2 p-4 space-y-4">
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="font-medium text-sm">API keys</h2>
-            <p className="text-xs text-muted-foreground">
-              Monitoring tools send alerts with a key in the x-api-key header.
-            </p>
-          </div>
-          <CreateApiKeyDialog />
-        </div>
+            <div className="mt-2 p-4 space-y-4">
 
-        <div className="flex justify-between">
+        <div className="flex justify-between items-center">
           <Tabs
             value={filter}
             onValueChange={(v: ApiKeyFilter) => setFilter(v)}
@@ -45,11 +36,16 @@ export function Integrations() {
               </TabsTrigger>
             </TabsList>
           </Tabs>
-          <SortControls sort={sort} onSortChange={setSort} />
+
+          <div className="flex items-center gap-4">
+            <SortControls sort={sort} onSortChange={setSort} />
+            <CreateApiKeyDialog />
+          </div>
         </div>
 
         <ApiKeysTable filter={filter} sort={sort} />
       </div>
+
     </div>
   );
 }
