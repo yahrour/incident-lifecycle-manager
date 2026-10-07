@@ -60,6 +60,7 @@ export class ApiKeyService {
   async findAll(ownerId: string) {
     const apiKeys = await this.prisma.apiKey.findMany({
       where: { ownerId },
+      orderBy: { createdAt: "desc" },
       select: {
         id: true,
         name: true,
