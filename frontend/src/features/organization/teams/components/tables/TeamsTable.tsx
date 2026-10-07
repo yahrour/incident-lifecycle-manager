@@ -2,7 +2,6 @@ import { useQueries } from "@tanstack/react-query";
 import { fetchTeams } from "../../api/teams";
 import { fetchMetrics } from "../../api/metrics";
 import { useNavigate } from "react-router";
-import { Spinner } from "@/components/ui/spinner";
 import {
   Table,
   TableBody,
@@ -24,6 +23,7 @@ import { useErrorToast } from "@/hooks/use-error-toast";
 import { DEFAULT_LIMIT } from "@/features/organization/shared/constants";
 import { NoTeamsState } from "../empty-states/NoTeamsState";
 import type { SortState } from "../../types";
+import { FullPageSpinner } from "@/components/FullPageSpinner";
 
 export function TeamsTable({
   search,
@@ -54,9 +54,7 @@ export function TeamsTable({
   useErrorToast(metricsQuery.isError, "something went wrong fetching metrics");
 
   if (teamsQuery.isPending || metricsQuery.isPending) {
-    return (
-      <Spinner className="size-5 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
-    );
+    return <FullPageSpinner />;
   }
 
   const teams = teamsQuery.data;

@@ -29,6 +29,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useEffect, useState } from "react";
 import type { SortState } from "../../types";
 import { Link } from "react-router";
+import { FullPageSpinner } from "@/components/FullPageSpinner";
 
 export function EngineersTable({
   page,
@@ -91,9 +92,7 @@ export function EngineersTable({
   }, [members, page, setPage]);
 
   if (isPending) {
-    return (
-      <Spinner className="size-5 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
-    );
+    return <FullPageSpinner />;
   }
 
   if (!members || members.length === 0) {
