@@ -10,20 +10,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useErrorToast } from "@/hooks/use-error-toast";
-import { DEFAULT_LIMIT } from "@/features/organization/shared/constants";
 import { NoTeamsState } from "../empty-states/NoTeamsState";
 import type { SortState } from "../../types";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
+import { TablePagination } from "@/features/organization/shared/components/TablePagination";
 
 export function TeamsTable({
   search,
@@ -73,9 +65,6 @@ export function TeamsTable({
   if (!teams || teams?.data.length === 0) {
     return <NoTeamsState />;
   }
-
-  const isFirstPage = page === 1;
-  const isLastPage = page * DEFAULT_LIMIT >= totalTeams;
 
   return (
     <>
@@ -144,31 +133,7 @@ export function TeamsTable({
           })}
         </TableBody>
       </Table>
-      <Pagination>
-        <PaginationContent>
-          <PaginationItem
-            className={
-              isFirstPage ? "pointer-events-none opacity-50" : undefined
-            }
-            aria-disabled={isFirstPage}
-          >
-            <PaginationPrevious onClick={() => setPage(page - 1)} />
-          </PaginationItem>
-
-          <PaginationItem>
-            <PaginationLink isActive>{page}</PaginationLink>
-          </PaginationItem>
-
-          <PaginationItem
-            className={
-              isLastPage ? "pointer-events-none opacity-50" : undefined
-            }
-            aria-disabled={isLastPage}
-          >
-            <PaginationNext onClick={() => setPage(page + 1)} />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+      <TablePagination page={page} setPage={setPage} total={totalTeams} />
     </>
   );
 }
