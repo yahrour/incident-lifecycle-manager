@@ -38,7 +38,7 @@ services:
 
   vault:
     build:
-      context: ./vault
+      context: ./infra/vault
       dockerfile: Dockerfile
     container_name: incident_vault
     ports:
@@ -48,7 +48,7 @@ services:
     volumes:
       - vault_token:/vault/runtime
     env_file:
-      - ./vault/.env
+      - ./infra/vault/.env
     networks:
       - incident_network
 
@@ -129,7 +129,7 @@ services:
 
   waf:
     build:
-      context: ./waf
+      context: ./infra/waf
       dockerfile: Dockerfile
     container_name: incident_waf
     environment:
