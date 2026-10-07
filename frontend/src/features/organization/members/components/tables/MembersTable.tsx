@@ -28,6 +28,7 @@ import { toast } from "@/components/ui/toast";
 import { queryClient } from "@/lib/queryClient";
 import { useState } from "react";
 import type { SortState } from "../../types";
+import { FullPageSpinner } from "@/components/FullPageSpinner";
 
 export function MembersTable({
   teamId,
@@ -80,9 +81,7 @@ export function MembersTable({
   useErrorToast(isError, "failed to load members");
 
   if (isPending) {
-    return (
-      <Spinner className="size-5 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
-    );
+    return <FullPageSpinner />;
   }
 
   const members = data?.data;
