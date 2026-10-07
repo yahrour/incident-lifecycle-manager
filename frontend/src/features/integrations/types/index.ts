@@ -13,3 +13,7 @@ export type CreatedApiKey = {
   prefix: string;
   expiresAt: string;
 };
+
+export type ApiKeyFilter = "all" | "active" | "disabled";
+export type SortField = "createdAt" | "expiresAt" | "name";
+export type SortState = { field: SortField; order: "asc" | "desc" };
