@@ -7,7 +7,7 @@ import {
 import { SortControls } from "../../components/SortControls";
 import { useState } from "react";
 import { type SortState } from "../../types";
-import { EngineersTable } from "../../components/tables/EngineersTable";
+import { AllMembersTable } from "../../components/tables/AllMembersTable";
 
 export function AllMembers() {
   const [sort, setSort] = useState<SortState>({
@@ -32,7 +32,7 @@ export function AllMembers() {
         <div className="flex justify-end items-center gap-2">
           <SortControls sort={sort} onSortChange={setSort} setPage={setPage} />
         </div>
-        <EngineersTable page={page} setPage={setPage} sort={sort} />
+        <AllMembersTable page={page} setPage={setPage} sort={sort} />
       </div>
     </div>
   );
