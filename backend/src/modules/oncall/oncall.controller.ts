@@ -22,4 +22,14 @@ export class OnCallController {
     const result = await this.onCallService.getCurrentOnCall(id, user.sub);
     return apiResponse(result);
   }
+
+  @Get(":id/upcoming-rotations")
+  @Roles(Role.SRE)
+  async getUpcomingRotations(
+    @Param("id", ParseUUIDPipe) id: string,
+    @ActiveUser() user: ActiveUserData
+  ) {
+    const result = await this.onCallService.getUpcomingRotations(id, user.sub);
+    return apiResponse(result);
+  }
 }
