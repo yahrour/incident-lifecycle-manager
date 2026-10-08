@@ -113,6 +113,7 @@ export class OnCallService {
                 startDate: { lte: now },
                 endDate: { gte: now },
                 confirmed: true,
+                status: "APPROVED",
               },
             },
           },
@@ -134,7 +135,8 @@ export class OnCallService {
     type User = (typeof members)[0]["user"];
     const upcomingRotations: User[] = [];
 
-    for (let i = 0; i < totalMembers; i++) {
+    // start from 1 to skip the current on-call engineer
+    for (let i = 1; i < totalMembers; i++) {
       const currentRotationIndex =
         (team.currentRotationIndex + i) % totalMembers;
       const member = members[currentRotationIndex];
@@ -144,11 +146,13 @@ export class OnCallService {
       if (isAvailable) {
         upcomingRotations.push(member.user);
       }
+
+      if (upcomingRotations.length === 5) {
+        break;
+      }
     }
 
-    return {
-      chain: upcomingRotations,
-    };
+    return upcomingRotations;
   }
 
   @Cron(CronExpression.EVERY_SECOND)
