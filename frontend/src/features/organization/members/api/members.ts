@@ -11,7 +11,11 @@ export async function fetchMembersPreview(id: string) {
   return response.data;
 }
 
-export async function fetchMembers(id: string, page: number, sort: SortState) {
+export async function fetchTeamMembers(
+  id: string,
+  page: number,
+  sort: SortState
+) {
   const offset = (page - 1) * DEFAULT_LIMIT;
   const params = new URLSearchParams({
     sortField: sort.field,
@@ -23,7 +27,7 @@ export async function fetchMembers(id: string, page: number, sort: SortState) {
   return response.data;
 }
 
-export async function fetchEngineers(page: number, sort: SortState) {
+export async function fetchAllMembers(page: number, sort: SortState) {
   const offset = (page - 1) * DEFAULT_LIMIT;
   const params = new URLSearchParams({
     sortField: sort.field,

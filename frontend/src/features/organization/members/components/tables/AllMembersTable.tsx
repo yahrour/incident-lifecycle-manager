@@ -1,0 +1,54 @@
+import { NoMembersState } from "../empty-states/NoMembersState";
+import { useQuery } from "@tanstack/react-query";
+import { fetchAllMembers } from "../../api/members";
+import { useErrorToast } from "@/hooks/use-error-toast";
+import { Spinner } from "@/components/ui/spinner";
+import { useEffect } from "react";
+import type { SortState } from "../../types";
+import { MembersTable } from "./MembersTable";
+
+export function AllMembersTable({
+  page,
+  setPage,
+  sort,
+}: {
+  page: number;
+  setPage: React.Dispatch<React.SetStateAction<number>>;
+  sort: SortState;
+}) {
+  const { data, isPending, isError } = useQuery({
+    queryKey: ["teams", "members", page, sort],
+    queryFn: () => fetchAllMembers(page, sort),
+  });
+
+  useErrorToast(isError, "failed to load members");
+
+  const members = data?.data;
+  const totalMembers = data?.meta?.total ?? 0;
+
+  useEffect(() => {
+    if (members && members.length === 0 && page > 1) {
+      setPage(page - 1);
+    }
+  }, [members, page, setPage]);
+
+  if (isPending) {
+    return (
+      <Spinner className="size-5 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
+    );
+  }
+
+  if (!members || members.length === 0) {
+    return <NoMembersState />;
+  }
+
+  return (
+    <MembersTable
+      members={members}
+      totalMembers={totalMembers}
+      page={page}
+      setPage={setPage}
+      showOrgWide={true}
+    />
+  );
+}
