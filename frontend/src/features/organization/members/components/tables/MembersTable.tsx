@@ -6,15 +6,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import { DEFAULT_LIMIT } from "@/features/organization/shared/constants";
 import { useMutation } from "@tanstack/react-query";
 import { removeMember } from "../../api/members";
 import { Spinner } from "@/components/ui/spinner";
@@ -27,6 +18,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useState } from "react";
 import type { Member } from "@/features/organization/shared/types";
 import { Link } from "react-router";
+import { TablePagination } from "@/features/organization/shared/components/TablePagination";
 
 export function MembersTable({
   members,
@@ -75,9 +67,6 @@ export function MembersTable({
       setPendingMemberId(null);
     },
   });
-
-  const isFirstPage = page === 1;
-  const isLastPage = page * DEFAULT_LIMIT >= totalMembers;
 
   const handleRemove = (teamId: string, memberId: number) => {
     setPendingMemberId(memberId);
@@ -158,31 +147,7 @@ export function MembersTable({
           })}
         </TableBody>
       </Table>
-      <Pagination>
-        <PaginationContent>
-          <PaginationItem
-            className={
-              isFirstPage ? "pointer-events-none opacity-50" : undefined
-            }
-            aria-disabled={isFirstPage}
-          >
-            <PaginationPrevious onClick={() => setPage(page - 1)} />
-          </PaginationItem>
-
-          <PaginationItem>
-            <PaginationLink isActive>{page}</PaginationLink>
-          </PaginationItem>
-
-          <PaginationItem
-            className={
-              isLastPage ? "pointer-events-none opacity-50" : undefined
-            }
-            aria-disabled={isLastPage}
-          >
-            <PaginationNext onClick={() => setPage(page + 1)} />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+      <TablePagination page={page} setPage={setPage} total={totalMembers} />
     </>
   );
 }
