@@ -18,6 +18,7 @@ import { MembersPreview } from "@/features/organization/members";
 import { fetchTeam } from "@/features/organization/shared/api/teams";
 import { UnavailabilitiesPreview } from "@/features/organization/unavailabilities";
 import { TeamNotFound } from "@/features/organization/shared/components/empty-states/TeamNotFound";
+import { UpcomingRotationsPreview } from "../../components/previews/UpcomingRotationsPreview";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 
 export function Team() {
@@ -60,7 +61,7 @@ export function Team() {
       </div>
 
       <div className="p-6 space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-wrap justify-between items-center gap-3">
           <h1 className="text-3xl font-semibold tracking-tight capitalize text-foreground">
             {team.name}
           </h1>
@@ -71,11 +72,16 @@ export function Team() {
         </div>
 
         <TeamStats team={team} />
-        <MembersPreview teamId={team.id} />
-        <div className="flex gap-4 max-md:flex-col">
-          <OnCallPreview teamId={team.id} />
-          <UnavailabilitiesPreview teamId={team.id} />
-          <ServicesPreview services={team.services} />
+        <div className="grid items-start gap-6 lg:grid-cols-3">
+          <div className="space-y-4 lg:sticky lg:top-6 lg:order-last">
+            <OnCallPreview teamId={team.id} />
+            <UpcomingRotationsPreview teamId={team.id} />
+            <ServicesPreview services={team.services} />
+          </div>
+          <main className="min-w-0 space-y-6 lg:col-span-2">
+            <MembersPreview teamId={team.id} />
+            <UnavailabilitiesPreview teamId={team.id} />
+          </main>
         </div>
       </div>
     </div>

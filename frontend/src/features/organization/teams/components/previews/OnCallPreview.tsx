@@ -85,7 +85,7 @@ function Person({ engineer, label }: { engineer: ChainUser; label: string }) {
 
       <Link
         to={`mailto:${engineer.email}`}
-        className="rounded-md p-1.5 text-muted-foreground hover:bg-[#f7f2ea] hover:text-foreground"
+        className="rounded-md p-1.5 text-muted-foreground hover:bg-muted"
       >
         <Mail className="size-4" />
       </Link>
