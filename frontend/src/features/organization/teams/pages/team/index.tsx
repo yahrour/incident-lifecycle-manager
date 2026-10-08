@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router";
-import { Spinner } from "@/components/ui/spinner";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -20,6 +19,7 @@ import { fetchTeam } from "@/features/organization/shared/api/teams";
 import { UnavailabilitiesPreview } from "@/features/organization/unavailabilities";
 import { TeamNotFound } from "@/features/organization/shared/components/empty-states/TeamNotFound";
 import { UpcomingRotationsPreview } from "../../components/previews/UpcomingRotationsPreview";
+import { FullPageSpinner } from "@/components/FullPageSpinner";
 
 export function Team() {
   const params = useParams();
@@ -33,9 +33,7 @@ export function Team() {
   useErrorToast(isError, "team doesn't exist");
 
   if (isPending) {
-    return (
-      <Spinner className="size-5 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
-    );
+    return <FullPageSpinner />;
   }
 
   const team = data?.data;

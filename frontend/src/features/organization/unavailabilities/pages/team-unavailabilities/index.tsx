@@ -10,13 +10,13 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router";
 import { fetchTeam } from "../../../shared/api/teams";
 import { useErrorToast } from "@/hooks/use-error-toast";
-import { Spinner } from "@/components/ui/spinner";
 import { TeamNotFound } from "../../../shared/components/empty-states/TeamNotFound";
 import { SortControls } from "../../components/SortControls";
 import { useState } from "react";
 import type { SortState } from "../../types";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TeamUnavailabilitiesTable } from "../../components/tables/TeamUnavailabilitiesTable";
+import { FullPageSpinner } from "@/components/FullPageSpinner";
 
 export function TeamUnavailabilities() {
   const [page, setPage] = useState(1);
@@ -34,9 +34,7 @@ export function TeamUnavailabilities() {
   useErrorToast(isError, "team doesn't exist");
 
   if (isPending) {
-    return (
-      <Spinner className="size-5 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
-    );
+    return <FullPageSpinner />;
   }
 
   const team = data?.data;
@@ -71,7 +69,7 @@ export function TeamUnavailabilities() {
         </Breadcrumb>
       </div>
 
-      <div className="p-6 space-y-4">
+      <div className="p-4 space-y-4">
         <div className="flex justify-between">
           <Tabs
             value={filter}
