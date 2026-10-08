@@ -19,7 +19,7 @@ import { MembersPreview } from "@/features/organization/members";
 import { fetchTeam } from "@/features/organization/shared/api/teams";
 import { UnavailabilitiesPreview } from "@/features/organization/unavailabilities";
 import { TeamNotFound } from "@/features/organization/shared/components/empty-states/TeamNotFound";
-import { fetchUpcomginRotations } from "../../api/teams";
+import { UpcomingRotationsPreview } from "../../components/previews/UpcomingRotationsPreview";
 
 export function Team() {
   const params = useParams();
@@ -28,11 +28,6 @@ export function Team() {
   const { data, isPending, isError } = useQuery({
     queryKey: ["team", teamId],
     queryFn: () => fetchTeam(teamId as string),
-  });
-
-  const upcomginRotationQuery = useQuery({
-    queryKey: ["upcomingRotation", teamId],
-    queryFn: () => fetchUpcomginRotations(teamId as string),
   });
 
   useErrorToast(isError, "team doesn't exist");
@@ -48,8 +43,6 @@ export function Team() {
   if (!team) {
     return <TeamNotFound />;
   }
-
-  console.log("upcomging rotation: ", upcomginRotationQuery.data);
 
   return (
     <div className="w-full">
@@ -83,9 +76,14 @@ export function Team() {
         <TeamStats team={team} />
         <MembersPreview teamId={team.id} />
         <div className="flex gap-4 max-md:flex-col">
-          <OnCallPreview teamId={team.id} />
-          <UnavailabilitiesPreview teamId={team.id} />
-          <ServicesPreview services={team.services} />
+          <div className="flex-1 space-y-4">
+            <OnCallPreview teamId={team.id} />
+            <UpcomingRotationsPreview teamId={team.id} />
+          </div>
+          <div className="flex-1 space-y-4">
+            <UnavailabilitiesPreview teamId={team.id} />
+            <ServicesPreview services={team.services} />
+          </div>
         </div>
       </div>
     </div>
