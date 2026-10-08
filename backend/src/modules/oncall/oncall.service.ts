@@ -90,6 +90,67 @@ export class OnCallService {
     };
   }
 
+  async getUpcomingRotations(teamId: string, ownerId: string) {
+    const now = new Date();
+    const team = await this.prisma.team.findUnique({
+      where: { id: teamId, ownerId },
+      include: {
+        teamMembers: {
+          orderBy: { joinedAt: "asc" },
+          select: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                specialty: true,
+                role: true,
+              },
+            },
+            unavailabilities: {
+              where: {
+                startDate: { lte: now },
+                endDate: { gte: now },
+                confirmed: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!team) {
+      throw new NotFoundException("Team doesn't exist");
+    }
+
+    if (team.teamMembers.length === 0) {
+      return null;
+    }
+
+    const members = team.teamMembers;
+    const totalMembers = members.length;
+
+    type User = (typeof members)[0]["user"];
+    const upcomingRotations: User[] = [];
+
+    for (let i = 0; i < totalMembers; i++) {
+      const currentRotationIndex =
+        (team.currentRotationIndex + i) % totalMembers;
+      const member = members[currentRotationIndex];
+
+      const isAvailable = member.unavailabilities.length === 0;
+
+      if (isAvailable) {
+        upcomingRotations.push(member.user);
+      }
+    }
+
+    return {
+      chain: upcomingRotations,
+    };
+  }
+
   @Cron(CronExpression.EVERY_SECOND)
   async processRotations() {
     const teams = await this.prisma.team.findMany({
