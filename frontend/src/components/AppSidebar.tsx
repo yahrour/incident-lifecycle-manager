@@ -92,6 +92,7 @@ export function AppSidebar() {
   }
 
   const items = user.role === Role.SRE ? managerItems : engineerItems;
+  const userFullName = user.firstName + " " + user.lastName;
 
   return (
     <Sidebar className="border-none bg-primary" collapsible="icon">
@@ -206,14 +207,20 @@ export function AppSidebar() {
               </Avatar>
             </div>
             <div className="flex-1 text-left group-data-[collapsible=icon]:hidden">
-              <Tooltip>
-                <TooltipTrigger render={<p className="text-sm font-medium" />}>
-                  {(user.firstName + " " + user.lastName).substring(0, 20)}
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{user.firstName + " " + user.lastName}</p>
-                </TooltipContent>
-              </Tooltip>
+              {userFullName.length > 20 ? (
+                <Tooltip>
+                  <TooltipTrigger
+                    render={<p className="text-sm font-medium" />}
+                  >
+                    {userFullName.substring(0, 20)}
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{userFullName}</p>
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                <p className="text-sm font-medium">{userFullName}</p>
+              )}
               <p className="text-xs text-muted-foreground">{user.role}</p>
             </div>
             <ChevronDown className="group-aria-expanded:rotate-180 transition-all duration-300" />
@@ -222,7 +229,7 @@ export function AppSidebar() {
             <DropdownMenuGroup className="py-2">
               <DropdownMenuLabel>
                 <p className="text-sm font-medium text-foreground">
-                  {user.firstName + " " + user.lastName}
+                  {userFullName}
                 </p>
                 <p>{user.email}</p>
               </DropdownMenuLabel>

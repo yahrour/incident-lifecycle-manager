@@ -4,13 +4,13 @@ import {
   fetchAllUnavailabilities,
 } from "../../api/unavailabilities";
 import { useErrorToast } from "@/hooks/use-error-toast";
-import { Spinner } from "@/components/ui/spinner";
 import type { SortState } from "../../types";
 import { ErrorUnavailabilitiesState } from "../error-states/ErrorUnavailabilitiesState";
 import { NoUnavailabilitiesState } from "../empty-states/NoUnavailabilitiesState";
 import { NoPendingUnavailabilitiesState } from "../empty-states/NoPendingUnavailabilitiesState";
 import { useEffect } from "react";
 import { UnavailabilitiesTable } from "./UnavailabilitiesTable";
+import { FullPageSpinner } from "@/components/FullPageSpinner";
 
 export function AllUnavailabilitiesTable({
   sort,
@@ -43,9 +43,7 @@ export function AllUnavailabilitiesTable({
   }, [unavailabilities, page, setPage]);
 
   if (isPending) {
-    return (
-      <Spinner className="size-5 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
-    );
+    return <FullPageSpinner />;
   }
 
   if (!unavailabilities || isError) {

@@ -9,14 +9,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDuration } from "../../utils/time";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import type {
   Unavailability,
   UnavailabilityStatus,
@@ -29,7 +21,7 @@ import {
 } from "../../api/unavailabilities";
 import { queryClient } from "@/lib/queryClient";
 import { toast } from "@/components/ui/toast";
-import { DEFAULT_LIMIT } from "@/features/organization/shared/constants";
+import { TablePagination } from "@/features/organization/shared/components/TablePagination";
 
 const statusVariant: Record<
   UnavailabilityStatus,
@@ -124,9 +116,6 @@ export function UnavailabilitiesTable({
     rejectMutation.mutate({ teamId, memberId, unavailabilityId });
   };
 
-  const isFirstPage = page === 1;
-  const isLastPage = page * DEFAULT_LIMIT >= totalUnavailabilities;
-
   return (
     <div className="space-y-4">
       <Table>
@@ -213,31 +202,11 @@ export function UnavailabilitiesTable({
           })}
         </TableBody>
       </Table>
-      <Pagination>
-        <PaginationContent>
-          <PaginationItem
-            className={
-              isFirstPage ? "pointer-events-none opacity-50" : undefined
-            }
-            aria-disabled={isFirstPage}
-          >
-            <PaginationPrevious onClick={() => setPage(page - 1)} />
-          </PaginationItem>
-
-          <PaginationItem>
-            <PaginationLink isActive>{page}</PaginationLink>
-          </PaginationItem>
-
-          <PaginationItem
-            className={
-              isLastPage ? "pointer-events-none opacity-50" : undefined
-            }
-            aria-disabled={isLastPage}
-          >
-            <PaginationNext onClick={() => setPage(page + 1)} />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+      <TablePagination
+        page={page}
+        setPage={setPage}
+        total={totalUnavailabilities}
+      />
     </div>
   );
 }
