@@ -69,7 +69,7 @@ export function TeamUnavailabilities() {
         </Breadcrumb>
       </div>
 
-      <div className="p-6 space-y-4">
+      <div className="p-4 space-y-4">
         <div className="flex justify-between">
           <Tabs
             value={filter}
