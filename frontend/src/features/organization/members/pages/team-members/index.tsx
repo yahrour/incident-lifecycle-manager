@@ -9,7 +9,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { MembersTable } from "../../components/tables/MembersTable";
+import { TeamMembersTable } from "../../components/tables/TeamMembersTable";
 import { SortControls } from "../../components/SortControls";
 import { useState } from "react";
 import { type SortState } from "../../types";
@@ -74,7 +74,7 @@ export function TeamMembers() {
           <SortControls sort={sort} onSortChange={setSort} setPage={setPage} />
           <InviteDialog team={team} />
         </div>
-        <MembersTable
+        <TeamMembersTable
           page={page}
           setPage={setPage}
           sort={sort}

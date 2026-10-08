@@ -6,7 +6,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { NoMembersState } from "../empty-states/NoMembersState";
 import {
   Pagination,
   PaginationContent,
@@ -16,9 +15,8 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { DEFAULT_LIMIT } from "@/features/organization/shared/constants";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { fetchMembers, removeMember } from "../../api/members";
-import { useErrorToast } from "@/hooks/use-error-toast";
+import { useMutation } from "@tanstack/react-query";
+import { removeMember } from "../../api/members";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
 import { formatJoined } from "../../utils/time";
@@ -27,34 +25,31 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { queryClient } from "@/lib/queryClient";
 import { useState } from "react";
-import type { SortState } from "../../types";
-import { FullPageSpinner } from "@/components/FullPageSpinner";
+import type { Member } from "@/features/organization/shared/types";
+import { Link } from "react-router";
 
 export function MembersTable({
-  teamId,
+  members,
+  totalMembers,
   page,
   setPage,
-  sort,
+  showOrgWide,
 }: {
-  teamId: string;
+  members: Member[];
+  totalMembers: number;
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
-  sort: SortState;
+  showOrgWide: boolean;
 }) {
   const [pendingMemberId, setPendingMemberId] = useState<number | null>(null);
-  const { data, isPending, isError } = useQuery({
-    queryKey: ["teams", "members", teamId, page, sort],
-    queryFn: () => fetchMembers(teamId, page, sort),
-  });
-
   const mutation = useMutation({
     mutationFn: ({ teamId, memberId }: { teamId: string; memberId: number }) =>
       removeMember({ teamId, memberId }),
-    onSuccess: () => {
+    onSuccess: (_data, { teamId }) => {
       toast.add({
         type: "success",
         title: "Team member removed",
-        description: "The team member was successfully removed from your team",
+        description: "The team member was successfully removed",
       });
       void queryClient.invalidateQueries({
         queryKey: ["teams"],
@@ -64,6 +59,9 @@ export function MembersTable({
       });
       void queryClient.invalidateQueries({
         queryKey: ["members", teamId],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ["teamsMetrics"],
       });
     },
     onError: () => {
@@ -78,26 +76,10 @@ export function MembersTable({
     },
   });
 
-  useErrorToast(isError, "failed to load members");
-
-  if (isPending) {
-    return <FullPageSpinner />;
-  }
-
-  const members = data?.data;
-  const totalMembers = data?.meta?.total as number;
-
-  if (members && members.length === 0 && page > 1) {
-    setPage(page - 1);
-  }
-  if (!members || members.length === 0) {
-    return <NoMembersState />;
-  }
-
   const isFirstPage = page === 1;
   const isLastPage = page * DEFAULT_LIMIT >= totalMembers;
 
-  const handleRemove = (memberId: number) => {
+  const handleRemove = (teamId: string, memberId: number) => {
     setPendingMemberId(memberId);
     mutation.mutate({ teamId, memberId });
   };
@@ -108,6 +90,7 @@ export function MembersTable({
         <TableHeader>
           <TableRow>
             <TableHead className="w-2/5">Engineer</TableHead>
+            {showOrgWide && <TableHead>Team</TableHead>}
             <TableHead>Role</TableHead>
             <TableHead>Specialty</TableHead>
             <TableHead>Availability</TableHead>
@@ -124,6 +107,20 @@ export function MembersTable({
                 <TableCell className="font-medium text-sm flex-1">
                   {member.user.firstName + " " + member.user.lastName}
                 </TableCell>
+                {showOrgWide && (
+                  <TableCell className="text-sm text-muted-foreground">
+                    {member.team ? (
+                      <Link
+                        to={`/manager/teams/${member.teamId}`}
+                        className="hover:underline hover:text-foreground"
+                      >
+                        {member.team.name}
+                      </Link>
+                    ) : (
+                      "—"
+                    )}
+                  </TableCell>
+                )}
                 <TableCell className="text-xs text-muted-foreground">
                   {member.user.role}
                 </TableCell>
@@ -145,7 +142,7 @@ export function MembersTable({
                   <Button
                     variant="destructive"
                     className="bg-transparent"
-                    onClick={() => handleRemove(member.id)}
+                    onClick={() => handleRemove(member.teamId, member.id)}
                     disabled={mutation.isPending}
                     size="sm"
                   >
