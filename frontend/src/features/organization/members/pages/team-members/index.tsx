@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router";
 import { useErrorToast } from "@/hooks/use-error-toast";
-import { Spinner } from "@/components/ui/spinner";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -17,6 +16,7 @@ import { type SortState } from "../../types";
 import { TeamNotFound } from "../../../shared/components/empty-states/TeamNotFound";
 import { InviteDialog } from "../../components/invite-dialog";
 import { fetchTeam } from "../../../shared/api/teams";
+import { FullPageSpinner } from "@/components/FullPageSpinner";
 
 export function TeamMembers() {
   const { id: teamId } = useParams();
@@ -34,9 +34,7 @@ export function TeamMembers() {
   useErrorToast(isError, "team doesn't exist");
 
   if (isPending) {
-    return (
-      <Spinner className="size-5 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
-    );
+    return <FullPageSpinner />;
   }
 
   const team = data?.data;

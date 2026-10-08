@@ -6,7 +6,6 @@ import { useState } from "react";
 import { toast } from "@/components/ui/toast";
 import { CalendarIcon, Plus, XIcon } from "lucide-react";
 import { format } from "date-fns";
-
 import {
   Dialog,
   DialogContent,
