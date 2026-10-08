@@ -56,8 +56,8 @@ export async function fetchOnCall(id: string) {
   return response.data;
 }
 
-export async function fetchUpcomginRotations(id: string) {
-  const response = await apiClient.get<ApiResponse<User>>(
+export async function fetchUpcomingRotations(id: string) {
+  const response = await apiClient.get<ApiResponse<User[]>>(
     `/teams/${id}/upcoming-rotations`
   );
   return response.data;
