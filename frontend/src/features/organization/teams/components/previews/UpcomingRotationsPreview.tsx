@@ -2,9 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Mail } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { fetchUpcomingRotations } from "../../api/teams";
-import type { User } from "@/features/organization/shared/types";
 import { Link } from "react-router";
 import { Badge } from "@/components/ui/badge";
+import type { UpcomingRotation } from "../../types";
+import { format } from "date-fns";
 
 export function UpcomingRotationsPreview({ teamId }: { teamId: string }) {
   const {
@@ -49,7 +50,7 @@ export function UpcomingRotationsPreview({ teamId }: { teamId: string }) {
           </p>
         ) : (
           <ol className="space-y-3">
-            {upcomingRotations.data.map((engineer: User, index) => (
+            {upcomingRotations.data.map((engineer: UpcomingRotation, index) => (
               <RotationRow
                 key={engineer.id}
                 engineer={engineer}
@@ -67,11 +68,14 @@ function RotationRow({
   engineer,
   position,
 }: {
-  engineer: User;
+  engineer: UpcomingRotation;
   position: number;
 }) {
   const name = `${engineer.firstName} ${engineer.lastName}`;
   const initials = `${engineer.firstName[0] ?? ""}${engineer.lastName[0] ?? ""}`;
+
+  const start = new Date(engineer.startDate);
+  const end = new Date(engineer.endDate);
 
   return (
     <li className="flex items-center gap-2">
@@ -96,6 +100,10 @@ function RotationRow({
           </p>
         )}
       </div>
+
+      <p className="shrink-0 text-right text-xs tabular-nums text-[#8a8178]">
+        {format(start, "MMM d")} - {format(end, "MMM d")}
+      </p>
 
       <Link
         to={`mailto:${engineer.email}`}
