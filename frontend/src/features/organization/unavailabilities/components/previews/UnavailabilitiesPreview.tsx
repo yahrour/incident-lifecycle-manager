@@ -53,7 +53,7 @@ export function UnavailabilitiesPreview({ teamId }: { teamId: string }) {
           </button>
         </p>
       ) : items.length === 0 ? (
-        <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+        <p className="px-4 py-3 text-center text-sm text-muted-foreground">
           No time off logged for this team.
         </p>
       ) : (

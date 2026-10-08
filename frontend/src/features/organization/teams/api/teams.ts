@@ -1,6 +1,6 @@
 import { apiClient } from "@/lib/apiClient";
 import type { ApiResponse } from "@/types";
-import type { OnCall, SortState, Stats } from "../types";
+import type { OnCall, SortState, Stats, UpcomingRotation } from "../types";
 import type { createTeamSchema, updateTeamSchema } from "../schemas";
 import z from "zod";
 import type { Team } from "../../shared/types";
@@ -52,6 +52,13 @@ export async function updateTeam(
 export async function fetchOnCall(id: string) {
   const response = await apiClient.get<ApiResponse<OnCall>>(
     `/teams/${id}/oncall/current`
+  );
+  return response.data;
+}
+
+export async function fetchUpcomingRotations(id: string) {
+  const response = await apiClient.get<ApiResponse<UpcomingRotation[]>>(
+    `/teams/${id}/upcoming-rotations`
   );
   return response.data;
 }

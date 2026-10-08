@@ -6,6 +6,12 @@ import { PrismaService } from "@/common/prisma/prisma.service";
 export class OnCallService {
   constructor(private prisma: PrismaService) {}
 
+  private addDays(date: Date, n: number) {
+    const result = new Date(date);
+    result.setDate(result.getDate() + n);
+    return result;
+  }
+
   async getCurrentOnCall(teamId: string, ownerId: string) {
     const now = new Date();
     const team = await this.prisma.team.findUnique({
@@ -88,6 +94,72 @@ export class OnCallService {
         { ...secondary.user, position: "SECONDARY" },
       ],
     };
+  }
+
+  async getUpcomingRotations(teamId: string, ownerId: string) {
+    const now = new Date();
+    const team = await this.prisma.team.findUnique({
+      where: { id: teamId, ownerId },
+      include: {
+        teamMembers: {
+          orderBy: { joinedAt: "asc" },
+          select: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                specialty: true,
+                role: true,
+              },
+            },
+            unavailabilities: {
+              where: {
+                endDate: { gte: now },
+                confirmed: true,
+                status: "APPROVED",
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!team) {
+      throw new NotFoundException("Team doesn't exist");
+    }
+
+    if (team.teamMembers.length === 0) {
+      return null;
+    }
+
+    const members = team.teamMembers;
+    const totalMembers = members.length;
+    const baseTime = new Date(
+      Math.max(team.lastRotatedAt.getTime(), team.rotationStartDate.getTime())
+    );
+    type User = (typeof members)[0]["user"];
+    const upcomingRotations: (User & { startDate: Date; endDate: Date })[] = [];
+
+    // start from 1 to skip the current on-call engineer
+    for (let i = 1; i < totalMembers && upcomingRotations.length < 5; i++) {
+      const member = members[(team.currentRotationIndex + i) % totalMembers];
+
+      const startDate = this.addDays(baseTime, team.rotationPeriodDays * i);
+      const endDate = this.addDays(startDate, team.rotationPeriodDays);
+
+      // available only if no approved leave overlaps their own slot
+      const isAvailable = !member.unavailabilities.some(
+        (u) => u.startDate < endDate && u.endDate > startDate
+      );
+
+      if (isAvailable) {
+        upcomingRotations.push({ ...member.user, startDate, endDate });
+      }
+    }
+
+    return upcomingRotations;
   }
 
   @Cron(CronExpression.EVERY_SECOND)
