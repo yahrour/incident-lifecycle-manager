@@ -3,7 +3,6 @@ import { Mail } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { fetchUpcomingRotations } from "../../api/teams";
 import { Link } from "react-router";
-import { Badge } from "@/components/ui/badge";
 import type { UpcomingRotation } from "../../types";
 import { format } from "date-fns";
 
@@ -89,7 +88,6 @@ function RotationRow({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <p className="truncate text-sm font-medium">{name}</p>
-          {position === 1 && <Badge variant="secondary">Next up</Badge>}
         </div>
         {engineer.specialty && (
           <p className="truncate text-xs text-[#8a8178]">
