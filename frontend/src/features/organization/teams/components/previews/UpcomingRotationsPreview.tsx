@@ -8,15 +8,12 @@ import type { UpcomingRotation } from "../../types";
 import { format } from "date-fns";
 
 export function UpcomingRotationsPreview({ teamId }: { teamId: string }) {
-  const {
-    data: upcomingRotations,
-    isPending,
-    isError,
-    refetch,
-  } = useQuery({
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["oncall", "upcoming-rotations", teamId],
     queryFn: () => fetchUpcomingRotations(teamId),
   });
+
+  const upcomingRotations = data?.data ?? [];
 
   return (
     <div className="flex-1 rounded-lg border border-border/50 bg-white">
@@ -44,13 +41,13 @@ export function UpcomingRotationsPreview({ teamId }: { teamId: string }) {
               Try again
             </button>
           </p>
-        ) : upcomingRotations.data.length === 0 ? (
+        ) : !upcomingRotations || upcomingRotations.length === 0 ? (
           <p className="text-center text-sm text-muted-foreground">
             No upcoming rotations scheduled.
           </p>
         ) : (
           <ol className="space-y-3">
-            {upcomingRotations.data.map((engineer: UpcomingRotation, index) => (
+            {upcomingRotations.map((engineer: UpcomingRotation, index) => (
               <RotationRow
                 key={engineer.id}
                 engineer={engineer}
