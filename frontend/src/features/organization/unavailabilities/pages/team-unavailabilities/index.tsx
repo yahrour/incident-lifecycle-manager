@@ -28,7 +28,7 @@ export function TeamUnavailabilities() {
   });
   const { id: teamId } = useParams();
   const { data, isPending, isError } = useQuery({
-    queryKey: teamKeys.detail(teamId),
+    queryKey: teamKeys.detail(teamId as string),
     queryFn: () => fetchTeam(teamId as string),
   });
 

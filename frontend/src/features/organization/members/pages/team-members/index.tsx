@@ -28,7 +28,7 @@ export function TeamMembers() {
   const [page, setPage] = useState(1);
 
   const { data, isPending, isError } = useQuery({
-    queryKey: teamKeys.detail(teamId),
+    queryKey: teamKeys.detail(teamId as string),
     queryFn: () => fetchTeam(teamId as string),
   });
 

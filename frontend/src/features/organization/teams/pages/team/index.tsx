@@ -26,8 +26,8 @@ export function Team() {
   const { id: teamId } = useParams();
 
   const { data, isPending, isError } = useQuery({
-    queryKey: teamKeys.detail(teamId),
-    queryFn: () => fetchTeam(teamId),
+    queryKey: teamKeys.detail(teamId as string),
+    queryFn: () => fetchTeam(teamId as string),
   });
 
   useErrorToast(isError, "team doesn't exist");
