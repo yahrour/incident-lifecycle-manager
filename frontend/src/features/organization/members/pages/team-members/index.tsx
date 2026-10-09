@@ -17,6 +17,7 @@ import { TeamNotFound } from "../../../shared/components/empty-states/TeamNotFou
 import { InviteDialog } from "../../components/invite-dialog";
 import { fetchTeam } from "../../../shared/api/teams";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
+import { teamKeys } from "@/features/organization/shared/constants";
 
 export function TeamMembers() {
   const { id: teamId } = useParams();
@@ -27,7 +28,7 @@ export function TeamMembers() {
   const [page, setPage] = useState(1);
 
   const { data, isPending, isError } = useQuery({
-    queryKey: ["team", teamId],
+    queryKey: teamKeys.detail(teamId),
     queryFn: () => fetchTeam(teamId as string),
   });
 

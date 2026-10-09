@@ -1,3 +1,4 @@
+import type { SortState as MemberState } from "../../members/types";
 import type { SortState as TeamSortState } from "../../teams/types";
 import type { SortState as UnavailabilitySortState } from "../../unavailabilities/types";
 
@@ -12,6 +13,11 @@ export const teamKeys = {
 
 export const memberKeys = {
   all: ["members"] as const,
+  lists: () => [...memberKeys.all, "lists"] as const,
+  list: (page: number, sort: MemberState) =>
+    [...memberKeys.lists(), "all", page, sort] as const,
+  listByTeam: (teamId: string, page: number, sort: MemberState) =>
+    [...memberKeys.lists(), "team", teamId, page, sort] as const,
   detail: (id: string) => [...memberKeys.all, "detail", id] as const,
   preview: (id: string) => [...memberKeys.detail(id), "preview"] as const,
 };
