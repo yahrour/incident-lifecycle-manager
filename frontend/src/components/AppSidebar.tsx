@@ -115,7 +115,7 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     className={cn(
                       "text-sm gap-2.5 rounded-lg font-medium",
-                      location.pathname === item.href
+                      location.pathname.includes(item.href)
                         ? "bg-secondary text-white hover:bg-secondary"
                         : "text-muted/70"
                     )}
@@ -143,7 +143,7 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     className={cn(
                       "text-sm gap-2.5 rounded-lg font-medium",
-                      location.pathname === item.href
+                      location.pathname.includes(item.href)
                         ? "bg-secondary text-white hover:bg-secondary"
                         : "text-muted/70"
                     )}
@@ -171,7 +171,7 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     className={cn(
                       "text-sm gap-2.5 rounded-lg font-medium",
-                      location.pathname === item.href
+                      location.pathname.includes(item.href)
                         ? "bg-secondary text-white hover:bg-secondary"
                         : "text-muted/70"
                     )}
