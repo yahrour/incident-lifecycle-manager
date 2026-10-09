@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
   fetchAllPendingUnavailabilities,
   fetchAllUnavailabilities,
@@ -29,6 +29,7 @@ export function AllUnavailabilitiesTable({
       filter === "all"
         ? fetchAllUnavailabilities(page, sort)
         : fetchAllPendingUnavailabilities(page, sort),
+    placeholderData: keepPreviousData,
   });
 
   useErrorToast(isError, "failed to load unavailabilities");

@@ -1,5 +1,5 @@
 import { NoMembersState } from "../empty-states/NoMembersState";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { fetchTeamMembers } from "../../api/members";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { Spinner } from "@/components/ui/spinner";
@@ -21,6 +21,7 @@ export function TeamMembersTable({
   const { data, isPending, isError } = useQuery({
     queryKey: ["teams", "members", teamId, page, sort],
     queryFn: () => fetchTeamMembers(teamId, page, sort),
+    placeholderData: keepPreviousData,
   });
 
   useErrorToast(isError, "failed to load members");

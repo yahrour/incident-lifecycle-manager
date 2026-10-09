@@ -1,4 +1,4 @@
-import { useQueries } from "@tanstack/react-query";
+import { keepPreviousData, useQueries } from "@tanstack/react-query";
 import { fetchTeams } from "../../api/teams";
 import { fetchMetrics } from "../../api/metrics";
 import { useNavigate } from "react-router";
@@ -34,6 +34,7 @@ export function TeamsTable({
       {
         queryKey: ["teams", page, search, sort],
         queryFn: () => fetchTeams(page, search, sort),
+        placeholderData: keepPreviousData,
       },
       {
         queryKey: ["teamsMetrics"],
