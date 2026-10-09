@@ -17,6 +17,7 @@ import type { SortState } from "../../types";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TeamUnavailabilitiesTable } from "../../components/tables/TeamUnavailabilitiesTable";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
+import { teamKeys } from "@/features/organization/shared/constants";
 
 export function TeamUnavailabilities() {
   const [page, setPage] = useState(1);
@@ -27,7 +28,7 @@ export function TeamUnavailabilities() {
   });
   const { id: teamId } = useParams();
   const { data, isPending, isError } = useQuery({
-    queryKey: ["team", teamId],
+    queryKey: teamKeys.detail(teamId),
     queryFn: () => fetchTeam(teamId as string),
   });
 
