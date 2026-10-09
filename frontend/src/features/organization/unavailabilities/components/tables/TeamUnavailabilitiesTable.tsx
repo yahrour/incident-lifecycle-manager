@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
   fetchTeamPendingUnavailabilities,
   fetchTeamUnavailabilities,
@@ -31,6 +31,7 @@ export function TeamUnavailabilitiesTable({
       filter === "all"
         ? fetchTeamUnavailabilities(teamId, page, sort)
         : fetchTeamPendingUnavailabilities(teamId, page, sort),
+    placeholderData: keepPreviousData,
   });
 
   useErrorToast(isError, "failed to load unavailabilities");
