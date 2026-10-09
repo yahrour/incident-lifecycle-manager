@@ -4,10 +4,11 @@ import { fetchOnCall } from "../../api/teams";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router";
 import type { ChainUser } from "../../types";
+import { onCallKeys } from "@/features/organization/shared/constants";
 
 export function OnCallPreview({ teamId }: { teamId: string }) {
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: ["oncall", teamId],
+    queryKey: onCallKeys.detail(teamId),
     queryFn: () => fetchOnCall(teamId),
     refetchInterval: 3_600_000, // every hour
     staleTime: 1_800_000, // every half hour

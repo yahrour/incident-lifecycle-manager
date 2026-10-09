@@ -16,6 +16,10 @@ import { NoTeamsState } from "../empty-states/NoTeamsState";
 import type { SortState } from "../../types";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { TablePagination } from "@/features/organization/shared/components/TablePagination";
+import {
+  teamKeys,
+  teamMetricsKeys,
+} from "@/features/organization/shared/constants";
 
 export function TeamsTable({
   search,
@@ -32,12 +36,12 @@ export function TeamsTable({
   const [teamsQuery, metricsQuery] = useQueries({
     queries: [
       {
-        queryKey: ["teams", page, search, sort],
+        queryKey: teamKeys.list(page, search, sort),
         queryFn: () => fetchTeams(page, search, sort),
         placeholderData: keepPreviousData,
       },
       {
-        queryKey: ["teamsMetrics"],
+        queryKey: teamMetricsKeys.all,
         queryFn: fetchMetrics,
       },
     ],

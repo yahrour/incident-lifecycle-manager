@@ -5,10 +5,11 @@ import { fetchUpcomingRotations } from "../../api/teams";
 import { Link } from "react-router";
 import type { UpcomingRotation } from "../../types";
 import { format } from "date-fns";
+import { upcomingRotationKeys } from "@/features/organization/shared/constants";
 
 export function UpcomingRotationsPreview({ teamId }: { teamId: string }) {
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: ["oncall", "upcoming-rotations", teamId],
+    queryKey: upcomingRotationKeys.detail(teamId),
     queryFn: () => fetchUpcomingRotations(teamId),
   });
 
