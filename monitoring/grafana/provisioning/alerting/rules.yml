@@ -1,7 +1,7 @@
 apiVersion: 1
 groups:
   - orgId: 1
-    name: Evaluation interval
+    name: availability
     folder: Monitoring
     interval: 1m
     rules:
@@ -16,7 +16,7 @@ groups:
             datasourceUid: prometheus
             model:
               editorMode: code
-              expr: pg_up
+              expr: pg_up{job="postgres"}
               instant: true
               intervalMs: 1000
               legendFormat: __auto
@@ -49,11 +49,12 @@ groups:
               maxDataPoints: 43200
               refId: C
               type: threshold
-        noDataState: NoData
-        execErrState: Error
+        noDataState: Alerting
+        execErrState: Alerting
         for: 1m
         annotations:
-          summary: PostgreSQL database is unavailable
+          summary: "PostgreSQL is unavailable"
+          description: "PostgreSQL is not reachable on {{ $labels.instance }}"
         labels:
           service: postgres
           severity: critical
@@ -102,11 +103,12 @@ groups:
               maxDataPoints: 43200
               refId: C
               type: threshold
-        noDataState: NoData
-        execErrState: Error
+        noDataState: Alerting
+        execErrState: Alerting
         for: 1m
         annotations:
-          summary: Backend service is unavailable
+          summary: "Backend is unavailable"
+          description: "Backend is not reachable on {{ $labels.instance }}"
         labels:
           service: backend
           severity: critical
