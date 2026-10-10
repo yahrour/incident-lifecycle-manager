@@ -1,6 +1,6 @@
 import { apiClient } from "@/lib/apiClient";
 import type { ApiResponse } from "@/types";
-import { DEFAULT_LIMIT } from "@/features/organization/shared/constants";
+import { DEFAULT_LIMIT } from "../constants";
 import type { Alert } from "../types";
 
 export async function fetchAlerts(page: number) {
