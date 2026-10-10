@@ -19,11 +19,11 @@ import { REFETCH_INTERVAL_MS } from "../constants";
 
 const severityVariant: Record<
   Alert["severity"],
-  "destructive" | "warning" | "secondary"
+  "destructive" | "warning" | "outline"
 > = {
   critical: "destructive",
   warning: "warning",
-  info: "secondary",
+  info: "outline",
 };
 
 const statusVariant: Record<Alert["status"], "warning" | "success"> = {
