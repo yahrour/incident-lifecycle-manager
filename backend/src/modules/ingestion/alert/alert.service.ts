@@ -5,6 +5,7 @@ import { IncidentsService } from "@/modules/incidents/incidents.service";
 import { CommonAlert } from "./common/common-alert";
 import { PrometheusAdapter } from "./providers/prometheus/prometheus.adapter";
 import { PrometheusAlertmanagerPayload } from "./providers/prometheus/dto/prometheus-alertmanager.dto";
+import { FindAlertsDto } from "./dto/find-alerts.dto";
 
 @Injectable()
 export class AlertService {
@@ -61,6 +62,25 @@ export class AlertService {
       receivedAt: alert.receivedAt,
       incidentId,
     };
+  }
+
+  async findAll(query: FindAlertsDto) {
+    const where = query.status ? { status: query.status } : {};
+
+    const [alerts, total] = await Promise.all([
+      this.prisma.alert.findMany({
+        where,
+        skip: query.offset,
+        take: query.limit,
+        ...(query.sortField && {
+          orderBy: { [query.sortField]: query.sortOrder },
+        }),
+        omit: { payload: true },
+      }),
+      this.prisma.alert.count({ where }),
+    ]);
+
+    return { alerts, total };
   }
 
   private normalizeAlert(provider: string, payload: unknown): CommonAlert {
