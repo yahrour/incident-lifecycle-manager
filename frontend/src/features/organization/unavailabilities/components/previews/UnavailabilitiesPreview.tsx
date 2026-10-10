@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router";
 import { fetchUnavailabilitiesPreview } from "../../api/unavailabilities";
-import { unavailabilityKeys } from "@/features/organization/shared/constants";
+import { teamKeys } from "@/features/organization/shared/constants";
 
 const formatDay = (date: Date | string) => {
   const d = new Date(date);
@@ -16,7 +16,7 @@ const formatDay = (date: Date | string) => {
 
 export function UnavailabilitiesPreview({ teamId }: { teamId: string }) {
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: unavailabilityKeys.preview(teamId),
+    queryKey: teamKeys.unavailabilities(teamId),
     queryFn: () => fetchUnavailabilitiesPreview(teamId),
   });
 

@@ -6,7 +6,7 @@ import { Spinner } from "@/components/ui/spinner";
 import type { SortState } from "../../types";
 import { MembersTable } from "./MembersTable";
 import { useEffect } from "react";
-import { memberKeys } from "@/features/organization/shared/constants";
+import { teamKeys } from "@/features/organization/shared/constants";
 
 export function TeamMembersTable({
   teamId,
@@ -20,7 +20,7 @@ export function TeamMembersTable({
   sort: SortState;
 }) {
   const { data, isPending, isError } = useQuery({
-    queryKey: memberKeys.listByTeam(teamId, page, sort),
+    queryKey: teamKeys.membersList(teamId, page, sort),
     queryFn: () => fetchTeamMembers(teamId, page, sort),
     placeholderData: keepPreviousData,
   });

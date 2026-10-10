@@ -22,7 +22,10 @@ import {
 import { queryClient } from "@/lib/queryClient";
 import { toast } from "@/components/ui/toast";
 import { TablePagination } from "@/features/organization/shared/components/TablePagination";
-import { unavailabilityKeys } from "@/features/organization/shared/constants";
+import {
+  teamKeys,
+  unavailabilityKeys,
+} from "@/features/organization/shared/constants";
 
 const statusVariant: Record<
   UnavailabilityStatus,
@@ -57,10 +60,9 @@ export function UnavailabilitiesTable({
       memberId: number;
       unavailabilityId: number;
     }) => confirmUnavailability(teamId, memberId, unavailabilityId),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: unavailabilityKeys.all,
-      });
+    onSuccess: (_data, { teamId }) => {
+      void queryClient.invalidateQueries({ queryKey: teamKeys.detail(teamId) });
+      void queryClient.invalidateQueries({ queryKey: unavailabilityKeys.all });
     },
     onError: () => {
       toast.add({
@@ -81,10 +83,9 @@ export function UnavailabilitiesTable({
       memberId: number;
       unavailabilityId: number;
     }) => rejectUnavailability(teamId, memberId, unavailabilityId),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: unavailabilityKeys.all,
-      });
+    onSuccess: (_data, { teamId }) => {
+      void queryClient.invalidateQueries({ queryKey: teamKeys.detail(teamId) });
+      void queryClient.invalidateQueries({ queryKey: unavailabilityKeys.all });
     },
     onError: () => {
       toast.add({

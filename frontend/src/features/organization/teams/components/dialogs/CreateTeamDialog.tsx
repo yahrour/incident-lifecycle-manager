@@ -49,10 +49,7 @@ import {
   DEFAULT_ROTATION_PERIOD_DAYS,
 } from "../../constants";
 import { ErrorSection } from "@/components/ErrorSection";
-import {
-  teamKeys,
-  teamMetricsKeys,
-} from "@/features/organization/shared/constants";
+import { teamKeys } from "@/features/organization/shared/constants";
 
 const TIMEZONES = Intl.supportedValuesOf("timeZone");
 
@@ -91,7 +88,7 @@ export function CreateTeamDialog() {
           queryKey: teamKeys.lists(),
         });
         void queryClient.invalidateQueries({
-          queryKey: teamMetricsKeys.all,
+          queryKey: teamKeys.metrics(),
         });
         resetForm();
         setOpen(false);

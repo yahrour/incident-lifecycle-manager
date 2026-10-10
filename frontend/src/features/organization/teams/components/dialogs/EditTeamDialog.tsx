@@ -36,7 +36,7 @@ import {
 import type { Team } from "@/features/organization/shared/types";
 import { parseApiError } from "@/utils/api";
 import { ErrorSection } from "@/components/ErrorSection";
-import { onCallKeys, teamKeys } from "@/features/organization/shared/constants";
+import { teamKeys } from "@/features/organization/shared/constants";
 
 export function EditTeamDialog({ team }: { team: Team }) {
   const [errors, setErrors] = useState<string[]>([]);
@@ -78,9 +78,6 @@ export function EditTeamDialog({ team }: { team: Team }) {
           void queryClient.invalidateQueries({ queryKey: teamKeys.lists() });
           void queryClient.invalidateQueries({
             queryKey: teamKeys.detail(team.id),
-          });
-          void queryClient.invalidateQueries({
-            queryKey: onCallKeys.detail(team.id),
           });
           setOpen(false);
           toast.add({

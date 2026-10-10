@@ -19,10 +19,7 @@ import { useState } from "react";
 import type { Member } from "@/features/organization/shared/types";
 import { Link } from "react-router";
 import { TablePagination } from "@/features/organization/shared/components/TablePagination";
-import {
-  memberKeys,
-  teamMetricsKeys,
-} from "@/features/organization/shared/constants";
+import { memberKeys, teamKeys } from "@/features/organization/shared/constants";
 
 export function MembersTable({
   members,
@@ -41,18 +38,16 @@ export function MembersTable({
   const mutation = useMutation({
     mutationFn: ({ teamId, memberId }: { teamId: string; memberId: number }) =>
       removeMember({ teamId, memberId }),
-    onSuccess: () => {
+    onSuccess: (_data, { teamId }) => {
       toast.add({
         type: "success",
         title: "Team member removed",
         description: "The team member was successfully removed",
       });
-      void queryClient.invalidateQueries({
-        queryKey: memberKeys.all,
-      });
-      void queryClient.invalidateQueries({
-        queryKey: teamMetricsKeys.all,
-      });
+      void queryClient.invalidateQueries({ queryKey: teamKeys.detail(teamId) });
+      void queryClient.invalidateQueries({ queryKey: teamKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: teamKeys.metrics() });
+      void queryClient.invalidateQueries({ queryKey: memberKeys.all });
     },
     onError: () => {
       toast.add({

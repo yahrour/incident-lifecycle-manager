@@ -4,58 +4,38 @@ import type { SortState as UnavailabilitySortState } from "../../unavailabilitie
 
 export const teamKeys = {
   all: ["teams"] as const,
-  lists: () => [...teamKeys.all, "lists"] as const,
+
+  lists: () => [...teamKeys.all, "list"] as const,
   list: (page: number, search: string, sort: TeamSortState) =>
-    [...teamKeys.lists(), "list", page, search, sort] as const,
-  detail: (id: string) => [...teamKeys.all, "detail", id] as const,
-  stats: (id: string) => [...teamKeys.detail(id), "stats"] as const,
-};
+    [...teamKeys.lists(), page, search, sort] as const,
+  metrics: () => [...teamKeys.all, "metrics"] as const,
 
-export const memberKeys = {
-  all: ["members"] as const,
-  lists: () => [...memberKeys.all, "lists"] as const,
-  list: (page: number, sort: MemberState) =>
-    [...memberKeys.lists(), "all", page, sort] as const,
-  listByTeam: (teamId: string, page: number, sort: MemberState) =>
-    [...memberKeys.lists(), "team", teamId, page, sort] as const,
-  detail: (id: string) => [...memberKeys.all, "detail", id] as const,
-  preview: (id: string) => [...memberKeys.detail(id), "preview"] as const,
-};
-
-export const unavailabilityKeys = {
-  all: ["unavailabilities"] as const,
-  lists: () => [...unavailabilityKeys.all, "lists"] as const,
-  list: (page: number, sort: UnavailabilitySortState, filter: string) =>
-    [...unavailabilityKeys.lists(), "all", page, sort, filter] as const,
-  listByTeam: (
+  detail: (teamId: string) => [...teamKeys.all, teamId] as const,
+  stats: (teamId: string) => [...teamKeys.detail(teamId), "stats"] as const,
+  onCall: (teamId: string) => [...teamKeys.detail(teamId), "on-call"] as const,
+  upcomingRotations: (teamId: string) =>
+    [...teamKeys.detail(teamId), "upcoming-rotations"] as const,
+  members: (teamId: string) => [...teamKeys.detail(teamId), "members"] as const,
+  membersList: (teamId: string, page: number, sort: MemberState) =>
+    [...teamKeys.members(teamId), page, sort] as const,
+  unavailabilities: (teamId: string) =>
+    [...teamKeys.detail(teamId), "unavailabilities"] as const,
+  unavailabilitiesList: (
     teamId: string,
     page: number,
     sort: UnavailabilitySortState,
     filter: string
-  ) =>
-    [
-      ...unavailabilityKeys.lists(),
-      "team",
-      teamId,
-      page,
-      sort,
-      filter,
-    ] as const,
-  detail: (id: string) => [...unavailabilityKeys.all, "detail", id] as const,
-  preview: (id: string) =>
-    [...unavailabilityKeys.detail(id), "preview"] as const,
+  ) => [...teamKeys.unavailabilities(teamId), page, sort, filter] as const,
 };
 
-export const onCallKeys = {
-  all: ["oncall"] as const,
-  detail: (id: string) => [...onCallKeys.all, "detail", id] as const,
+export const memberKeys = {
+  all: ["members"] as const,
+  list: (page: number, sort: MemberState) =>
+    [...memberKeys.all, page, sort] as const,
 };
 
-export const upcomingRotationKeys = {
-  all: ["upcoming-rotation"] as const,
-  detail: (id: string) => [...upcomingRotationKeys.all, "detail", id] as const,
-};
-
-export const teamMetricsKeys = {
-  all: ["teams-metrics"] as const,
+export const unavailabilityKeys = {
+  all: ["unavailabilities"] as const,
+  list: (page: number, sort: UnavailabilitySortState, filter: string) =>
+    [...unavailabilityKeys.all, page, sort, filter] as const,
 };

@@ -11,11 +11,11 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router";
 import { fetchMembersPreview } from "@/features/organization/members/api/members";
 import { formatJoined } from "../../utils/time";
-import { memberKeys } from "@/features/organization/shared/constants";
+import { teamKeys } from "@/features/organization/shared/constants";
 
 export function MembersPreview({ teamId }: { teamId: string }) {
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: memberKeys.preview(teamId),
+    queryKey: teamKeys.members(teamId),
     queryFn: () => fetchMembersPreview(teamId),
   });
 
