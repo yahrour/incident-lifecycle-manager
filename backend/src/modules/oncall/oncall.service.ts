@@ -121,6 +121,21 @@ export class OnCallService {
       },
     });
 
+    const totalAssignedIncidents = await this.prisma.incident.count({
+      where: {
+        assignedToId: userId,
+      },
+    });
+
+    const totalUnacknowledgedIncidents = await this.prisma.incident.count({
+      where: {
+        assignedToId: userId,
+        acknowledgedAt: {
+          not: null,
+        },
+      },
+    });
+
     if (!team) {
       throw new NotFoundException("Team doesn't exist");
     }
@@ -130,6 +145,7 @@ export class OnCallService {
 
     type Member = (typeof members)[0];
     let primary: Member | null = null;
+    let secondary: Member | null = null;
 
     for (let i = 0; i < totalMembers; i++) {
       const currentRotationIndex =
@@ -141,6 +157,8 @@ export class OnCallService {
       if (isAvailable) {
         if (!primary) {
           primary = member;
+        } else if (!secondary) {
+          secondary = member;
           break;
         }
       }
@@ -150,17 +168,42 @@ export class OnCallService {
       return {
         isOnCall: true,
         currentShift: {
-          team: { id: team.id, name: team.name },
+          team: {
+            id: team.id,
+            name: team.name,
+            escalationTimeoutMinutes: team.escalationTimeoutMinutes,
+          },
           position: "PRIMARY",
           startsAt: team.lastRotatedAt,
           endsAt: this.addDays(team.lastRotatedAt, team.rotationPeriodDays),
+          incidents: {
+            totalAssignedIncidents,
+            totalUnacknowledgedIncidents,
+          },
+        },
+      };
+    } else if (secondary && secondary.user.id === userId) {
+      return {
+        isOnCall: false,
+        currentShift: {
+          team: {
+            id: team.id,
+            name: team.name,
+            escalationTimeoutMinutes: team.escalationTimeoutMinutes,
+          },
+          position: "SECONDARY",
+          startsAt: this.addDays(team.lastRotatedAt, team.rotationPeriodDays),
+          endsAt: this.addDays(team.lastRotatedAt, team.rotationPeriodDays * 2),
+          incidents: {
+            totalAssignedIncidents,
+            totalUnacknowledgedIncidents,
+          },
         },
       };
     }
-
     return {
       isOnCall: false,
-      currentShift: [],
+      currentShift: {},
     };
   }
 
