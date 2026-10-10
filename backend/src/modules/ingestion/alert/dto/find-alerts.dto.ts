@@ -1,7 +1,7 @@
-import { IsEnum, IsIn, IsInt, IsOptional, Max, Min } from "class-validator";
+import { IsEnum, IsInt, IsOptional, Max, Min } from "class-validator";
 import { Type } from "class-transformer";
 import { PAGINATION, SORT_ORDER } from "@/common/constants";
-import { ALERT_STATUSES, SORT_FIELD } from "../constants";
+import { SORT_FIELD } from "../constants";
 
 export class FindAlertsDto {
   @IsOptional()
@@ -24,8 +24,4 @@ export class FindAlertsDto {
   @IsOptional()
   @IsEnum(SORT_ORDER)
   sortOrder?: SORT_ORDER = SORT_ORDER.DESC;
-
-  @IsOptional()
-  @IsIn(ALERT_STATUSES)
-  status?: string;
 }
