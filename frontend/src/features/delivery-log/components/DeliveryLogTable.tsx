@@ -1,6 +1,5 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -12,10 +11,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { useErrorToast } from "@/hooks/use-error-toast";
-import { TablePagination } from "@/features/organization/shared/components/TablePagination";
+import { TablePagination } from "./AlertsPagination";
 import { fetchAlerts } from "../api/alerts";
 import type { Alert } from "../types";
 import { NoAlertsState } from "./empty-states/NoAlertsState";
+import { REFETCH_INTERVAL_MS } from "../constants";
 
 const severityVariant: Record<
   Alert["severity"],
@@ -42,18 +42,13 @@ export function DeliveryLogTable({
     queryKey: ["alerts", page],
     queryFn: () => fetchAlerts(page),
     placeholderData: keepPreviousData,
+    refetchInterval: REFETCH_INTERVAL_MS,
   });
 
   useErrorToast(isError, "failed to load alerts");
 
   const alerts = data?.data;
   const totalAlerts = data?.meta?.total ?? 0;
-
-  useEffect(() => {
-    if (alerts && alerts.length === 0 && page > 1) {
-      setPage(page - 1);
-    }
-  }, [alerts, page, setPage]);
 
   if (isPending) {
     return <FullPageSpinner />;
