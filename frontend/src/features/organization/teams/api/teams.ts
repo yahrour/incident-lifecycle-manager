@@ -3,6 +3,7 @@ import type { ApiResponse } from "@/types";
 import type { OnCall, SortState, Stats, UpcomingRotation } from "../types";
 import type { createTeamSchema, updateTeamSchema } from "../schemas";
 import z from "zod";
+import { format } from "date-fns";
 import type { Team } from "../../shared/types";
 import { DEFAULT_LIMIT } from "../../shared/constants";
 
@@ -23,7 +24,12 @@ export async function fetchTeams(
 }
 
 export async function createTeam(team: z.infer<typeof createTeamSchema>) {
-  const response = await apiClient.post<ApiResponse<Team>>("/teams", team);
+  const body = {
+    ...team,
+    rotationStartDate:
+      team.rotationStartDate && format(team.rotationStartDate, "yyyy-MM-dd"),
+  };
+  const response = await apiClient.post<ApiResponse<Team>>("/teams", body);
   return response.data;
 }
 
