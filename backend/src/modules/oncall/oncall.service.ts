@@ -96,6 +96,74 @@ export class OnCallService {
     };
   }
 
+  async getUserOnCallStatus(teamId: string, userId: string) {
+    const now = new Date();
+    const team = await this.prisma.team.findUnique({
+      where: { id: teamId },
+      include: {
+        teamMembers: {
+          orderBy: { joinedAt: "asc" },
+          select: {
+            user: {
+              select: {
+                id: true,
+              },
+            },
+            unavailabilities: {
+              where: {
+                startDate: { lte: now },
+                endDate: { gte: now },
+                confirmed: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!team) {
+      throw new NotFoundException("Team doesn't exist");
+    }
+
+    const members = team.teamMembers;
+    const totalMembers = members.length;
+
+    type Member = (typeof members)[0];
+    let primary: Member | null = null;
+
+    for (let i = 0; i < totalMembers; i++) {
+      const currentRotationIndex =
+        (team.currentRotationIndex + i) % totalMembers;
+      const member = members[currentRotationIndex];
+
+      const isAvailable = member.unavailabilities.length === 0;
+
+      if (isAvailable) {
+        if (!primary) {
+          primary = member;
+          break;
+        }
+      }
+    }
+
+    if (primary && primary.user.id === userId) {
+      return {
+        isOnCall: true,
+        currentShift: {
+          team: { id: team.id, name: team.name },
+          position: "PRIMARY",
+          startsAt: team.lastRotatedAt,
+          endsAt: this.addDays(team.lastRotatedAt, team.rotationPeriodDays),
+        },
+      };
+    }
+
+    return {
+      isOnCall: false,
+      currentShift: [],
+    };
+  }
+
   async getUpcomingRotations(teamId: string, ownerId: string) {
     const now = new Date();
     const team = await this.prisma.team.findUnique({

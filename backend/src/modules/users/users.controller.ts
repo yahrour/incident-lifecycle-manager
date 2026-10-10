@@ -5,6 +5,8 @@ import { ActiveUser } from "@/common/decorators/active-user.decorator";
 import type { ActiveUserData } from "@/common/interfaces/active-user.interface";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { apiResponse } from "@/common/utils/api-response";
+import { Roles } from "@/common/decorators/roles.decorator";
+import { Role } from "@/generated/prisma/enums";
 
 @Controller({
   path: "users",
@@ -31,5 +33,12 @@ export class UsersController {
   ) {
     const profile = await this.usersService.updateProfile(user.sub, dto);
     return apiResponse(profile);
+  }
+
+  @Get("me/oncall")
+  @Roles(Role.ENGINEER)
+  async getMyOnCallStatus(@ActiveUser() user: ActiveUserData) {
+    const result = await this.usersService.getMyOnCallStatus(user.sub);
+    return apiResponse(result);
   }
 }
