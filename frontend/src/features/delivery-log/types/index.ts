@@ -1,3 +1,5 @@
+import type { SortOrder } from "@/features/organization/shared/types";
+
 export type Alert = {
   id: string;
   provider: string;
@@ -11,3 +13,8 @@ export type Alert = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type AlertFilter = "all" | "firing" | "resolved";
+
+type SortField = "receivedAt" | "occurredAt";
+export type SortState = { field: SortField; order: SortOrder };

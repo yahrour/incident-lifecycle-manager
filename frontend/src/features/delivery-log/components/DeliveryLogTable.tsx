@@ -14,7 +14,7 @@ import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { TablePagination } from "@/features/organization/shared/components/TablePagination";
 import { fetchAlerts } from "../api/alerts";
-import type { Alert } from "../types";
+import type { Alert, AlertFilter, SortState } from "../types";
 import { NoAlertsState } from "./empty-states/NoAlertsState";
 
 const severityVariant: Record<
@@ -32,15 +32,19 @@ const statusVariant: Record<Alert["status"], "warning" | "success"> = {
 };
 
 export function DeliveryLogTable({
+  sort,
   page,
   setPage,
+  filter,
 }: {
+  sort: SortState;
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
+  filter: AlertFilter;
 }) {
   const { data, isError, isPending } = useQuery({
-    queryKey: ["alerts", page],
-    queryFn: () => fetchAlerts(page),
+    queryKey: ["alerts", page, sort, filter],
+    queryFn: () => fetchAlerts(page, sort, filter),
     placeholderData: keepPreviousData,
   });
 

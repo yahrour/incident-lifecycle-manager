@@ -1,8 +1,16 @@
 import { useState } from "react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DeliveryLogTable } from "../components/DeliveryLogTable";
+import { SortControls } from "../components/SortControls";
+import type { AlertFilter, SortState } from "../types";
 
 export function DeliveryLog() {
   const [page, setPage] = useState(1);
+  const [filter, setFilter] = useState<AlertFilter>("all");
+  const [sort, setSort] = useState<SortState>({
+    field: "receivedAt",
+    order: "desc",
+  });
 
   return (
     <div className="w-full">
@@ -11,7 +19,34 @@ export function DeliveryLog() {
       </div>
 
       <div className="mt-2 p-4 space-y-4">
-        <DeliveryLogTable page={page} setPage={setPage} />
+        <div className="flex justify-between items-center">
+          <Tabs
+            value={filter}
+            onValueChange={(v: AlertFilter) => {
+              setFilter(v);
+              setPage(1);
+            }}
+          >
+            <TabsList>
+              <TabsTrigger value="all" className="cursor-pointer">
+                All
+              </TabsTrigger>
+              <TabsTrigger value="firing" className="cursor-pointer">
+                Firing
+              </TabsTrigger>
+              <TabsTrigger value="resolved" className="cursor-pointer">
+                Resolved
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <SortControls sort={sort} onSortChange={setSort} setPage={setPage} />
+        </div>
+        <DeliveryLogTable
+          sort={sort}
+          page={page}
+          setPage={setPage}
+          filter={filter}
+        />
       </div>
     </div>
   );
