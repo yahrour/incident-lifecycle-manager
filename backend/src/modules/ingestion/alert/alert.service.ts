@@ -65,11 +65,8 @@ export class AlertService {
   }
 
   async findAll(query: FindAlertsDto) {
-    const where = query.status ? { status: query.status } : {};
-
     const [alerts, total] = await Promise.all([
       this.prisma.alert.findMany({
-        where,
         skip: query.offset,
         take: query.limit,
         ...(query.sortField && {
@@ -77,7 +74,7 @@ export class AlertService {
         }),
         omit: { payload: true },
       }),
-      this.prisma.alert.count({ where }),
+      this.prisma.alert.count(),
     ]);
 
     return { alerts, total };
