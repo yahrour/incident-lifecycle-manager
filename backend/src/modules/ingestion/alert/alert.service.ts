@@ -69,9 +69,7 @@ export class AlertService {
       this.prisma.alert.findMany({
         skip: query.offset,
         take: query.limit,
-        ...(query.sortField && {
-          orderBy: { [query.sortField]: query.sortOrder },
-        }),
+        orderBy: { receivedAt: "desc" },
         omit: { payload: true },
       }),
       this.prisma.alert.count(),
