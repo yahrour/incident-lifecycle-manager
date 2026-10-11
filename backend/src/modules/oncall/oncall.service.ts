@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { PrismaService } from "@/common/prisma/prisma.service";
+import { INCIDENT_STATUS } from "../incidents/constants";
 
 @Injectable()
 export class OnCallService {
@@ -35,6 +36,7 @@ export class OnCallService {
                 startDate: { lte: now },
                 endDate: { gte: now },
                 confirmed: true,
+                status: "APPROVED",
               },
             },
           },
@@ -116,6 +118,7 @@ export class OnCallService {
                     startDate: { lte: now },
                     endDate: { gte: now },
                     confirmed: true,
+                    status: "APPROVED",
                   },
                 },
               },
@@ -125,6 +128,7 @@ export class OnCallService {
         this.prisma.incident.count({
           where: {
             assignedToId: userId,
+            status: { not: INCIDENT_STATUS.RESOLVED },
           },
         }),
         this.prisma.incident.count({
@@ -182,6 +186,9 @@ export class OnCallService {
         },
       };
     } else if (secondary && secondary.user.id === userId) {
+      const baseDate = new Date(
+        Math.max(team.lastRotatedAt.getTime(), team.rotationStartDate.getTime())
+      );
       return {
         isOnCall: false,
         currentShift: {
@@ -191,8 +198,8 @@ export class OnCallService {
             escalationTimeoutMinutes: team.escalationTimeoutMinutes,
           },
           position: "SECONDARY",
-          startsAt: this.addDays(team.lastRotatedAt, team.rotationPeriodDays),
-          endsAt: this.addDays(team.lastRotatedAt, team.rotationPeriodDays * 2),
+          startsAt: this.addDays(baseDate, team.rotationPeriodDays),
+          endsAt: this.addDays(baseDate, team.rotationPeriodDays * 2),
           incidents: {
             totalAssignedIncidents,
             totalUnacknowledgedIncidents,
