@@ -8,12 +8,14 @@ import { PrismaService } from "@/common/prisma/prisma.service";
 import { BcryptService } from "../security/bcrypt.service";
 import { Role, Prisma } from "@/generated/prisma/client";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
+import { OnCallService } from "../oncall/oncall.service";
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly bcrypt: BcryptService
+    private readonly bcrypt: BcryptService,
+    private readonly onCall: OnCallService
   ) {}
 
   async create(
@@ -166,5 +168,22 @@ export class UsersService {
       }
       throw error;
     }
+  }
+
+  async getMyOnCallStatus(userId: string) {
+    const member = await this.prisma.teamMember.findUnique({
+      where: {
+        userId,
+      },
+    });
+
+    if (!member) {
+      return {
+        isOnCall: false,
+        currentShift: null,
+      };
+    }
+
+    return await this.onCall.getUserOnCallStatus(member.teamId, userId);
   }
 }

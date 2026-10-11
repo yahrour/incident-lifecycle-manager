@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { PrismaService } from "@/common/prisma/prisma.service";
+import { INCIDENT_STATUS } from "../incidents/constants";
 
 @Injectable()
 export class OnCallService {
@@ -33,6 +34,7 @@ export class OnCallService {
                 startDate: { lte: now },
                 endDate: { gte: now },
                 confirmed: true,
+                status: "APPROVED",
               },
             },
           },
@@ -91,6 +93,121 @@ export class OnCallService {
         { ...primary.user, position: "PRIMARY" },
         { ...secondary.user, position: "SECONDARY" },
       ],
+    };
+  }
+
+  async getUserOnCallStatus(teamId: string, userId: string) {
+    const now = new Date();
+    const [team, totalAssignedIncidents, totalUnacknowledgedIncidents] =
+      await Promise.all([
+        this.prisma.team.findUnique({
+          where: { id: teamId },
+          include: {
+            teamMembers: {
+              orderBy: { joinedAt: "asc" },
+              select: {
+                user: {
+                  select: {
+                    id: true,
+                  },
+                },
+                unavailabilities: {
+                  where: {
+                    startDate: { lte: now },
+                    endDate: { gte: now },
+                    confirmed: true,
+                    status: "APPROVED",
+                  },
+                },
+              },
+            },
+          },
+        }),
+        this.prisma.incident.count({
+          where: {
+            assignedToId: userId,
+            status: { not: INCIDENT_STATUS.RESOLVED },
+          },
+        }),
+        this.prisma.incident.count({
+          where: {
+            assignedToId: userId,
+            acknowledgedAt: null,
+          },
+        }),
+      ]);
+
+    if (!team) {
+      throw new NotFoundException("Team doesn't exist");
+    }
+
+    const members = team.teamMembers;
+    const totalMembers = members.length;
+
+    type Member = (typeof members)[0];
+    let primary: Member | null = null;
+    let secondary: Member | null = null;
+
+    for (let i = 0; i < totalMembers; i++) {
+      const currentRotationIndex =
+        (team.currentRotationIndex + i) % totalMembers;
+      const member = members[currentRotationIndex];
+
+      const isAvailable = member.unavailabilities.length === 0;
+
+      if (isAvailable) {
+        if (!primary) {
+          primary = member;
+        } else if (!secondary) {
+          secondary = member;
+          break;
+        }
+      }
+    }
+
+    const baseDate = new Date(
+      Math.max(team.lastRotatedAt.getTime(), team.rotationStartDate.getTime())
+    );
+    if (primary && primary.user.id === userId) {
+      return {
+        isOnCall: true,
+        currentShift: {
+          team: {
+            id: team.id,
+            name: team.name,
+            escalationTimeoutMinutes: team.escalationTimeoutMinutes,
+          },
+          position: "PRIMARY",
+          startsAt: baseDate,
+          endsAt: this.addDays(baseDate, team.rotationPeriodDays),
+          incidents: {
+            totalAssignedIncidents,
+            totalUnacknowledgedIncidents,
+          },
+        },
+      };
+    } else if (secondary && secondary.user.id === userId) {
+      return {
+        isOnCall: false,
+        currentShift: {
+          team: {
+            id: team.id,
+            name: team.name,
+            escalationTimeoutMinutes: team.escalationTimeoutMinutes,
+          },
+          position: "SECONDARY",
+          startsAt: this.addDays(baseDate, team.rotationPeriodDays),
+          endsAt: this.addDays(baseDate, team.rotationPeriodDays * 2),
+          incidents: {
+            totalAssignedIncidents,
+            totalUnacknowledgedIncidents,
+          },
+        },
+      };
+    }
+    return {
+      isOnCall: false,
+      currentShift: null,
     };
   }
 

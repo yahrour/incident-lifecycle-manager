@@ -1,0 +1,1 @@
+export { MyShift } from "./pages";

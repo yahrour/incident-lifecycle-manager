@@ -17,6 +17,7 @@ import {
 import { InvitePage } from "@/features/invite";
 import { HomeRedirect } from "./HomeRedirect";
 import { Integrations } from "@/features/integrations";
+import { MyShift } from "@/features/my-shift";
 import { DeliveryLog } from "@/features/delivery-log";
 
 export default function AppRoutes() {
@@ -62,7 +63,7 @@ export default function AppRoutes() {
         {/* Engineer only */}
         <Route element={<ProtectedRoute allowedRole="ENGINEER" />}>
           <Route element={<AppLayout />}>
-            <Route path="/engineer/my-shift" element={<div>my shift</div>} />
+            <Route path="/engineer/my-shift" element={<MyShift />} />
             <Route
               path="/engineer/time-off"
               element={<div>manage time-off</div>}
