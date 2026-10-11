@@ -262,7 +262,12 @@ export class IncidentsService {
         where: { ownerId, name: alert.team },
         select: { id: true },
       }));
-    if (!team) return null;
+    if (!team) {
+      this.logger.warn(
+        `Alert ${alertId} has dropped, no such team "${alert.team ?? ""}"`
+      );
+      return null;
+    }
 
     const service = alert.serviceName ?? "unknown";
     const fingerprint = createIncidentFingerprint(
@@ -287,6 +292,7 @@ export class IncidentsService {
         team.id,
         ownerId
       );
+
       incident = await this.prisma.incident.upsert({
         where,
         update: {},
@@ -446,45 +452,64 @@ export class IncidentsService {
         escalatedAt: null,
       },
       include: { team: true },
+      orderBy: { createdAt: "asc" },
+      take: 100,
     });
 
     for (const incident of openIncidents) {
       if (!incident.team) {
         continue;
       }
-      const waited = Date.now() - incident.createdAt.getTime();
-      const escalationTimeout =
-        incident.team.escalationTimeoutMinutes * 60 * 1000;
-
-      if (waited >= escalationTimeout) {
-        try {
-          const onCall = await this.onCallService.getCurrentOnCall(
-            incident.team.id,
-            incident.team.ownerId
-          );
-
-          const secondary = onCall?.chain.find((engineer) => {
-            return engineer.position === "SECONDARY";
-          });
-          if (!secondary || secondary.id === incident.assignedToId) {
-            continue;
-          }
-
-          await this.prisma.incident.updateMany({
-            where: {
-              id: incident.id,
-              status: INCIDENT_STATUS.OPEN,
-              assignedToId: incident.assignedToId,
-            },
-
-            data: { assignedToId: secondary.id, escalatedAt: new Date() },
-          });
-        } catch (error) {
-          this.logger.error(
-            `Failed to escalate incident ${incident.id}`,
-            error
-          );
+      try {
+        const waited = Date.now() - incident.createdAt.getTime();
+        const escalationTimeout =
+          incident.team.escalationTimeoutMinutes * 60 * 1000;
+        if (incident.assignedToId && waited < escalationTimeout) {
+          continue;
         }
+
+        const onCall = await this.onCallService.getCurrentOnCall(
+          incident.team.id,
+          incident.team.ownerId
+        );
+
+        if (!incident.assignedToId) {
+          const primary = onCall?.chain.find((engineer) => {
+            return engineer.position === "PRIMARY";
+          });
+          if (primary) {
+            await this.prisma.incident.updateMany({
+              where: {
+                id: incident.id,
+                status: INCIDENT_STATUS.OPEN,
+                assignedToId: null,
+              },
+              data: { assignedToId: primary.id },
+            });
+          }
+          continue;
+        }
+
+        const secondary = onCall?.chain.find((engineer) => {
+          return engineer.position === "SECONDARY";
+        });
+        // No secondary to hand over to: the team owner is the last step.
+        const escalateToId =
+          secondary && secondary.id !== incident.assignedToId
+            ? secondary.id
+            : incident.team.ownerId;
+
+        await this.prisma.incident.updateMany({
+          where: {
+            id: incident.id,
+            status: INCIDENT_STATUS.OPEN,
+            assignedToId: incident.assignedToId,
+          },
+
+          data: { assignedToId: escalateToId, escalatedAt: new Date() },
+        });
+      } catch (error) {
+        this.logger.error(`Failed to escalate incident ${incident.id}`, error);
       }
     }
   }

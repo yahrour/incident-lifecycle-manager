@@ -654,7 +654,7 @@ describe("IncidentsService", () => {
     );
   });
 
-  it("escalates only overdue open incidents to the secondary on-call engineer", async () => {
+  it("escalates overdue open incidents to the secondary, or to the team owner without one", async () => {
     const team = { id: "team-id", ownerId: "owner-id" };
     const minutesAgo = (minutes: number) =>
       new Date(Date.now() - minutes * 60 * 1000);
@@ -672,7 +672,7 @@ describe("IncidentsService", () => {
         team: { ...team, escalationTimeoutMinutes: 5 },
       },
       {
-        // Already with the secondary (single-member team): nobody to hand over to.
+        // Already with the secondary: the team owner is next.
         id: "no-backup",
         assignedToId: "secondary-id",
         createdAt: minutesAgo(10),
@@ -707,11 +707,18 @@ describe("IncidentsService", () => {
       })
     );
     expect(getCurrentOnCall).toHaveBeenCalledWith("team-id", "owner-id");
-    expect(updateMany).toHaveBeenCalledTimes(1);
+    expect(updateMany).toHaveBeenCalledTimes(2);
     expect(updateMany).toHaveBeenCalledWith({
       where: { id: "overdue", status: "open", assignedToId: "primary-id" },
       data: {
         assignedToId: "secondary-id",
+        escalatedAt: expect.any(Date) as Date,
+      },
+    });
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { id: "no-backup", status: "open", assignedToId: "secondary-id" },
+      data: {
+        assignedToId: "owner-id",
         escalatedAt: expect.any(Date) as Date,
       },
     });
