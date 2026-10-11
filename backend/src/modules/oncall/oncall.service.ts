@@ -98,43 +98,42 @@ export class OnCallService {
 
   async getUserOnCallStatus(teamId: string, userId: string) {
     const now = new Date();
-    const team = await this.prisma.team.findUnique({
-      where: { id: teamId },
-      include: {
-        teamMembers: {
-          orderBy: { joinedAt: "asc" },
-          select: {
-            user: {
+    const [team, totalAssignedIncidents, totalUnacknowledgedIncidents] =
+      await Promise.all([
+        this.prisma.team.findUnique({
+          where: { id: teamId },
+          include: {
+            teamMembers: {
+              orderBy: { joinedAt: "asc" },
               select: {
-                id: true,
-              },
-            },
-            unavailabilities: {
-              where: {
-                startDate: { lte: now },
-                endDate: { gte: now },
-                confirmed: true,
+                user: {
+                  select: {
+                    id: true,
+                  },
+                },
+                unavailabilities: {
+                  where: {
+                    startDate: { lte: now },
+                    endDate: { gte: now },
+                    confirmed: true,
+                  },
+                },
               },
             },
           },
-        },
-      },
-    });
-
-    const totalAssignedIncidents = await this.prisma.incident.count({
-      where: {
-        assignedToId: userId,
-      },
-    });
-
-    const totalUnacknowledgedIncidents = await this.prisma.incident.count({
-      where: {
-        assignedToId: userId,
-        acknowledgedAt: {
-          not: null,
-        },
-      },
-    });
+        }),
+        this.prisma.incident.count({
+          where: {
+            assignedToId: userId,
+          },
+        }),
+        this.prisma.incident.count({
+          where: {
+            assignedToId: userId,
+            acknowledgedAt: null,
+          },
+        }),
+      ]);
 
     if (!team) {
       throw new NotFoundException("Team doesn't exist");
