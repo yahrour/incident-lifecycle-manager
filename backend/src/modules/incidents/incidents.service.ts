@@ -141,10 +141,28 @@ export class IncidentsService {
             },
           },
         },
+        alerts: { select: { alertId: true } },
       },
     });
 
     if (!incident) throw new NotFoundException("Incident doesn't exist");
+
+    const alertIds = (incident.alerts ?? []).map(({ alertId }) => alertId);
+    const alerts = alertIds.length
+      ? await this.prisma.alert.findMany({
+          where: { id: { in: alertIds } },
+          select: {
+            id: true,
+            provider: true,
+            title: true,
+            severity: true,
+            status: true,
+            occurredAt: true,
+            receivedAt: true,
+          },
+          orderBy: { receivedAt: "asc" },
+        })
+      : [];
 
     const timeline = [
       { type: "created", at: incident.createdAt },
@@ -163,10 +181,17 @@ export class IncidentsService {
         noteId: note.id,
         actor: note.author,
       })),
+      ...alerts.map((alert) => ({
+        type: "alert_received",
+        at: alert.receivedAt,
+        alertId: alert.id,
+        status: alert.status,
+      })),
     ].sort((a, b) => a.at.getTime() - b.at.getTime());
 
     return {
       ...incident,
+      alerts,
       metrics: {
         mttaSeconds: incident.mttaSeconds,
         mttrSeconds: incident.mttrSeconds,
