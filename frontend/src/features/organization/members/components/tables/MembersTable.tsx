@@ -19,7 +19,11 @@ import { useState } from "react";
 import type { Member } from "@/features/organization/shared/types";
 import { Link } from "react-router";
 import { TablePagination } from "@/features/organization/shared/components/TablePagination";
-import { memberKeys, teamKeys } from "@/features/organization/shared/constants";
+import {
+  memberKeys,
+  teamKeys,
+  unavailabilityKeys,
+} from "@/features/organization/shared/constants";
 
 export function MembersTable({
   members,
@@ -48,6 +52,7 @@ export function MembersTable({
       void queryClient.invalidateQueries({ queryKey: teamKeys.lists() });
       void queryClient.invalidateQueries({ queryKey: teamKeys.metrics() });
       void queryClient.invalidateQueries({ queryKey: memberKeys.all });
+      void queryClient.invalidateQueries({ queryKey: unavailabilityKeys.all });
     },
     onError: () => {
       toast.add({

@@ -18,7 +18,11 @@ import { queryClient } from "@/lib/queryClient";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Trash } from "lucide-react";
-import { teamKeys } from "@/features/organization/shared/constants";
+import {
+  memberKeys,
+  teamKeys,
+  unavailabilityKeys,
+} from "@/features/organization/shared/constants";
 
 export function DeleteTeamDialog({ teamId }: { teamId: string }) {
   const [open, setOpen] = useState(false);
@@ -37,6 +41,12 @@ export function DeleteTeamDialog({ teamId }: { teamId: string }) {
       });
       void queryClient.invalidateQueries({
         queryKey: teamKeys.metrics(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: memberKeys.all,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: unavailabilityKeys.all,
       });
 
       void navigate("/manager/teams", { replace: true });
