@@ -2,6 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { UsersService } from "./users.service";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { BcryptService } from "../security/bcrypt.service";
+import { OnCallService } from "../oncall/oncall.service";
 
 describe("UsersService", () => {
   // 1. Define the mock types
@@ -47,6 +48,10 @@ describe("UsersService", () => {
         {
           provide: BcryptService,
           useValue: fakeBcrypt,
+        },
+        {
+          provide: OnCallService,
+          useValue: {},
         },
       ],
     }).compile();
