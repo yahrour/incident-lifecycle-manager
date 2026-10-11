@@ -36,6 +36,11 @@ import {
 import type { Team } from "@/features/organization/shared/types";
 import { parseApiError } from "@/utils/api";
 import { ErrorSection } from "@/components/ErrorSection";
+import {
+  memberKeys,
+  teamKeys,
+  unavailabilityKeys,
+} from "@/features/organization/shared/constants";
 
 export function EditTeamDialog({ team }: { team: Team }) {
   const [errors, setErrors] = useState<string[]>([]);
@@ -74,9 +79,14 @@ export function EditTeamDialog({ team }: { team: Team }) {
       { id: team.id, ...(changedData as typeof data) },
       {
         onSuccess: () => {
-          void queryClient.invalidateQueries({ queryKey: ["teams"] });
-          void queryClient.invalidateQueries({ queryKey: ["team", team.id] });
-          void queryClient.invalidateQueries({ queryKey: ["oncall", team.id] });
+          void queryClient.invalidateQueries({ queryKey: teamKeys.lists() });
+          void queryClient.invalidateQueries({
+            queryKey: teamKeys.detail(team.id),
+          });
+          void queryClient.invalidateQueries({ queryKey: memberKeys.all });
+          void queryClient.invalidateQueries({
+            queryKey: unavailabilityKeys.all,
+          });
           setOpen(false);
           toast.add({
             type: "success",
