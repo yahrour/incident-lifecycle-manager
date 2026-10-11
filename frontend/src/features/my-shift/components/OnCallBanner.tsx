@@ -3,11 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { shiftKeys } from "../constants";
 import { fetchShift } from "../api/shift";
+import { useAuth } from "@/features/auth";
 
 export function OnCallBanner() {
+  const { user } = useAuth();
+
   const { data, isPending, isError } = useQuery({
-    queryKey: shiftKeys.all,
+    queryKey: shiftKeys.detail(user.id),
     queryFn: fetchShift,
+    refetchInterval: 600_000,
   });
 
   if (isPending) {
@@ -34,7 +38,7 @@ export function OnCallBanner() {
 
   const shift = data?.data;
 
-  if (!shift.isOnCall) {
+  if (!shift?.currentShift || !shift?.currentShift?.position) {
     return (
       <div className="flex items-center rounded-lg border border-l-4 border-border border-l-muted-foreground/40 bg-card px-4 py-3">
         <div>
