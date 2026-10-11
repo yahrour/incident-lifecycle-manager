@@ -178,7 +178,10 @@ export class UsersService {
     });
 
     if (!member) {
-      throw new NotFoundException("Member doesn't exist");
+      return {
+        isOnCall: false,
+        currentShift: {},
+      };
     }
 
     return await this.onCall.getUserOnCallStatus(member.teamId, userId);
