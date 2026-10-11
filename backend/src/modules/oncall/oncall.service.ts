@@ -167,6 +167,9 @@ export class OnCallService {
       }
     }
 
+    const baseDate = new Date(
+      Math.max(team.lastRotatedAt.getTime(), team.rotationStartDate.getTime())
+    );
     if (primary && primary.user.id === userId) {
       return {
         isOnCall: true,
@@ -177,8 +180,8 @@ export class OnCallService {
             escalationTimeoutMinutes: team.escalationTimeoutMinutes,
           },
           position: "PRIMARY",
-          startsAt: team.lastRotatedAt,
-          endsAt: this.addDays(team.lastRotatedAt, team.rotationPeriodDays),
+          startsAt: baseDate,
+          endsAt: this.addDays(baseDate, team.rotationPeriodDays),
           incidents: {
             totalAssignedIncidents,
             totalUnacknowledgedIncidents,
@@ -186,9 +189,6 @@ export class OnCallService {
         },
       };
     } else if (secondary && secondary.user.id === userId) {
-      const baseDate = new Date(
-        Math.max(team.lastRotatedAt.getTime(), team.rotationStartDate.getTime())
-      );
       return {
         isOnCall: false,
         currentShift: {
