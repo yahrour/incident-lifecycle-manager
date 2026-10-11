@@ -493,7 +493,6 @@ export class IncidentsService {
         const secondary = onCall?.chain.find((engineer) => {
           return engineer.position === "SECONDARY";
         });
-        // No secondary to hand over to: the team owner is the last step.
         const escalateToId =
           secondary && secondary.id !== incident.assignedToId
             ? secondary.id
