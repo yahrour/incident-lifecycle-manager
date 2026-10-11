@@ -9,7 +9,7 @@ export function OnCallBanner() {
   const { user } = useAuth();
 
   const { data, isPending, isError } = useQuery({
-    queryKey: shiftKeys.detail(user.id),
+    queryKey: shiftKeys.detail(user?.id ?? ""),
     queryFn: fetchShift,
     refetchInterval: 600_000,
   });
@@ -38,7 +38,7 @@ export function OnCallBanner() {
 
   const shift = data?.data;
 
-  if (!shift?.currentShift || !shift?.currentShift?.position) {
+  if (!shift?.currentShift) {
     return (
       <div className="flex items-center rounded-lg border border-l-4 border-border border-l-muted-foreground/40 bg-card px-4 py-3">
         <div>

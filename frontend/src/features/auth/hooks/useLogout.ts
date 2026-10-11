@@ -14,7 +14,7 @@ export default function useLogout() {
     onSettled: () => {
       queryClient.setQueryData(["session"], null);
       void queryClient.invalidateQueries({
-        queryKey: shiftKeys.detail(user.id),
+        queryKey: shiftKeys.detail(user?.id ?? ""),
       });
       void navigate("/login", { replace: true });
     },

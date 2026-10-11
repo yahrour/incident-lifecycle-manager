@@ -209,7 +209,7 @@ export class OnCallService {
     }
     return {
       isOnCall: false,
-      currentShift: {},
+      currentShift: null,
     };
   }
 

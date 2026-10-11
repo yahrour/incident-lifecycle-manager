@@ -180,7 +180,7 @@ export class UsersService {
     if (!member) {
       return {
         isOnCall: false,
-        currentShift: {},
+        currentShift: null,
       };
     }
 
