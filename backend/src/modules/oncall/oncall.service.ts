@@ -7,9 +7,7 @@ export class OnCallService {
   constructor(private prisma: PrismaService) {}
 
   private addDays(date: Date, n: number) {
-    const result = new Date(date);
-    result.setDate(result.getDate() + n);
-    return result;
+    return new Date(date.getTime() + n * 24 * 60 * 60 * 1000);
   }
 
   async getCurrentOnCall(teamId: string, ownerId: string) {
