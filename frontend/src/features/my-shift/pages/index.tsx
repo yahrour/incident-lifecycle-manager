@@ -25,8 +25,6 @@ export function MyShift() {
 
   const shift = data.data;
 
-  console.log("shift: ", shift);
-
   return (
     <div className="w-full">
       <div className="bg-white flex items-center gap-2 px-4 py-3 border-b">
@@ -40,14 +38,16 @@ export function MyShift() {
       </div>
 
       <div className="mt-2 p-4 space-y-4">
-        <OnCallBanner
-          teamName={"frontend"}
-          position="SECONDARY"
-          assigned={123}
-          unacked={21}
-          escalationMinutes={5}
-          shiftEndsAt={new Date().toISOString()}
-        />
+        {(shift.isOnCall || shift.currentShift.position === "SECONDARY") && (
+          <OnCallBanner
+            teamName={shift.currentShift.team.name}
+            position={shift.currentShift.position}
+            assigned={shift.currentShift.incidents.totalAssignedIncidents}
+            unacked={shift.currentShift.incidents.totalUnacknowledgedIncidents}
+            escalationMinutes={shift.currentShift.team.escalationTimeoutMinutes}
+            shiftEndsAt={new Date(shift.currentShift.endsAt).toISOString()}
+          />
+        )}
       </div>
     </div>
   );
