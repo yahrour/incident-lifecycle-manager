@@ -1,1 +1,1 @@
-export { MyUnavailabilities } from "./pages/MyUnavailabilities";
+export { MyUnavailabilities } from "./pages";

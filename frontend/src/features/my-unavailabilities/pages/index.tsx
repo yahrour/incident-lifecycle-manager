@@ -12,6 +12,7 @@ import type { SortState } from "../types";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUserMembership } from "../api/membership";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
+import { NoMembershipState } from "../components/NoMembershipState";
 
 export function MyUnavailabilities() {
   const [page, setPage] = useState(1);
@@ -47,46 +48,49 @@ export function MyUnavailabilities() {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-
-      <div className="p-4 space-y-4">
-        <div className="flex justify-between">
-          <Tabs
-            value={filter}
-            onValueChange={(v: "all" | "pending") => {
-              setFilter(v);
-              setPage(1);
-              if (v === "pending") {
-                setSort({
-                  field: "createdAt",
-                  order: "desc",
-                });
-              }
-            }}
-          >
-            <TabsList>
-              <TabsTrigger value="all" className="cursor-pointer">
-                All
-              </TabsTrigger>
-              <TabsTrigger value="pending" className="cursor-pointer">
-                Pending
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <SortControls
-            sort={sort}
-            onSortChange={setSort}
-            setPage={setPage}
+      {!membership ? (
+        <NoMembershipState />
+      ) : (
+        <div className="p-4 space-y-4">
+          <div className="flex justify-between">
+            <Tabs
+              value={filter}
+              onValueChange={(v: "all" | "pending") => {
+                setFilter(v);
+                setPage(1);
+                if (v === "pending") {
+                  setSort({
+                    field: "createdAt",
+                    order: "desc",
+                  });
+                }
+              }}
+            >
+              <TabsList>
+                <TabsTrigger value="all" className="cursor-pointer">
+                  All
+                </TabsTrigger>
+                <TabsTrigger value="pending" className="cursor-pointer">
+                  Pending
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <SortControls
+              sort={sort}
+              onSortChange={setSort}
+              setPage={setPage}
+              filter={filter}
+            />
+          </div>
+          <UnavailabilitiesTable
+            membership={membership}
             filter={filter}
+            page={page}
+            setPage={setPage}
+            sort={sort}
           />
         </div>
-        <UnavailabilitiesTable
-          membership={membership}
-          filter={filter}
-          page={page}
-          setPage={setPage}
-          sort={sort}
-        />
-      </div>
+      )}
     </div>
   );
 }

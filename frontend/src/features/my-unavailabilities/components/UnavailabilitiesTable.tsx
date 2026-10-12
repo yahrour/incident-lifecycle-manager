@@ -15,6 +15,7 @@ import { fetchMemberUnavailabilities } from "../api/unavailability";
 import type { Membership, SortState } from "../types";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { useErrorToast } from "@/hooks/use-error-toast";
+import { NoUnavailabilitiesState } from "./NoUnavailabilitiesState";
 
 const statusVariant: Record<
   UnavailabilityStatus,
@@ -64,8 +65,12 @@ export function UnavailabilitiesTable({
     return <FullPageSpinner />;
   }
 
+  if (!data) {
+    return <NoUnavailabilitiesState />;
+  }
+
   const unavailabilities = data.data;
-  const totalUnavailabilities = data.meta.total ?? 0;
+  const totalUnavailabilities = data.meta?.total ?? 0;
 
   return (
     <div className="space-y-4">
