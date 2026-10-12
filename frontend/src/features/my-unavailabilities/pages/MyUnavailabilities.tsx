@@ -81,6 +81,7 @@ export function MyUnavailabilities() {
         </div>
         <UnavailabilitiesTable
           membership={membership}
+          filter={filter}
           page={page}
           setPage={setPage}
           sort={sort}

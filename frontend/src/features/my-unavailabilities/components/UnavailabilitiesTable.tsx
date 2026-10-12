@@ -28,11 +28,13 @@ const statusVariant: Record<
 
 export function UnavailabilitiesTable({
   membership,
+  filter,
   page,
   setPage,
   sort,
 }: {
   membership: Membership;
+  filter: "all" | "pending";
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
   sort: SortState;
@@ -44,14 +46,16 @@ export function UnavailabilitiesTable({
       membership.memberId,
       sort,
       page,
+      filter,
     ],
     queryFn: () =>
-      fetchMemberUnavailabilities(
-        membership.team.id,
-        membership.memberId,
+      fetchMemberUnavailabilities({
+        memberId: membership.memberId,
+        teamId: membership.team.id,
+        filter,
         page,
-        sort
-      ),
+        sort,
+      }),
   });
 
   useErrorToast(isError, "Failed to fetch unavailabilities");
