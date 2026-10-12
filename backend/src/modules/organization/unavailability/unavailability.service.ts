@@ -275,6 +275,62 @@ export class UnavailabilityService {
     return { unavailabilities, total };
   }
 
+  async findMemberPending(
+    requesterUserId: string,
+    teamId: string,
+    memberId: number,
+    query: OffsetPaginationSearchParams
+  ) {
+    await this.getAuthorizedMember(memberId, teamId, requesterUserId);
+
+    const [unavailabilities, total] = await Promise.all([
+      this.prisma.unavailability.findMany({
+        where: {
+          memberId,
+          status: "PENDING",
+        },
+        include: {
+          teamMember: {
+            select: {
+              id: true,
+              team: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                  specialty: true,
+                  role: true,
+                },
+              },
+            },
+          },
+        },
+        ...(query.sortField && {
+          orderBy: {
+            [query.sortField]: query.sortOrder,
+          },
+        }),
+        skip: query.offset,
+        take: query.limit,
+      }),
+      this.prisma.unavailability.count({
+        where: {
+          memberId,
+          status: "PENDING",
+        },
+      }),
+    ]);
+
+    return { unavailabilities, total };
+  }
+
   async removeMemberAll(
     requesterUserId: string,
     teamId: string,
