@@ -11,6 +11,7 @@ import { NoPendingUnavailabilitiesState } from "../empty-states/NoPendingUnavail
 import { useEffect } from "react";
 import { UnavailabilitiesTable } from "./UnavailabilitiesTable";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
+import { unavailabilityKeys } from "@/features/organization/shared/constants";
 
 export function AllUnavailabilitiesTable({
   sort,
@@ -24,7 +25,7 @@ export function AllUnavailabilitiesTable({
   filter: "all" | "pending";
 }) {
   const { data, isError, isPending } = useQuery({
-    queryKey: ["teams", "unavailabilities", page, sort, filter],
+    queryKey: unavailabilityKeys.list(page, sort, filter),
     queryFn: () =>
       filter === "all"
         ? fetchAllUnavailabilities(page, sort)

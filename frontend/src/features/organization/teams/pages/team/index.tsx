@@ -20,13 +20,13 @@ import { UnavailabilitiesPreview } from "@/features/organization/unavailabilitie
 import { TeamNotFound } from "@/features/organization/shared/components/empty-states/TeamNotFound";
 import { UpcomingRotationsPreview } from "../../components/previews/UpcomingRotationsPreview";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
+import { teamKeys } from "@/features/organization/shared/constants";
 
 export function Team() {
-  const params = useParams();
-  const teamId = params.id;
+  const { id: teamId } = useParams();
 
   const { data, isPending, isError } = useQuery({
-    queryKey: ["team", teamId],
+    queryKey: teamKeys.detail(teamId as string),
     queryFn: () => fetchTeam(teamId as string),
   });
 
