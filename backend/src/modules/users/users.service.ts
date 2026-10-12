@@ -186,4 +186,30 @@ export class UsersService {
 
     return await this.onCall.getUserOnCallStatus(member.teamId, userId);
   }
+
+  async getMyMembership(userId: string) {
+    const membership = await this.prisma.teamMember.findUnique({
+      where: {
+        userId,
+      },
+      select: {
+        id: true,
+        team: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+    return (
+      membership && {
+        memberId: membership.id,
+        team: {
+          id: membership.team.id,
+          name: membership.team.name,
+        },
+      }
+    );
+  }
 }

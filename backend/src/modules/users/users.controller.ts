@@ -41,4 +41,11 @@ export class UsersController {
     const result = await this.usersService.getMyOnCallStatus(user.sub);
     return apiResponse(result);
   }
+
+  @Get("me/membership")
+  @Roles(Role.ENGINEER)
+  async getMyMembership(@ActiveUser() user: ActiveUserData) {
+    const result = await this.usersService.getMyMembership(user.sub);
+    return apiResponse(result);
+  }
 }
