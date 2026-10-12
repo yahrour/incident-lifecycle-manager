@@ -19,6 +19,7 @@ import { HomeRedirect } from "./HomeRedirect";
 import { Integrations } from "@/features/integrations";
 import { MyShift } from "@/features/my-shift";
 import { DeliveryLog } from "@/features/delivery-log";
+import { MyUnavailabilities } from "@/features/my-unavailabilities";
 
 export default function AppRoutes() {
   return (
@@ -65,8 +66,8 @@ export default function AppRoutes() {
           <Route element={<AppLayout />}>
             <Route path="/engineer/my-shift" element={<MyShift />} />
             <Route
-              path="/engineer/time-off"
-              element={<div>manage time-off</div>}
+              path="/engineer/my-unavailabilities"
+              element={<MyUnavailabilities />}
             />
             <Route path="/engineer/team" element={<div>manage team</div>} />
           </Route>

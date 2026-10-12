@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatDuration } from "../../utils/time";
 import type {
   Unavailability,
   UnavailabilityStatus,
@@ -26,6 +25,7 @@ import {
   teamKeys,
   unavailabilityKeys,
 } from "@/features/organization/shared/constants";
+import { formatDuration } from "@/utils/time";
 
 const statusVariant: Record<
   UnavailabilityStatus,
