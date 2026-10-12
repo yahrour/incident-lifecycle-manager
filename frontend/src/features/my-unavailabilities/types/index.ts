@@ -13,3 +13,5 @@ export type Membership = {
     name: string;
   };
 };
+
+export type Filter = "ALL" | "PENDING" | "REJECTED" | "APPROVED" | "EXPIRED";

@@ -85,31 +85,14 @@ export class UnavailabilityController {
   }
 
   @Get(":teamId/members/:memberId/unavailabilities")
-  async findMemberAll(
+  async findMember(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @Query() query: OffsetPaginationSearchParams,
     @ActiveUser() user: ActiveUserData
   ) {
     const { unavailabilities, total } =
-      await this.unavailabilityService.findMemberAll(
-        user.sub,
-        teamId,
-        memberId,
-        query
-      );
-    return apiResponse(unavailabilities, { total });
-  }
-
-  @Get(":teamId/members/:memberId/unavailabilities/pending")
-  async findMemberPending(
-    @Param("teamId", ParseUUIDPipe) teamId: string,
-    @Param("memberId", ParseIntPipe) memberId: number,
-    @Query() query: OffsetPaginationSearchParams,
-    @ActiveUser() user: ActiveUserData
-  ) {
-    const { unavailabilities, total } =
-      await this.unavailabilityService.findMemberPending(
+      await this.unavailabilityService.findMember(
         user.sub,
         teamId,
         memberId,

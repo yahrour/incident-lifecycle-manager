@@ -11,7 +11,7 @@ export async function fetchMemberUnavailabilities({
   page,
   sort,
 }: {
-  filter: "all" | "pending";
+  filter: string;
   teamId: string;
   memberId: number;
   page: number;
@@ -23,9 +23,10 @@ export async function fetchMemberUnavailabilities({
     limit: String(DEFAULT_LIMIT),
     sortField: sort.field,
     sortOrder: sort.order,
+    filterField: filter,
   });
   const response = await apiClient.get<ApiResponse<Unavailability[]>>(
-    `/teams/${teamId}/members/${memberId}/unavailabilities${filter === "pending" ? "/pending" : ""}?${params.toString()}`
+    `/teams/${teamId}/members/${memberId}/unavailabilities?${params.toString()}`
   );
   return response.data;
 }

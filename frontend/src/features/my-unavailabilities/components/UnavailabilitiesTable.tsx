@@ -12,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { TablePagination } from "@/features/organization/shared/components/TablePagination";
 import { formatDuration } from "@/utils/time";
 import { fetchMemberUnavailabilities } from "../api/unavailability";
-import type { Membership, SortState } from "../types";
+import type { Filter, Membership, SortState } from "../types";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { NoUnavailabilitiesState } from "./NoUnavailabilitiesState";
@@ -35,7 +35,7 @@ export function UnavailabilitiesTable({
   sort,
 }: {
   membership: Membership;
-  filter: "all" | "pending";
+  filter: Filter;
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
   sort: SortState;
@@ -71,6 +71,10 @@ export function UnavailabilitiesTable({
 
   const unavailabilities = data.data;
   const totalUnavailabilities = data.meta?.total ?? 0;
+
+  if (unavailabilities.length === 0) {
+    return <NoUnavailabilitiesState />;
+  }
 
   return (
     <div className="space-y-4">

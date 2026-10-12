@@ -1,11 +1,4 @@
 import { ArrowUpDown } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { SortOrder, type SortState } from "../types";
 
@@ -13,31 +6,14 @@ export function SortControls({
   sort,
   onSortChange,
   setPage,
-  filter,
 }: {
   sort: SortState;
   onSortChange: React.Dispatch<React.SetStateAction<SortState>>;
   setPage: React.Dispatch<React.SetStateAction<number>>;
-  filter: "all" | "pending";
 }) {
   return (
     <div className="flex items-center gap-2">
-      <Select
-        value={sort.field}
-        onValueChange={(field) => {
-          if (field) onSortChange({ field, order: sort.order });
-          setPage(1);
-        }}
-      >
-        <SelectTrigger className="w-40">
-          <SelectValue placeholder="Sort by" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="createdAt">Created at</SelectItem>
-          {filter === "all" && <SelectItem value="status">Status</SelectItem>}
-        </SelectContent>
-      </Select>
-
+      <Button variant="outline">{sort.field}</Button>
       <Button
         variant="outline"
         size="icon"

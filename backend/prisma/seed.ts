@@ -4,7 +4,8 @@
  * Creates (deterministic: same data every run, safe to re-run):
  *  - 4 SRE users (team owners) + 50 ENGINEER users, 5 per team
  *  - 10 teams with services, rotation settings and escalation timeouts
- *  - Unavailability windows (past / current / future; approved / pending / rejected)
+ *  - Unavailability windows (past / current / future; approved / pending / rejected),
+ *    plus a bulk set of 24 for Amelia Martin (engineer@example.com)
  *  - API keys per SRE (one disabled)
  *  - ~120 incidents over the last 30 days (open / acknowledged / resolved)
  *    with assignees, MTTA/MTTR, linked alerts and responder notes
@@ -129,6 +130,39 @@ const UNAVAILABILITY_REASONS = [
 ];
 const PROVIDERS = ["prometheus", "grafana", "datadog"];
 
+// Hand-written, non-overlapping unavailability windows for Amelia Martin
+// (engineer@example.com). Offsets are days from today; `len` extends the end date.
+// Spans roughly 4 months back to 3 months ahead, with every status represented.
+const AMELIA_UNAVAILABILITIES = [
+  // past
+  { offset: -110, len: 3, reason: "Vacation", status: "APPROVED" },
+  { offset: -98, len: 1, reason: "Medical appointment", status: "APPROVED" },
+  { offset: -90, len: 5, reason: "Conference", status: "APPROVED" },
+  { offset: -78, len: 2, reason: "Family event", status: "REJECTED" },
+  { offset: -70, len: 1, reason: "Public holiday", status: "APPROVED" },
+  { offset: -62, len: 4, reason: "Vacation", status: "APPROVED" },
+  { offset: -50, len: 1, reason: "Training day", status: "APPROVED" },
+  { offset: -44, len: 2, reason: "Moving house", status: "REJECTED" },
+  { offset: -36, len: 3, reason: "Conference", status: "APPROVED" },
+  { offset: -28, len: 1, reason: "Medical appointment", status: "APPROVED" },
+  { offset: -21, len: 2, reason: "Family event", status: "APPROVED" },
+  { offset: -14, len: 1, reason: "Training day", status: "REJECTED" },
+  { offset: -7, len: 1, reason: "Public holiday", status: "APPROVED" },
+  // current
+  { offset: -1, len: 4, reason: "Vacation", status: "APPROVED" },
+  // future
+  { offset: 8, len: 2, reason: "Medical appointment", status: "PENDING" },
+  { offset: 15, len: 6, reason: "Vacation", status: "PENDING" },
+  { offset: 27, len: 1, reason: "Public holiday", status: "APPROVED" },
+  { offset: 34, len: 3, reason: "Conference", status: "PENDING" },
+  { offset: 45, len: 2, reason: "Family event", status: "PENDING" },
+  { offset: 52, len: 1, reason: "Training day", status: "REJECTED" },
+  { offset: 60, len: 5, reason: "Vacation", status: "PENDING" },
+  { offset: 71, len: 1, reason: "Medical appointment", status: "PENDING" },
+  { offset: 80, len: 3, reason: "Moving house", status: "PENDING" },
+  { offset: 90, len: 2, reason: "Public holiday", status: "PENDING" },
+] as const;
+
 // ── Main ────────────────────────────────────────────────────────────────
 async function main() {
   console.log("Seeding…");
@@ -158,10 +192,6 @@ async function main() {
         role: Role.ENGINEER,
         specialty: pick(SPECIALTIES),
         timezone: pick(TIMEZONES),
-        ...(chance(0.5) && {
-          discordId: String(100000000000000000n + BigInt(i)),
-          discordName: `${firstName}${lastName}`,
-        }),
       };
     }),
   ];
@@ -254,6 +284,26 @@ async function main() {
       });
     }
   }
+  // Amelia Martin (engineer@example.com) gets a hand-written bulk set instead of
+  // the random ones above. The random ones are dropped *after* generation so the
+  // random sequence (and therefore all other seeded data) stays unchanged.
+  const amelia = byEmail.get("engineer@example.com")!;
+  const ameliaMember = members.find((m) => m.userId === amelia.id)!;
+  for (let i = windows.length - 1; i >= 0; i--) {
+    if (windows[i].memberId === ameliaMember.id) windows.splice(i, 1);
+  }
+  windows.push(
+    ...AMELIA_UNAVAILABILITIES.map((u) => ({
+      memberId: ameliaMember.id,
+      startDate: dayOffset(u.offset),
+      endDate: new Date(dayOffset(u.offset + u.len).getTime() + (23 * HOUR + 59 * 60 * SEC)),
+      reason: u.reason,
+      status: u.status,
+      confirmed: u.status === "APPROVED",
+    }))
+  );
+  // Clear her existing rows first so re-running doesn't duplicate them
+  await prisma.unavailability.deleteMany({ where: { memberId: ameliaMember.id } });
   await prisma.unavailability.createMany({ data: windows, skipDuplicates: true });
 
   // 4. API keys (deterministic raw keys so reruns don't pile up) ------------

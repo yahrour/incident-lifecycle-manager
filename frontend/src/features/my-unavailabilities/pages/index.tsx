@@ -8,7 +8,7 @@ import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UnavailabilitiesTable } from "../components/UnavailabilitiesTable";
 import { SortControls } from "../components/SortControls";
-import type { SortState } from "../types";
+import type { Filter, SortState } from "../types";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUserMembership } from "../api/membership";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
@@ -16,7 +16,7 @@ import { NoMembershipState } from "../components/NoMembershipState";
 
 export function MyUnavailabilities() {
   const [page, setPage] = useState(1);
-  const [filter, setFilter] = useState<"all" | "pending">("all");
+  const [filter, setFilter] = useState<Filter>("ALL");
   const [sort, setSort] = useState<SortState>({
     field: "createdAt",
     order: "desc",
@@ -55,23 +55,26 @@ export function MyUnavailabilities() {
           <div className="flex justify-between">
             <Tabs
               value={filter}
-              onValueChange={(v: "all" | "pending") => {
+              onValueChange={(v: Filter) => {
                 setFilter(v);
                 setPage(1);
-                if (v === "pending") {
-                  setSort({
-                    field: "createdAt",
-                    order: "desc",
-                  });
-                }
               }}
             >
               <TabsList>
-                <TabsTrigger value="all" className="cursor-pointer">
+                <TabsTrigger value="ALL" className="cursor-pointer">
                   All
                 </TabsTrigger>
-                <TabsTrigger value="pending" className="cursor-pointer">
+                <TabsTrigger value="APPROVED" className="cursor-pointer">
+                  Approved
+                </TabsTrigger>
+                <TabsTrigger value="PENDING" className="cursor-pointer">
                   Pending
+                </TabsTrigger>
+                <TabsTrigger value="REJECTED" className="cursor-pointer">
+                  Rejected
+                </TabsTrigger>
+                <TabsTrigger value="EXPIRED" className="cursor-pointer">
+                  Expired
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -79,7 +82,6 @@ export function MyUnavailabilities() {
               sort={sort}
               onSortChange={setSort}
               setPage={setPage}
-              filter={filter}
             />
           </div>
           <UnavailabilitiesTable

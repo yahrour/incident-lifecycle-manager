@@ -15,6 +15,7 @@ import { PrismaService } from "@/common/prisma/prisma.service";
 import { Team, TeamMember } from "@/generated/prisma/client";
 import { convertDateToUtc } from "@/common/utils/timezone";
 import { Cron, CronExpression } from "@nestjs/schedule";
+import { FILTER_FIELD } from "./constants";
 
 @Injectable()
 export class UnavailabilityService {
@@ -221,7 +222,7 @@ export class UnavailabilityService {
     }
   }
 
-  async findMemberAll(
+  async findMember(
     requesterUserId: string,
     teamId: string,
     memberId: number,
@@ -233,6 +234,9 @@ export class UnavailabilityService {
       this.prisma.unavailability.findMany({
         where: {
           memberId,
+          ...(query.filterField !== FILTER_FIELD.all && {
+            status: query.filterField,
+          }),
         },
         include: {
           teamMember: {
@@ -268,62 +272,9 @@ export class UnavailabilityService {
       this.prisma.unavailability.count({
         where: {
           memberId,
-        },
-      }),
-    ]);
-
-    return { unavailabilities, total };
-  }
-
-  async findMemberPending(
-    requesterUserId: string,
-    teamId: string,
-    memberId: number,
-    query: OffsetPaginationSearchParams
-  ) {
-    await this.getAuthorizedMember(memberId, teamId, requesterUserId);
-
-    const [unavailabilities, total] = await Promise.all([
-      this.prisma.unavailability.findMany({
-        where: {
-          memberId,
-          status: "PENDING",
-        },
-        include: {
-          teamMember: {
-            select: {
-              id: true,
-              team: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-              user: {
-                select: {
-                  id: true,
-                  firstName: true,
-                  lastName: true,
-                  email: true,
-                  specialty: true,
-                  role: true,
-                },
-              },
-            },
-          },
-        },
-        ...(query.sortField && {
-          orderBy: {
-            [query.sortField]: query.sortOrder,
-          },
-        }),
-        skip: query.offset,
-        take: query.limit,
-      }),
-      this.prisma.unavailability.count({
-        where: {
-          memberId,
-          status: "PENDING",
+          ...(query.filterField !== FILTER_FIELD.all && {
+            status: query.filterField,
+          }),
         },
       }),
     ]);

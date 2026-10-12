@@ -1,7 +1,7 @@
 import { IsEnum, IsInt, IsOptional, Max, Min } from "class-validator";
 import { Type } from "class-transformer";
 import { PAGINATION, SORT_ORDER } from "@/common/constants";
-import { SORT_FIELD } from "../constants";
+import { FILTER_FIELD, SORT_FIELD } from "../constants";
 
 export class OffsetPaginationSearchParams {
   @IsOptional()
@@ -24,4 +24,7 @@ export class OffsetPaginationSearchParams {
   @IsOptional()
   @IsEnum(SORT_ORDER)
   sortOrder?: SORT_ORDER = SORT_ORDER.ASC;
+
+  @IsEnum(FILTER_FIELD)
+  filterField: FILTER_FIELD = FILTER_FIELD.ALL;
 }
