@@ -38,7 +38,7 @@ export function MyShift() {
         </Breadcrumb>
       </div>
 
-      {membership ? (
+      {!membership ? (
         <NoMembershipState />
       ) : (
         <div className="mt-2 p-4 space-y-4">
