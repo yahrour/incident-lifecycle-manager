@@ -15,3 +15,11 @@ export type Shift = {
     };
   } | null;
 };
+
+export type Membership = {
+  memberId: number;
+  team: {
+    id: string;
+    name: string;
+  };
+};
