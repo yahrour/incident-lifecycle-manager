@@ -217,6 +217,51 @@ describe("IncidentsService", () => {
     );
   });
 
+  it("returns linked alerts and adds them to the timeline", async () => {
+    const createdAt = new Date("2026-01-01T00:00:00.000Z");
+    const receivedAt = new Date("2026-01-01T00:00:01.000Z");
+    const alert = {
+      id: "alert-id",
+      provider: "grafana",
+      title: "High CPU",
+      severity: "critical",
+      status: "firing",
+      occurredAt: createdAt,
+      receivedAt,
+    };
+    const findFirst = jest.fn().mockResolvedValue({
+      id: "incident-id",
+      createdAt,
+      acknowledgedAt: null,
+      resolvedAt: null,
+      alerts: [{ alertId: "alert-id" }],
+    });
+    const findMany = jest.fn().mockResolvedValue([alert]);
+    const prisma = {
+      incident: { findFirst },
+      alert: { findMany },
+    } as unknown as PrismaService;
+    const service = new IncidentsService(prisma, {} as OnCallService);
+
+    await expect(service.findOne("user-id", "incident-id")).resolves.toEqual(
+      expect.objectContaining({
+        alerts: [alert],
+        timeline: [
+          { type: "created", at: createdAt },
+          {
+            type: "alert_received",
+            at: receivedAt,
+            alertId: "alert-id",
+            status: "firing",
+          },
+        ],
+      })
+    );
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: { in: ["alert-id"] } } })
+    );
+  });
+
   it("creates a note for an incident the user can access", async () => {
     const findFirst = jest.fn().mockResolvedValue({ id: "incident-id" });
     const create = jest.fn().mockResolvedValue({

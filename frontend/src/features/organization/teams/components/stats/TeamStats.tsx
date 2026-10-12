@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { StatBlock } from "./StatBlock";
 import type { Team } from "@/features/organization/shared/types";
 import { useErrorToast } from "@/hooks/use-error-toast";
+import { teamKeys } from "@/features/organization/shared/constants";
 
 export function TeamStats({ team }: { team: Team }) {
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: ["team", team.id, "stats"],
+    queryKey: teamKeys.stats(team.id),
     queryFn: () => fetchStats(team.id),
   });
 
