@@ -74,9 +74,9 @@ const engineerItems = {
     { label: "Delivery log", href: "/engineer/delivery-log", icon: Send },
   ],
   orgItems: [
-    { label: "Team", href: "/engineer/team", icon: Users },
+    { label: "My Team", href: "/engineer/my-team", icon: Users },
     {
-      label: "Unavailabilities",
+      label: "My Unavailabilities",
       href: "/engineer/my-unavailabilities",
       icon: CalendarOff,
     },

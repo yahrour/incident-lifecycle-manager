@@ -69,7 +69,10 @@ export default function AppRoutes() {
               path="/engineer/my-unavailabilities"
               element={<MyUnavailabilities />}
             />
-            <Route path="/engineer/team" element={<div>manage team</div>} />
+            <Route
+              path="/engineer/my-team"
+              element={<div>manage my team</div>}
+            />
           </Route>
         </Route>
         <Route element={<AppLayout />}>
