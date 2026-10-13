@@ -158,10 +158,6 @@ async function main() {
         role: Role.ENGINEER,
         specialty: pick(SPECIALTIES),
         timezone: pick(TIMEZONES),
-        ...(chance(0.5) && {
-          discordId: String(100000000000000000n + BigInt(i)),
-          discordName: `${firstName}${lastName}`,
-        }),
       };
     }),
   ];
