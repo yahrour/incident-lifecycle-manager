@@ -1,7 +1,6 @@
-import type { Unavailability } from "@/features/organization/shared/types";
 import { apiClient } from "@/lib/apiClient";
 import type { ApiResponse } from "@/types";
-import type { SortState } from "../types";
+import type { SortState, Unavailability } from "../types";
 import { DEFAULT_LIMIT } from "../constants";
 
 export async function fetchMemberUnavailabilities({
