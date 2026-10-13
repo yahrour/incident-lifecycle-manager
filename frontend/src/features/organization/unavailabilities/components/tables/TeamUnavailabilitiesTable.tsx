@@ -1,10 +1,7 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import {
-  fetchTeamPendingUnavailabilities,
-  fetchTeamUnavailabilities,
-} from "../../api/unavailabilities";
+import { fetchTeamUnavailabilities } from "../../api/unavailabilities";
 import { useErrorToast } from "@/hooks/use-error-toast";
-import type { SortState } from "../../types";
+import type { Filter, SortState } from "../../types";
 import { ErrorUnavailabilitiesState } from "../error-states/ErrorUnavailabilitiesState";
 import { NoUnavailabilitiesState } from "../empty-states/NoUnavailabilitiesState";
 import { NoPendingUnavailabilitiesState } from "../empty-states/NoPendingUnavailabilitiesState";
@@ -24,14 +21,11 @@ export function TeamUnavailabilitiesTable({
   sort: SortState;
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
-  filter: "all" | "pending";
+  filter: Filter;
 }) {
   const { data, isError, isPending } = useQuery({
     queryKey: teamKeys.unavailabilitiesList(teamId, page, sort, filter),
-    queryFn: () =>
-      filter === "all"
-        ? fetchTeamUnavailabilities(teamId, page, sort)
-        : fetchTeamPendingUnavailabilities(teamId, page, sort),
+    queryFn: () => fetchTeamUnavailabilities(teamId, page, sort, filter),
     placeholderData: keepPreviousData,
   });
 

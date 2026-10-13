@@ -1,6 +1,9 @@
 import type { SortState as MemberState } from "../../members/types";
 import type { SortState as TeamSortState } from "../../teams/types";
-import type { SortState as UnavailabilitySortState } from "../../unavailabilities/types";
+import type {
+  Filter,
+  SortState as UnavailabilitySortState,
+} from "../../unavailabilities/types";
 
 export const teamKeys = {
   all: ["teams"] as const,
@@ -24,7 +27,7 @@ export const teamKeys = {
     teamId: string,
     page: number,
     sort: UnavailabilitySortState,
-    filter: string
+    filter: Filter
   ) => [...teamKeys.unavailabilities(teamId), page, sort, filter] as const,
 };
 

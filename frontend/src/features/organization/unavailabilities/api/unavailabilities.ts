@@ -2,7 +2,7 @@ import { apiClient } from "@/lib/apiClient";
 import type { ApiResponse } from "@/types";
 import type { Unavailability } from "../../shared/types";
 import { DEFAULT_LIMIT, DEFAULT_PREVIEW_LIMIT } from "../../shared/constants";
-import type { SortState } from "../types";
+import type { Filter, SortState } from "../types";
 
 export async function fetchUnavailabilitiesPreview(id: string) {
   const response = await apiClient.get<ApiResponse<Unavailability[]>>(
@@ -14,7 +14,8 @@ export async function fetchUnavailabilitiesPreview(id: string) {
 export async function fetchTeamUnavailabilities(
   id: string,
   page: number,
-  sort: SortState
+  sort: SortState,
+  filter: Filter
 ) {
   const offset = (page - 1) * DEFAULT_LIMIT;
   const params = new URLSearchParams({
@@ -22,27 +23,10 @@ export async function fetchTeamUnavailabilities(
     limit: String(DEFAULT_LIMIT),
     sortField: sort.field,
     sortOrder: sort.order,
+    filterField: filter,
   });
   const response = await apiClient.get<ApiResponse<Unavailability[]>>(
     `/teams/${id}/unavailabilities?${params.toString()}`
-  );
-  return response.data;
-}
-
-export async function fetchTeamPendingUnavailabilities(
-  id: string,
-  page: number,
-  sort: SortState
-) {
-  const offset = (page - 1) * DEFAULT_LIMIT;
-  const params = new URLSearchParams({
-    offset: String(offset),
-    limit: String(DEFAULT_LIMIT),
-    sortField: sort.field,
-    sortOrder: sort.order,
-  });
-  const response = await apiClient.get<ApiResponse<Unavailability[]>>(
-    `/teams/${id}/unavailabilities/pending?${params.toString()}`
   );
   return response.data;
 }
@@ -67,23 +51,10 @@ export async function rejectUnavailability(
   );
 }
 
-export async function fetchAllUnavailabilities(page: number, sort: SortState) {
-  const offset = (page - 1) * DEFAULT_LIMIT;
-  const params = new URLSearchParams({
-    offset: String(offset),
-    limit: String(DEFAULT_LIMIT),
-    sortField: sort.field,
-    sortOrder: sort.order,
-  });
-  const response = await apiClient.get<ApiResponse<Unavailability[]>>(
-    `/teams/unavailabilities?${params.toString()}`
-  );
-  return response.data;
-}
-
-export async function fetchAllPendingUnavailabilities(
+export async function fetchAllUnavailabilities(
   page: number,
-  sort: SortState
+  sort: SortState,
+  filter: Filter
 ) {
   const offset = (page - 1) * DEFAULT_LIMIT;
   const params = new URLSearchParams({
@@ -91,9 +62,10 @@ export async function fetchAllPendingUnavailabilities(
     limit: String(DEFAULT_LIMIT),
     sortField: sort.field,
     sortOrder: sort.order,
+    filterField: filter,
   });
   const response = await apiClient.get<ApiResponse<Unavailability[]>>(
-    `/teams/unavailabilities/pending?${params.toString()}`
+    `/teams/unavailabilities?${params.toString()}`
   );
   return response.data;
 }
