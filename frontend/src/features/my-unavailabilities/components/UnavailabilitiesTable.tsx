@@ -16,6 +16,7 @@ import type { Filter, Membership, SortState } from "../types";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { NoUnavailabilitiesState } from "./NoUnavailabilitiesState";
 import { ErrorUnavailabilitiesState } from "./ErrorUnavailabilitiesState";
+import { unavailabilityKeys } from "../constants/query.keys";
 
 const statusVariant: Record<
   UnavailabilityStatus,
@@ -41,14 +42,13 @@ export function UnavailabilitiesTable({
   sort: SortState;
 }) {
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: [
-      "engineer-unavailability",
-      membership.team.id,
-      membership.memberId,
-      sort,
-      page,
+    queryKey: unavailabilityKeys.detail({
+      teamId: membership.team.id,
+      memberId: membership.memberId,
       filter,
-    ],
+      page,
+      sort,
+    }),
     queryFn: () =>
       fetchMemberUnavailabilities({
         memberId: membership.memberId,

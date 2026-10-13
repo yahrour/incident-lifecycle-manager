@@ -14,8 +14,11 @@ import { fetchUserMembership } from "../api/membership";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { NoMembershipState } from "../components/NoMembershipState";
 import { ErrorUnavailabilitiesState } from "../components/ErrorUnavailabilitiesState";
+import { membershipKeys } from "../constants/query.keys";
+import { useAuth } from "@/features/auth";
 
 export function MyUnavailabilities() {
+  const { user } = useAuth();
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<SortState>({
@@ -24,7 +27,7 @@ export function MyUnavailabilities() {
   });
 
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: ["membership"],
+    queryKey: membershipKeys.detail(user?.id ?? ""),
     queryFn: fetchUserMembership,
   });
 
