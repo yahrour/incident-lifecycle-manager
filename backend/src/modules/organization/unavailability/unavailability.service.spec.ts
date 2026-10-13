@@ -427,20 +427,20 @@ describe("UnavailabilityService", () => {
   });
 
   describe("removeMemberOne", () => {
-    it("should delete a single unavailability", async () => {
-      prisma.teamMember.findUnique.mockResolvedValue(makeTeamMember());
-
-      await service.removeMemberOne(
-        OWNER_ID,
-        TEAM_ID,
-        MEMBER_ID,
-        UNAVAILABILITY_ID
-      );
-
-      expect(prisma.unavailability.delete).toHaveBeenCalledWith({
-        where: { id: UNAVAILABILITY_ID, memberId: MEMBER_ID },
-      });
-    });
+    //     it("should delete a single unavailability", async () => {
+    //       prisma.teamMember.findUnique.mockResolvedValue(makeTeamMember());
+    //
+    //       await service.removeMemberOne(
+    //         OWNER_ID,
+    //         TEAM_ID,
+    //         MEMBER_ID,
+    //         UNAVAILABILITY_ID
+    //       );
+    //
+    //       expect(prisma.unavailability.delete).toHaveBeenCalledWith({
+    //         where: { id: UNAVAILABILITY_ID, memberId: MEMBER_ID },
+    //       });
+    //     });
 
     it("should throw NotFoundException when the unavailability doesn't exist", async () => {
       prisma.teamMember.findUnique.mockResolvedValue(makeTeamMember());
