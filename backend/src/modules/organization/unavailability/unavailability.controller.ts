@@ -85,14 +85,14 @@ export class UnavailabilityController {
   }
 
   @Get(":teamId/members/:memberId/unavailabilities")
-  async findMemberAll(
+  async findMember(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @Query() query: OffsetPaginationSearchParams,
     @ActiveUser() user: ActiveUserData
   ) {
     const { unavailabilities, total } =
-      await this.unavailabilityService.findMemberAll(
+      await this.unavailabilityService.findMember(
         user.sub,
         teamId,
         memberId,

@@ -74,8 +74,12 @@ const engineerItems = {
     { label: "Delivery log", href: "/engineer/delivery-log", icon: Send },
   ],
   orgItems: [
-    { label: "Team", href: "/engineer/team", icon: Users },
-    { label: "Time Off", href: "/engineer/time-off", icon: CalendarOff },
+    { label: "My Team", href: "/engineer/my-team", icon: Users },
+    {
+      label: "My Unavailabilities",
+      href: "/engineer/my-unavailabilities",
+      icon: CalendarOff,
+    },
   ],
   setupItems: [{ label: "Settings", href: "/settings", icon: Settings }],
 };

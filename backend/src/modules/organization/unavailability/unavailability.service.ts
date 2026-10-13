@@ -12,9 +12,14 @@ import {
   UpdateUnavailabilityDto,
 } from "./dto";
 import { PrismaService } from "@/common/prisma/prisma.service";
-import { Team, TeamMember } from "@/generated/prisma/client";
+import {
+  Team,
+  TeamMember,
+  UnavailabilityStatus,
+} from "@/generated/prisma/client";
 import { convertDateToUtc } from "@/common/utils/timezone";
 import { Cron, CronExpression } from "@nestjs/schedule";
+import { FILTER_FIELD } from "./constants";
 
 @Injectable()
 export class UnavailabilityService {
@@ -221,7 +226,14 @@ export class UnavailabilityService {
     }
   }
 
-  async findMemberAll(
+  // FILTER_FIELD is lowercase ("pending"), the Prisma enum is uppercase
+  private statusFilter(filterField: FILTER_FIELD) {
+    return filterField === FILTER_FIELD.ALL
+      ? {}
+      : { status: filterField.toUpperCase() as UnavailabilityStatus };
+  }
+
+  async findMember(
     requesterUserId: string,
     teamId: string,
     memberId: number,
@@ -233,11 +245,13 @@ export class UnavailabilityService {
       this.prisma.unavailability.findMany({
         where: {
           memberId,
+          ...this.statusFilter(query.filterField),
         },
         ...(query.sortField && {
-          orderBy: {
-            [query.sortField]: query.sortOrder,
-          },
+          orderBy: [
+            { [query.sortField]: query.sortOrder },
+            { id: query.sortOrder },
+          ],
         }),
         skip: query.offset,
         take: query.limit,
@@ -245,6 +259,7 @@ export class UnavailabilityService {
       this.prisma.unavailability.count({
         where: {
           memberId,
+          ...this.statusFilter(query.filterField),
         },
       }),
     ]);
