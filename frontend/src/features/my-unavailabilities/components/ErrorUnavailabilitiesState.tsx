@@ -9,7 +9,7 @@ export function ErrorUnavailabilitiesState({
   description?: string;
 }) {
   return (
-    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-56 mt-2 p-4 text-center space-y-4 flex flex-col justify-center items-center">
+    <div className="h-56 mt-2 p-4 text-center space-y-4 flex flex-col justify-center items-center">
       <TriangleAlertIcon className="size-8 text-muted-foreground" />
       <div className="space-y-1">
         <h3 className="font-medium text-sm">Unable to load unavailabilities</h3>

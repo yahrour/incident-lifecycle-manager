@@ -12,22 +12,18 @@ export function SortControls({
   setPage: React.Dispatch<React.SetStateAction<number>>;
 }) {
   return (
-    <div className="flex items-center gap-2">
-      <Button variant="outline">{sort.field}</Button>
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => {
-          onSortChange({
-            field: sort.field,
-            order:
-              sort.order === SortOrder.ASC ? SortOrder.DESC : SortOrder.ASC,
-          });
-          setPage(1);
-        }}
-      >
-        <ArrowUpDown size={16} />
-      </Button>
-    </div>
+    <Button
+      variant="outline"
+      onClick={() => {
+        onSortChange({
+          field: sort.field,
+          order: sort.order === SortOrder.ASC ? SortOrder.DESC : SortOrder.ASC,
+        });
+        setPage(1);
+      }}
+    >
+      {sort.order === SortOrder.DESC ? "Newest first" : "Oldest first"}
+      <ArrowUpDown size={16} />
+    </Button>
   );
 }

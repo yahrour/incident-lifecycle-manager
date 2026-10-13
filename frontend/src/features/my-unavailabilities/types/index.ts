@@ -3,7 +3,7 @@ export const SortOrder = {
   DESC: "desc",
 } as const;
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder];
-type SortField = "status" | "createdAt";
+type SortField = "createdAt";
 export type SortState = { field: SortField; order: SortOrder };
 
 export type Membership = {

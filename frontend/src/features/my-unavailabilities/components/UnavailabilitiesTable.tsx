@@ -14,7 +14,6 @@ import { formatDuration } from "@/utils/time";
 import { fetchMemberUnavailabilities } from "../api/unavailability";
 import type { Filter, Membership, SortState } from "../types";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
-import { useErrorToast } from "@/hooks/use-error-toast";
 import { NoUnavailabilitiesState } from "./NoUnavailabilitiesState";
 import { ErrorUnavailabilitiesState } from "./ErrorUnavailabilitiesState";
 
@@ -60,8 +59,6 @@ export function UnavailabilitiesTable({
       }),
     placeholderData: keepPreviousData,
   });
-
-  useErrorToast(isError, "Failed to fetch unavailabilities");
 
   if (isPending) {
     return <FullPageSpinner />;
