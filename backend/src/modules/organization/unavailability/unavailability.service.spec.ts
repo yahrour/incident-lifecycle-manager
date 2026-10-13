@@ -12,7 +12,7 @@ import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prism
 import { createMockPrisma, MockPrisma } from "../../../../test/prisma-mock";
 import { convertDateToUtc } from "@/common/utils/timezone";
 import { UnavailabilityService } from "./unavailability.service";
-import { SORT_FIELD } from "./constants";
+import { FILTER_FIELD, SORT_FIELD } from "./constants";
 import { SORT_ORDER } from "@/common/constants";
 
 const TEAM_ID = "teamId";
@@ -26,6 +26,7 @@ const makeTeam = () => ({
   ownerId: OWNER_ID,
   name: "frontend",
   description: "frontend team",
+  services: ["frontend-app"],
   rotationPeriodDays: 7,
   rotationStartDate: NOW_DATE,
   escalationTimeoutMinutes: 30,
@@ -54,8 +55,8 @@ const makeUnavailability = (overrides: Record<string, unknown> = {}) => ({
   endDate: new Date("2026-01-16T00:00:00.000Z"),
   reason: "vacation",
   confirmed: false,
+  status: "PENDING" as const,
   createdAt: NOW_DATE,
-  updatedAt: NOW_DATE,
   ...overrides,
 });
 
@@ -196,6 +197,7 @@ describe("UnavailabilityService", () => {
           offset: 0,
           sortField: SORT_FIELD.CREATED_AT,
           sortOrder: SORT_ORDER.ASC,
+          filterField: FILTER_FIELD.ALL,
         })
       ).rejects.toThrow(NotFoundException);
 
@@ -211,6 +213,7 @@ describe("UnavailabilityService", () => {
           offset: 0,
           sortField: SORT_FIELD.CREATED_AT,
           sortOrder: SORT_ORDER.ASC,
+          filterField: FILTER_FIELD.ALL,
         })
       ).rejects.toThrow(NotFoundException);
     });
@@ -222,6 +225,7 @@ describe("UnavailabilityService", () => {
       offset: 0,
       sortField: SORT_FIELD.CREATED_AT,
       sortOrder: SORT_ORDER.ASC,
+      filterField: FILTER_FIELD.ALL,
     };
 
     beforeEach(() => {
@@ -274,6 +278,7 @@ describe("UnavailabilityService", () => {
         offset: 20,
         limit: 10,
         sortOrder: SORT_ORDER.DESC,
+        filterField: FILTER_FIELD.ALL,
       });
 
       expect(prisma.unavailability.findMany).toHaveBeenCalledWith(
@@ -301,6 +306,7 @@ describe("UnavailabilityService", () => {
       offset: 0,
       sortField: SORT_FIELD.CREATED_AT,
       sortOrder: SORT_ORDER.ASC,
+      filterField: FILTER_FIELD.ALL,
     };
 
     it("should return pending unavailabilities with a total count", async () => {
@@ -338,12 +344,13 @@ describe("UnavailabilityService", () => {
     });
   });
 
-  describe("findMemberAll", () => {
+  describe("findMember", () => {
     const defaultQuery = {
       limit: 20,
       offset: 0,
       sortField: SORT_FIELD.CREATED_AT,
       sortOrder: SORT_ORDER.ASC,
+      filterField: FILTER_FIELD.ALL,
     };
 
     it("should return a member's unavailabilities with a total count", async () => {
@@ -354,7 +361,7 @@ describe("UnavailabilityService", () => {
       prisma.unavailability.findMany.mockResolvedValue(memberUnavailabilities);
       prisma.unavailability.count.mockResolvedValue(1);
 
-      const result = await service.findMemberAll(
+      const result = await service.findMember(
         OWNER_ID,
         TEAM_ID,
         MEMBER_ID,
@@ -373,6 +380,26 @@ describe("UnavailabilityService", () => {
           take: 20,
         })
       );
+    });
+
+    it("should filter by the uppercase Prisma status when a filter is given", async () => {
+      prisma.teamMember.findUnique.mockResolvedValue(makeTeamMember());
+      prisma.unavailability.findMany.mockResolvedValue([]);
+      prisma.unavailability.count.mockResolvedValue(0);
+
+      await service.findMember(OWNER_ID, TEAM_ID, MEMBER_ID, {
+        ...defaultQuery,
+        filterField: FILTER_FIELD.PENDING,
+      });
+
+      expect(prisma.unavailability.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { memberId: MEMBER_ID, status: "PENDING" },
+        })
+      );
+      expect(prisma.unavailability.count).toHaveBeenCalledWith({
+        where: { memberId: MEMBER_ID, status: "PENDING" },
+      });
     });
   });
 
