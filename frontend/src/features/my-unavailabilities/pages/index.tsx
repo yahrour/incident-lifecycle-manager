@@ -16,7 +16,7 @@ import { NoMembershipState } from "../components/NoMembershipState";
 
 export function MyUnavailabilities() {
   const [page, setPage] = useState(1);
-  const [filter, setFilter] = useState<Filter>("ALL");
+  const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<SortState>({
     field: "createdAt",
     order: "desc",
@@ -61,19 +61,19 @@ export function MyUnavailabilities() {
               }}
             >
               <TabsList>
-                <TabsTrigger value="ALL" className="cursor-pointer">
+                <TabsTrigger value="all" className="cursor-pointer">
                   All
                 </TabsTrigger>
-                <TabsTrigger value="APPROVED" className="cursor-pointer">
+                <TabsTrigger value="approved" className="cursor-pointer">
                   Approved
                 </TabsTrigger>
-                <TabsTrigger value="PENDING" className="cursor-pointer">
+                <TabsTrigger value="pending" className="cursor-pointer">
                   Pending
                 </TabsTrigger>
-                <TabsTrigger value="REJECTED" className="cursor-pointer">
+                <TabsTrigger value="rejected" className="cursor-pointer">
                   Rejected
                 </TabsTrigger>
-                <TabsTrigger value="EXPIRED" className="cursor-pointer">
+                <TabsTrigger value="expired" className="cursor-pointer">
                   Expired
                 </TabsTrigger>
               </TabsList>
