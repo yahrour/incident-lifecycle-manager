@@ -2,7 +2,6 @@ import type { Filter, SortState } from "../types";
 
 export const membershipKeys = {
   all: ["membership"],
-  detail: (userId: string) => [...membershipKeys.all, userId],
 };
 
 export const unavailabilityKeys = {
