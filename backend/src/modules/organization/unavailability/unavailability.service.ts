@@ -290,6 +290,19 @@ export class UnavailabilityService {
     await this.getAuthorizedMember(memberId, teamId, requesterUserId);
 
     try {
+      const unavailability = await this.prisma.unavailability.findUnique({
+        where: { id: unavailabilityId },
+      });
+      if (!unavailability) {
+        throw new NotFoundException("Unavailability doesn't exist");
+      }
+
+      if (unavailability.status !== "PENDING") {
+        throw new BadRequestException(
+          "Cannot remove non pending unavailability"
+        );
+      }
+
       await this.prisma.unavailability.delete({
         where: {
           id: unavailabilityId,

@@ -29,3 +29,17 @@ export async function fetchMemberUnavailabilities({
   );
   return response.data;
 }
+
+export async function removeUnavailability({
+  teamId,
+  memberId,
+  unavailabilityId,
+}: {
+  teamId: string;
+  memberId: number;
+  unavailabilityId: number;
+}) {
+  await apiClient.delete(
+    `/teams/${teamId}/members/${memberId}/unavailabilities/${unavailabilityId}`
+  );
+}
