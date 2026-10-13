@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { fetchTeamUnavailabilities } from "../../api/unavailabilities";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import type { Filter, SortState } from "../../types";
@@ -26,7 +26,11 @@ export function TeamUnavailabilitiesTable({
   const { data, isError, isPending } = useQuery({
     queryKey: teamKeys.unavailabilitiesList(teamId, page, sort, filter),
     queryFn: () => fetchTeamUnavailabilities(teamId, page, sort, filter),
-    placeholderData: keepPreviousData,
+    placeholderData: (previousData, previousQuery) => {
+      // WARN: the filter value should be last one in the unavailabilityKeys.detail array
+      const prevFilter = previousQuery?.queryKey.at(-1) as Filter;
+      return prevFilter === filter ? previousData : undefined;
+    },
   });
 
   useErrorToast(isError, "failed to load unavailabilities");
