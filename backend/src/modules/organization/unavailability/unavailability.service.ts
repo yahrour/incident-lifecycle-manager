@@ -97,6 +97,15 @@ export class UnavailabilityService {
     teamMemberId: number,
     createUnavailabilityDto: CreateUnavailabilityDto
   ) {
+    const now = new Date();
+    if (
+      convertDateToUtc(
+        createUnavailabilityDto.startDate,
+        createUnavailabilityDto.timezone
+      ) < now
+    ) {
+      throw new BadRequestException("Start date can't be in the past");
+    }
     if (createUnavailabilityDto.startDate > createUnavailabilityDto.endDate) {
       throw new BadRequestException("Start date must be before end date");
     }
