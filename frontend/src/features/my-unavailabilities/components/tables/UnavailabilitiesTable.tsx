@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import type { UnavailabilityStatus } from "@/features/organization/shared/types";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { TablePagination } from "@/features/organization/shared/components/TablePagination";
 import { formatDuration } from "@/utils/time";
 import { fetchMemberUnavailabilities } from "../../api/unavailability";
@@ -57,7 +57,11 @@ export function UnavailabilitiesTable({
         page,
         sort,
       }),
-    placeholderData: keepPreviousData,
+    placeholderData: (previousData, previousQuery) => {
+      // WARN: the filter value should be last one in the unavailabilityKeys.detail array
+      const prevFilter = previousQuery?.queryKey.at(-1) as Filter;
+      return prevFilter === filter ? previousData : undefined;
+    },
   });
 
   if (isPending) {
