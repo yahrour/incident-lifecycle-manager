@@ -247,33 +247,11 @@ export class UnavailabilityService {
           memberId,
           ...this.statusFilter(query.filterField),
         },
-        include: {
-          teamMember: {
-            select: {
-              id: true,
-              team: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-              user: {
-                select: {
-                  id: true,
-                  firstName: true,
-                  lastName: true,
-                  email: true,
-                  specialty: true,
-                  role: true,
-                },
-              },
-            },
-          },
-        },
         ...(query.sortField && {
-          orderBy: {
-            [query.sortField]: query.sortOrder,
-          },
+          orderBy: [
+            { [query.sortField]: query.sortOrder },
+            { id: query.sortOrder },
+          ],
         }),
         skip: query.offset,
         take: query.limit,
