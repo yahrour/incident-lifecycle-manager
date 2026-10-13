@@ -6,11 +6,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
-import {
-  CreateUnavailabilityDto,
-  OffsetPaginationSearchParams,
-  UpdateUnavailabilityDto,
-} from "./dto";
+import { CreateUnavailabilityDto, OffsetPaginationSearchParams } from "./dto";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import {
   Team,
@@ -24,6 +20,13 @@ import { FILTER_FIELD } from "./constants";
 @Injectable()
 export class UnavailabilityService {
   constructor(private prisma: PrismaService) {}
+
+  // FILTER_FIELD values are lowercase, the Prisma enum is uppercase
+  private statusFilter(filterField: FILTER_FIELD) {
+    return filterField === FILTER_FIELD.ALL
+      ? {}
+      : { status: filterField.toUpperCase() as UnavailabilityStatus };
+  }
 
   private async verifyTeamOwnership(teamId: string, ownerId: string) {
     const team = await this.prisma.team.findUnique({
@@ -130,109 +133,6 @@ export class UnavailabilityService {
     }
   }
 
-  async update(
-    requesterUserId: string,
-    teamId: string,
-    memberId: number,
-    unavailabilityId: number,
-    updateUnavailabilityDto: UpdateUnavailabilityDto
-  ) {
-    await this.getSelfMember(memberId, teamId, requesterUserId);
-
-    if (
-      updateUnavailabilityDto.startDate &&
-      updateUnavailabilityDto.endDate &&
-      updateUnavailabilityDto.startDate > updateUnavailabilityDto.endDate
-    ) {
-      throw new BadRequestException(
-        "end date should be greater than start date"
-      );
-    }
-
-    // convert to UTC
-    if (updateUnavailabilityDto.startDate) {
-      updateUnavailabilityDto.startDate = convertDateToUtc(
-        updateUnavailabilityDto.startDate,
-        updateUnavailabilityDto.timezone
-      );
-    }
-    if (updateUnavailabilityDto.endDate) {
-      updateUnavailabilityDto.endDate = convertDateToUtc(
-        updateUnavailabilityDto.endDate,
-        updateUnavailabilityDto.timezone,
-        true
-      );
-    }
-
-    try {
-      const currentUnavailability = await this.prisma.unavailability.findUnique(
-        {
-          where: { id: unavailabilityId, memberId },
-        }
-      );
-
-      if (!currentUnavailability) {
-        throw new NotFoundException("Unavailability doesn't exist");
-      }
-
-      if (currentUnavailability.status === "EXPIRED") {
-        throw new BadRequestException(
-          "Cannot update an expired unavailability"
-        );
-      }
-
-      // if one of the dates is present and the other one is missing
-      if (
-        (updateUnavailabilityDto.startDate &&
-          !updateUnavailabilityDto.endDate) ||
-        (!updateUnavailabilityDto.startDate && updateUnavailabilityDto.endDate)
-      ) {
-        if (updateUnavailabilityDto.startDate) {
-          if (
-            updateUnavailabilityDto.startDate > currentUnavailability.endDate
-          ) {
-            throw new BadRequestException("Start date must be before end date");
-          }
-        } else if (updateUnavailabilityDto.endDate) {
-          if (
-            updateUnavailabilityDto.endDate < currentUnavailability.startDate
-          ) {
-            throw new BadRequestException("End date must be after start date");
-          }
-        }
-      }
-
-      return await this.prisma.unavailability.update({
-        where: { id: unavailabilityId, memberId },
-        data: {
-          startDate: updateUnavailabilityDto.startDate,
-          endDate: updateUnavailabilityDto.endDate,
-          reason: updateUnavailabilityDto.reason,
-          confirmed: false,
-          status: "PENDING",
-        },
-      });
-    } catch (error) {
-      if (error instanceof PrismaClientKnownRequestError) {
-        if (error.code === "P2025") {
-          throw new NotFoundException("Unavailability doesn't exist");
-        }
-        if (error.code === "P2002") {
-          throw new ConflictException("Unavailability window already exists");
-        }
-      }
-
-      throw error;
-    }
-  }
-
-  // FILTER_FIELD is lowercase ("pending"), the Prisma enum is uppercase
-  private statusFilter(filterField: FILTER_FIELD) {
-    return filterField === FILTER_FIELD.ALL
-      ? {}
-      : { status: filterField.toUpperCase() as UnavailabilityStatus };
-  }
-
   async findMember(
     requesterUserId: string,
     teamId: string,
@@ -281,7 +181,7 @@ export class UnavailabilityService {
     });
   }
 
-  async removeMemberOne(
+  async removeMember(
     requesterUserId: string,
     teamId: string,
     memberId: number,
@@ -308,7 +208,7 @@ export class UnavailabilityService {
     }
   }
 
-  async findTeamAll(
+  async findTeam(
     requesterId: string,
     teamId: string,
     query: OffsetPaginationSearchParams
@@ -322,6 +222,7 @@ export class UnavailabilityService {
             teamMember: {
               teamId,
               team: { ownerId: requesterId },
+              ...this.statusFilter(query.filterField),
             },
           },
           include: {
@@ -350,9 +251,10 @@ export class UnavailabilityService {
           skip: query.offset,
           take: query.limit,
           ...(query.sortField && {
-            orderBy: {
-              [query.sortField]: query.sortOrder,
-            },
+            orderBy: [
+              { [query.sortField]: query.sortOrder },
+              { id: query.sortOrder },
+            ],
           }),
         }),
         this.prisma.unavailability.count({
@@ -360,6 +262,7 @@ export class UnavailabilityService {
             teamMember: {
               teamId,
               team: { ownerId: requesterId },
+              ...this.statusFilter(query.filterField),
             },
           },
         }),
@@ -450,6 +353,7 @@ export class UnavailabilityService {
             teamMember: {
               team: { ownerId: requesterId },
             },
+            ...this.statusFilter(query.filterField),
           },
           include: {
             teamMember: {
@@ -487,6 +391,7 @@ export class UnavailabilityService {
             teamMember: {
               team: { ownerId: requesterId },
             },
+            ...this.statusFilter(query.filterField),
           },
         }),
       ]);

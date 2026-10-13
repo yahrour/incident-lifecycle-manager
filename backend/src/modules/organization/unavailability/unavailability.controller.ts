@@ -9,11 +9,10 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
-  Patch,
   Query,
 } from "@nestjs/common";
 import { UnavailabilityService } from "./unavailability.service";
-import { CreateUnavailabilityDto, UpdateUnavailabilityDto } from "./dto";
+import { CreateUnavailabilityDto } from "./dto";
 import { Roles } from "@/common/decorators/roles.decorator";
 import { Role } from "@/generated/prisma/enums";
 import { ActiveUser } from "@/common/decorators/active-user.decorator";
@@ -39,18 +38,8 @@ export class UnavailabilityController {
     return apiResponse(unavailabilities, { total });
   }
 
-  @Get("unavailabilities/pending")
-  @Roles(Role.SRE)
-  async findPending(
-    @Query() query: OffsetPaginationSearchParams,
-    @ActiveUser() user: ActiveUserData
-  ) {
-    const { unavailabilities, total } =
-      await this.unavailabilityService.findPending(user.sub, query);
-    return apiResponse(unavailabilities, { total });
-  }
-
   @Post(":teamId/members/:memberId/unavailabilities")
+  @Roles(Role.ENGINEER)
   async create(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
@@ -62,24 +51,6 @@ export class UnavailabilityController {
       teamId,
       memberId,
       createUnavailabilityDto
-    );
-    return apiResponse(result);
-  }
-
-  @Patch(":teamId/members/:memberId/unavailabilities/:unavailabilityId")
-  async update(
-    @Param("teamId", ParseUUIDPipe) teamId: string,
-    @Param("memberId", ParseIntPipe) memberId: number,
-    @Param("unavailabilityId", ParseIntPipe) unavailabilityId: number,
-    @ActiveUser() user: ActiveUserData,
-    @Body() updateUnavailabilityDto: UpdateUnavailabilityDto
-  ) {
-    const result = await this.unavailabilityService.update(
-      user.sub,
-      teamId,
-      memberId,
-      unavailabilityId,
-      updateUnavailabilityDto
     );
     return apiResponse(result);
   }
@@ -101,29 +72,15 @@ export class UnavailabilityController {
     return apiResponse(unavailabilities, { total });
   }
 
-  @Delete(":teamId/members/:memberId/unavailabilities")
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async removeMemberAll(
-    @Param("teamId", ParseUUIDPipe) teamId: string,
-    @Param("memberId", ParseIntPipe) memberId: number,
-    @ActiveUser() user: ActiveUserData
-  ) {
-    await this.unavailabilityService.removeMemberAll(
-      user.sub,
-      teamId,
-      memberId
-    );
-  }
-
   @Delete(":teamId/members/:memberId/unavailabilities/:unavailabilityId")
   @HttpCode(HttpStatus.NO_CONTENT)
-  async removeMemberOne(
+  async removeMember(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @Param("unavailabilityId", ParseIntPipe) unavailabilityId: number,
     @ActiveUser() user: ActiveUserData
   ) {
-    await this.unavailabilityService.removeMemberOne(
+    await this.unavailabilityService.removeMember(
       user.sub,
       teamId,
       memberId,
@@ -133,25 +90,13 @@ export class UnavailabilityController {
 
   @Get(":teamId/unavailabilities")
   @Roles(Role.SRE)
-  async findTeamAll(
+  async findTeam(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Query() query: OffsetPaginationSearchParams,
     @ActiveUser() user: ActiveUserData
   ) {
     const { unavailabilities, total } =
-      await this.unavailabilityService.findTeamAll(user.sub, teamId, query);
-    return apiResponse(unavailabilities, { total });
-  }
-
-  @Get(":teamId/unavailabilities/pending")
-  @Roles(Role.SRE)
-  async findTeamPending(
-    @Param("teamId", ParseUUIDPipe) teamId: string,
-    @Query() query: OffsetPaginationSearchParams,
-    @ActiveUser() user: ActiveUserData
-  ) {
-    const { unavailabilities, total } =
-      await this.unavailabilityService.findTeamPending(user.sub, teamId, query);
+      await this.unavailabilityService.findTeam(user.sub, teamId, query);
     return apiResponse(unavailabilities, { total });
   }
 
