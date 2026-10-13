@@ -6,14 +6,14 @@ import {
 } from "@/components/ui/breadcrumb";
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UnavailabilitiesTable } from "../components/UnavailabilitiesTable";
+import { UnavailabilitiesTable } from "../components/tables/UnavailabilitiesTable";
 import { SortControls } from "../components/SortControls";
 import type { Filter, SortState } from "../types";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUserMembership } from "../api/membership";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
-import { NoMembershipState } from "../components/NoMembershipState";
-import { ErrorUnavailabilitiesState } from "../components/ErrorUnavailabilitiesState";
+import { NoMembershipState } from "../components/empty-states/NoMembershipState";
+import { ErrorUnavailabilitiesState } from "../components/error-states/ErrorUnavailabilitiesState";
 import { membershipKeys } from "../constants/query.keys";
 import { useAuth } from "@/features/auth";
 

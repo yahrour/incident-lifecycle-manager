@@ -1,5 +1,5 @@
 import { CalendarOffIcon } from "lucide-react";
-import type { Filter } from "../types";
+import type { Filter } from "../../types";
 
 export function NoUnavailabilitiesState({ filter }: { filter: Filter }) {
   const isFiltered = filter !== "all";

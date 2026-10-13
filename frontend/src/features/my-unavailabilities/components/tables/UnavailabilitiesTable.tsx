@@ -11,12 +11,12 @@ import type { UnavailabilityStatus } from "@/features/organization/shared/types"
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { TablePagination } from "@/features/organization/shared/components/TablePagination";
 import { formatDuration } from "@/utils/time";
-import { fetchMemberUnavailabilities } from "../api/unavailability";
-import type { Filter, Membership, SortState } from "../types";
+import { fetchMemberUnavailabilities } from "../../api/unavailability";
+import type { Filter, Membership, SortState } from "../../types";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
-import { NoUnavailabilitiesState } from "./NoUnavailabilitiesState";
-import { ErrorUnavailabilitiesState } from "./ErrorUnavailabilitiesState";
-import { unavailabilityKeys } from "../constants/query.keys";
+import { NoUnavailabilitiesState } from "../empty-states/NoUnavailabilitiesState";
+import { ErrorUnavailabilitiesState } from "../error-states/ErrorUnavailabilitiesState";
+import { unavailabilityKeys } from "../../constants/query.keys";
 
 const statusVariant: Record<
   UnavailabilityStatus,
