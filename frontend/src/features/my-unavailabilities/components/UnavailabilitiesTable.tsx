@@ -66,14 +66,14 @@ export function UnavailabilitiesTable({
   }
 
   if (!data) {
-    return <NoUnavailabilitiesState />;
+    return <NoUnavailabilitiesState filter={filter} />;
   }
 
   const unavailabilities = data.data;
   const totalUnavailabilities = data.meta?.total ?? 0;
 
   if (unavailabilities.length === 0) {
-    return <NoUnavailabilitiesState />;
+    return <NoUnavailabilitiesState filter={filter} />;
   }
 
   return (
