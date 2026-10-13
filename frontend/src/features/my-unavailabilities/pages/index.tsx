@@ -13,6 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchUserMembership } from "../api/membership";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { NoMembershipState } from "../components/NoMembershipState";
+import { ErrorUnavailabilitiesState } from "../components/ErrorUnavailabilitiesState";
 
 export function MyUnavailabilities() {
   const [page, setPage] = useState(1);
@@ -22,7 +23,7 @@ export function MyUnavailabilities() {
     order: "desc",
   });
 
-  const { data, isPending, isError } = useQuery({
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["membership"],
     queryFn: fetchUserMembership,
   });
@@ -32,7 +33,12 @@ export function MyUnavailabilities() {
   }
 
   if (isError) {
-    return <div>failed to fetch, click here try again </div>;
+    return (
+      <ErrorUnavailabilitiesState
+        onRetry={() => void refetch()}
+        description="We couldn't load your team. Please try again."
+      />
+    );
   }
 
   const membership = data.data;
