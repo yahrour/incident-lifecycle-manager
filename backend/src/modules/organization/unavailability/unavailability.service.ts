@@ -101,7 +101,8 @@ export class UnavailabilityService {
     if (
       convertDateToUtc(
         createUnavailabilityDto.startDate,
-        createUnavailabilityDto.timezone
+        createUnavailabilityDto.timezone,
+        true
       ) < now
     ) {
       throw new BadRequestException("Start date can't be in the past");
