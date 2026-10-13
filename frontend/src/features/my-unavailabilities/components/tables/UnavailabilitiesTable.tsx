@@ -7,12 +7,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import type { UnavailabilityStatus } from "@/features/organization/shared/types";
 import { useQuery } from "@tanstack/react-query";
 import { TablePagination } from "@/features/organization/shared/components/TablePagination";
 import { formatDuration } from "@/utils/time";
 import { fetchMemberUnavailabilities } from "../../api/unavailability";
-import type { Filter, Membership, SortState } from "../../types";
+import type {
+  Filter,
+  Membership,
+  SortState,
+  UnavailabilityStatus,
+} from "../../types";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { NoUnavailabilitiesState } from "../empty-states/NoUnavailabilitiesState";
 import { ErrorUnavailabilitiesState } from "../error-states/ErrorUnavailabilitiesState";
