@@ -33,7 +33,6 @@ export class OnCallService {
               where: {
                 startDate: { lte: now },
                 endDate: { gte: now },
-                confirmed: true,
                 status: "APPROVED",
               },
             },
@@ -115,7 +114,6 @@ export class OnCallService {
                   where: {
                     startDate: { lte: now },
                     endDate: { gte: now },
-                    confirmed: true,
                     status: "APPROVED",
                   },
                 },
@@ -232,7 +230,6 @@ export class OnCallService {
             unavailabilities: {
               where: {
                 endDate: { gte: now },
-                confirmed: true,
                 status: "APPROVED",
               },
             },

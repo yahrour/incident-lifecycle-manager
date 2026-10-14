@@ -1,7 +1,7 @@
 jest.mock("src/common/prisma/prisma.service", () => ({
   PrismaService: class {},
 }));
-jest.mock("src/modules/oncall/oncall.service", () => ({
+jest.mock("src/modules/on-call/on-call.service", () => ({
   OnCallService: class {},
 }));
 
@@ -706,7 +706,7 @@ describe("IncidentsService", () => {
         where: { status: "open", escalatedAt: null },
       })
     );
-    expect(getCurrentOnCall).toHaveBeenCalledWith("team-id", "owner-id");
+    expect(getCurrentOnCall).toHaveBeenCalledWith("owner-id", "team-id");
     expect(updateMany).toHaveBeenCalledTimes(2);
     expect(updateMany).toHaveBeenCalledWith({
       where: { id: "overdue", status: "open", assignedToId: "primary-id" },

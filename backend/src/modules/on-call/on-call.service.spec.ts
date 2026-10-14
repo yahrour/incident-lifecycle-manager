@@ -110,7 +110,7 @@ describe("OnCallService", () => {
               {
                 id: 1,
                 createdAt: new Date("2026-07-20T10:00:00Z"),
-                confirmed: true,
+                status: "APPROVED",
                 memberId: 1,
                 startDate: new Date("2026-08-10T00:00:00Z"),
                 endDate: new Date("2026-08-12T23:59:59Z"),
@@ -261,7 +261,7 @@ describe("OnCallService", () => {
               {
                 id: 1,
                 createdAt: new Date("2026-07-20T10:00:00Z"),
-                confirmed: true,
+                status: "APPROVED",
                 memberId: 1,
                 startDate: new Date("2026-08-10T00:00:00Z"),
                 endDate: new Date("2026-08-12T23:59:59Z"),

@@ -49,7 +49,6 @@ model Unavailability {
   endDate    DateTime   @map("end_date") @db.Timestamptz
   reason     String?    @db.VarChar(255)
   createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz
-  confirmed  Boolean    @default(false)
   status    UnavailabilityStatus @default(PENDING)
 
   @@unique([memberId, startDate, endDate], name: "unique_unavailability_window")

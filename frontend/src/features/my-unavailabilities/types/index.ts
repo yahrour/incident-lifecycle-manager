@@ -25,6 +25,5 @@ export type Unavailability = {
   endDate: Date;
   reason: string | null;
   createdAt: Date;
-  confirmed: boolean;
   status: UnavailabilityStatus;
 };

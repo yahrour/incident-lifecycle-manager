@@ -64,7 +64,7 @@ export class OrganizationService {
     const totalUnavailabilities = await this.prisma.unavailability.count({
       where: {
         teamMember: { team: { ownerId } },
-        confirmed: true,
+        status: "APPROVED",
       },
     });
 
@@ -73,7 +73,7 @@ export class OrganizationService {
         teamMember: { team: { ownerId } },
         startDate: { lte: now },
         endDate: { gte: now },
-        confirmed: true,
+        status: "APPROVED",
       },
     });
 

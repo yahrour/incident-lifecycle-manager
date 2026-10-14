@@ -372,7 +372,6 @@ export class UnavailabilityService {
         memberId,
       },
       data: {
-        confirmed: true,
         status: "APPROVED",
       },
     });
@@ -420,7 +419,6 @@ export class UnavailabilityService {
         memberId,
       },
       data: {
-        confirmed: false,
         status: "REJECTED",
       },
     });
