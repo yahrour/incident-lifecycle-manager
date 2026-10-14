@@ -43,6 +43,8 @@ import { requestUnavailability } from "../../api/unavailability";
 import { useMutation } from "@tanstack/react-query";
 import { Textarea } from "@/components/ui/textarea";
 import { unavailabilityKeys } from "../../constants";
+import { toZonedTime } from 'date-fns-tz';
+
 
 type RequestUnavailabilitySchema = z.input<typeof requestUnavailabilitySchema>;
 const TIMEZONES = Intl.supportedValuesOf("timeZone");
@@ -156,7 +158,7 @@ export function RequestUnavailabilityDialog({
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
-                          disabled={{ before: new Date() }}
+                          disabled={{ before: toZonedTime(new Date(), form.watch("timezone")) }}
                         />
                       </PopoverContent>
                     </Popover>
@@ -194,7 +196,7 @@ export function RequestUnavailabilityDialog({
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
-                          disabled={{ before: form.watch("startDate") }}
+                          disabled={{ before: toZonedTime(form.watch("startDate"), form.watch("timezone")) }}
                         />
                       </PopoverContent>
                     </Popover>
