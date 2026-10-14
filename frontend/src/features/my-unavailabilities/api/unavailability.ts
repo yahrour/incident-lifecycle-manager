@@ -2,6 +2,9 @@ import { apiClient } from "@/lib/apiClient";
 import type { ApiResponse } from "@/types";
 import type { SortState, Unavailability } from "../types";
 import { DEFAULT_LIMIT } from "../constants";
+import z from "zod";
+import type { requestUnavailabilitySchema } from "../schemas";
+import { format } from "date-fns";
 
 export async function fetchMemberUnavailabilities({
   filter,
@@ -41,5 +44,22 @@ export async function removeUnavailability({
 }) {
   await apiClient.delete(
     `/teams/${teamId}/members/${memberId}/unavailabilities/${unavailabilityId}`
+  );
+}
+
+type RequestUnavailabilitySchema = z.input<typeof requestUnavailabilitySchema>;
+export async function requestUnavailability(
+  data: RequestUnavailabilitySchema,
+  teamId: string,
+  memberId: number
+) {
+  const body = {
+    ...data,
+    startDate: format(data.startDate, "yyyy-MM-dd"),
+    endDate: format(data.endDate, "yyyy-MM-dd"),
+  };
+  await apiClient.post(
+    `/teams/${teamId}/members/${memberId}/unavailabilities`,
+    body
   );
 }
