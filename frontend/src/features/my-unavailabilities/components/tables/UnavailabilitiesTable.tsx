@@ -91,7 +91,7 @@ export function UnavailabilitiesTable({
     return <NoUnavailabilitiesState filter={filter} />;
   }
 
-  if (unavailabilities.length === 0) {
+  if (!unavailabilities || unavailabilities.length === 0) {
     return <NoUnavailabilitiesState filter={filter} />;
   }
 

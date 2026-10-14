@@ -6,13 +6,13 @@ import {
 } from "@/components/ui/breadcrumb";
 import { SortControls } from "../../components/SortControls";
 import { useState } from "react";
-import type { SortState } from "../../types";
+import type { Filter, SortState } from "../../types";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AllUnavailabilitiesTable } from "../../components/tables/AllUnavailabilitiesTable";
 
 export function AllUnavailabilities() {
   const [page, setPage] = useState(1);
-  const [filter, setFilter] = useState<"all" | "pending">("all");
+  const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<SortState>({
     field: "createdAt",
     order: "desc",
@@ -46,19 +46,27 @@ export function AllUnavailabilities() {
             }}
           >
             <TabsList>
-              <TabsTrigger value="all" className="cursor-pointer">
-                All
-              </TabsTrigger>
-              <TabsTrigger value="pending" className="cursor-pointer">
-                Pending
-              </TabsTrigger>
-            </TabsList>
+                <TabsTrigger value="all" className="cursor-pointer">
+                  All
+                </TabsTrigger>
+                <TabsTrigger value="approved" className="cursor-pointer">
+                  Approved
+                </TabsTrigger>
+                <TabsTrigger value="pending" className="cursor-pointer">
+                  Pending
+                </TabsTrigger>
+                <TabsTrigger value="rejected" className="cursor-pointer">
+                  Rejected
+                </TabsTrigger>
+                <TabsTrigger value="expired" className="cursor-pointer">
+                  Expired
+                </TabsTrigger>
+              </TabsList>
           </Tabs>
           <SortControls
             sort={sort}
             onSortChange={setSort}
             setPage={setPage}
-            filter={filter}
           />
         </div>
         <AllUnavailabilitiesTable
