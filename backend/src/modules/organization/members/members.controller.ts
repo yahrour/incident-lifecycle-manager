@@ -24,21 +24,6 @@ import { apiResponse } from "@/common/utils/api-response";
 export class MembersController {
   constructor(private readonly membersService: MembersService) {}
 
-  @Get(":id/members")
-  @Roles(Role.SRE)
-  async findAll(
-    @Param("id", ParseUUIDPipe) id: string,
-    @Query() query: OffsetPaginationSearchParams,
-    @ActiveUser() user: ActiveUserData
-  ) {
-    const { members, total } = await this.membersService.findAll(
-      id,
-      user.sub,
-      query
-    );
-    return apiResponse(members, { total });
-  }
-
   @Get("members")
   @Roles(Role.SRE)
   async findAllForOwner(
@@ -52,25 +37,29 @@ export class MembersController {
     return apiResponse(members, { total });
   }
 
-  @Get(":id/members/:memberId")
+  @Get(":teamId/members")
   @Roles(Role.SRE)
-  async findOne(
-    @Param("id", ParseUUIDPipe) id: string,
-    @Param("memberId", ParseIntPipe) memberId: number,
+  async findByTeam(
+    @Param("teamId", ParseUUIDPipe) teamId: string,
+    @Query() query: OffsetPaginationSearchParams,
     @ActiveUser() user: ActiveUserData
   ) {
-    const result = await this.membersService.findOne(id, memberId, user.sub);
-    return apiResponse(result);
+    const { members, total } = await this.membersService.findByTeam(
+      user.sub,
+      teamId,
+      query
+    );
+    return apiResponse(members, { total });
   }
 
-  @Delete(":id/members/:memberId")
+  @Delete(":teamId/members/:memberId")
   @Roles(Role.SRE)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(
-    @Param("id", ParseUUIDPipe) id: string,
+  async removeFromTeam(
+    @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @ActiveUser() user: ActiveUserData
   ) {
-    await this.membersService.remove(id, memberId, user.sub);
+    await this.membersService.removeFromTeam(user.sub, teamId, memberId);
   }
 }

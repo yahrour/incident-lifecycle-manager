@@ -114,7 +114,7 @@ export class InviteService {
           },
           tx
         );
-        await this.membersService.add(tx, invite.teamId, newUser.id);
+        await this.membersService.addToTeam(tx, invite.teamId, newUser.id);
       });
       return {
         success: true,
@@ -144,7 +144,7 @@ export class InviteService {
     if (user.role !== Role.ENGINEER) {
       throw new ForbiddenException("Only engineers can join a team.");
     }
-    const isMember = await this.membersService.hasTeam(user.id);
+    const isMember = await this.membersService.isInTeam(user.id);
     if (isMember) {
       throw new ConflictException(
         "You're already in a team. Leave it before joining a new one."
@@ -161,7 +161,7 @@ export class InviteService {
             "This invite link has already been used."
           );
         }
-        await this.membersService.add(tx, invite.teamId, activeUser.sub);
+        await this.membersService.addToTeam(tx, invite.teamId, activeUser.sub);
       });
     } catch (error) {
       if (error instanceof HttpException) throw error;
