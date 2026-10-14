@@ -97,6 +97,8 @@ export class UnavailabilityService {
     teamMemberId: number,
     createUnavailabilityDto: CreateUnavailabilityDto
   ) {
+    await this.getSelfMember(teamMemberId, teamId, requesterUserId);
+    
     const now = new Date();
     if (
       convertDateToUtc(
@@ -110,8 +112,6 @@ export class UnavailabilityService {
     if (createUnavailabilityDto.startDate > createUnavailabilityDto.endDate) {
       throw new BadRequestException("Start date must be before end date");
     }
-
-    await this.getSelfMember(teamMemberId, teamId, requesterUserId);
 
     try {
       return await this.prisma.unavailability.create({
