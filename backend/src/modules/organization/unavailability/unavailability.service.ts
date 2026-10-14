@@ -97,11 +97,21 @@ export class UnavailabilityService {
     teamMemberId: number,
     createUnavailabilityDto: CreateUnavailabilityDto
   ) {
+    await this.getSelfMember(teamMemberId, teamId, requesterUserId);
+    
+    const now = new Date();
+    if (
+      convertDateToUtc(
+        createUnavailabilityDto.startDate,
+        createUnavailabilityDto.timezone,
+        true
+      ) < now
+    ) {
+      throw new BadRequestException("Start date can't be in the past");
+    }
     if (createUnavailabilityDto.startDate > createUnavailabilityDto.endDate) {
       throw new BadRequestException("Start date must be before end date");
     }
-
-    await this.getSelfMember(teamMemberId, teamId, requesterUserId);
 
     try {
       return await this.prisma.unavailability.create({
@@ -289,22 +299,17 @@ export class UnavailabilityService {
   ) {
     await this.getAuthorizedMember(memberId, teamId, requesterUserId);
 
-    try {
-      await this.prisma.unavailability.delete({
-        where: {
-          id: unavailabilityId,
-          memberId,
-        },
-      });
-    } catch (error) {
-      if (
-        error instanceof PrismaClientKnownRequestError &&
-        error.code === "P2025"
-      ) {
-        throw new NotFoundException("Unavailability doesn't exist");
-      }
-
-      throw error;
+    const result = await this.prisma.unavailability.deleteMany({
+      where: {
+        id: unavailabilityId,
+        memberId,
+        status: "PENDING",
+      },
+    });
+    if (result.count === 0) {
+      throw new NotFoundException(
+        "Unavailability doesn't exist or isn't pending"
+      );
     }
   }
 

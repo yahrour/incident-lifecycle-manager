@@ -14,7 +14,8 @@ import { fetchUserMembership } from "../api/membership";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { NoMembershipState } from "../components/empty-states/NoMembershipState";
 import { ErrorUnavailabilitiesState } from "../components/error-states/ErrorUnavailabilitiesState";
-import { membershipKeys } from "../constants/query.keys";
+import { RequestUnavailabilityDialog } from "../components/dialogs/RequestUnavailabilityDialog";
+import { membershipKeys } from "../constants";
 
 export function MyUnavailabilities() {
   const [page, setPage] = useState(1);
@@ -85,11 +86,17 @@ export function MyUnavailabilities() {
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-            <SortControls
-              sort={sort}
-              onSortChange={setSort}
-              setPage={setPage}
-            />
+            <div className="flex items-center gap-4">
+              <SortControls
+                sort={sort}
+                onSortChange={setSort}
+                setPage={setPage}
+              />
+              <RequestUnavailabilityDialog
+                teamId={membership.team.id}
+                memberId={membership.memberId}
+              />
+            </div>
           </div>
           <UnavailabilitiesTable
             membership={membership}
