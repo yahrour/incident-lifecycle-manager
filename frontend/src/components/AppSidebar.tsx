@@ -45,6 +45,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { FullPageSpinner } from "@/components/FullPageSpinner";
 
 const managerItems = {
   respondItems: [
@@ -90,7 +91,7 @@ export function AppSidebar() {
   const { mutate: logout, isPending } = useLogout();
 
   if (isLoading) {
-    return <p>Loading...</p>;
+    return <FullPageSpinner />;
   } else if (!user) {
     return <p>Unauthorized</p>;
   }
