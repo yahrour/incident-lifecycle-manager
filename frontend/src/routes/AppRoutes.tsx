@@ -25,7 +25,6 @@ export default function AppRoutes() {
   return (
     <Routes>
       {/* Public — must stay outside RequireAuth */}
-      <Route path="/unauthorized" element={<div>Not allowed</div>} />
       <Route path="/invite" element={<InvitePage />} />
       <Route element={<GuestOnly />}>
         <Route path="/login" element={<SignIn />} />

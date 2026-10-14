@@ -24,8 +24,9 @@ import {
   Home,
   ChevronDown,
   LogOut,
+  LogIn,
 } from "lucide-react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, Navigate } from "react-router";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth/context/AuthContext";
 import { Role } from "@/types";
@@ -93,7 +94,7 @@ export function AppSidebar() {
   if (isLoading) {
     return <FullPageSpinner />;
   } else if (!user) {
-    return <p>Unauthorized</p>;
+    return <Navigate to={"/login"} replace />;
   }
 
   const items = user.role === Role.SRE ? managerItems : engineerItems;

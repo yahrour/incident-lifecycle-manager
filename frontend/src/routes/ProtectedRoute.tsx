@@ -4,8 +4,7 @@ import type { Role } from "@/types";
 
 export function ProtectedRoute({ allowedRole }: { allowedRole: Role }) {
   const { user } = useAuth();
-  if (user?.role !== allowedRole)
-    return <Navigate to="/unauthorized" replace />;
+  if (user?.role !== allowedRole) return <Navigate to="/login" replace />;
 
   return <Outlet />;
 }

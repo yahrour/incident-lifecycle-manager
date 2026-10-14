@@ -16,6 +16,6 @@ export function HomeRedirect() {
       return <Navigate to="/engineer/my-shift" replace />;
 
     default:
-      return <Navigate to="/unauthorized" replace />;
+      return <Navigate to="/login" replace />;
   }
 }
