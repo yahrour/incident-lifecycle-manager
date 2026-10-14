@@ -73,7 +73,6 @@ export function RequestUnavailabilityDialog({
 
   const onSubmit = (data: RequestUnavailabilitySchema) => {
     setErrors([]);
-    console.log("data: ", data);
     mutation.mutate(data, {
       onSuccess: () => {
         void queryClient.invalidateQueries({
