@@ -299,38 +299,17 @@ export class UnavailabilityService {
   ) {
     await this.getAuthorizedMember(memberId, teamId, requesterUserId);
 
-    try {
-      const unavailability = await this.prisma.unavailability.findUnique({
-        where: {
-          id: unavailabilityId,
-          memberId,
-        },
-      });
-      if (!unavailability) {
-        throw new NotFoundException("Unavailability doesn't exist");
-      }
-
-      if (unavailability.status !== "PENDING") {
-        throw new BadRequestException(
-          "Cannot remove non pending unavailability"
-        );
-      }
-
-      await this.prisma.unavailability.delete({
-        where: {
-          id: unavailabilityId,
-          memberId,
-        },
-      });
-    } catch (error) {
-      if (
-        error instanceof PrismaClientKnownRequestError &&
-        error.code === "P2025"
-      ) {
-        throw new NotFoundException("Unavailability doesn't exist");
-      }
-
-      throw error;
+    const result = await this.prisma.unavailability.deleteMany({
+      where: {
+        id: unavailabilityId,
+        memberId,
+        status: "PENDING",
+      },
+    });
+    if (result.count === 0) {
+      throw new NotFoundException(
+        "Unavailability doesn't exist or isn't pending"
+      );
     }
   }
 
