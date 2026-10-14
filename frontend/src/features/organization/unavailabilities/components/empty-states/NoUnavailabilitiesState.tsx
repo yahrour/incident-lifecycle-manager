@@ -15,8 +15,8 @@ export function NoUnavailabilitiesState({ filter }: { filter: Filter }) {
         </h3>
         <p className="text-sm text-muted-foreground">
           {isFiltered
-            ? `You have no ${filter} unavailabilities. Try another filter.`
-            : "You're available for on-call on this team. Request time off when you need to be skipped in the rotation."}
+            ? `No engineer on this team has ${filter} unavailabilities. Try another filter.`
+            : "Everyone on this team is available for on-call. Unavailabilities will appear here when engineers request time off from the rotation."}
         </p>
       </div>
     </div>
