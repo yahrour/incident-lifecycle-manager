@@ -7,6 +7,5 @@ export function RequireAuth() {
 
   if (isLoading) return <FullPageSpinner />;
   if (!user) return <Navigate to="/login" replace />;
-
   return <Outlet />;
 }
