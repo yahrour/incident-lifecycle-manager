@@ -1,7 +1,7 @@
 import { Test } from "@nestjs/testing";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { createMockPrisma, MockPrisma } from "../../../test/prisma-mock";
-import { OnCallService } from "./oncall.service";
+import { OnCallService } from "./on-call.service";
 import { NotFoundException } from "@nestjs/common";
 
 const TEAM_ID = "teamId";

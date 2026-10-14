@@ -8,7 +8,7 @@ jest.mock("src/modules/oncall/oncall.service", () => ({
 import { IncidentsService } from "./incidents.service";
 import { ConflictException, NotFoundException } from "@nestjs/common";
 import type { PrismaService } from "src/common/prisma/prisma.service";
-import type { OnCallService } from "src/modules/oncall/oncall.service";
+import type { OnCallService } from "@/modules/on-call/on-call.service";
 import { createIncidentFingerprint } from "./utils/incident-fingerprint";
 
 describe("IncidentsService", () => {

@@ -11,7 +11,7 @@ export class OnCallService {
     return new Date(date.getTime() + n * 24 * 60 * 60 * 1000);
   }
 
-  async getCurrentOnCall(teamId: string, ownerId: string) {
+  async getCurrentOnCall(ownerId: string, teamId: string) {
     const now = new Date();
     const team = await this.prisma.team.findUnique({
       where: { id: teamId, ownerId },
@@ -211,7 +211,7 @@ export class OnCallService {
     };
   }
 
-  async getUpcomingRotations(teamId: string, ownerId: string) {
+  async getUpcomingRotations(ownerId: string, teamId: string) {
     const now = new Date();
     const team = await this.prisma.team.findUnique({
       where: { id: teamId, ownerId },
@@ -277,7 +277,7 @@ export class OnCallService {
     return upcomingRotations;
   }
 
-  @Cron(CronExpression.EVERY_SECOND)
+  @Cron(CronExpression.EVERY_MINUTE)
   async processRotations() {
     const teams = await this.prisma.team.findMany({
       select: {

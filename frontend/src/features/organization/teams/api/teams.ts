@@ -57,14 +57,14 @@ export async function updateTeam(
 
 export async function fetchOnCall(id: string) {
   const response = await apiClient.get<ApiResponse<OnCall>>(
-    `/teams/${id}/oncall/current`
+    `/teams/${id}/on-call/current`
   );
   return response.data;
 }
 
 export async function fetchUpcomingRotations(id: string) {
   const response = await apiClient.get<ApiResponse<UpcomingRotation[]>>(
-    `/teams/${id}/upcoming-rotations`
+    `/teams/${id}/on-call/upcoming`
   );
   return response.data;
 }

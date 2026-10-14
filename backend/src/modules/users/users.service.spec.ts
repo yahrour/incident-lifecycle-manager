@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { UsersService } from "./users.service";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { BcryptService } from "../security/bcrypt.service";
-import { OnCallService } from "../oncall/oncall.service";
+import { OnCallService } from "../on-call/on-call.service";
 
 describe("UsersService", () => {
   // 1. Define the mock types

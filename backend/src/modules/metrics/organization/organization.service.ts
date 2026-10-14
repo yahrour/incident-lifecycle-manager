@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "@/common/prisma/prisma.service";
-import { OnCallService } from "@/modules/oncall/oncall.service";
+import { OnCallService } from "@/modules/on-call/on-call.service";
 
 @Injectable()
 export class OrganizationService {
@@ -43,8 +43,8 @@ export class OrganizationService {
     return Promise.all(
       teams.map(async (team) => {
         const activeMember = await this.onCallService.getCurrentOnCall(
-          team.id,
-          ownerId
+          ownerId,
+          team.id
         );
         const onCallChain = activeMember?.chain.length
           ? activeMember.chain
