@@ -15,7 +15,7 @@ import type {
 import { Link } from "react-router";
 import { useMutation } from "@tanstack/react-query";
 import {
-  confirmUnavailability,
+  approveUnavailability,
   rejectUnavailability,
 } from "../../api/unavailabilities";
 import { queryClient } from "@/lib/queryClient";
@@ -59,7 +59,7 @@ export function UnavailabilitiesTable({
       teamId: string;
       memberId: number;
       unavailabilityId: number;
-    }) => confirmUnavailability(teamId, memberId, unavailabilityId),
+    }) => approveUnavailability(teamId, memberId, unavailabilityId),
     onSuccess: (_data, { teamId }) => {
       void queryClient.invalidateQueries({ queryKey: teamKeys.detail(teamId) });
       void queryClient.invalidateQueries({ queryKey: unavailabilityKeys.all });

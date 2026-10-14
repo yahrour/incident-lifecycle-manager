@@ -23,7 +23,7 @@ export async function fetchTeamUnavailabilities(
     limit: String(DEFAULT_LIMIT),
     sortField: sort.field,
     sortOrder: sort.order,
-    filterField: filter
+    filterField: filter,
   });
   const response = await apiClient.get<ApiResponse<Unavailability[]>>(
     `/teams/${id}/unavailabilities?${params.toString()}`
@@ -31,14 +31,13 @@ export async function fetchTeamUnavailabilities(
   return response.data;
 }
 
-
-export async function confirmUnavailability(
+export async function approveUnavailability(
   teamId: string,
   memberId: number,
   unavailabilityId: number
 ) {
   await apiClient.post(
-    `/teams/${teamId}/members/${memberId}/unavailabilities/${unavailabilityId}/confirm`
+    `/teams/${teamId}/members/${memberId}/unavailabilities/${unavailabilityId}/approve`
   );
 }
 
@@ -52,14 +51,18 @@ export async function rejectUnavailability(
   );
 }
 
-export async function fetchAllUnavailabilities(page: number, sort: SortState, filter: Filter) {
+export async function fetchAllUnavailabilities(
+  page: number,
+  sort: SortState,
+  filter: Filter
+) {
   const offset = (page - 1) * DEFAULT_LIMIT;
   const params = new URLSearchParams({
     offset: String(offset),
     limit: String(DEFAULT_LIMIT),
     sortField: sort.field,
     sortOrder: sort.order,
-    filterField: filter
+    filterField: filter,
   });
   const response = await apiClient.get<ApiResponse<Unavailability[]>>(
     `/teams/unavailabilities?${params.toString()}`

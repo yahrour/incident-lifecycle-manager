@@ -6,7 +6,7 @@ import {
   MaxLength,
 } from "class-validator";
 
-export class CreateUnavailabilityDto {
+export class RequestUnavailabilityDto {
   @IsDate()
   startDate: Date;
 
