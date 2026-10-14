@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
-import { TablePagination } from "@/features/organization/shared/components/TablePagination";
 import { fetchMemberUnavailabilities } from "../../api/unavailability";
 import type {
   Filter,
@@ -22,6 +21,8 @@ import { ErrorUnavailabilitiesState } from "../error-states/ErrorUnavailabilitie
 import { RemoveUnavailabilityButton } from "../buttons/RemoveUnavailabilityButton";
 import { unavailabilityKeys } from "../../constants";
 import { formatDuration } from "../../utils/time";
+import { TablePagination } from "../TablePagination";
+import { useEffect } from "react";
 
 const statusVariant: Record<
   UnavailabilityStatus,
@@ -69,6 +70,15 @@ export function UnavailabilitiesTable({
     },
   });
 
+  const unavailabilities = data?.data;
+  const totalUnavailabilities = data?.meta?.total ?? 0;
+
+  useEffect(() => {
+    if (unavailabilities && unavailabilities.length === 0 && page > 1) {
+      setPage(page - 1);
+    }
+  }, [unavailabilities, page, setPage]);
+
   if (isPending) {
     return <FullPageSpinner />;
   }
@@ -80,9 +90,6 @@ export function UnavailabilitiesTable({
   if (!data) {
     return <NoUnavailabilitiesState filter={filter} />;
   }
-
-  const unavailabilities = data.data;
-  const totalUnavailabilities = data.meta?.total ?? 0;
 
   if (unavailabilities.length === 0) {
     return <NoUnavailabilitiesState filter={filter} />;
