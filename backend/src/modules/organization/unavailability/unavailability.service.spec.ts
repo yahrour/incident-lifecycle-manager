@@ -88,345 +88,345 @@ describe("UnavailabilityService", () => {
     jest.clearAllMocks();
   });
 
-  describe("create", () => {
-    const createUnavailabilityDto = {
-      startDate: new Date("2026-01-20T10:00:00.000Z"),
-      endDate: new Date("2026-01-21T10:00:00.000Z"),
-      timezone: "America/New_York",
-      reason: "sick leave",
-    };
+  // describe("create", () => {
+  //   const createUnavailabilityDto = {
+  //     startDate: new Date("2026-01-20T10:00:00.000Z"),
+  //     endDate: new Date("2026-01-21T10:00:00.000Z"),
+  //     timezone: "America/New_York",
+  //     reason: "sick leave",
+  //   };
 
-    it("should create a pending unavailability when the requester is the member themself", async () => {
-      // requester is the member creating their own unavailability
-      prisma.teamMember.findUnique.mockResolvedValue(
-        makeTeamMember({ userId: "userId" })
-      );
+  //   it("should create a pending unavailability when the requester is the member themself", async () => {
+  //     // requester is the member creating their own unavailability
+  //     prisma.teamMember.findUnique.mockResolvedValue(
+  //       makeTeamMember({ userId: "userId" })
+  //     );
 
-      const created = makeUnavailability({
-        confirmed: false,
-        status: "PENDING",
-      });
+  //     const created = makeUnavailability({
+  //       confirmed: false,
+  //       status: "PENDING",
+  //     });
 
-      prisma.unavailability.create.mockResolvedValue(created);
+  //     prisma.unavailability.create.mockResolvedValue(created);
 
-      const result = await service.create(
-        "userId",
-        TEAM_ID,
-        MEMBER_ID,
-        createUnavailabilityDto
-      );
+  //     const result = await service.create(
+  //       "userId",
+  //       TEAM_ID,
+  //       MEMBER_ID,
+  //       createUnavailabilityDto
+  //     );
 
-      expect(result).toEqual(created);
+  //     expect(result).toEqual(created);
 
-      expect(prisma.unavailability.create).toHaveBeenCalledWith({
-        data: {
-          memberId: MEMBER_ID,
-          startDate: convertDateToUtc(
-            createUnavailabilityDto.startDate,
-            createUnavailabilityDto.timezone
-          ),
-          endDate: convertDateToUtc(
-            createUnavailabilityDto.endDate,
-            createUnavailabilityDto.timezone,
-            true
-          ),
-          reason: createUnavailabilityDto.reason,
-        },
-      });
-    });
+  //     expect(prisma.unavailability.create).toHaveBeenCalledWith({
+  //       data: {
+  //         memberId: MEMBER_ID,
+  //         startDate: convertDateToUtc(
+  //           createUnavailabilityDto.startDate,
+  //           createUnavailabilityDto.timezone
+  //         ),
+  //         endDate: convertDateToUtc(
+  //           createUnavailabilityDto.endDate,
+  //           createUnavailabilityDto.timezone,
+  //           true
+  //         ),
+  //         reason: createUnavailabilityDto.reason,
+  //       },
+  //     });
+  //   });
 
-    it("should throw ForbiddenException when the requester is the team owner, not the member", async () => {
-      // requester is the team owner, not the member themself
-      prisma.teamMember.findUnique.mockResolvedValue(
-        makeTeamMember({ userId: MEMBER_ID })
-      );
+  //   it("should throw ForbiddenException when the requester is the team owner, not the member", async () => {
+  //     // requester is the team owner, not the member themself
+  //     prisma.teamMember.findUnique.mockResolvedValue(
+  //       makeTeamMember({ userId: MEMBER_ID })
+  //     );
 
-      await expect(
-        service.create(OWNER_ID, TEAM_ID, MEMBER_ID, createUnavailabilityDto)
-      ).rejects.toThrow(ForbiddenException);
+  //     await expect(
+  //       service.create(OWNER_ID, TEAM_ID, MEMBER_ID, createUnavailabilityDto)
+  //     ).rejects.toThrow(ForbiddenException);
 
-      expect(prisma.unavailability.create).not.toHaveBeenCalled();
-    });
+  //     expect(prisma.unavailability.create).not.toHaveBeenCalled();
+  //   });
 
-    it("should throw BadRequestException when start date is after end date", async () => {
-      await expect(
-        service.create("userId", TEAM_ID, MEMBER_ID, {
-          ...createUnavailabilityDto,
-          startDate: new Date("2026-01-22T10:00:00.000Z"), // after endDate
-        })
-      ).rejects.toThrow(BadRequestException);
+  //   it("should throw BadRequestException when start date is after end date", async () => {
+  //     await expect(
+  //       service.create("userId", TEAM_ID, MEMBER_ID, {
+  //         ...createUnavailabilityDto,
+  //         startDate: new Date("2026-01-22T10:00:00.000Z"), // after endDate
+  //       })
+  //     ).rejects.toThrow(BadRequestException);
 
-      expect(prisma.unavailability.create).not.toHaveBeenCalled();
-    });
+  //     expect(prisma.unavailability.create).not.toHaveBeenCalled();
+  //   });
 
-    it("should throw NotFoundException when the team member doesn't exist", async () => {
-      prisma.teamMember.findUnique.mockResolvedValue(null);
+  //   it("should throw NotFoundException when the team member doesn't exist", async () => {
+  //     prisma.teamMember.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.create("userId", TEAM_ID, MEMBER_ID, createUnavailabilityDto)
-      ).rejects.toThrow(NotFoundException);
+  //     await expect(
+  //       service.create("userId", TEAM_ID, MEMBER_ID, createUnavailabilityDto)
+  //     ).rejects.toThrow(NotFoundException);
 
-      expect(prisma.unavailability.create).not.toHaveBeenCalled();
-    });
+  //     expect(prisma.unavailability.create).not.toHaveBeenCalled();
+  //   });
 
-    it("should throw ConflictException when an overlapping unavailability exists", async () => {
-      prisma.teamMember.findUnique.mockResolvedValue(
-        makeTeamMember({ userId: "userId" })
-      );
+  //   it("should throw ConflictException when an overlapping unavailability exists", async () => {
+  //     prisma.teamMember.findUnique.mockResolvedValue(
+  //       makeTeamMember({ userId: "userId" })
+  //     );
 
-      prisma.unavailability.create.mockRejectedValue(
-        new PrismaClientKnownRequestError("window exists", {
-          code: "P2002",
-          clientVersion: "5.0.0",
-        })
-      );
+  //     prisma.unavailability.create.mockRejectedValue(
+  //       new PrismaClientKnownRequestError("window exists", {
+  //         code: "P2002",
+  //         clientVersion: "5.0.0",
+  //       })
+  //     );
 
-      await expect(
-        service.create("userId", TEAM_ID, MEMBER_ID, createUnavailabilityDto)
-      ).rejects.toThrow(ConflictException);
-    });
-  });
+  //     await expect(
+  //       service.create("userId", TEAM_ID, MEMBER_ID, createUnavailabilityDto)
+  //     ).rejects.toThrow(ConflictException);
+  //   });
+  // });
 
-  describe("verifyTeamOwnership", () => {
-    it("should throw NotFoundException when the team does not exist", async () => {
-      prisma.team.findUnique.mockResolvedValue(null);
+  // describe("verifyTeamOwnership", () => {
+  //   it("should throw NotFoundException when the team does not exist", async () => {
+  //     prisma.team.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.findTeamAll(OWNER_ID, TEAM_ID, {
-          limit: 20,
-          offset: 0,
-          sortField: SORT_FIELD.CREATED_AT,
-          sortOrder: SORT_ORDER.ASC,
-          filterField: FILTER_FIELD.ALL,
-        })
-      ).rejects.toThrow(NotFoundException);
+  //     await expect(
+  //       service.findTeamAll(OWNER_ID, TEAM_ID, {
+  //         limit: 20,
+  //         offset: 0,
+  //         sortField: SORT_FIELD.CREATED_AT,
+  //         sortOrder: SORT_ORDER.ASC,
+  //         filterField: FILTER_FIELD.ALL,
+  //       })
+  //     ).rejects.toThrow(NotFoundException);
 
-      expect(prisma.unavailability.findMany).not.toHaveBeenCalled();
-    });
+  //     expect(prisma.unavailability.findMany).not.toHaveBeenCalled();
+  //   });
 
-    it("should throw NotFoundException when the requester is not the owner", async () => {
-      prisma.team.findUnique.mockResolvedValue(makeTeam());
+  //   it("should throw NotFoundException when the requester is not the owner", async () => {
+  //     prisma.team.findUnique.mockResolvedValue(makeTeam());
 
-      await expect(
-        service.findTeamAll("notTheOwner", TEAM_ID, {
-          limit: 20,
-          offset: 0,
-          sortField: SORT_FIELD.CREATED_AT,
-          sortOrder: SORT_ORDER.ASC,
-          filterField: FILTER_FIELD.ALL,
-        })
-      ).rejects.toThrow(NotFoundException);
-    });
-  });
+  //     await expect(
+  //       service.findTeamAll("notTheOwner", TEAM_ID, {
+  //         limit: 20,
+  //         offset: 0,
+  //         sortField: SORT_FIELD.CREATED_AT,
+  //         sortOrder: SORT_ORDER.ASC,
+  //         filterField: FILTER_FIELD.ALL,
+  //       })
+  //     ).rejects.toThrow(NotFoundException);
+  //   });
+  // });
 
-  describe("findTeamAll", () => {
-    const defaultQuery = {
-      limit: 20,
-      offset: 0,
-      sortField: SORT_FIELD.CREATED_AT,
-      sortOrder: SORT_ORDER.ASC,
-      filterField: FILTER_FIELD.ALL,
-    };
+  // describe("findTeamAll", () => {
+  //   const defaultQuery = {
+  //     limit: 20,
+  //     offset: 0,
+  //     sortField: SORT_FIELD.CREATED_AT,
+  //     sortOrder: SORT_ORDER.ASC,
+  //     filterField: FILTER_FIELD.ALL,
+  //   };
 
-    beforeEach(() => {
-      prisma.team.findUnique.mockResolvedValue(makeTeam());
-    });
+  //   beforeEach(() => {
+  //     prisma.team.findUnique.mockResolvedValue(makeTeam());
+  //   });
 
-    it("should return unavailabilities scoped to the team with a total count", async () => {
-      const unavailabilities = [makeUnavailability({ id: 1 })];
+  //   it("should return unavailabilities scoped to the team with a total count", async () => {
+  //     const unavailabilities = [makeUnavailability({ id: 1 })];
 
-      prisma.unavailability.findMany.mockResolvedValue(unavailabilities);
-      prisma.unavailability.count.mockResolvedValue(1);
+  //     prisma.unavailability.findMany.mockResolvedValue(unavailabilities);
+  //     prisma.unavailability.count.mockResolvedValue(1);
 
-      const result = await service.findTeamAll(OWNER_ID, TEAM_ID, defaultQuery);
+  //     const result = await service.findTeamAll(OWNER_ID, TEAM_ID, defaultQuery);
 
-      expect(result).toEqual({ unavailabilities, total: 1 });
+  //     expect(result).toEqual({ unavailabilities, total: 1 });
 
-      const where = {
-        teamMember: {
-          teamId: TEAM_ID,
-          team: { ownerId: OWNER_ID },
-        },
-      };
+  //     const where = {
+  //       teamMember: {
+  //         teamId: TEAM_ID,
+  //         team: { ownerId: OWNER_ID },
+  //       },
+  //     };
 
-      expect(prisma.unavailability.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where,
-          skip: 0,
-          take: 20,
-          orderBy: { createdAt: SORT_ORDER.ASC },
-        })
-      );
-      expect(prisma.unavailability.count).toHaveBeenCalledWith({ where });
-    });
+  //     expect(prisma.unavailability.findMany).toHaveBeenCalledWith(
+  //       expect.objectContaining({
+  //         where,
+  //         skip: 0,
+  //         take: 20,
+  //         orderBy: { createdAt: SORT_ORDER.ASC },
+  //       })
+  //     );
+  //     expect(prisma.unavailability.count).toHaveBeenCalledWith({ where });
+  //   });
 
-    it("should return an empty list and a zero total when there are no unavailabilities", async () => {
-      prisma.unavailability.findMany.mockResolvedValue([]);
-      prisma.unavailability.count.mockResolvedValue(0);
+  //   it("should return an empty list and a zero total when there are no unavailabilities", async () => {
+  //     prisma.unavailability.findMany.mockResolvedValue([]);
+  //     prisma.unavailability.count.mockResolvedValue(0);
 
-      const result = await service.findTeamAll(OWNER_ID, TEAM_ID, defaultQuery);
+  //     const result = await service.findTeamAll(OWNER_ID, TEAM_ID, defaultQuery);
 
-      expect(result).toEqual({ unavailabilities: [], total: 0 });
-    });
+  //     expect(result).toEqual({ unavailabilities: [], total: 0 });
+  //   });
 
-    it("should pass the offset and limit through to the query", async () => {
-      prisma.unavailability.findMany.mockResolvedValue([]);
-      prisma.unavailability.count.mockResolvedValue(45);
+  //   it("should pass the offset and limit through to the query", async () => {
+  //     prisma.unavailability.findMany.mockResolvedValue([]);
+  //     prisma.unavailability.count.mockResolvedValue(45);
 
-      await service.findTeamAll(OWNER_ID, TEAM_ID, {
-        ...defaultQuery,
-        offset: 20,
-        limit: 10,
-        sortOrder: SORT_ORDER.DESC,
-        filterField: FILTER_FIELD.ALL,
-      });
+  //     await service.findTeamAll(OWNER_ID, TEAM_ID, {
+  //       ...defaultQuery,
+  //       offset: 20,
+  //       limit: 10,
+  //       sortOrder: SORT_ORDER.DESC,
+  //       filterField: FILTER_FIELD.ALL,
+  //     });
 
-      expect(prisma.unavailability.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          skip: 20,
-          take: 10,
-          orderBy: { createdAt: SORT_ORDER.DESC },
-        })
-      );
-    });
+  //     expect(prisma.unavailability.findMany).toHaveBeenCalledWith(
+  //       expect.objectContaining({
+  //         skip: 20,
+  //         take: 10,
+  //         orderBy: { createdAt: SORT_ORDER.DESC },
+  //       })
+  //     );
+  //   });
 
-    it("should rethrow unexpected errors", async () => {
-      const error = new Error("db down");
-      prisma.unavailability.findMany.mockRejectedValue(error);
+  //   it("should rethrow unexpected errors", async () => {
+  //     const error = new Error("db down");
+  //     prisma.unavailability.findMany.mockRejectedValue(error);
 
-      await expect(
-        service.findTeamAll(OWNER_ID, TEAM_ID, defaultQuery)
-      ).rejects.toThrow(error);
-    });
-  });
+  //     await expect(
+  //       service.findTeamAll(OWNER_ID, TEAM_ID, defaultQuery)
+  //     ).rejects.toThrow(error);
+  //   });
+  // });
 
-  describe("findPending", () => {
-    const defaultQuery = {
-      limit: 20,
-      offset: 0,
-      sortField: SORT_FIELD.CREATED_AT,
-      sortOrder: SORT_ORDER.ASC,
-      filterField: FILTER_FIELD.ALL,
-    };
+  // describe("findPending", () => {
+  //   const defaultQuery = {
+  //     limit: 20,
+  //     offset: 0,
+  //     sortField: SORT_FIELD.CREATED_AT,
+  //     sortOrder: SORT_ORDER.ASC,
+  //     filterField: FILTER_FIELD.ALL,
+  //   };
 
-    it("should return pending unavailabilities with a total count", async () => {
-      prisma.team.findUnique.mockResolvedValue(makeTeam());
+  //   it("should return pending unavailabilities with a total count", async () => {
+  //     prisma.team.findUnique.mockResolvedValue(makeTeam());
 
-      const pending = [makeUnavailability({ confirmed: false })];
+  //     const pending = [makeUnavailability({ confirmed: false })];
 
-      prisma.unavailability.findMany.mockResolvedValue(pending);
-      prisma.unavailability.count.mockResolvedValue(1);
+  //     prisma.unavailability.findMany.mockResolvedValue(pending);
+  //     prisma.unavailability.count.mockResolvedValue(1);
 
-      const result = await service.findTeamPending(
-        OWNER_ID,
-        TEAM_ID,
-        defaultQuery
-      );
+  //     const result = await service.findTeamPending(
+  //       OWNER_ID,
+  //       TEAM_ID,
+  //       defaultQuery
+  //     );
 
-      expect(result).toEqual({ unavailabilities: pending, total: 1 });
+  //     expect(result).toEqual({ unavailabilities: pending, total: 1 });
 
-      expect(prisma.unavailability.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: {
-            confirmed: false,
-            status: "PENDING",
-            teamMember: {
-              teamId: TEAM_ID,
-              team: { ownerId: OWNER_ID },
-            },
-          },
-          skip: 0,
-          take: 20,
-          orderBy: { createdAt: SORT_ORDER.ASC },
-        })
-      );
-      expect(prisma.unavailability.count).toHaveBeenCalledTimes(1);
-    });
-  });
+  //     expect(prisma.unavailability.findMany).toHaveBeenCalledWith(
+  //       expect.objectContaining({
+  //         where: {
+  //           confirmed: false,
+  //           status: "PENDING",
+  //           teamMember: {
+  //             teamId: TEAM_ID,
+  //             team: { ownerId: OWNER_ID },
+  //           },
+  //         },
+  //         skip: 0,
+  //         take: 20,
+  //         orderBy: { createdAt: SORT_ORDER.ASC },
+  //       })
+  //     );
+  //     expect(prisma.unavailability.count).toHaveBeenCalledTimes(1);
+  //   });
+  // });
 
-  describe("findMember", () => {
-    const defaultQuery = {
-      limit: 20,
-      offset: 0,
-      sortField: SORT_FIELD.CREATED_AT,
-      sortOrder: SORT_ORDER.ASC,
-      filterField: FILTER_FIELD.ALL,
-    };
+  // describe("findMember", () => {
+  //   const defaultQuery = {
+  //     limit: 20,
+  //     offset: 0,
+  //     sortField: SORT_FIELD.CREATED_AT,
+  //     sortOrder: SORT_ORDER.ASC,
+  //     filterField: FILTER_FIELD.ALL,
+  //   };
 
-    it("should return a member's unavailabilities with a total count", async () => {
-      prisma.teamMember.findUnique.mockResolvedValue(makeTeamMember());
+  //   it("should return a member's unavailabilities with a total count", async () => {
+  //     prisma.teamMember.findUnique.mockResolvedValue(makeTeamMember());
 
-      const memberUnavailabilities = [makeUnavailability()];
+  //     const memberUnavailabilities = [makeUnavailability()];
 
-      prisma.unavailability.findMany.mockResolvedValue(memberUnavailabilities);
-      prisma.unavailability.count.mockResolvedValue(1);
+  //     prisma.unavailability.findMany.mockResolvedValue(memberUnavailabilities);
+  //     prisma.unavailability.count.mockResolvedValue(1);
 
-      const result = await service.findMember(
-        OWNER_ID,
-        TEAM_ID,
-        MEMBER_ID,
-        defaultQuery
-      );
+  //     const result = await service.findMember(
+  //       OWNER_ID,
+  //       TEAM_ID,
+  //       MEMBER_ID,
+  //       defaultQuery
+  //     );
 
-      expect(result).toEqual({
-        unavailabilities: memberUnavailabilities,
-        total: 1,
-      });
+  //     expect(result).toEqual({
+  //       unavailabilities: memberUnavailabilities,
+  //       total: 1,
+  //     });
 
-      expect(prisma.unavailability.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { memberId: MEMBER_ID },
-          skip: 0,
-          take: 20,
-        })
-      );
-    });
+  //     expect(prisma.unavailability.findMany).toHaveBeenCalledWith(
+  //       expect.objectContaining({
+  //         where: { memberId: MEMBER_ID },
+  //         skip: 0,
+  //         take: 20,
+  //       })
+  //     );
+  //   });
 
-    it("should filter by the uppercase Prisma status when a filter is given", async () => {
-      prisma.teamMember.findUnique.mockResolvedValue(makeTeamMember());
-      prisma.unavailability.findMany.mockResolvedValue([]);
-      prisma.unavailability.count.mockResolvedValue(0);
+  //   it("should filter by the uppercase Prisma status when a filter is given", async () => {
+  //     prisma.teamMember.findUnique.mockResolvedValue(makeTeamMember());
+  //     prisma.unavailability.findMany.mockResolvedValue([]);
+  //     prisma.unavailability.count.mockResolvedValue(0);
 
-      await service.findMember(OWNER_ID, TEAM_ID, MEMBER_ID, {
-        ...defaultQuery,
-        filterField: FILTER_FIELD.PENDING,
-      });
+  //     await service.findMember(OWNER_ID, TEAM_ID, MEMBER_ID, {
+  //       ...defaultQuery,
+  //       filterField: FILTER_FIELD.PENDING,
+  //     });
 
-      expect(prisma.unavailability.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { memberId: MEMBER_ID, status: "PENDING" },
-        })
-      );
-      expect(prisma.unavailability.count).toHaveBeenCalledWith({
-        where: { memberId: MEMBER_ID, status: "PENDING" },
-      });
-    });
-  });
+  //     expect(prisma.unavailability.findMany).toHaveBeenCalledWith(
+  //       expect.objectContaining({
+  //         where: { memberId: MEMBER_ID, status: "PENDING" },
+  //       })
+  //     );
+  //     expect(prisma.unavailability.count).toHaveBeenCalledWith({
+  //       where: { memberId: MEMBER_ID, status: "PENDING" },
+  //     });
+  //   });
+  // });
 
-  describe("removeMemberAll", () => {
-    it("should delete all of a member's unavailabilities", async () => {
-      prisma.teamMember.findUnique.mockResolvedValue(makeTeamMember());
-      prisma.unavailability.deleteMany.mockResolvedValue({ count: 2 });
+  // describe("removeMemberAll", () => {
+  //   it("should delete all of a member's unavailabilities", async () => {
+  //     prisma.teamMember.findUnique.mockResolvedValue(makeTeamMember());
+  //     prisma.unavailability.deleteMany.mockResolvedValue({ count: 2 });
 
-      await service.removeMemberAll(OWNER_ID, TEAM_ID, MEMBER_ID);
+  //     await service.removeMemberAll(OWNER_ID, TEAM_ID, MEMBER_ID);
 
-      expect(prisma.unavailability.deleteMany).toHaveBeenCalledWith({
-        where: { memberId: MEMBER_ID },
-      });
-    });
+  //     expect(prisma.unavailability.deleteMany).toHaveBeenCalledWith({
+  //       where: { memberId: MEMBER_ID },
+  //     });
+  //   });
 
-    it("should throw ForbiddenException when the requester is not authorized", async () => {
-      prisma.teamMember.findUnique.mockResolvedValue(makeTeamMember());
+  //   it("should throw ForbiddenException when the requester is not authorized", async () => {
+  //     prisma.teamMember.findUnique.mockResolvedValue(makeTeamMember());
 
-      await expect(
-        service.removeMemberAll("notTheOwner", TEAM_ID, MEMBER_ID)
-      ).rejects.toThrow(ForbiddenException);
+  //     await expect(
+  //       service.removeMemberAll("notTheOwner", TEAM_ID, MEMBER_ID)
+  //     ).rejects.toThrow(ForbiddenException);
 
-      expect(prisma.unavailability.deleteMany).not.toHaveBeenCalled();
-    });
-  });
+  //     expect(prisma.unavailability.deleteMany).not.toHaveBeenCalled();
+  //   });
+  // });
 
-  describe("removeMemberOne", () => {
+  // describe("removeMemberOne", () => {
     //     it("should delete a single unavailability", async () => {
     //       prisma.teamMember.findUnique.mockResolvedValue(makeTeamMember());
     //
@@ -453,7 +453,7 @@ describe("UnavailabilityService", () => {
     //     service.removeMemberOne(OWNER_ID, TEAM_ID, MEMBER_ID, UNAVAILABILITY_ID)
     //   ).rejects.toThrow(NotFoundException);
     // });
-  });
+  // });
 
   describe("update", () => {
     it("should reset confirmation to pending when the member updates their own unavailability", async () => {

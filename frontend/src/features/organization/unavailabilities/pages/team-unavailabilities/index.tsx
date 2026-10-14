@@ -98,7 +98,6 @@ export function TeamUnavailabilities() {
             sort={sort}
             onSortChange={setSort}
             setPage={setPage}
-            filter={filter}
           />
         </div>
         <TeamUnavailabilitiesTable

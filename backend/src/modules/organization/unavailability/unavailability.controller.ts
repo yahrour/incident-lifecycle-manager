@@ -133,13 +133,13 @@ export class UnavailabilityController {
 
   @Get(":teamId/unavailabilities")
   @Roles(Role.SRE)
-  async findTeamAll(
+  async findTeam(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Query() query: OffsetPaginationSearchParams,
     @ActiveUser() user: ActiveUserData
   ) {
     const { unavailabilities, total } =
-      await this.unavailabilityService.findTeamAll(user.sub, teamId, query);
+      await this.unavailabilityService.findTeam(user.sub, teamId, query);
     return apiResponse(unavailabilities, { total });
   }
 

@@ -1,13 +1,11 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
-  fetchAllPendingUnavailabilities,
   fetchAllUnavailabilities,
 } from "../../api/unavailabilities";
 import { useErrorToast } from "@/hooks/use-error-toast";
-import type { SortState } from "../../types";
+import type { Filter, SortState } from "../../types";
 import { ErrorUnavailabilitiesState } from "../error-states/ErrorUnavailabilitiesState";
 import { NoUnavailabilitiesState } from "../empty-states/NoUnavailabilitiesState";
-import { NoPendingUnavailabilitiesState } from "../empty-states/NoPendingUnavailabilitiesState";
 import { useEffect } from "react";
 import { UnavailabilitiesTable } from "./UnavailabilitiesTable";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
@@ -22,14 +20,11 @@ export function AllUnavailabilitiesTable({
   sort: SortState;
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
-  filter: "all" | "pending";
+  filter: Filter;
 }) {
   const { data, isError, isPending } = useQuery({
     queryKey: unavailabilityKeys.list(page, sort, filter),
-    queryFn: () =>
-      filter === "all"
-        ? fetchAllUnavailabilities(page, sort)
-        : fetchAllPendingUnavailabilities(page, sort),
+    queryFn: () => fetchAllUnavailabilities(page, sort, filter),
     placeholderData: keepPreviousData,
   });
 
@@ -51,11 +46,7 @@ export function AllUnavailabilitiesTable({
   if (!unavailabilities || isError) {
     return <ErrorUnavailabilitiesState />;
   } else if (unavailabilities && totalUnavailabilities === 0) {
-    return filter === "all" ? (
-      <NoUnavailabilitiesState />
-    ) : (
-      <NoPendingUnavailabilitiesState />
-    );
+    return <NoUnavailabilitiesState  filter={filter} />
   }
 
   return (

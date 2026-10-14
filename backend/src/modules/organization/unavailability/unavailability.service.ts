@@ -25,6 +25,13 @@ import { FILTER_FIELD } from "./constants";
 export class UnavailabilityService {
   constructor(private prisma: PrismaService) {}
 
+  // FILTER_FIELD is lowercase ("pending"), the Prisma enum is uppercase
+  private statusFilter(filterField: FILTER_FIELD) {
+    return filterField === FILTER_FIELD.ALL
+      ? {}
+      : { status: filterField.toUpperCase() as UnavailabilityStatus };
+  }
+
   private async verifyTeamOwnership(teamId: string, ownerId: string) {
     const team = await this.prisma.team.findUnique({
       where: { id: teamId },
@@ -236,13 +243,6 @@ export class UnavailabilityService {
     }
   }
 
-  // FILTER_FIELD is lowercase ("pending"), the Prisma enum is uppercase
-  private statusFilter(filterField: FILTER_FIELD) {
-    return filterField === FILTER_FIELD.ALL
-      ? {}
-      : { status: filterField.toUpperCase() as UnavailabilityStatus };
-  }
-
   async findMember(
     requesterUserId: string,
     teamId: string,
@@ -313,7 +313,7 @@ export class UnavailabilityService {
     }
   }
 
-  async findTeamAll(
+  async findTeam(
     requesterId: string,
     teamId: string,
     query: OffsetPaginationSearchParams
@@ -328,6 +328,7 @@ export class UnavailabilityService {
               teamId,
               team: { ownerId: requesterId },
             },
+            ...this.statusFilter(query.filterField),
           },
           include: {
             teamMember: {
@@ -355,9 +356,10 @@ export class UnavailabilityService {
           skip: query.offset,
           take: query.limit,
           ...(query.sortField && {
-            orderBy: {
-              [query.sortField]: query.sortOrder,
-            },
+            orderBy: [
+              {[query.sortField]: query.sortOrder},
+              { id: query.sortOrder },
+            ],
           }),
         }),
         this.prisma.unavailability.count({
@@ -366,6 +368,7 @@ export class UnavailabilityService {
               teamId,
               team: { ownerId: requesterId },
             },
+            ...this.statusFilter(query.filterField),
           },
         }),
       ]);
@@ -455,6 +458,7 @@ export class UnavailabilityService {
             teamMember: {
               team: { ownerId: requesterId },
             },
+            ...this.statusFilter(query.filterField),
           },
           include: {
             teamMember: {
@@ -482,9 +486,10 @@ export class UnavailabilityService {
           skip: query.offset,
           take: query.limit,
           ...(query.sortField && {
-            orderBy: {
-              [query.sortField]: query.sortOrder,
-            },
+            orderBy: [
+            { [query.sortField]: query.sortOrder },
+            { id: query.sortOrder },
+          ],
           }),
         }),
         this.prisma.unavailability.count({
@@ -492,6 +497,7 @@ export class UnavailabilityService {
             teamMember: {
               team: { ownerId: requesterId },
             },
+            ...this.statusFilter(query.filterField),
           },
         }),
       ]);
