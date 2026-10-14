@@ -291,7 +291,10 @@ export class UnavailabilityService {
 
     try {
       const unavailability = await this.prisma.unavailability.findUnique({
-        where: { id: unavailabilityId },
+        where: {
+          id: unavailabilityId,
+          memberId,
+        },
       });
       if (!unavailability) {
         throw new NotFoundException("Unavailability doesn't exist");
