@@ -9,10 +9,11 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchUserMembership } from "../api/membership";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { NoMembershipState } from "../components/NoMembershipState";
+import { membershipKeys } from "../constants";
 
 export function MyShift() {
   const { data, isPending, isError } = useQuery({
-    queryKey: ["membership"],
+    queryKey: membershipKeys.all,
     queryFn: fetchUserMembership,
   });
 
