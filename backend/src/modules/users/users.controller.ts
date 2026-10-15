@@ -35,7 +35,7 @@ export class UsersController {
     return apiResponse(profile);
   }
 
-  @Get("me/oncall")
+  @Get("me/on-call")
   @Roles(Role.ENGINEER)
   async getMyOnCallStatus(@ActiveUser() user: ActiveUserData) {
     const result = await this.usersService.getMyOnCallStatus(user.sub);
