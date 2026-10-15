@@ -1,0 +1,76 @@
+import { IncidentsController } from "./incidents.controller";
+
+describe("IncidentsController", () => {
+  it("wraps the incident list in data and meta", async () => {
+    const incidents = [{ id: "incident-id" }];
+    const incidentsService = {
+      findAll: jest.fn().mockResolvedValue({
+        data: incidents,
+        total: 1,
+        nextCursor: "next-cursor",
+      }),
+    };
+    const controller = new IncidentsController(incidentsService as never);
+
+    await expect(
+      controller.findAll({} as never, { sub: "user-id" } as never)
+    ).resolves.toEqual({
+      data: incidents,
+      meta: { total: 1, nextCursor: "next-cursor" },
+    });
+  });
+
+  it("wraps one incident in data", async () => {
+    const incident = {
+      id: "incident-id",
+      metrics: { mttaSeconds: 300, mttrSeconds: 2100 },
+      timeline: [{ type: "created", at: new Date("2026-01-01T00:00:00.000Z") }],
+    };
+    const incidentsService = {
+      findOne: jest.fn().mockResolvedValue(incident),
+    };
+    const controller = new IncidentsController(incidentsService as never);
+
+    await expect(
+      controller.findOne("incident-id", { sub: "user-id" } as never)
+    ).resolves.toEqual({ data: incident });
+  });
+
+  it("wraps a created note in data", async () => {
+    const note = { id: "note-id", content: "Mitigation started" };
+    const incidentsService = {
+      createNote: jest.fn().mockResolvedValue(note),
+    };
+    const controller = new IncidentsController(incidentsService as never);
+
+    await expect(
+      controller.createNote("incident-id", { content: note.content }, {
+        sub: "user-id",
+      } as never)
+    ).resolves.toEqual({ data: note });
+  });
+
+  it("wraps an acknowledged incident in data", async () => {
+    const incident = { id: "incident-id", status: "acknowledged" };
+    const incidentsService = {
+      acknowledge: jest.fn().mockResolvedValue(incident),
+    };
+    const controller = new IncidentsController(incidentsService as never);
+
+    await expect(
+      controller.acknowledge("incident-id", { sub: "user-id" } as never)
+    ).resolves.toEqual({ data: incident });
+  });
+
+  it("wraps a resolved incident in data", async () => {
+    const incident = { id: "incident-id", status: "resolved" };
+    const incidentsService = {
+      resolve: jest.fn().mockResolvedValue(incident),
+    };
+    const controller = new IncidentsController(incidentsService as never);
+
+    await expect(
+      controller.resolve("incident-id", { sub: "user-id" } as never)
+    ).resolves.toEqual({ data: incident });
+  });
+});

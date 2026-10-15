@@ -1,0 +1,56 @@
+enum Role {
+  SRE
+  ENGINEER
+
+  @@map("role")
+  @@schema("auth")
+}
+
+model User {
+  id          String  @id @default(uuid()) @db.Uuid
+  firstName   String  @map("first_name")
+  lastName    String  @map("last_name")
+  email       String  @unique
+  passwordHash String?  @map("password_hash")
+  role         Role
+  googleId     String?  @unique @map("google_id")
+  specialty    String?
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  timezone     String?  @default("UTC") @map("timezone")
+
+  apiKeys           ApiKey[]
+  refreshTokens     RefreshToken[]
+  ownedTeams        Team[]
+  teamMembers       TeamMember[]
+  assignedIncidents Incident[]     @relation("IncidentAssignee")
+  incidentNotes     IncidentNote[]
+
+  @@map("users")
+  @@schema("auth")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("refresh_tokens")
+  @@schema("auth")
+}
+
+model InviteToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  token     String   @unique
+  email     String
+  teamId    String   @map("team_id") @db.Uuid
+  used      Boolean  @default(false)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("invite_tokens")
+  @@schema("auth")
+}

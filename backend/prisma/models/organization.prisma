@@ -1,0 +1,57 @@
+model Team {
+  id                        String       @id @default(uuid()) @db.Uuid
+  ownerId                   String       @map("owner_id") @db.Uuid
+  owner                     User         @relation(fields: [ownerId], references: [id])
+  name                      String       @unique @db.VarChar(50)
+  description               String?      @db.VarChar(255)
+  services                  String[]     
+  rotationPeriodDays        Int          @default(7) @map("rotation_period_days")
+  rotationStartDate         DateTime     @default(now()) @map("rotation_start_date") @db.Timestamptz
+  currentRotationIndex      Int          @default(0) @map("current_rotation_index")
+  lastRotatedAt             DateTime     @default(now()) @map("last_rotated_at") @db.Timestamptz
+  escalationTimeoutMinutes  Int          @default(5) @map("escalation_timeout_minutes")
+  createdAt                 DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt                 DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+  teamMembers               TeamMember[]
+  incidents                 Incident[]
+
+  @@map("teams")
+  @@schema("organization")
+}
+
+model TeamMember {
+  id               Int              @id @default(autoincrement())
+  userId           String           @unique @map("user_id") @db.Uuid
+  user             User             @relation(fields: [userId], references: [id])
+  teamId           String           @map("team_id") @db.Uuid
+  team             Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  joinedAt         DateTime         @default(now()) @map("joined_at") @db.Timestamptz
+  unavailabilities Unavailability[]
+
+  @@map("team_members")
+  @@schema("organization")
+}
+
+enum UnavailabilityStatus {
+  APPROVED
+  PENDING
+  REJECTED
+  EXPIRED
+
+  @@schema("organization")
+}
+
+model Unavailability {
+  id         Int        @id @default(autoincrement())
+  memberId   Int        @map("member_id")
+  teamMember TeamMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  startDate  DateTime   @map("start_date") @db.Timestamptz
+  endDate    DateTime   @map("end_date") @db.Timestamptz
+  reason     String?    @db.VarChar(255)
+  createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  status    UnavailabilityStatus @default(PENDING)
+
+  @@unique([memberId, startDate, endDate], name: "unique_unavailability_window")
+  @@map("unavailabilities")
+  @@schema("organization")
+}

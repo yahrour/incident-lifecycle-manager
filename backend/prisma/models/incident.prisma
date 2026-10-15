@@ -1,0 +1,54 @@
+model Incident {
+  id             String         @id @default(uuid()) @db.Uuid
+  teamId         String?        @map("team_id") @db.Uuid
+  team           Team?          @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  title          String
+  service        String
+  fingerprint    String?
+  openFingerprint String?       @map("open_fingerprint")
+  severity       String
+  status         String         @default("open")
+  assignedToId   String?        @map("assigned_to") @db.Uuid
+  assignedTo     User?          @relation("IncidentAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  acknowledgedAt DateTime?      @map("acknowledged_at") @db.Timestamptz
+  escalatedAt    DateTime?      @map("escalated_at") @db.Timestamptz
+  resolvedAt     DateTime?      @map("resolved_at") @db.Timestamptz
+  mttaSeconds    Int?           @map("mtta_seconds")
+  mttrSeconds    Int?           @map("mttr_seconds")
+  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+  notes          IncidentNote[]
+  alerts         IncidentAlert[]
+
+  @@unique([teamId, openFingerprint], name: "unique_team_open_fingerprint")
+  @@index([teamId], name: "idx_incidents_team")
+  @@index([fingerprint, status], name: "idx_incidents_fingerprint_status")
+  @@index([status], name: "idx_incidents_status")
+  @@index([createdAt], name: "idx_incidents_created_at")
+  @@map("incidents")
+  @@schema("incident")
+}
+
+model IncidentNote {
+  id         String   @id @default(uuid()) @db.Uuid
+  incidentId String   @map("incident_id") @db.Uuid
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  authorId   String   @map("author_id") @db.Uuid
+  author     User     @relation(fields: [authorId], references: [id])
+  content    String
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([incidentId, createdAt], name: "idx_incident_notes_incident_created")
+  @@map("incident_notes")
+  @@schema("incident")
+}
+
+model IncidentAlert {
+  alertId    String   @id @map("alert_id") @db.Uuid
+  incidentId String   @map("incident_id") @db.Uuid
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@map("incident_alerts")
+  @@schema("incident")
+}

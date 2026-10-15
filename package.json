@@ -1,29 +1,31 @@
 {
-  "type": "module",
-  "devDependencies": {
-    "@commitlint/cli": "^21.2.0",
-    "@commitlint/config-conventional": "^21.2.0",
-    "@eslint/js": "^10.0.1",
-    "@typescript-eslint/eslint-plugin": "^8.62.1",
-    "@typescript-eslint/parser": "^8.62.1",
-    "eslint": "^10.6.0",
-    "eslint-config-prettier": "^10.1.8",
-    "globals": "^17.7.0",
-    "husky": "^9.1.7",
-    "lint-staged": "^17.0.8",
-    "prettier": "^3.9.4"
-  },
+  "name": "incident-lifecycle-manager",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
   "scripts": {
-    "lint": "eslint \"services/**/*.ts\" \"shared/**/*.ts\" --fix --no-error-on-unmatched-pattern",
-    "format": "prettier --write \"services/**/*.ts\" \"shared/**/*.ts\" --no-error-on-unmatched-pattern",
-    "prepare": "husky",
-    "infra:up": "docker-compose up -d",
-    "infra:down": "docker-compose down"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky"
   },
-  "lint-staged": {
-    "*.ts": [
-      "npm run lint",
-      "npm run format"
-    ]
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yahrour/incident-lifecycle-manager.git"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/yahrour/incident-lifecycle-manager/issues"
+  },
+  "homepage": "https://github.com/yahrour/incident-lifecycle-manager#readme",
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.2",
+    "@commitlint/config-conventional": "^21.2.2",
+    "@types/passport-google-oauth20": "^2.0.17",
+    "husky": "^9.1.7"
+  },
+  "dependencies": {
+    "@nestjs/passport": "^12.0.0",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0"
   }
 }

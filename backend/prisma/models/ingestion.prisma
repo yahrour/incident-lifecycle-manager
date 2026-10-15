@@ -1,0 +1,35 @@
+model ApiKey {
+  id        String   @id @default(uuid()) @db.Uuid
+  ownerId   String   @map("owner_id") @db.Uuid
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name      String
+  keyPrefix String   @map("key_prefix") @db.VarChar(12)
+  keyHash   String   @unique @map("key_hash")
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@unique([ownerId, name], name: "unique_owner_name")
+  @@map("api_keys")
+  @@schema("ingestion")
+}
+
+model Alert {
+  id         String   @id @default(uuid()) @db.Uuid
+  provider   String
+  title      String
+  service    String?
+  message    String?
+  severity   String
+  status     String   @default("firing")
+  occurredAt DateTime @map("occurred_at") @db.Timestamptz
+  receivedAt DateTime @default(now()) @map("received_at") @db.Timestamptz
+  payload    Json?
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([provider, status])
+  @@index([service])
+  @@map("alerts")
+  @@schema("ingestion")
+}
