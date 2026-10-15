@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { UsersController } from "./users.controller";
 import { SecurityModule } from "../security/security.module";
-import { OncallModule } from "../oncall/oncall.module";
+import { OncallModule } from "../on-call/on-call.module";
 
 @Module({
   imports: [SecurityModule, OncallModule],

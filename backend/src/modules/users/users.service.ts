@@ -8,7 +8,7 @@ import { PrismaService } from "@/common/prisma/prisma.service";
 import { BcryptService } from "../security/bcrypt.service";
 import { Role, Prisma } from "@/generated/prisma/client";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
-import { OnCallService } from "../oncall/oncall.service";
+import { OnCallService } from "../on-call/on-call.service";
 
 @Injectable()
 export class UsersService {

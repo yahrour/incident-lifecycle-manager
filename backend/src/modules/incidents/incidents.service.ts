@@ -9,7 +9,7 @@ import {
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { Prisma } from "@/generated/prisma/client";
-import { OnCallService } from "@/modules/oncall/oncall.service";
+import { OnCallService } from "@/modules/on-call/on-call.service";
 import { CreateIncidentDto } from "./dto/create-incident.dto";
 import { FindIncidentsDto } from "./dto/find-incidents.dto";
 import { INCIDENT_STATUS } from "./constants";
@@ -220,8 +220,8 @@ export class IncidentsService {
 
   async create(ownerId: string, createIncidentDto: CreateIncidentDto) {
     const onCall = await this.onCallService.getCurrentOnCall(
-      createIncidentDto.teamId,
-      ownerId
+      ownerId,
+      createIncidentDto.teamId
     );
     const assigneeUserId = onCall?.chain.find(
       ({ position }) => position === "PRIMARY"
@@ -289,8 +289,8 @@ export class IncidentsService {
     if (!incident) {
       if (alert.status === "resolved") return null;
       const onCall = await this.onCallService.getCurrentOnCall(
-        team.id,
-        ownerId
+        ownerId,
+        team.id
       );
 
       incident = await this.prisma.incident.upsert({
@@ -469,8 +469,8 @@ export class IncidentsService {
         }
 
         const onCall = await this.onCallService.getCurrentOnCall(
-          incident.team.id,
-          incident.team.ownerId
+          incident.team.ownerId,
+          incident.team.id
         );
 
         if (!incident.assignedToId) {

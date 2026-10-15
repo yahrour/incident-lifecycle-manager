@@ -49,7 +49,7 @@ export function TeamStats({ team }: { team: Team }) {
         title="Escalation (min)"
         value={team.escalationTimeoutMinutes}
       />
-      <StatBlock title="Open Incidents" value={stats.incidentCount} />
+      <StatBlock title="Open Incidents" value={stats.openIncidentCount} />
     </div>
   );
 }

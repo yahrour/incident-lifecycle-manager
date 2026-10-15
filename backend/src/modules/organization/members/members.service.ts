@@ -12,7 +12,11 @@ import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prism
 export class MembersService {
   constructor(private prisma: PrismaService) {}
 
-  async add(tx: Prisma.TransactionClient, teamId: string, userId: string) {
+  async addToTeam(
+    tx: Prisma.TransactionClient,
+    teamId: string,
+    userId: string
+  ) {
     const team = await tx.team.findUnique({
       where: { id: teamId },
     });
@@ -23,7 +27,7 @@ export class MembersService {
 
     if (team.ownerId === userId) {
       throw new ConflictException(
-        "SRE Managers are administrative owners and cannot be added to the on-call member rotation."
+        "SRE managers can't be added as team members"
       );
     }
 
@@ -37,9 +41,7 @@ export class MembersService {
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === "P2002") {
-          throw new ConflictException(
-            "This user is already a member of a team"
-          );
+          throw new ConflictException("This user already belongs to a team");
         }
         if (error.code === "P2003") {
           throw new NotFoundException("User doesn't exist");
@@ -49,9 +51,9 @@ export class MembersService {
     }
   }
 
-  async findAll(
-    teamId: string,
+  async findByTeam(
     ownerId: string,
+    teamId: string,
     query: OffsetPaginationSearchParams
   ) {
     const now = new Date();
@@ -75,9 +77,10 @@ export class MembersService {
           },
         },
         ...(query.sortField && {
-          orderBy: {
-            [query.sortField]: query.sortOrder,
-          },
+          orderBy: [
+            { [query.sortField]: query.sortOrder },
+            { id: query.sortOrder },
+          ],
         }),
         omit: {
           userId: true,
@@ -95,7 +98,7 @@ export class MembersService {
           },
           unavailabilities: {
             where: {
-              confirmed: true,
+              status: "APPROVED",
               startDate: {
                 lte: now,
               },
@@ -131,9 +134,10 @@ export class MembersService {
           },
         },
         ...(query.sortField && {
-          orderBy: {
-            [query.sortField]: query.sortOrder,
-          },
+          orderBy: [
+            { [query.sortField]: query.sortOrder },
+            { id: query.sortOrder },
+          ],
         }),
         omit: {
           userId: true,
@@ -151,7 +155,7 @@ export class MembersService {
           },
           unavailabilities: {
             where: {
-              confirmed: true,
+              status: "APPROVED",
               startDate: {
                 lte: now,
               },
@@ -173,39 +177,7 @@ export class MembersService {
     return { members, total };
   }
 
-  async findOne(teamId: string, memberId: number, ownerId: string) {
-    const member = await this.prisma.teamMember.findUnique({
-      where: {
-        id: memberId,
-        teamId,
-        team: {
-          ownerId,
-        },
-      },
-      omit: {
-        userId: true,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            specialty: true,
-          },
-        },
-      },
-    });
-
-    if (!member) {
-      throw new NotFoundException("Member doesn't exist");
-    }
-
-    return member;
-  }
-
-  async remove(teamId: string, memberId: number, ownerId: string) {
+  async removeFromTeam(ownerId: string, teamId: string, memberId: number) {
     try {
       await this.prisma.teamMember.delete({
         where: {
@@ -227,14 +199,14 @@ export class MembersService {
     }
   }
 
-  async hasTeam(userId: string) {
-    const hasTeam = await this.prisma.teamMember.findUnique({
+  async isInTeam(userId: string) {
+    const membership = await this.prisma.teamMember.findUnique({
       where: {
         userId,
       },
       select: { id: true },
     });
 
-    return hasTeam !== null;
+    return membership !== null;
   }
 }

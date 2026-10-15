@@ -40,54 +40,61 @@ export class TeamsController {
     return apiResponse(result);
   }
 
-  @Patch(":id")
+  @Patch(":teamId")
   @Roles(Role.SRE)
   async update(
-    @Param("id", ParseUUIDPipe) id: string,
+    @Param("teamId", ParseUUIDPipe) teamId: string,
     @ActiveUser() user: ActiveUserData,
     @Body() updateTeamDto: UpdateTeamDto
   ) {
-    const result = await this.teamsService.update(id, user.sub, updateTeamDto);
+    const result = await this.teamsService.update(
+      user.sub,
+      teamId,
+      updateTeamDto
+    );
     return apiResponse(result);
   }
 
   @Get()
   @Roles(Role.SRE)
-  async findAll(
+  async findAllForOwner(
     @ActiveUser() user: ActiveUserData,
     @Query() query: OffsetPaginationSearchParams
   ) {
-    const { teams, total } = await this.teamsService.findAll(user.sub, query);
+    const { teams, total } = await this.teamsService.findAllForOwner(
+      user.sub,
+      query
+    );
     return apiResponse(teams, { total });
   }
 
-  @Get(":id")
+  @Get(":teamId")
   @Roles(Role.SRE)
   async findOne(
-    @Param("id", ParseUUIDPipe) id: string,
+    @Param("teamId", ParseUUIDPipe) teamId: string,
     @ActiveUser() user: ActiveUserData
   ) {
-    const result = await this.teamsService.findOne(id, user.sub);
+    const result = await this.teamsService.findOne(user.sub, teamId);
     return apiResponse(result);
   }
 
-  @Get(":id/stats")
+  @Get(":teamId/stats")
   @Roles(Role.SRE)
-  async findStats(
-    @Param("id", ParseUUIDPipe) id: string,
+  async getStats(
+    @Param("teamId", ParseUUIDPipe) teamId: string,
     @ActiveUser() user: ActiveUserData
   ) {
-    const result = await this.teamsService.findStats(id, user.sub);
+    const result = await this.teamsService.getStats(user.sub, teamId);
     return apiResponse(result);
   }
 
-  @Delete(":id")
+  @Delete(":teamId")
   @Roles(Role.SRE)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(
-    @Param("id", ParseUUIDPipe) id: string,
+  async remove(
+    @Param("teamId", ParseUUIDPipe) teamId: string,
     @ActiveUser() user: ActiveUserData
   ) {
-    await this.teamsService.delete(id, user.sub);
+    await this.teamsService.remove(user.sub, teamId);
   }
 }

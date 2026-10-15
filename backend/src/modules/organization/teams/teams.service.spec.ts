@@ -1,555 +1,382 @@
-// /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
-// import { Test } from "@nestjs/testing";
-// import { PrismaService } from "@/common/prisma/prisma.service";
-// import { TeamsService } from "./teams.service";
-// import { createMockPrisma, MockPrisma } from "../../../../test/prisma-mock";
-// import { convertDateToUtc } from "@/common/utils/timezone";
-// import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
-// import {
-//   BadRequestException,
-//   ConflictException,
-//   NotFoundException,
-// } from "@nestjs/common";
-// import { SORT_FIELD } from "./constants";
-// import { SORT_ORDER } from "@/common/constants";
-
-// const encodeCursor = (cursor: {
-//   id: string;
-//   sortField: SORT_FIELD;
-//   sortOrder: SORT_ORDER;
-// }) => Buffer.from(JSON.stringify(cursor)).toString("base64url");
-
-// const TEAM_ID = "teamId";
-// const OWNER_ID = "ownerId";
-// const NOW_DATE = new Date("2026-01-15T00:00:00.000Z");
-
-// describe("TeamsService", () => {
-//   let service: TeamsService;
-//   let prisma: MockPrisma;
-
-//   beforeEach(async () => {
-//     jest.useFakeTimers();
-//     jest.setSystemTime(NOW_DATE);
-
-//     prisma = createMockPrisma();
-
-//     const module = await Test.createTestingModule({
-//       providers: [
-//         TeamsService,
-//         {
-//           provide: PrismaService,
-//           useValue: prisma,
-//         },
-//       ],
-//     }).compile();
-
-//     service = module.get<TeamsService>(TeamsService);
-//   });
-
-//   afterEach(() => {
-//     jest.useRealTimers();
-//     jest.clearAllMocks();
-//   });
-
-//   describe("create", () => {
-//     it("should create a team", async () => {
-//       const createTeamDto = {
-//         name: "frontend",
-//         description: "this team is responsible for the application frontend",
-//         rotationPeriodDays: 7,
-//         rotationStartDate: new Date(),
-//         timezone: "UTC",
-//         escalationTimeoutMinutes: 30,
-//       };
-
-//       const team = {
-//         id: TEAM_ID,
-//         ownerId: OWNER_ID,
-//         name: createTeamDto.name,
-//         description: createTeamDto.description,
-//         rotationPeriodDays: createTeamDto.rotationPeriodDays,
-//         rotationStartDate: createTeamDto.rotationStartDate,
-//         escalationTimeoutMinutes: createTeamDto.escalationTimeoutMinutes,
-//         currentRotationIndex: 0,
-//         lastNotifiedRotationIndex: -1,
-//         lastRotatedAt: new Date(),
-//         webhookUrl: null,
-//         createdAt: new Date(),
-//         updatedAt: new Date(),
-//       };
-
-//       prisma.team.create.mockResolvedValue(team);
-
-//       const result = await service.create(OWNER_ID, createTeamDto);
-
-//       expect(result).toEqual(team);
-
-//       expect(prisma.team.create).toHaveBeenCalledWith(
-//         expect.objectContaining({
-//           data: {
-//             ownerId: OWNER_ID,
-//             name: createTeamDto.name,
-//             description: createTeamDto.description,
-//             rotationPeriodDays: createTeamDto.rotationPeriodDays,
-//             rotationStartDate: convertDateToUtc(
-//               createTeamDto.rotationStartDate,
-//               createTeamDto.timezone
-//             ),
-//             escalationTimeoutMinutes: createTeamDto.escalationTimeoutMinutes,
-//           },
-//         })
-//       );
-//     });
-
-//     it("should throw ConflictException because team already exists", async () => {
-//       const createTeamDto = {
-//         name: "frontend",
-//         description: "this team is responsible for the application frontend",
-//         rotationPeriodDays: 7,
-//         rotationStartDate: new Date(),
-//         timezone: "UTC",
-//         escalationTimeoutMinutes: 30,
-//       };
-
-//       prisma.team.create.mockRejectedValue(
-//         new PrismaClientKnownRequestError("Team already exists", {
-//           code: "P2002",
-//           clientVersion: "5.0.0",
-//         })
-//       );
-
-//       await expect(service.create(OWNER_ID, createTeamDto)).rejects.toThrow(
-//         ConflictException
-//       );
-//     });
-
-//     it("should rethrow unknown errors", async () => {
-//       const createTeamDto = {
-//         name: "frontend",
-//         description: "this team is responsible for the application frontend",
-//         rotationPeriodDays: 7,
-//         rotationStartDate: new Date(),
-//         timezone: "UTC",
-//         escalationTimeoutMinutes: 30,
-//       };
-//       const error = new Error("unknow error");
-
-//       prisma.team.create.mockRejectedValue(error);
-
-//       await expect(service.create(OWNER_ID, createTeamDto)).rejects.toThrow(
-//         error
-//       );
-//     });
-//   });
-
-//   describe("update", () => {
-//     it("should update a team", async () => {
-//       const updateTeamDto = {
-//         name: "backend",
-//         description: "this team is responsible for the backend",
-//         escalationTimeoutMinutes: 60,
-//       };
-
-//       const updatedTeam = {
-//         id: TEAM_ID,
-//         ownerId: OWNER_ID,
-//         name: updateTeamDto.name,
-//         description: updateTeamDto.description,
-//         rotationPeriodDays: 7,
-//         rotationStartDate: new Date(),
-//         escalationTimeoutMinutes: updateTeamDto.escalationTimeoutMinutes,
-//         currentRotationIndex: 0,
-//         lastNotifiedRotationIndex: 0,
-//         lastRotatedAt: new Date(),
-//         webhookUrl: null,
-//         createdAt: new Date(),
-//         updatedAt: new Date(),
-//       };
-
-//       prisma.team.update.mockResolvedValue(updatedTeam);
-
-//       const result = await service.update(TEAM_ID, OWNER_ID, updateTeamDto);
-
-//       expect(result).toEqual(updatedTeam);
-
-//       expect(prisma.team.update).toHaveBeenCalledWith(
-//         expect.objectContaining({
-//           where: {
-//             id: TEAM_ID,
-//             ownerId: OWNER_ID,
-//           },
-//           data: {
-//             ...updateTeamDto,
-//             currentRotationIndex: undefined,
-//             lastNotifiedRotationIndex: undefined,
-//             lastRotatedAt: undefined,
-//           },
-//         })
-//       );
-//     });
-
-//     it("should reset rotation when rotationPeriodDays is updated", async () => {
-//       const updateTeamDto = {
-//         rotationPeriodDays: 14,
-//       };
-
-//       const updatedTeam = {
-//         id: TEAM_ID,
-//         ownerId: OWNER_ID,
-//         name: "frontend",
-//         description: "frontend team",
-//         rotationPeriodDays: 14,
-//         rotationStartDate: NOW_DATE,
-//         escalationTimeoutMinutes: 30,
-//         currentRotationIndex: 0,
-//         lastNotifiedRotationIndex: -1,
-//         lastRotatedAt: NOW_DATE,
-//         webhookUrl: null,
-//         createdAt: NOW_DATE,
-//         updatedAt: NOW_DATE,
-//       };
-
-//       prisma.team.update.mockResolvedValue(updatedTeam);
-
-//       const result = await service.update(TEAM_ID, OWNER_ID, updateTeamDto);
-
-//       expect(result).toEqual(updatedTeam);
-
-//       expect(prisma.team.update).toHaveBeenCalledWith(
-//         expect.objectContaining({
-//           where: {
-//             id: TEAM_ID,
-//             ownerId: OWNER_ID,
-//           },
-//           data: expect.objectContaining({
-//             rotationPeriodDays: 14,
-//             currentRotationIndex: 0,
-//             lastNotifiedRotationIndex: -1,
-//             lastRotatedAt: NOW_DATE,
-//           }),
-//         })
-//       );
-//     });
-
-//     it("should throw NotFoundException when team does not exist", async () => {
-//       prisma.team.update.mockRejectedValue(
-//         new PrismaClientKnownRequestError("Team does not exist", {
-//           code: "P2025",
-//           clientVersion: "5.0.0",
-//         })
-//       );
-
-//       await expect(
-//         service.update(TEAM_ID, OWNER_ID, {
-//           name: "backend",
-//         })
-//       ).rejects.toThrow(NotFoundException);
-//     });
-
-//     it("should throw ConflictException when team name already exists", async () => {
-//       prisma.team.update.mockRejectedValue(
-//         new PrismaClientKnownRequestError("Team already exists", {
-//           code: "P2002",
-//           clientVersion: "5.0.0",
-//         })
-//       );
-
-//       await expect(
-//         service.update(TEAM_ID, OWNER_ID, {
-//           name: "backend",
-//         })
-//       ).rejects.toThrow(ConflictException);
-//     });
-
-//     it("should rethrow unknown errors", async () => {
-//       const error = new Error("unknow error");
-
-//       prisma.team.update.mockRejectedValue(error);
-
-//       await expect(
-//         service.update(TEAM_ID, OWNER_ID, {
-//           name: "backend",
-//         })
-//       ).rejects.toThrow(error);
-//     });
-//   });
-
-//   describe("findOne", () => {
-//     it("should return a team", async () => {
-//       const team = {
-//         id: TEAM_ID,
-//         ownerId: OWNER_ID,
-//         name: "frontend",
-//         description: "this team is responsible for the application frontend",
-//         rotationPeriodDays: 7,
-//         rotationStartDate: NOW_DATE,
-//         timezone: "UTC",
-//         escalationTimeoutMinutes: 30,
-//         currentRotationIndex: 0,
-//         lastNotifiedRotationIndex: 0,
-//         lastRotatedAt: NOW_DATE,
-//         webhookUrl: null,
-//         createdAt: NOW_DATE,
-//         updatedAt: NOW_DATE,
-//       };
-
-//       prisma.team.findUnique.mockResolvedValue(team);
-
-//       const result = await service.findOne(TEAM_ID, OWNER_ID);
-
-//       expect(result).toEqual(team);
-
-//       expect(prisma.team.findUnique).toHaveBeenCalledWith(
-//         expect.objectContaining({
-//           where: {
-//             id: TEAM_ID,
-//             ownerId: OWNER_ID,
-//           },
-//         })
-//       );
-//     });
-
-//     it("should throw NotFoundException when team does not exist", async () => {
-//       prisma.team.findUnique.mockResolvedValue(null);
-
-//       await expect(service.findOne(TEAM_ID, OWNER_ID)).rejects.toThrow(
-//         NotFoundException
-//       );
-
-//       expect(prisma.team.findUnique).toHaveBeenCalledWith(
-//         expect.objectContaining({
-//           where: {
-//             id: TEAM_ID,
-//             ownerId: OWNER_ID,
-//           },
-//         })
-//       );
-//     });
-//   });
-
-//   describe("delete", () => {
-//     it("should delete a team", async () => {
-//       const team = {
-//         id: TEAM_ID,
-//         ownerId: OWNER_ID,
-//         name: "frontend",
-//         description: "this team is responsible for the application frontend",
-//         rotationPeriodDays: 7,
-//         rotationStartDate: NOW_DATE,
-//         timezone: "UTC",
-//         escalationTimeoutMinutes: 30,
-//         currentRotationIndex: 0,
-//         lastNotifiedRotationIndex: 0,
-//         lastRotatedAt: NOW_DATE,
-//         webhookUrl: null,
-//         createdAt: NOW_DATE,
-//         updatedAt: NOW_DATE,
-//       };
-//       prisma.team.delete.mockResolvedValue(team);
-
-//       await service.delete(TEAM_ID, OWNER_ID);
-
-//       expect(prisma.team.delete).toHaveBeenCalledWith({
-//         where: {
-//           id: TEAM_ID,
-//           ownerId: OWNER_ID,
-//         },
-//       });
-//     });
-
-//     it("should throw NotFoundException when team doesn't exist", async () => {
-//       prisma.team.delete.mockRejectedValue(
-//         new PrismaClientKnownRequestError("Team doesn't exist", {
-//           code: "P2025",
-//           clientVersion: "5.0.0",
-//         })
-//       );
-
-//       await expect(service.delete(TEAM_ID, OWNER_ID)).rejects.toThrow(
-//         NotFoundException
-//       );
-//     });
-//   });
-
-//   describe("findAll", () => {
-//     const defaultQuery = {
-//       limit: 20,
-//       sortField: SORT_FIELD.CREATED_AT,
-//       sortOrder: SORT_ORDER.ASC,
-//     };
-
-//     const makeTeam = (index: number) => ({
-//       id: `${TEAM_ID}${index}`,
-//       ownerId: OWNER_ID,
-//       name: `frontend-${index}`,
-//       description: "frontend team",
-//       rotationPeriodDays: 7,
-//       rotationStartDate: NOW_DATE,
-//       escalationTimeoutMinutes: 30,
-//       currentRotationIndex: 0,
-//       lastNotifiedRotationIndex: 0,
-//       lastRotatedAt: NOW_DATE,
-//       webhookUrl: null,
-//       createdAt: NOW_DATE,
-//       updatedAt: NOW_DATE,
-//     });
-
-//     it("should return teams scoped to the owner without a next cursor when there is no next page", async () => {
-//       const teams = [makeTeam(1), makeTeam(2)];
-//       prisma.team.findMany.mockResolvedValue(teams);
-
-//       const result = await service.findAll(OWNER_ID, defaultQuery);
-
-//       expect(result).toEqual({ teams, nextCursor: null });
-
-//       expect(prisma.team.findMany).toHaveBeenCalledWith(
-//         expect.objectContaining({
-//           where: { ownerId: OWNER_ID },
-//           take: defaultQuery.limit + 1,
-//           orderBy: [
-//             { [defaultQuery.sortField]: defaultQuery.sortOrder },
-//             { id: defaultQuery.sortOrder },
-//           ],
-//         })
-//       );
-//     });
-
-//     it("should return an empty list and no next cursor when there are no teams", async () => {
-//       prisma.team.findMany.mockResolvedValue([]);
-
-//       const result = await service.findAll(OWNER_ID, defaultQuery);
-
-//       expect(result).toEqual({ teams: [], nextCursor: null });
-//     });
-
-//     it("should return a next cursor when there are more pages and truncate the results to the limit", async () => {
-//       const teams = [makeTeam(1), makeTeam(2), makeTeam(3)];
-//       prisma.team.findMany.mockResolvedValue(teams);
-
-//       const result = await service.findAll(OWNER_ID, {
-//         ...defaultQuery,
-//         limit: 2,
-//       });
-
-//       expect(result.teams).toEqual([makeTeam(1), makeTeam(2)]);
-
-//       const decodedCursor = result.nextCursor
-//         ? JSON.parse(
-//             Buffer.from(result.nextCursor, "base64url").toString("utf-8")
-//           )
-//         : null;
-//       expect(decodedCursor).toEqual({
-//         id: makeTeam(2).id,
-//         sortField: defaultQuery.sortField,
-//         sortOrder: defaultQuery.sortOrder,
-//       });
-//     });
-
-//     it("should filter by search using a case-insensitive name match", async () => {
-//       const teams = [makeTeam(1)];
-//       prisma.team.findMany.mockResolvedValue(teams);
-
-//       const search = "frontend";
-//       const result = await service.findAll(OWNER_ID, {
-//         ...defaultQuery,
-//         search,
-//       });
-
-//       expect(result).toEqual({ teams, nextCursor: null });
-
-//       expect(prisma.team.findMany).toHaveBeenCalledWith(
-//         expect.objectContaining({
-//           where: {
-//             ownerId: OWNER_ID,
-//             name: {
-//               contains: search,
-//               mode: "insensitive",
-//             },
-//           },
-//         })
-//       );
-//     });
-
-//     it("should skip the cursor record when a cursor is provided", async () => {
-//       const cursorId = "6015a4a0-b9ea-4a4d-85e1-5f0b4c8d0e2f";
-//       const cursor = encodeCursor({
-//         id: cursorId,
-//         sortField: defaultQuery.sortField,
-//         sortOrder: defaultQuery.sortOrder,
-//       });
-//       prisma.team.findMany.mockResolvedValue([makeTeam(2)]);
-
-//       await service.findAll(OWNER_ID, { ...defaultQuery, cursor });
-
-//       expect(prisma.team.findMany).toHaveBeenCalledWith(
-//         expect.objectContaining({
-//           skip: 1,
-//           cursor: { id: cursorId },
-//         })
-//       );
-//     });
-
-//     it("should combine cursor pagination with truncation and produce the next cursor when a page follows", async () => {
-//       const cursorId = "6015a4a0-b9ea-4a4d-85e1-5f0b4c8d0e2f";
-//       const cursor = encodeCursor({
-//         id: cursorId,
-//         sortField: defaultQuery.sortField,
-//         sortOrder: defaultQuery.sortOrder,
-//       });
-
-//       // 3 rows returned from Prisma (2 fit the page, 1 signals a next page)
-//       prisma.team.findMany.mockResolvedValue([
-//         makeTeam(1),
-//         makeTeam(2),
-//         makeTeam(3),
-//       ]);
-
-//       const result = await service.findAll(OWNER_ID, {
-//         ...defaultQuery,
-//         cursor,
-//         limit: 2,
-//       });
-
-//       expect(result.teams).toEqual([makeTeam(1), makeTeam(2)]);
-
-//       const decodedCursor = result.nextCursor
-//         ? JSON.parse(
-//             Buffer.from(result.nextCursor, "base64url").toString("utf-8")
-//           )
-//         : null;
-//       expect(decodedCursor).toEqual({
-//         id: makeTeam(2).id,
-//         sortField: SORT_FIELD.CREATED_AT,
-//         sortOrder: SORT_ORDER.ASC,
-//       });
-//     });
-
-//     it("should throw BadRequestException when the cursor sort parameters do not match the query", async () => {
-//       const cursor = encodeCursor({
-//         id: "6015a4a0-b9ea-4a4d-85e1-5f0b4c8d0e2f",
-//         sortField: SORT_FIELD.NAME,
-//         sortOrder: defaultQuery.sortOrder,
-//       });
-
-//       await expect(
-//         service.findAll(OWNER_ID, { ...defaultQuery, cursor })
-//       ).rejects.toThrow(BadRequestException);
-//       expect(prisma.team.findMany).not.toHaveBeenCalled();
-//     });
-
-//     it("should throw BadRequestException when the cursor is invalid", async () => {
-//       await expect(
-//         service.findAll(OWNER_ID, {
-//           ...defaultQuery,
-//           cursor: "not-a-valid-cursor",
-//         })
-//       ).rejects.toThrow(BadRequestException);
-//       expect(prisma.team.findMany).not.toHaveBeenCalled();
-//     });
-//   });
-// });
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
+import { Test } from "@nestjs/testing";
+import { ConflictException, NotFoundException } from "@nestjs/common";
+import { PrismaService } from "@/common/prisma/prisma.service";
+import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
+import { convertDateToUtc } from "@/common/utils/timezone";
+import { SORT_ORDER } from "@/common/constants";
+import { createMockPrisma, MockPrisma } from "../../../../test/prisma-mock";
+import { TeamsService } from "./teams.service";
+import { SORT_FIELD } from "./constants";
+
+const TEAM_ID = "teamId";
+const OWNER_ID = "ownerId";
+const NOW = new Date("2026-01-15T12:00:00.000Z");
+
+const prismaError = (code: string) =>
+  new PrismaClientKnownRequestError(code, { code, clientVersion: "5.0.0" });
+
+const makeTeam = (overrides = {}) => ({
+  id: TEAM_ID,
+  ownerId: OWNER_ID,
+  name: "frontend",
+  description: null,
+  services: ["web"],
+  rotationPeriodDays: 7,
+  rotationStartDate: NOW,
+  currentRotationIndex: 0,
+  lastRotatedAt: NOW,
+  escalationTimeoutMinutes: 30,
+  createdAt: NOW,
+  updatedAt: NOW,
+  ...overrides,
+});
 
 describe("TeamsService", () => {
-  it.todo("re-enable teams service unit tests");
+  let service: TeamsService;
+  let prisma: MockPrisma;
+
+  beforeEach(async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(NOW);
+
+    prisma = createMockPrisma();
+    const module = await Test.createTestingModule({
+      providers: [TeamsService, { provide: PrismaService, useValue: prisma }],
+    }).compile();
+
+    service = module.get(TeamsService);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  describe("create", () => {
+    const dto = {
+      name: "frontend",
+      description: "web team",
+      services: ["web"],
+      rotationPeriodDays: 7,
+      rotationStartDate: new Date("2026-02-01T00:00:00.000Z"),
+      timezone: "UTC",
+      escalationTimeoutMinutes: 30,
+    };
+
+    it("creates a team owned by the caller, converting the start date to UTC", async () => {
+      const team = makeTeam();
+      prisma.team.create.mockResolvedValue(team);
+
+      const result = await service.create(OWNER_ID, dto);
+
+      expect(result).toBe(team);
+      expect(prisma.team.create).toHaveBeenCalledWith({
+        data: {
+          ownerId: OWNER_ID,
+          name: dto.name,
+          description: dto.description,
+          services: dto.services,
+          rotationPeriodDays: dto.rotationPeriodDays,
+          rotationStartDate: convertDateToUtc(dto.rotationStartDate, "UTC"),
+          escalationTimeoutMinutes: dto.escalationTimeoutMinutes,
+        },
+        omit: { ownerId: true, createdAt: true, updatedAt: true },
+      });
+    });
+
+    it("leaves rotationStartDate undefined when none is given", async () => {
+      prisma.team.create.mockResolvedValue(makeTeam());
+
+      await service.create(OWNER_ID, { name: "frontend", services: ["web"] });
+
+      expect(prisma.team.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ rotationStartDate: undefined }),
+        })
+      );
+    });
+
+    it("throws ConflictException when the team already exists (P2002)", async () => {
+      prisma.team.create.mockRejectedValue(prismaError("P2002"));
+
+      await expect(service.create(OWNER_ID, dto)).rejects.toThrow(
+        ConflictException
+      );
+    });
+
+    it("rethrows unknown errors", async () => {
+      const error = new Error("boom");
+      prisma.team.create.mockRejectedValue(error);
+
+      await expect(service.create(OWNER_ID, dto)).rejects.toBe(error);
+    });
+  });
+
+  describe("update", () => {
+    it("updates the team, scoped to the owner", async () => {
+      const team = makeTeam({ name: "backend" });
+      prisma.team.update.mockResolvedValue(team);
+
+      const result = await service.update(OWNER_ID, TEAM_ID, {
+        name: "backend",
+      });
+
+      expect(result).toBe(team);
+      expect(prisma.team.update).toHaveBeenCalledWith({
+        where: { id: TEAM_ID, ownerId: OWNER_ID },
+        data: { name: "backend" },
+        omit: { ownerId: true, createdAt: true, updatedAt: true },
+      });
+    });
+
+    it("resets the rotation when rotationPeriodDays changes", async () => {
+      prisma.team.update.mockResolvedValue(makeTeam());
+
+      await service.update(OWNER_ID, TEAM_ID, { rotationPeriodDays: 14 });
+
+      expect(prisma.team.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: {
+            rotationPeriodDays: 14,
+            currentRotationIndex: 0,
+            lastRotatedAt: NOW,
+          },
+        })
+      );
+    });
+
+    it("doesn't reset the rotation when rotationPeriodDays isn't updated", async () => {
+      prisma.team.update.mockResolvedValue(makeTeam());
+
+      await service.update(OWNER_ID, TEAM_ID, { name: "backend" });
+
+      expect(prisma.team.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.not.objectContaining({ currentRotationIndex: 0 }),
+        })
+      );
+    });
+
+    it("throws NotFoundException when the team doesn't exist (P2025)", async () => {
+      prisma.team.update.mockRejectedValue(prismaError("P2025"));
+
+      await expect(
+        service.update(OWNER_ID, TEAM_ID, { name: "backend" })
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it("throws ConflictException when the name is taken (P2002)", async () => {
+      prisma.team.update.mockRejectedValue(prismaError("P2002"));
+
+      await expect(
+        service.update(OWNER_ID, TEAM_ID, { name: "backend" })
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it("rethrows unknown errors", async () => {
+      const error = new Error("boom");
+      prisma.team.update.mockRejectedValue(error);
+
+      await expect(
+        service.update(OWNER_ID, TEAM_ID, { name: "backend" })
+      ).rejects.toBe(error);
+    });
+  });
+
+  describe("findAllForOwner", () => {
+    it("returns the owner's teams and the total", async () => {
+      const teams = [makeTeam(), makeTeam({ id: "t2" })];
+      prisma.team.findMany.mockResolvedValue(teams);
+      prisma.team.count.mockResolvedValue(2);
+
+      const result = await service.findAllForOwner(OWNER_ID, {
+        limit: 10,
+        offset: 0,
+      });
+
+      expect(result).toEqual({ teams, total: 2 });
+      expect(prisma.team.findMany).toHaveBeenCalledWith({
+        where: { ownerId: OWNER_ID },
+        skip: 0,
+        take: 10,
+        orderBy: undefined,
+        omit: { ownerId: true, updatedAt: true, currentRotationIndex: true },
+      });
+      expect(prisma.team.count).toHaveBeenCalledWith({
+        where: { ownerId: OWNER_ID },
+      });
+    });
+
+    it("returns an empty list when the owner has no teams", async () => {
+      prisma.team.findMany.mockResolvedValue([]);
+      prisma.team.count.mockResolvedValue(0);
+
+      const result = await service.findAllForOwner(OWNER_ID, {
+        limit: 10,
+        offset: 0,
+      });
+
+      expect(result).toEqual({ teams: [], total: 0 });
+    });
+
+    it("applies the same case-insensitive name search to the page and the count", async () => {
+      prisma.team.findMany.mockResolvedValue([]);
+      prisma.team.count.mockResolvedValue(0);
+      const where = {
+        ownerId: OWNER_ID,
+        name: { contains: "front", mode: "insensitive" },
+      };
+
+      await service.findAllForOwner(OWNER_ID, {
+        limit: 10,
+        offset: 0,
+        search: "front",
+      });
+
+      expect(prisma.team.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where })
+      );
+      expect(prisma.team.count).toHaveBeenCalledWith({ where });
+    });
+
+    it("forwards limit and offset to take and skip", async () => {
+      prisma.team.findMany.mockResolvedValue([]);
+      prisma.team.count.mockResolvedValue(0);
+
+      await service.findAllForOwner(OWNER_ID, { limit: 5, offset: 15 });
+
+      expect(prisma.team.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 5, skip: 15 })
+      );
+    });
+
+    it("forwards sortField and sortOrder to orderBy", async () => {
+      prisma.team.findMany.mockResolvedValue([]);
+      prisma.team.count.mockResolvedValue(0);
+
+      await service.findAllForOwner(OWNER_ID, {
+        limit: 10,
+        offset: 0,
+        sortField: SORT_FIELD.NAME,
+        sortOrder: SORT_ORDER.DESC,
+      });
+
+      expect(prisma.team.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: { name: SORT_ORDER.DESC } })
+      );
+    });
+  });
+
+  describe("findOne", () => {
+    it("returns the team, scoped to the owner", async () => {
+      const team = makeTeam();
+      prisma.team.findUnique.mockResolvedValue(team);
+
+      await expect(service.findOne(OWNER_ID, TEAM_ID)).resolves.toBe(team);
+      expect(prisma.team.findUnique).toHaveBeenCalledWith({
+        where: { id: TEAM_ID, ownerId: OWNER_ID },
+        omit: { ownerId: true, createdAt: true, updatedAt: true },
+      });
+    });
+
+    it("throws NotFoundException when the team doesn't exist", async () => {
+      prisma.team.findUnique.mockResolvedValue(null);
+
+      await expect(service.findOne(OWNER_ID, TEAM_ID)).rejects.toThrow(
+        NotFoundException
+      );
+    });
+  });
+
+  describe("getStats", () => {
+    it("returns member, open incident and active unavailability counts", async () => {
+      prisma.team.findUnique.mockResolvedValue({
+        _count: { teamMembers: 5, incidents: 2 },
+      } as never);
+      prisma.unavailability.count.mockResolvedValue(1);
+
+      const result = await service.getStats(OWNER_ID, TEAM_ID);
+
+      expect(result).toEqual({
+        memberCount: 5,
+        openIncidentCount: 2,
+        activeUnavailabilityCount: 1,
+      });
+    });
+
+    it("counts only open incidents", async () => {
+      prisma.team.findUnique.mockResolvedValue({
+        _count: { teamMembers: 0, incidents: 0 },
+      } as never);
+      prisma.unavailability.count.mockResolvedValue(0);
+
+      await service.getStats(OWNER_ID, TEAM_ID);
+
+      expect(prisma.team.findUnique).toHaveBeenCalledWith({
+        where: { id: TEAM_ID, ownerId: OWNER_ID },
+        select: {
+          _count: {
+            select: {
+              incidents: { where: { status: "open" } },
+              teamMembers: true,
+            },
+          },
+        },
+      });
+    });
+
+    it("counts only approved unavailabilities active right now", async () => {
+      prisma.team.findUnique.mockResolvedValue({
+        _count: { teamMembers: 0, incidents: 0 },
+      } as never);
+      prisma.unavailability.count.mockResolvedValue(0);
+
+      await service.getStats(OWNER_ID, TEAM_ID);
+
+      expect(prisma.unavailability.count).toHaveBeenCalledWith({
+        where: {
+          teamMember: { team: { ownerId: OWNER_ID }, teamId: TEAM_ID },
+          status: "APPROVED",
+          startDate: { lte: NOW },
+          endDate: { gte: NOW },
+        },
+      });
+    });
+
+    it("throws NotFoundException when the team doesn't exist", async () => {
+      prisma.team.findUnique.mockResolvedValue(null);
+      prisma.unavailability.count.mockResolvedValue(0);
+
+      await expect(service.getStats(OWNER_ID, TEAM_ID)).rejects.toThrow(
+        NotFoundException
+      );
+    });
+  });
+
+  describe("remove", () => {
+    it("deletes the team, scoped to the owner", async () => {
+      prisma.team.delete.mockResolvedValue(makeTeam());
+
+      await expect(service.remove(OWNER_ID, TEAM_ID)).resolves.toBeUndefined();
+      expect(prisma.team.delete).toHaveBeenCalledWith({
+        where: { id: TEAM_ID, ownerId: OWNER_ID },
+      });
+    });
+
+    it("throws NotFoundException when the team doesn't exist (P2025)", async () => {
+      prisma.team.delete.mockRejectedValue(prismaError("P2025"));
+
+      await expect(service.remove(OWNER_ID, TEAM_ID)).rejects.toThrow(
+        NotFoundException
+      );
+    });
+
+    it("rethrows unknown errors", async () => {
+      const error = new Error("boom");
+      prisma.team.delete.mockRejectedValue(error);
+
+      await expect(service.remove(OWNER_ID, TEAM_ID)).rejects.toBe(error);
+    });
+  });
 });

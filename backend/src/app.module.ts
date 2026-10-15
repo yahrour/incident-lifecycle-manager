@@ -4,7 +4,7 @@ import { HealthModule } from "@/modules/health/health.module";
 import { ConfigModule } from "@nestjs/config";
 import { validationSchema } from "@/common/validation/env.schema";
 import { OrganizationModule } from "@/modules/organization/organization.module";
-import { OncallModule } from "@/modules/oncall/oncall.module";
+import { OncallModule } from "@/modules/on-call/on-call.module";
 import { MetricsModule } from "@/modules/metrics/metrics.module";
 import { AuthModule } from "@/modules/auth/auth.module";
 import { UsersModule } from "@/modules/users/users.module";

@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
-import { OnCallController } from "./oncall.controller";
-import { OnCallService } from "./oncall.service";
+import { OnCallController } from "./on-call.controller";
+import { OnCallService } from "./on-call.service";
 
 @Module({
   controllers: [OnCallController],

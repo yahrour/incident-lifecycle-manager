@@ -11,6 +11,7 @@ import {
 } from "./dto";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { convertDateToUtc } from "@/common/utils/timezone";
+import { Prisma } from "@/generated/prisma/client";
 
 @Injectable()
 export class TeamsService {
@@ -44,7 +45,7 @@ export class TeamsService {
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === "P2002") {
-          throw new ConflictException("Team already exist");
+          throw new ConflictException("Team already exists");
         }
       }
 
@@ -52,20 +53,14 @@ export class TeamsService {
     }
   }
 
-  async update(id: string, ownerId: string, updateTeamDto: UpdateTeamDto) {
-    const data: UpdateTeamDto & {
-      currentRotationIndex: number | undefined;
-      lastRotatedAt: Date | undefined;
-    } = {
+  async update(ownerId: string, id: string, updateTeamDto: UpdateTeamDto) {
+    const data: Prisma.TeamUpdateInput = {
       ...updateTeamDto,
-      currentRotationIndex: undefined,
-      lastRotatedAt: undefined,
+      ...(updateTeamDto.rotationPeriodDays !== undefined && {
+        currentRotationIndex: 0,
+        lastRotatedAt: new Date(),
+      }),
     };
-
-    if (updateTeamDto.rotationPeriodDays !== undefined) {
-      data.currentRotationIndex = 0;
-      data.lastRotatedAt = new Date();
-    }
 
     try {
       const updatedTeam = await this.prisma.team.update({
@@ -80,14 +75,15 @@ export class TeamsService {
           updatedAt: true,
         },
       });
+
       return updatedTeam;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === "P2025") {
-          throw new NotFoundException();
+          throw new NotFoundException("Team doesn't exist");
         }
         if (error.code === "P2002") {
-          throw new ConflictException("Team already exist");
+          throw new ConflictException("Team already exists");
         }
       }
 
@@ -95,60 +91,48 @@ export class TeamsService {
     }
   }
 
-  async findAll(ownerId: string, query: OffsetPaginationSearchParams) {
-    try {
-      const [teams, total] = await Promise.all([
-        this.prisma.team.findMany({
-          where: {
-            ownerId,
-            ...(query.search && {
-              name: {
-                contains: query.search,
-                mode: "insensitive",
-              },
-            }),
-          },
-          skip: query.offset,
-          take: query.limit,
-          ...(query.sortField && {
-            orderBy: {
-              [query.sortField]: query.sortOrder,
+  async findAllForOwner(ownerId: string, query: OffsetPaginationSearchParams) {
+    const [teams, total] = await Promise.all([
+      this.prisma.team.findMany({
+        where: {
+          ownerId,
+          ...(query.search && {
+            name: {
+              contains: query.search,
+              mode: "insensitive",
             },
           }),
-          omit: {
-            ownerId: true,
-            updatedAt: true,
-            currentRotationIndex: true,
+        },
+        skip: query.offset,
+        take: query.limit,
+        ...(query.sortField && {
+          orderBy: {
+            [query.sortField]: query.sortOrder,
           },
         }),
-        this.prisma.team.count({
-          where: {
-            ownerId,
-            ...(query.search && {
-              name: {
-                contains: query.search,
-                mode: "insensitive",
-              },
-            }),
-          },
-        }),
-      ]);
+        omit: {
+          ownerId: true,
+          updatedAt: true,
+          currentRotationIndex: true,
+        },
+      }),
+      this.prisma.team.count({
+        where: {
+          ownerId,
+          ...(query.search && {
+            name: {
+              contains: query.search,
+              mode: "insensitive",
+            },
+          }),
+        },
+      }),
+    ]);
 
-      return { teams, total };
-    } catch (error) {
-      if (
-        error instanceof PrismaClientKnownRequestError &&
-        error.code === "P2025"
-      ) {
-        throw new NotFoundException(
-          "Cursor references a no-longer-existing team"
-        );
-      }
-      throw error;
-    }
+    return { teams, total };
   }
 
-  async findOne(id: string, ownerId: string) {
+  async findOne(ownerId: string, id: string) {
     const team = await this.prisma.team.findUnique({
       where: {
         id,
@@ -168,9 +152,9 @@ export class TeamsService {
     return team;
   }
 
-  async findStats(id: string, ownerId: string) {
+  async getStats(ownerId: string, id: string) {
     const now = new Date();
-    const [teamStats, activeUnavailabilityCount] = await Promise.all([
+    const [stats, activeUnavailabilityCount] = await Promise.all([
       this.prisma.team.findUnique({
         where: {
           id,
@@ -193,7 +177,7 @@ export class TeamsService {
       this.prisma.unavailability.count({
         where: {
           teamMember: { team: { ownerId }, teamId: id },
-          confirmed: true,
+          status: "APPROVED",
           startDate: {
             lte: now,
           },
@@ -204,18 +188,18 @@ export class TeamsService {
       }),
     ]);
 
-    if (!teamStats) {
+    if (!stats) {
       throw new NotFoundException("Team doesn't exist");
     }
 
     return {
-      memberCount: teamStats._count.teamMembers,
-      incidentCount: teamStats._count.incidents,
+      memberCount: stats._count.teamMembers,
+      openIncidentCount: stats._count.incidents,
       activeUnavailabilityCount,
     };
   }
 
-  async delete(id: string, ownerId: string) {
+  async remove(ownerId: string, id: string) {
     try {
       await this.prisma.team.delete({
         where: {

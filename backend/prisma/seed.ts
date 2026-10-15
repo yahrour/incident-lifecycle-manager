@@ -280,7 +280,6 @@ async function main() {
         endDate: new Date(dayOffset(offset + len).getTime() + (23 * HOUR + 59 * 60 * SEC)),
         reason: pick(UNAVAILABILITY_REASONS),
         status,
-        confirmed: status === "APPROVED",
       });
     }
   }
@@ -299,7 +298,6 @@ async function main() {
       endDate: new Date(dayOffset(u.offset + u.len).getTime() + (23 * HOUR + 59 * 60 * SEC)),
       reason: u.reason,
       status: u.status,
-      confirmed: u.status === "APPROVED",
     }))
   );
   // Clear her existing rows first so re-running doesn't duplicate them
