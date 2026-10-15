@@ -1,4 +1,5 @@
-export type Filter = "all" | "pending" | "rejected" | "approved" | "expired";
+export type UnavailabilityFilter =
+  "all" | "pending" | "rejected" | "approved" | "expired";
 
 export type UnavailabilityStatus =
   "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED";
