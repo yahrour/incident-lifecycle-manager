@@ -19,6 +19,7 @@ import {
   ACCESS_COOKIE_OPTIONS,
   REFRESH_COOKIE_OPTIONS,
 } from "./auth-cookie.constants";
+import { apiResponse } from "@/common/utils/api-response";
 
 @Public()
 @Controller({
@@ -40,7 +41,10 @@ export class AuthController {
   ) {
     const result = await this.authService.signIn(signIn);
     if (!result.success) {
-      return { success: false, message: result.message };
+      return apiResponse({
+        success: false,
+        message: "Invalid email or password",
+      });
     }
     response.cookie(
       "refreshToken",
@@ -48,7 +52,7 @@ export class AuthController {
       REFRESH_COOKIE_OPTIONS
     );
     response.cookie("accessToken", result.accessToken, ACCESS_COOKIE_OPTIONS);
-    return { success: true };
+    return apiResponse({ success: true });
   }
 
   @HttpCode(HttpStatus.OK)
@@ -98,7 +102,7 @@ export class AuthController {
     return { user };
   }
 
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   @Post("logout")
   async logout(
     @Req() request: Request,
@@ -106,9 +110,7 @@ export class AuthController {
   ) {
     const cookies = request.cookies as Record<string, string> | undefined;
     await this.authService.logout(cookies?.["refreshToken"]);
-
     response.clearCookie("accessToken", ACCESS_COOKIE_OPTIONS);
     response.clearCookie("refreshToken", REFRESH_COOKIE_OPTIONS);
-    return { message: "Logged out successfully" };
   }
 }

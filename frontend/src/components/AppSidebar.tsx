@@ -25,7 +25,7 @@ import {
   ChevronDown,
   LogOut,
 } from "lucide-react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, Navigate } from "react-router";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth/context/AuthContext";
 import { Role } from "@/types";
@@ -45,6 +45,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { FullPageSpinner } from "@/components/FullPageSpinner";
 
 const managerItems = {
   respondItems: [
@@ -90,9 +91,9 @@ export function AppSidebar() {
   const { mutate: logout, isPending } = useLogout();
 
   if (isLoading) {
-    return <p>Loading...</p>;
+    return <FullPageSpinner />;
   } else if (!user) {
-    return <p>Unauthorized</p>;
+    return <Navigate to="/login" replace />;
   }
 
   const items = user.role === Role.SRE ? managerItems : engineerItems;
