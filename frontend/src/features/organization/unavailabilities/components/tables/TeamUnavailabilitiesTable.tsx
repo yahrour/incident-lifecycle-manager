@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import { UnavailabilitiesTable } from "./UnavailabilitiesTable";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { teamKeys } from "@/features/organization/shared/constants";
-import type { Filter } from "@/types";
+import type { UnavailabilityFilter } from "@/types";
 
 export function TeamUnavailabilitiesTable({
   teamId,
@@ -21,7 +21,7 @@ export function TeamUnavailabilitiesTable({
   sort: SortState;
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
-  filter: Filter;
+  filter: UnavailabilityFilter;
 }) {
   const { data, isError, isPending, refetch } = useQuery({
     queryKey: teamKeys.unavailabilitiesList(teamId, page, sort, filter),

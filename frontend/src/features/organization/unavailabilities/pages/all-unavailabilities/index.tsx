@@ -9,11 +9,11 @@ import { useState } from "react";
 import type { SortState } from "../../types";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AllUnavailabilitiesTable } from "../../components/tables/AllUnavailabilitiesTable";
-import type { Filter } from "@/types";
+import type { UnavailabilityFilter } from "@/types";
 
 export function AllUnavailabilities() {
   const [page, setPage] = useState(1);
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<UnavailabilityFilter>("all");
   const [sort, setSort] = useState<SortState>({
     field: "createdAt",
     order: "desc",

@@ -22,8 +22,8 @@ import {
   unavailabilityKeys,
 } from "@/features/organization/shared/constants";
 import { formatDuration } from "@/utils/time";
-import type { Unavailability, UnavailabilityStatus } from "@/types";
-import type { TeamMember } from "@/features/organization/shared/types";
+import type { UnavailabilityStatus } from "@/types";
+import type { UnavailabilityWithTeamMember } from "@/features/organization/shared/types";
 
 const statusVariant: Record<
   UnavailabilityStatus,
@@ -42,7 +42,7 @@ export function UnavailabilitiesTable({
   page,
   setPage,
 }: {
-  unavailabilities: (Unavailability & { teamMember: TeamMember })[];
+  unavailabilities: UnavailabilityWithTeamMember[];
   showOrgWide: boolean;
   totalUnavailabilities: number;
   page: number;

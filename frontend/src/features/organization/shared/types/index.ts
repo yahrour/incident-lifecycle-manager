@@ -39,3 +39,7 @@ export type TeamMember = {
     name: string;
   };
 };
+
+export type UnavailabilityWithTeamMember = Unavailability & {
+  teamMember: TeamMember;
+};

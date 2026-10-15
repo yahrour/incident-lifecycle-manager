@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import { UnavailabilitiesTable } from "./UnavailabilitiesTable";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { unavailabilityKeys } from "@/features/organization/shared/constants";
-import type { Filter } from "@/types";
+import type { UnavailabilityFilter } from "@/types";
 
 export function AllUnavailabilitiesTable({
   sort,
@@ -19,7 +19,7 @@ export function AllUnavailabilitiesTable({
   sort: SortState;
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
-  filter: Filter;
+  filter: UnavailabilityFilter;
 }) {
   const { data, isError, isPending, refetch } = useQuery({
     queryKey: unavailabilityKeys.list(page, sort, filter),

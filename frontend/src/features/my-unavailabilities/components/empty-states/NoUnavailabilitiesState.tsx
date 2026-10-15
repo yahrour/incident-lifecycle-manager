@@ -1,7 +1,11 @@
-import type { Filter } from "@/types";
+import type { UnavailabilityFilter } from "@/types";
 import { CalendarOffIcon } from "lucide-react";
 
-export function NoUnavailabilitiesState({ filter }: { filter: Filter }) {
+export function NoUnavailabilitiesState({
+  filter,
+}: {
+  filter: UnavailabilityFilter;
+}) {
   const isFiltered = filter !== "all";
 
   return (
