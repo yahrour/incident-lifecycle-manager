@@ -15,8 +15,11 @@ import { useErrorToast } from "@/hooks/use-error-toast";
 import { NoTeamsState } from "../empty-states/NoTeamsState";
 import type { SortState } from "../../types";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
-import { TablePagination } from "@/features/organization/shared/components/TablePagination";
-import { teamKeys } from "@/features/organization/shared/constants";
+import {
+  DEFAULT_LIMIT,
+  teamKeys,
+} from "@/features/organization/shared/constants";
+import { TablePagination } from "@/components/TablePagination";
 
 export function TeamsTable({
   search,
@@ -135,7 +138,12 @@ export function TeamsTable({
           })}
         </TableBody>
       </Table>
-      <TablePagination page={page} setPage={setPage} total={totalTeams} />
+      <TablePagination
+        page={page}
+        setPage={setPage}
+        total={totalTeams}
+        limit={DEFAULT_LIMIT}
+      />
     </>
   );
 }

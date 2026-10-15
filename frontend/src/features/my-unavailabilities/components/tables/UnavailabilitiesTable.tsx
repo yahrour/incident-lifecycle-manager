@@ -14,11 +14,11 @@ import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { NoUnavailabilitiesState } from "../empty-states/NoUnavailabilitiesState";
 import { ErrorUnavailabilitiesState } from "../error-states/ErrorUnavailabilitiesState";
 import { RemoveUnavailabilityButton } from "../buttons/RemoveUnavailabilityButton";
-import { unavailabilityKeys } from "../../constants";
+import { DEFAULT_LIMIT, unavailabilityKeys } from "../../constants";
 import { formatDuration } from "../../utils/time";
-import { TablePagination } from "../TablePagination";
 import { useEffect } from "react";
 import type { UnavailabilityFilter, UnavailabilityStatus } from "@/types";
+import { TablePagination } from "@/components/TablePagination";
 
 const statusVariant: Record<
   UnavailabilityStatus,
@@ -137,6 +137,7 @@ export function UnavailabilitiesTable({
         page={page}
         setPage={setPage}
         total={totalUnavailabilities}
+        limit={DEFAULT_LIMIT}
       />
     </div>
   );
