@@ -10,7 +10,6 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { TeamMembersTable } from "../../components/tables/TeamMembersTable";
-import { SortControls } from "../../components/SortControls";
 import { useState } from "react";
 import { type SortState } from "../../types";
 import { TeamNotFound } from "../../../shared/components/empty-states/TeamNotFound";
@@ -18,6 +17,7 @@ import { InviteDialog } from "../../components/invite-dialog";
 import { fetchTeam } from "../../../shared/api/teams";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { teamKeys } from "@/features/organization/shared/constants";
+import { SortOrderToggle } from "@/components/SortOrderToggle";
 
 export function TeamMembers() {
   const { id: teamId } = useParams();
@@ -72,7 +72,13 @@ export function TeamMembers() {
 
       <div className="p-4 space-y-4 mt-2">
         <div className="flex justify-end items-center gap-2">
-          <SortControls sort={sort} onSortChange={setSort} setPage={setPage} />
+          <SortOrderToggle
+            order={sort.order}
+            onChange={(order) => {
+              setSort({ ...sort, order });
+              setPage(1);
+            }}
+          />
           <InviteDialog team={team} />
         </div>
         <TeamMembersTable
