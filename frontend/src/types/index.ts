@@ -1,3 +1,6 @@
+export * from "./unavailabilities.types";
+export * from "./sort.types";
+
 export const Role = {
   SRE: "SRE",
   ENGINEER: "ENGINEER",

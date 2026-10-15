@@ -9,12 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { fetchMemberUnavailabilities } from "../../api/unavailability";
-import type {
-  Filter,
-  Membership,
-  SortState,
-  UnavailabilityStatus,
-} from "../../types";
+import type { Membership, SortState } from "../../types";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { NoUnavailabilitiesState } from "../empty-states/NoUnavailabilitiesState";
 import { ErrorUnavailabilitiesState } from "../error-states/ErrorUnavailabilitiesState";
@@ -23,6 +18,7 @@ import { unavailabilityKeys } from "../../constants";
 import { formatDuration } from "../../utils/time";
 import { TablePagination } from "../TablePagination";
 import { useEffect } from "react";
+import type { UnavailabilityFilter, UnavailabilityStatus } from "@/types";
 
 const statusVariant: Record<
   UnavailabilityStatus,
@@ -42,7 +38,7 @@ export function UnavailabilitiesTable({
   sort,
 }: {
   membership: Membership;
-  filter: Filter;
+  filter: UnavailabilityFilter;
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
   sort: SortState;
@@ -65,7 +61,7 @@ export function UnavailabilitiesTable({
       }),
     placeholderData: (previousData, previousQuery) => {
       // WARN: the filter value should be last one in the unavailabilityKeys.detail array
-      const prevFilter = previousQuery?.queryKey.at(-1) as Filter;
+      const prevFilter = previousQuery?.queryKey.at(-1) as UnavailabilityFilter;
       return prevFilter === filter ? previousData : undefined;
     },
   });

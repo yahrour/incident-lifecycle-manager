@@ -8,10 +8,6 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type {
-  Unavailability,
-  UnavailabilityStatus,
-} from "@/features/organization/shared/types";
 import { Link } from "react-router";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -26,6 +22,8 @@ import {
   unavailabilityKeys,
 } from "@/features/organization/shared/constants";
 import { formatDuration } from "@/utils/time";
+import type { UnavailabilityStatus } from "@/types";
+import type { UnavailabilityWithTeamMember } from "@/features/organization/shared/types";
 
 const statusVariant: Record<
   UnavailabilityStatus,
@@ -44,7 +42,7 @@ export function UnavailabilitiesTable({
   page,
   setPage,
 }: {
-  unavailabilities: Unavailability[];
+  unavailabilities: UnavailabilityWithTeamMember[];
   showOrgWide: boolean;
   totalUnavailabilities: number;
   page: number;
@@ -95,22 +93,6 @@ export function UnavailabilitiesTable({
       });
     },
   });
-
-  const handleApprove = (
-    teamId: string,
-    unavailabilityId: number,
-    memberId: number
-  ) => {
-    approveMutation.mutate({ teamId, memberId, unavailabilityId });
-  };
-
-  const handleReject = (
-    teamId: string,
-    unavailabilityId: number,
-    memberId: number
-  ) => {
-    rejectMutation.mutate({ teamId, memberId, unavailabilityId });
-  };
 
   return (
     <div className="space-y-4">
@@ -167,11 +149,11 @@ export function UnavailabilitiesTable({
                     size={"xs"}
                     className="bg-success text-xs hover:bg-success/90"
                     onClick={() =>
-                      handleApprove(
-                        unavailability.teamMember.team.id,
-                        unavailability.id,
-                        unavailability.memberId
-                      )
+                      approveMutation.mutate({
+                        teamId: unavailability.teamMember.team.id,
+                        memberId: unavailability.memberId,
+                        unavailabilityId: unavailability.id,
+                      })
                     }
                     disabled={isActionDisabled}
                   >
@@ -182,11 +164,11 @@ export function UnavailabilitiesTable({
                     variant="destructive"
                     className="text-xs"
                     onClick={() =>
-                      handleReject(
-                        unavailability.teamMember.team.id,
-                        unavailability.id,
-                        unavailability.memberId
-                      )
+                      rejectMutation.mutate({
+                        teamId: unavailability.teamMember.team.id,
+                        memberId: unavailability.memberId,
+                        unavailabilityId: unavailability.id,
+                      })
                     }
                     disabled={isActionDisabled}
                   >

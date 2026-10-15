@@ -7,7 +7,7 @@ import { toast } from "@/components/ui/toast";
 import { queryClient } from "@/lib/queryClient";
 import { unavailabilityKeys } from "../../constants/query.keys";
 import { parseApiError } from "@/utils/api";
-import type { UnavailabilityStatus } from "../../types";
+import type { UnavailabilityStatus } from "@/types";
 
 export function RemoveUnavailabilityButton({
   teamId,

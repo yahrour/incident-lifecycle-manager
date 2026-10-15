@@ -1,15 +1,14 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import {
-  fetchTeamUnavailabilities,
-} from "../../api/unavailabilities";
+import { fetchTeamUnavailabilities } from "../../api/unavailabilities";
 import { useErrorToast } from "@/hooks/use-error-toast";
-import type { Filter, SortState } from "../../types";
+import type { SortState } from "../../types";
 import { ErrorUnavailabilitiesState } from "../error-states/ErrorUnavailabilitiesState";
 import { NoUnavailabilitiesState } from "../empty-states/NoUnavailabilitiesState";
 import { useEffect } from "react";
 import { UnavailabilitiesTable } from "./UnavailabilitiesTable";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { teamKeys } from "@/features/organization/shared/constants";
+import type { UnavailabilityFilter } from "@/types";
 
 export function TeamUnavailabilitiesTable({
   teamId,
@@ -22,9 +21,9 @@ export function TeamUnavailabilitiesTable({
   sort: SortState;
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
-  filter: Filter;
+  filter: UnavailabilityFilter;
 }) {
-  const { data, isError, isPending } = useQuery({
+  const { data, isError, isPending, refetch } = useQuery({
     queryKey: teamKeys.unavailabilitiesList(teamId, page, sort, filter),
     queryFn: () => fetchTeamUnavailabilities(teamId, page, sort, filter),
     placeholderData: keepPreviousData,
@@ -46,9 +45,9 @@ export function TeamUnavailabilitiesTable({
   }
 
   if (!unavailabilities || isError) {
-    return <ErrorUnavailabilitiesState />;
+    return <ErrorUnavailabilitiesState onRetry={() => void refetch()} />;
   } else if (unavailabilities && totalUnavailabilities === 0) {
-    return <NoUnavailabilitiesState filter={filter} />
+    return <NoUnavailabilitiesState filter={filter} />;
   }
 
   return (

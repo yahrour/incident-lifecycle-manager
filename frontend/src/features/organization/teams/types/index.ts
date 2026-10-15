@@ -1,4 +1,5 @@
-import type { SortOrder, User } from "../../shared/types";
+import type { SortOrder } from "@/types";
+import type { User } from "../../shared/types";
 
 export type Metrics = {
   organization: {

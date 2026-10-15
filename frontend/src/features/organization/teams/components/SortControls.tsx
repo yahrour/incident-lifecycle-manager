@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { type SortState } from "../types";
-import { SortOrder } from "../../shared/types";
+import { SortOrder } from "@/types";
 
 export function SortControls({
   sort,
