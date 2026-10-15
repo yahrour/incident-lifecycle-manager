@@ -1,4 +1,4 @@
-import { Role } from "@/types";
+import { Role, type Unavailability } from "@/types";
 
 export type Team = {
   id: string;
@@ -24,36 +24,18 @@ export type Member = {
   teamId: string;
   id: number;
   joinedAt: Date;
-  unavailabilities: Omit<Unavailability, "teamMember">[];
+  unavailabilities: Unavailability[];
   team?: {
     id: string;
     name: string;
   };
 };
 
-export type UnavailabilityStatus =
-  "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED";
-export type Unavailability = {
+export type TeamMember = {
   id: number;
-  memberId: number;
-  startDate: Date;
-  endDate: Date;
-  reason: string | null;
-  createdAt: Date;
-  status: UnavailabilityStatus;
-  teamMember: {
-    id: number;
-    user: User;
-    team: {
-      id: string;
-      name: string;
-    };
+  user: User;
+  team: {
+    id: string;
+    name: string;
   };
 };
-
-export const SortOrder = {
-  ASC: "asc",
-  DESC: "desc",
-} as const;
-
-export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder];

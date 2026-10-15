@@ -1,3 +1,5 @@
+export * from "./unvailabilities.types";
+
 export const Role = {
   SRE: "SRE",
   ENGINEER: "ENGINEER",
@@ -29,3 +31,9 @@ export type ApiError = {
   message: string | string[];
   statusCode: number;
 };
+
+export const SortOrder = {
+  ASC: "asc",
+  DESC: "desc",
+} as const;
+export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder];

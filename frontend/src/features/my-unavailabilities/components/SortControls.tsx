@@ -1,6 +1,7 @@
 import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SortOrder, type SortState } from "../types";
+import type { SortState } from "../types";
+import { SortOrder } from "@/types";
 
 export function SortControls({
   sort,

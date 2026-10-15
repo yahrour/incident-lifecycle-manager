@@ -1,4 +1,5 @@
-import type { Filter, SortState } from "../types";
+import type { Filter } from "@/types";
+import type { SortState } from "../types";
 
 export const membershipKeys = {
   all: ["membership"],

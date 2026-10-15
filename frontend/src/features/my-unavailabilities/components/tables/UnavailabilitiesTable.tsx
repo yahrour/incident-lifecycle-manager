@@ -9,12 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { fetchMemberUnavailabilities } from "../../api/unavailability";
-import type {
-  Filter,
-  Membership,
-  SortState,
-  UnavailabilityStatus,
-} from "../../types";
+import type { Membership, SortState } from "../../types";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { NoUnavailabilitiesState } from "../empty-states/NoUnavailabilitiesState";
 import { ErrorUnavailabilitiesState } from "../error-states/ErrorUnavailabilitiesState";
@@ -23,6 +18,7 @@ import { unavailabilityKeys } from "../../constants";
 import { formatDuration } from "../../utils/time";
 import { TablePagination } from "../TablePagination";
 import { useEffect } from "react";
+import type { Filter, UnavailabilityStatus } from "@/types";
 
 const statusVariant: Record<
   UnavailabilityStatus,

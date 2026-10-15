@@ -8,7 +8,7 @@ import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UnavailabilitiesTable } from "../components/tables/UnavailabilitiesTable";
 import { SortControls } from "../components/SortControls";
-import type { Filter, SortState } from "../types";
+import type { SortState } from "../types";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUserMembership } from "../api/membership";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
@@ -16,6 +16,7 @@ import { NoMembershipState } from "../components/empty-states/NoMembershipState"
 import { ErrorUnavailabilitiesState } from "../components/error-states/ErrorUnavailabilitiesState";
 import { RequestUnavailabilityDialog } from "../components/dialogs/RequestUnavailabilityDialog";
 import { membershipKeys } from "../constants";
+import type { Filter } from "@/types";
 
 export function MyUnavailabilities() {
   const [page, setPage] = useState(1);
