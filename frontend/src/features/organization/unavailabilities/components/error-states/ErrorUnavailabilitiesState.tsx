@@ -12,7 +12,7 @@ export function ErrorUnavailabilitiesState({
       <div className="space-y-1">
         <h3 className="font-medium text-sm">Unable to load unavailabilities</h3>
         <p className="text-sm text-muted-foreground">
-          Something went wrong while loading your unavailabilities.
+          Something went wrong while loading the team's unavailabilities
         </p>
       </div>
       <Button variant="outline" size="sm" onClick={onRetry}>
