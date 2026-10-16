@@ -268,7 +268,10 @@ export class OnCallService {
       Math.max(team.lastRotatedAt.getTime(), team.rotationStartDate.getTime())
     );
     type User = (typeof members)[0]["user"];
-    const upcomingRotations: (User & { startDate: Date; endDate: Date })[] = [];
+    const upcomingRotations: {
+      user: User;
+      window: { startDate: Date; endDate: Date };
+    }[] = [];
 
     // start from 1 to skip the current on-call engineer
     for (let i = 1; i < totalMembers && upcomingRotations.length < 5; i++) {
@@ -283,7 +286,10 @@ export class OnCallService {
       );
 
       if (isAvailable) {
-        upcomingRotations.push({ ...member.user, startDate, endDate });
+        upcomingRotations.push({
+          user: member.user,
+          window: { startDate, endDate },
+        });
       }
     }
 

@@ -49,7 +49,7 @@ export function UpcomingRotationsPreview({ teamId }: { teamId: string }) {
           <ol className="space-y-3">
             {upcomingRotations.map((engineer: UpcomingRotation, index) => (
               <RotationRow
-                key={engineer.id}
+                key={engineer.user.id}
                 engineer={engineer}
                 position={index + 1}
               />
@@ -68,11 +68,11 @@ function RotationRow({
   engineer: UpcomingRotation;
   position: number;
 }) {
-  const name = `${engineer.firstName} ${engineer.lastName}`;
-  const initials = `${engineer.firstName[0] ?? ""}${engineer.lastName[0] ?? ""}`;
+  const name = `${engineer.user.firstName} ${engineer.user.lastName}`;
+  const initials = `${engineer.user.firstName[0] ?? ""}${engineer.user.lastName[0] ?? ""}`;
 
-  const start = new Date(engineer.startDate);
-  const end = new Date(engineer.endDate);
+  const start = new Date(engineer.window.startDate);
+  const end = new Date(engineer.window.endDate);
 
   return (
     <li className="flex items-center gap-2">
@@ -90,9 +90,9 @@ function RotationRow({
         <div className="flex items-center gap-2">
           <p className="truncate text-sm font-medium">{name}</p>
         </div>
-        {engineer.specialty && (
+        {engineer.user.specialty && (
           <p className="truncate text-xs text-[#8a8178]">
-            {engineer.specialty}
+            {engineer.user.specialty}
           </p>
         )}
       </div>
@@ -102,7 +102,7 @@ function RotationRow({
       </p>
 
       <Link
-        to={`mailto:${engineer.email}`}
+        to={`mailto:${engineer.user.email}`}
         aria-label={`Email ${name}`}
         className="rounded-md p-1.5 text-muted-foreground hover:bg-muted"
       >

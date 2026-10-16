@@ -39,4 +39,7 @@ export type OnCall = {
 type SortField = "name" | "rotationPeriodDays" | "createdAt";
 export type SortState = { field: SortField; order: SortOrder };
 
-export type UpcomingRotation = User & { startDate: string; endDate: string };
+export type UpcomingRotation = {
+  user: User;
+  window: { startDate: Date; endDate: Date };
+};
