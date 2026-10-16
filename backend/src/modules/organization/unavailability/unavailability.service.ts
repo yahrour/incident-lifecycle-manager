@@ -40,6 +40,17 @@ export class UnavailabilityService {
     return team;
   }
 
+  private async requireTeamMembership(teamId: string, userId: string) {
+    const membership = await this.prisma.teamMember.findUnique({
+      where: { teamId, userId },
+      select: { id: true },
+    });
+
+    if (!membership) {
+      throw new NotFoundException("Team doesn't exist");
+    }
+  }
+
   private assertSelfOrOwner(
     targetMember: TeamMember & { team: Team },
     requesterId: string
@@ -274,6 +285,8 @@ export class UnavailabilityService {
   }
 
   async findTeammatesAway(requesterId: string, teamId: string) {
+    await this.requireTeamMembership(teamId, requesterId);
+
     const active = {
       status: "APPROVED",
       endDate: { gte: new Date() },

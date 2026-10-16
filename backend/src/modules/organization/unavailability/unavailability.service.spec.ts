@@ -414,6 +414,25 @@ describe("UnavailabilityService", () => {
   });
 
   describe("findTeammatesAway", () => {
+    beforeEach(() => {
+      prisma.teamMember.findUnique.mockResolvedValue({
+        id: MEMBER_ID,
+      } as never);
+    });
+
+    it("throws NotFoundException when the requester isn't in the team", async () => {
+      prisma.teamMember.findUnique.mockResolvedValue(null);
+
+      await expect(service.findTeammatesAway(USER_ID, TEAM_ID)).rejects.toThrow(
+        NotFoundException
+      );
+      expect(prisma.teamMember.findUnique).toHaveBeenCalledWith({
+        where: { teamId: TEAM_ID, userId: USER_ID },
+        select: { id: true },
+      });
+      expect(prisma.teamMember.findMany).not.toHaveBeenCalled();
+    });
+
     const active = {
       status: "APPROVED",
       endDate: { gte: NOW },
