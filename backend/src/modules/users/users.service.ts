@@ -221,58 +221,65 @@ export class UsersService {
       return null;
     }
 
-    const [teamDetails, teamUpcomingRotations, teammatesAway] =
-      await Promise.all([
-        this.prisma.team.findUnique({
-          where: {
-            id: membership.team.id,
-          },
-          select: {
-            id: true,
-            description: true,
-            escalationTimeoutMinutes: true,
-            name: true,
-            rotationPeriodDays: true,
-            services: true,
-            _count: {
-              select: {
-                teamMembers: true,
-              },
+    try {
+      const [teamDetails, teamUpcomingRotations, teammatesAway] =
+        await Promise.all([
+          this.prisma.team.findUnique({
+            where: {
+              id: membership.team.id,
             },
-            teamMembers: {
-              take: 5,
-              select: {
-                id: true,
-                joinedAt: true,
-                user: {
-                  select: {
-                    firstName: true,
-                    lastName: true,
-                    specialty: true,
-                  },
+            select: {
+              id: true,
+              description: true,
+              escalationTimeoutMinutes: true,
+              name: true,
+              rotationPeriodDays: true,
+              services: true,
+              _count: {
+                select: {
+                  teamMembers: true,
                 },
               },
-              orderBy: {
-                joinedAt: "desc",
+              teamMembers: {
+                take: 5,
+                select: {
+                  id: true,
+                  joinedAt: true,
+                  user: {
+                    select: {
+                      firstName: true,
+                      lastName: true,
+                      specialty: true,
+                    },
+                  },
+                },
+                orderBy: {
+                  joinedAt: "desc",
+                },
               },
             },
-          },
-        }),
-        this.onCall.getUpcomingRotations(userId, membership.team.id),
-        this.unavailability.findTeammatesAway(userId, membership.team.id),
-      ]);
+          }),
+          this.onCall.getUpcomingRotations(userId, membership.team.id),
+          this.unavailability.findTeammatesAway(userId, membership.team.id),
+        ]);
 
-    if (!teamDetails) {
-      return null;
+      if (!teamDetails) {
+        return null;
+      }
+
+      const { teamMembers, _count, ...team } = teamDetails;
+      return {
+        team,
+        members: teamMembers,
+        membersCount: _count.teamMembers,
+        teamUpcomingRotations,
+        teammatesAway,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return null;
+      }
+      throw error;
     }
-
-    const { teamMembers, _count, ...team } = teamDetails;
-    return {
-      team,
-      members: teamMembers,
-      membersCount: _count.teamMembers,
-      teamUpcomingRotations,
-      teammatesAway,
-    };
   }
 }
