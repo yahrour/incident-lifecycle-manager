@@ -71,8 +71,8 @@ function RotationRow({
   const name = `${engineer.user.firstName} ${engineer.user.lastName}`;
   const initials = `${engineer.user.firstName[0] ?? ""}${engineer.user.lastName[0] ?? ""}`;
 
-  const start = new Date(engineer.window.startDate);
-  const end = new Date(engineer.window.endDate);
+  const start = new Date(engineer.shift.startDate);
+  const end = new Date(engineer.shift.endDate);
 
   return (
     <li className="flex items-center gap-2">

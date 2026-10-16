@@ -41,5 +41,5 @@ export type SortState = { field: SortField; order: SortOrder };
 
 export type UpcomingRotation = {
   user: User;
-  window: { startDate: Date; endDate: Date };
+  shift: { startDate: string; endDate: string };
 };
