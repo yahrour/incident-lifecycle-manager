@@ -32,6 +32,7 @@ const makeLeave = (startDate: Date, endDate: Date) => ({
 });
 
 const makeMember = (id: string, unavailabilities: unknown[] = []) => ({
+  userId: id,
   user: makeUser(id),
   unavailabilities,
 });
@@ -316,83 +317,60 @@ describe("OnCallService", () => {
     const mockTeam = (
       members: ReturnType<typeof makeMember>[],
       overrides = {}
-    ) => {
-      const team = makeTeam(overrides);
-      prisma.team.findFirst.mockResolvedValue(team);
+    ) =>
       prisma.team.findUnique.mockResolvedValue({
-        ...team,
+        ...makeTeam(overrides),
         teamMembers: members,
       } as never);
-    };
 
-    it("only lets the owner or a member of the team in", async () => {
-      mockTeam([]);
+    it("lets the owner in", async () => {
+      mockTeam([makeMember("a"), makeMember("b")]);
 
-      await service.getUpcomingRotations(OWNER_ID, TEAM_ID);
+      await expect(
+        service.getUpcomingRotations(OWNER_ID, TEAM_ID)
+      ).resolves.toHaveLength(1);
+      expect(prisma.team.findUnique).toHaveBeenCalledTimes(1);
+    });
 
-      expect(prisma.team.findFirst).toHaveBeenCalledWith({
-        where: {
-          id: TEAM_ID,
-          OR: [
-            { ownerId: OWNER_ID },
-            { teamMembers: { some: { userId: OWNER_ID } } },
-          ],
-        },
-      });
+    it("lets a member of the team in", async () => {
+      mockTeam([makeMember("a"), makeMember("b")]);
+
+      await expect(
+        service.getUpcomingRotations("a", TEAM_ID)
+      ).resolves.toHaveLength(1);
     });
 
     it("exposes id, email and role of members to the owner", async () => {
-      mockTeam([]);
+      mockTeam([makeMember("a"), makeMember("b")]);
 
-      await service.getUpcomingRotations(OWNER_ID, TEAM_ID);
+      const result = await service.getUpcomingRotations(OWNER_ID, TEAM_ID);
 
-      expect(prisma.team.findUnique).toHaveBeenCalledWith(
-        expect.objectContaining({
-          include: {
-            teamMembers: expect.objectContaining({
-              select: expect.objectContaining({
-                user: {
-                  select: expect.objectContaining({
-                    id: true,
-                    email: true,
-                    role: true,
-                  }),
-                },
-              }),
-            }),
-          },
-        })
-      );
+      expect(result?.[0].user).toEqual(makeUser("b"));
     });
 
     it("hides id, email and role of members from a teammate", async () => {
-      mockTeam([]);
+      mockTeam([makeMember("a"), makeMember("b")]);
 
-      await service.getUpcomingRotations("engineer", TEAM_ID);
+      const result = await service.getUpcomingRotations("a", TEAM_ID);
 
-      expect(prisma.team.findUnique).toHaveBeenCalledWith(
-        expect.objectContaining({
-          include: {
-            teamMembers: expect.objectContaining({
-              select: expect.objectContaining({
-                user: {
-                  select: expect.objectContaining({
-                    id: false,
-                    email: false,
-                    role: false,
-                    firstName: true,
-                    lastName: true,
-                  }),
-                },
-              }),
-            }),
-          },
-        })
-      );
+      expect(result?.[0].user).toEqual({
+        firstName: "b",
+        lastName: "Doe",
+        specialty: null,
+      });
+      expect(result?.[0].user).not.toHaveProperty("email");
     });
 
-    it("throws NotFoundException when the team doesn't exist or the requester has no access", async () => {
-      prisma.team.findFirst.mockResolvedValue(null);
+    it("throws NotFoundException when the requester is neither owner nor member", async () => {
+      mockTeam([makeMember("a")]);
+
+      await expect(
+        service.getUpcomingRotations("stranger", TEAM_ID)
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it("throws NotFoundException when the team doesn't exist", async () => {
+      prisma.team.findUnique.mockResolvedValue(null);
 
       await expect(
         service.getUpcomingRotations(OWNER_ID, TEAM_ID)

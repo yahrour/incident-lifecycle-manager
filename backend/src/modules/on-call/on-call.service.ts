@@ -212,35 +212,21 @@ export class OnCallService {
   async getUpcomingRotations(requesterId: string, teamId: string) {
     const now = new Date();
 
-    const targetTeam = await this.prisma.team.findFirst({
-      where: {
-        id: teamId,
-        OR: [
-          { ownerId: requesterId },
-          { teamMembers: { some: { userId: requesterId } } },
-        ],
-      },
-    });
-    if (!targetTeam) {
-      throw new NotFoundException("Team doesn't exist");
-    }
-
-    const isOwner = targetTeam.ownerId === requesterId;
-
     const team = await this.prisma.team.findUnique({
       where: { id: teamId },
       include: {
         teamMembers: {
           orderBy: { joinedAt: "asc" },
           select: {
+            userId: true,
             user: {
               select: {
-                id: isOwner,
+                id: true,
                 firstName: true,
                 lastName: true,
-                email: isOwner,
+                email: true,
                 specialty: true,
-                role: isOwner,
+                role: true,
               },
             },
             unavailabilities: {
@@ -254,7 +240,11 @@ export class OnCallService {
       },
     });
 
-    if (!team) {
+    const isOwner = team?.ownerId === requesterId;
+    if (
+      !team ||
+      !(isOwner || team.teamMembers.some((m) => m.userId === requesterId))
+    ) {
       throw new NotFoundException("Team doesn't exist");
     }
 
@@ -269,7 +259,8 @@ export class OnCallService {
     );
     type User = (typeof members)[0]["user"];
     const upcomingRotations: {
-      user: User;
+      user: Omit<User, "id" | "email" | "role"> &
+        Partial<Pick<User, "id" | "email" | "role">>;
       shift: { startDate: Date; endDate: Date };
     }[] = [];
 
@@ -286,8 +277,11 @@ export class OnCallService {
       );
 
       if (isAvailable) {
+        // teammates only get the public fields, never id, email or role
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id, email, role, ...publicUser } = member.user;
         upcomingRotations.push({
-          user: member.user,
+          user: isOwner ? member.user : publicUser,
           shift: { startDate, endDate },
         });
       }
