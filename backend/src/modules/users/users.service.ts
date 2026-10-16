@@ -9,13 +9,15 @@ import { BcryptService } from "../security/bcrypt.service";
 import { Role, Prisma } from "@/generated/prisma/client";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { OnCallService } from "../on-call/on-call.service";
+import { UnavailabilityService } from "../organization/unavailability/unavailability.service";
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly bcrypt: BcryptService,
-    private readonly onCall: OnCallService
+    private readonly onCall: OnCallService,
+    private readonly unavailability: UnavailabilityService
   ) {}
 
   async create(
@@ -211,5 +213,73 @@ export class UsersService {
         },
       }
     );
+  }
+
+  async getMyTeam(userId: string) {
+    const membership = await this.getMyMembership(userId);
+    if (!membership) {
+      return null;
+    }
+
+    try {
+      const [teamDetails, teamUpcomingRotations, teammatesAway] =
+        await Promise.all([
+          this.prisma.team.findUnique({
+            where: {
+              id: membership.team.id,
+            },
+            select: {
+              id: true,
+              description: true,
+              escalationTimeoutMinutes: true,
+              name: true,
+              rotationPeriodDays: true,
+              services: true,
+              _count: {
+                select: {
+                  teamMembers: true,
+                },
+              },
+              teamMembers: {
+                take: 5,
+                select: {
+                  id: true,
+                  joinedAt: true,
+                  user: {
+                    select: {
+                      firstName: true,
+                      lastName: true,
+                      specialty: true,
+                    },
+                  },
+                },
+                orderBy: {
+                  joinedAt: "desc",
+                },
+              },
+            },
+          }),
+          this.onCall.getUpcomingRotations(userId, membership.team.id),
+          this.unavailability.findTeammatesAway(userId, membership.team.id),
+        ]);
+
+      if (!teamDetails) {
+        return null;
+      }
+
+      const { teamMembers, _count, ...team } = teamDetails;
+      return {
+        team,
+        members: teamMembers,
+        membersCount: _count.teamMembers,
+        teamUpcomingRotations,
+        teammatesAway,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return null;
+      }
+      throw error;
+    }
   }
 }

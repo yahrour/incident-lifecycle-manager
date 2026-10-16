@@ -5,5 +5,6 @@ import { UnavailabilityService } from "./unavailability.service";
 @Module({
   controllers: [UnavailabilityController],
   providers: [UnavailabilityService],
+  exports: [UnavailabilityService],
 })
 export class UnavailabilityModule {}

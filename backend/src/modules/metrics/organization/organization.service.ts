@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { OnCallService } from "@/modules/on-call/on-call.service";
+import { UnavailabilityStatus } from "@/generated/prisma/enums";
 
 @Injectable()
 export class OrganizationService {
@@ -64,7 +65,7 @@ export class OrganizationService {
     const totalUnavailabilities = await this.prisma.unavailability.count({
       where: {
         teamMember: { team: { ownerId } },
-        status: "APPROVED",
+        status: UnavailabilityStatus.APPROVED,
       },
     });
 
@@ -73,7 +74,7 @@ export class OrganizationService {
         teamMember: { team: { ownerId } },
         startDate: { lte: now },
         endDate: { gte: now },
-        status: "APPROVED",
+        status: UnavailabilityStatus.APPROVED,
       },
     });
 

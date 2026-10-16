@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { INCIDENT_STATUS } from "../incidents/constants";
+import { UnavailabilityStatus } from "@/generated/prisma/enums";
 
 @Injectable()
 export class OnCallService {
@@ -33,7 +34,7 @@ export class OnCallService {
               where: {
                 startDate: { lte: now },
                 endDate: { gte: now },
-                status: "APPROVED",
+                status: UnavailabilityStatus.APPROVED,
               },
             },
           },
@@ -114,7 +115,7 @@ export class OnCallService {
                   where: {
                     startDate: { lte: now },
                     endDate: { gte: now },
-                    status: "APPROVED",
+                    status: UnavailabilityStatus.APPROVED,
                   },
                 },
               },
@@ -209,14 +210,16 @@ export class OnCallService {
     };
   }
 
-  async getUpcomingRotations(ownerId: string, teamId: string) {
+  async getUpcomingRotations(requesterId: string, teamId: string) {
     const now = new Date();
+
     const team = await this.prisma.team.findUnique({
-      where: { id: teamId, ownerId },
+      where: { id: teamId },
       include: {
         teamMembers: {
           orderBy: { joinedAt: "asc" },
           select: {
+            userId: true,
             user: {
               select: {
                 id: true,
@@ -230,7 +233,7 @@ export class OnCallService {
             unavailabilities: {
               where: {
                 endDate: { gte: now },
-                status: "APPROVED",
+                status: UnavailabilityStatus.APPROVED,
               },
             },
           },
@@ -238,7 +241,11 @@ export class OnCallService {
       },
     });
 
-    if (!team) {
+    const isOwner = team?.ownerId === requesterId;
+    if (
+      !team ||
+      !(isOwner || team.teamMembers.some((m) => m.userId === requesterId))
+    ) {
       throw new NotFoundException("Team doesn't exist");
     }
 
@@ -252,7 +259,11 @@ export class OnCallService {
       Math.max(team.lastRotatedAt.getTime(), team.rotationStartDate.getTime())
     );
     type User = (typeof members)[0]["user"];
-    const upcomingRotations: (User & { startDate: Date; endDate: Date })[] = [];
+    const upcomingRotations: {
+      user: Omit<User, "id" | "email" | "role"> &
+        Partial<Pick<User, "id" | "email" | "role">>;
+      shift: { startDate: Date; endDate: Date };
+    }[] = [];
 
     // start from 1 to skip the current on-call engineer
     for (let i = 1; i < totalMembers && upcomingRotations.length < 5; i++) {
@@ -267,7 +278,13 @@ export class OnCallService {
       );
 
       if (isAvailable) {
-        upcomingRotations.push({ ...member.user, startDate, endDate });
+        // teammates only get the public fields, never id, email or role
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id, email, role, ...publicUser } = member.user;
+        upcomingRotations.push({
+          user: isOwner ? member.user : publicUser,
+          shift: { startDate, endDate },
+        });
       }
     }
 

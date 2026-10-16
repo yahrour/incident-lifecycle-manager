@@ -32,6 +32,7 @@ const makeLeave = (startDate: Date, endDate: Date) => ({
 });
 
 const makeMember = (id: string, unavailabilities: unknown[] = []) => ({
+  userId: id,
   user: makeUser(id),
   unavailabilities,
 });
@@ -322,14 +323,50 @@ describe("OnCallService", () => {
         teamMembers: members,
       } as never);
 
-    it("looks the team up scoped to the owner", async () => {
-      mockTeam([]);
+    it("lets the owner in", async () => {
+      mockTeam([makeMember("a"), makeMember("b")]);
 
-      await service.getUpcomingRotations(OWNER_ID, TEAM_ID);
+      await expect(
+        service.getUpcomingRotations(OWNER_ID, TEAM_ID)
+      ).resolves.toHaveLength(1);
+      expect(prisma.team.findUnique).toHaveBeenCalledTimes(1);
+    });
 
-      expect(prisma.team.findUnique).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { id: TEAM_ID, ownerId: OWNER_ID } })
-      );
+    it("lets a member of the team in", async () => {
+      mockTeam([makeMember("a"), makeMember("b")]);
+
+      await expect(
+        service.getUpcomingRotations("a", TEAM_ID)
+      ).resolves.toHaveLength(1);
+    });
+
+    it("exposes id, email and role of members to the owner", async () => {
+      mockTeam([makeMember("a"), makeMember("b")]);
+
+      const result = await service.getUpcomingRotations(OWNER_ID, TEAM_ID);
+
+      expect(result?.[0].user).toEqual(makeUser("b"));
+    });
+
+    it("hides id, email and role of members from a teammate", async () => {
+      mockTeam([makeMember("a"), makeMember("b")]);
+
+      const result = await service.getUpcomingRotations("a", TEAM_ID);
+
+      expect(result?.[0].user).toEqual({
+        firstName: "b",
+        lastName: "Doe",
+        specialty: null,
+      });
+      expect(result?.[0].user).not.toHaveProperty("email");
+    });
+
+    it("throws NotFoundException when the requester is neither owner nor member", async () => {
+      mockTeam([makeMember("a")]);
+
+      await expect(
+        service.getUpcomingRotations("stranger", TEAM_ID)
+      ).rejects.toThrow(NotFoundException);
     });
 
     it("throws NotFoundException when the team doesn't exist", async () => {
@@ -363,14 +400,12 @@ describe("OnCallService", () => {
 
       expect(result).toEqual([
         {
-          ...makeUser("b"),
-          startDate: daysFromNow(4),
-          endDate: daysFromNow(11),
+          user: makeUser("b"),
+          shift: { startDate: daysFromNow(4), endDate: daysFromNow(11) },
         },
         {
-          ...makeUser("c"),
-          startDate: daysFromNow(11),
-          endDate: daysFromNow(18),
+          user: makeUser("c"),
+          shift: { startDate: daysFromNow(11), endDate: daysFromNow(18) },
         },
       ]);
     });
@@ -382,7 +417,7 @@ describe("OnCallService", () => {
 
       const result = await service.getUpcomingRotations(OWNER_ID, TEAM_ID);
 
-      expect(result?.map((m) => m.id)).toEqual(["a", "b"]);
+      expect(result?.map((r) => r.user.id)).toEqual(["a", "b"]);
     });
 
     it("skips a member whose approved leave overlaps their slot", async () => {
@@ -392,7 +427,7 @@ describe("OnCallService", () => {
 
       const result = await service.getUpcomingRotations(OWNER_ID, TEAM_ID);
 
-      expect(result?.map((m) => m.id)).toEqual(["c"]);
+      expect(result?.map((r) => r.user.id)).toEqual(["c"]);
     });
 
     it("keeps a member whose leave is outside their slot", async () => {
@@ -401,7 +436,7 @@ describe("OnCallService", () => {
 
       const result = await service.getUpcomingRotations(OWNER_ID, TEAM_ID);
 
-      expect(result?.map((m) => m.id)).toEqual(["b"]);
+      expect(result?.map((r) => r.user.id)).toEqual(["b"]);
     });
 
     it("returns at most 5 rotations", async () => {
