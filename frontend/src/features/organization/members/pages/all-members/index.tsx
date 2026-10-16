@@ -4,10 +4,10 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
-import { SortControls } from "../../components/SortControls";
 import { useState } from "react";
 import { type SortState } from "../../types";
 import { AllMembersTable } from "../../components/tables/AllMembersTable";
+import { SortOrderToggle } from "@/components/SortOrderToggle";
 
 export function AllMembers() {
   const [sort, setSort] = useState<SortState>({
@@ -30,7 +30,13 @@ export function AllMembers() {
 
       <div className="mt-2 p-4 space-y-4">
         <div className="flex justify-end items-center gap-2">
-          <SortControls sort={sort} onSortChange={setSort} setPage={setPage} />
+          <SortOrderToggle
+            order={sort.order}
+            onChange={(order) => {
+              setSort({ ...sort, order });
+              setPage(1);
+            }}
+          />
         </div>
         <AllMembersTable page={page} setPage={setPage} sort={sort} />
       </div>

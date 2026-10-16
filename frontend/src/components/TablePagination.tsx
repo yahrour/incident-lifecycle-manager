@@ -6,20 +6,21 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { DEFAULT_LIMIT } from "../constants";
 import type { SetStateAction } from "react";
 
 export function TablePagination({
   page,
   setPage,
   total,
+  limit,
 }: {
   page: number;
   setPage: React.Dispatch<SetStateAction<number>>;
   total: number;
+  limit: number;
 }) {
   const isFirstPage = page === 1;
-  const isLastPage = page * DEFAULT_LIMIT >= total;
+  const isLastPage = page * limit >= total;
 
   return (
     <Pagination>

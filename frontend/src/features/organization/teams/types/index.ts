@@ -1,4 +1,4 @@
-import type { SortOrder } from "@/types";
+import type { SortState as SortStateAbstract } from "@/types";
 import type { User } from "../../shared/types";
 
 export type Metrics = {
@@ -37,6 +37,5 @@ export type OnCall = {
 } | null;
 
 type SortField = "name" | "rotationPeriodDays" | "createdAt";
-export type SortState = { field: SortField; order: SortOrder };
-
+export type SortState = SortStateAbstract<SortField>;
 export type UpcomingRotation = User & { startDate: string; endDate: string };
