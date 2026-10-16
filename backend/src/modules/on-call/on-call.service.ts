@@ -270,7 +270,7 @@ export class OnCallService {
     type User = (typeof members)[0]["user"];
     const upcomingRotations: {
       user: User;
-      window: { startDate: Date; endDate: Date };
+      shift: { startDate: Date; endDate: Date };
     }[] = [];
 
     // start from 1 to skip the current on-call engineer
@@ -288,7 +288,7 @@ export class OnCallService {
       if (isAvailable) {
         upcomingRotations.push({
           user: member.user,
-          window: { startDate, endDate },
+          shift: { startDate, endDate },
         });
       }
     }
