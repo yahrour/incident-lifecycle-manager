@@ -18,12 +18,13 @@ import { queryClient } from "@/lib/queryClient";
 import { useState } from "react";
 import type { Member } from "@/features/organization/shared/types";
 import { Link } from "react-router";
-import { TablePagination } from "@/features/organization/shared/components/TablePagination";
 import {
+  DEFAULT_LIMIT,
   memberKeys,
   teamKeys,
   unavailabilityKeys,
 } from "@/features/organization/shared/constants";
+import { TablePagination } from "@/components/TablePagination";
 
 export function MembersTable({
   members,
@@ -145,7 +146,12 @@ export function MembersTable({
           })}
         </TableBody>
       </Table>
-      <TablePagination page={page} setPage={setPage} total={totalMembers} />
+      <TablePagination
+        page={page}
+        setPage={setPage}
+        total={totalMembers}
+        limit={DEFAULT_LIMIT}
+      />
     </>
   );
 }

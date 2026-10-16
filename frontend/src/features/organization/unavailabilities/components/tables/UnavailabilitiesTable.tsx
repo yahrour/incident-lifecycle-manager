@@ -16,14 +16,15 @@ import {
 } from "../../api/unavailabilities";
 import { queryClient } from "@/lib/queryClient";
 import { toast } from "@/components/ui/toast";
-import { TablePagination } from "@/features/organization/shared/components/TablePagination";
 import {
+  DEFAULT_LIMIT,
   teamKeys,
   unavailabilityKeys,
 } from "@/features/organization/shared/constants";
 import { formatDuration } from "@/utils/time";
 import type { UnavailabilityStatus } from "@/types";
 import type { UnavailabilityWithTeamMember } from "@/features/organization/shared/types";
+import { TablePagination } from "@/components/TablePagination";
 
 const statusVariant: Record<
   UnavailabilityStatus,
@@ -184,6 +185,7 @@ export function UnavailabilitiesTable({
         page={page}
         setPage={setPage}
         total={totalUnavailabilities}
+        limit={DEFAULT_LIMIT}
       />
     </div>
   );

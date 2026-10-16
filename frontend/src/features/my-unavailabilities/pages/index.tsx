@@ -7,7 +7,6 @@ import {
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UnavailabilitiesTable } from "../components/tables/UnavailabilitiesTable";
-import { SortControls } from "../components/SortControls";
 import type { SortState } from "../types";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUserMembership } from "../api/membership";
@@ -17,6 +16,7 @@ import { ErrorUnavailabilitiesState } from "../components/error-states/ErrorUnav
 import { RequestUnavailabilityDialog } from "../components/dialogs/RequestUnavailabilityDialog";
 import { membershipKeys } from "../constants";
 import type { UnavailabilityFilter } from "@/types";
+import { SortOrderToggle } from "@/components/SortOrderToggle";
 
 export function MyUnavailabilities() {
   const [page, setPage] = useState(1);
@@ -88,10 +88,12 @@ export function MyUnavailabilities() {
               </TabsList>
             </Tabs>
             <div className="flex items-center gap-4">
-              <SortControls
-                sort={sort}
-                onSortChange={setSort}
-                setPage={setPage}
+              <SortOrderToggle
+                order={sort.order}
+                onChange={(order) => {
+                  setSort({ ...sort, order });
+                  setPage(1);
+                }}
               />
               <RequestUnavailabilityDialog
                 teamId={membership.team.id}

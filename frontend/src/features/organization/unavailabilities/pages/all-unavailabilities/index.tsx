@@ -4,12 +4,12 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
-import { SortControls } from "../../components/SortControls";
 import { useState } from "react";
 import type { SortState } from "../../types";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AllUnavailabilitiesTable } from "../../components/tables/AllUnavailabilitiesTable";
 import type { UnavailabilityFilter } from "@/types";
+import { SortOrderToggle } from "@/components/SortOrderToggle";
 
 export function AllUnavailabilities() {
   const [page, setPage] = useState(1);
@@ -64,7 +64,13 @@ export function AllUnavailabilities() {
               </TabsTrigger>
             </TabsList>
           </Tabs>
-          <SortControls sort={sort} onSortChange={setSort} setPage={setPage} />
+          <SortOrderToggle
+            order={sort.order}
+            onChange={(order) => {
+              setSort({ ...sort, order });
+              setPage(1);
+            }}
+          />
         </div>
         <AllUnavailabilitiesTable
           sort={sort}

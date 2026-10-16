@@ -7,7 +7,7 @@ import {
 import { Search, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CreateTeamDialog } from "../../components/dialogs/CreateTeamDialog";
-import { SortControls } from "../../components/SortControls";
+import { SortControls } from "@/components/SortControls";
 import type { SortState } from "../../types";
 
 export function Teams() {
@@ -60,7 +60,18 @@ export function Teams() {
           </InputGroup>
 
           <div className="flex items-center gap-4">
-            <SortControls sort={sort} setSort={setSort} setPage={setPage} />
+            <SortControls
+              sort={sort}
+              onChange={(s) => {
+                setSort(s);
+                setPage(1);
+              }}
+              options={[
+                { value: "name", label: "Name" },
+                { value: "createdAt", label: "Created at" },
+                { value: "rotationPeriodDays", label: "Rotation period" },
+              ]}
+            />
             <CreateTeamDialog />
           </div>
         </div>
