@@ -209,22 +209,38 @@ export class OnCallService {
     };
   }
 
-  async getUpcomingRotations(ownerId: string, teamId: string) {
+  async getUpcomingRotations(requesterId: string, teamId: string) {
     const now = new Date();
+
+    const targetTeam = await this.prisma.team.findFirst({
+      where: {
+        id: teamId,
+        OR: [
+          { ownerId: requesterId },
+          { teamMembers: { some: { userId: requesterId } } },
+        ],
+      },
+    });
+    if (!targetTeam) {
+      throw new NotFoundException("Team doesn't exist");
+    }
+
+    const isOwner = targetTeam.ownerId === requesterId;
+
     const team = await this.prisma.team.findUnique({
-      where: { id: teamId, ownerId },
+      where: { id: teamId },
       include: {
         teamMembers: {
           orderBy: { joinedAt: "asc" },
           select: {
             user: {
               select: {
-                id: true,
+                id: isOwner,
                 firstName: true,
                 lastName: true,
-                email: true,
+                email: isOwner,
                 specialty: true,
-                role: true,
+                role: isOwner,
               },
             },
             unavailabilities: {

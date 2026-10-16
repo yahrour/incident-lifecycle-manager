@@ -48,4 +48,11 @@ export class UsersController {
     const result = await this.usersService.getMyMembership(user.sub);
     return apiResponse(result);
   }
+
+  @Get("me/team")
+  @Roles(Role.ENGINEER)
+  async getMyTeam(@ActiveUser() user: ActiveUserData) {
+    const result = await this.usersService.getMyTeam(user.sub);
+    return apiResponse(result);
+  }
 }

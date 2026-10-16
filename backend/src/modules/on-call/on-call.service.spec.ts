@@ -316,24 +316,83 @@ describe("OnCallService", () => {
     const mockTeam = (
       members: ReturnType<typeof makeMember>[],
       overrides = {}
-    ) =>
+    ) => {
+      const team = makeTeam(overrides);
+      prisma.team.findFirst.mockResolvedValue(team);
       prisma.team.findUnique.mockResolvedValue({
-        ...makeTeam(overrides),
+        ...team,
         teamMembers: members,
       } as never);
+    };
 
-    it("looks the team up scoped to the owner", async () => {
+    it("only lets the owner or a member of the team in", async () => {
+      mockTeam([]);
+
+      await service.getUpcomingRotations(OWNER_ID, TEAM_ID);
+
+      expect(prisma.team.findFirst).toHaveBeenCalledWith({
+        where: {
+          id: TEAM_ID,
+          OR: [
+            { ownerId: OWNER_ID },
+            { teamMembers: { some: { userId: OWNER_ID } } },
+          ],
+        },
+      });
+    });
+
+    it("exposes id, email and role of members to the owner", async () => {
       mockTeam([]);
 
       await service.getUpcomingRotations(OWNER_ID, TEAM_ID);
 
       expect(prisma.team.findUnique).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { id: TEAM_ID, ownerId: OWNER_ID } })
+        expect.objectContaining({
+          include: {
+            teamMembers: expect.objectContaining({
+              select: expect.objectContaining({
+                user: {
+                  select: expect.objectContaining({
+                    id: true,
+                    email: true,
+                    role: true,
+                  }),
+                },
+              }),
+            }),
+          },
+        })
       );
     });
 
-    it("throws NotFoundException when the team doesn't exist", async () => {
-      prisma.team.findUnique.mockResolvedValue(null);
+    it("hides id, email and role of members from a teammate", async () => {
+      mockTeam([]);
+
+      await service.getUpcomingRotations("engineer", TEAM_ID);
+
+      expect(prisma.team.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: {
+            teamMembers: expect.objectContaining({
+              select: expect.objectContaining({
+                user: {
+                  select: expect.objectContaining({
+                    id: false,
+                    email: false,
+                    role: false,
+                    firstName: true,
+                    lastName: true,
+                  }),
+                },
+              }),
+            }),
+          },
+        })
+      );
+    });
+
+    it("throws NotFoundException when the team doesn't exist or the requester has no access", async () => {
+      prisma.team.findFirst.mockResolvedValue(null);
 
       await expect(
         service.getUpcomingRotations(OWNER_ID, TEAM_ID)

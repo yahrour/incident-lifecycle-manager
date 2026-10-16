@@ -273,6 +273,29 @@ export class UnavailabilityService {
     }
   }
 
+  async findTeammatesAway(requesterId: string, teamId: string) {
+    const active = {
+      status: "APPROVED",
+      endDate: { gte: new Date() },
+    } as const;
+
+    return this.prisma.teamMember.findMany({
+      where: {
+        teamId,
+        NOT: { userId: requesterId },
+        unavailabilities: { some: active },
+      },
+      select: {
+        user: { select: { firstName: true, lastName: true, specialty: true } },
+        unavailabilities: {
+          where: active,
+          select: { startDate: true, endDate: true },
+          orderBy: { startDate: "asc" },
+        },
+      },
+    });
+  }
+
   async findAllForOwner(
     requesterId: string,
     query: OffsetPaginationSearchParams

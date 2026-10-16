@@ -413,6 +413,82 @@ describe("UnavailabilityService", () => {
     });
   });
 
+  describe("findTeammatesAway", () => {
+    const active = {
+      status: "APPROVED",
+      endDate: { gte: NOW },
+    };
+
+    it("returns the away teammates with their approved, unexpired windows", async () => {
+      const away = [
+        {
+          user: {
+            firstName: "Ada",
+            lastName: "Lovelace",
+            specialty: "Backend",
+          },
+          unavailabilities: [
+            {
+              startDate: new Date("2026-01-20T00:00:00.000Z"),
+              endDate: new Date("2026-01-22T23:59:59.999Z"),
+            },
+          ],
+        },
+      ];
+      prisma.teamMember.findMany.mockResolvedValue(away as never);
+
+      await expect(
+        service.findTeammatesAway(USER_ID, TEAM_ID)
+      ).resolves.toEqual(away);
+    });
+
+    it("returns an empty list when nobody is away", async () => {
+      prisma.teamMember.findMany.mockResolvedValue([]);
+
+      await expect(
+        service.findTeammatesAway(USER_ID, TEAM_ID)
+      ).resolves.toEqual([]);
+    });
+
+    it("excludes the requester and applies the same filter to members and windows", async () => {
+      prisma.teamMember.findMany.mockResolvedValue([]);
+
+      await service.findTeammatesAway(USER_ID, TEAM_ID);
+
+      expect(prisma.teamMember.findMany).toHaveBeenCalledWith({
+        where: {
+          teamId: TEAM_ID,
+          NOT: { userId: USER_ID },
+          unavailabilities: { some: active },
+        },
+        select: {
+          user: {
+            select: { firstName: true, lastName: true, specialty: true },
+          },
+          unavailabilities: {
+            where: active,
+            select: { startDate: true, endDate: true },
+            orderBy: { startDate: "asc" },
+          },
+        },
+      });
+    });
+
+    it("never selects the reason or status", async () => {
+      prisma.teamMember.findMany.mockResolvedValue([]);
+
+      await service.findTeammatesAway(USER_ID, TEAM_ID);
+
+      const [{ select }] = prisma.teamMember.findMany.mock.calls[0] as [
+        { select: { unavailabilities: { select: object } } },
+      ];
+      expect(Object.keys(select.unavailabilities.select)).toEqual([
+        "startDate",
+        "endDate",
+      ]);
+    });
+  });
+
   describe("findAllForOwner", () => {
     it("returns unavailabilities across all of the owner's teams", async () => {
       const rows = [makeUnavailability()];
