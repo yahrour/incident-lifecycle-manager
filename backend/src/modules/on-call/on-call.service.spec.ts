@@ -422,14 +422,12 @@ describe("OnCallService", () => {
 
       expect(result).toEqual([
         {
-          ...makeUser("b"),
-          startDate: daysFromNow(4),
-          endDate: daysFromNow(11),
+          user: makeUser("b"),
+          shift: { startDate: daysFromNow(4), endDate: daysFromNow(11) },
         },
         {
-          ...makeUser("c"),
-          startDate: daysFromNow(11),
-          endDate: daysFromNow(18),
+          user: makeUser("c"),
+          shift: { startDate: daysFromNow(11), endDate: daysFromNow(18) },
         },
       ]);
     });
@@ -441,7 +439,7 @@ describe("OnCallService", () => {
 
       const result = await service.getUpcomingRotations(OWNER_ID, TEAM_ID);
 
-      expect(result?.map((m) => m.id)).toEqual(["a", "b"]);
+      expect(result?.map((r) => r.user.id)).toEqual(["a", "b"]);
     });
 
     it("skips a member whose approved leave overlaps their slot", async () => {
@@ -451,7 +449,7 @@ describe("OnCallService", () => {
 
       const result = await service.getUpcomingRotations(OWNER_ID, TEAM_ID);
 
-      expect(result?.map((m) => m.id)).toEqual(["c"]);
+      expect(result?.map((r) => r.user.id)).toEqual(["c"]);
     });
 
     it("keeps a member whose leave is outside their slot", async () => {
@@ -460,7 +458,7 @@ describe("OnCallService", () => {
 
       const result = await service.getUpcomingRotations(OWNER_ID, TEAM_ID);
 
-      expect(result?.map((m) => m.id)).toEqual(["b"]);
+      expect(result?.map((r) => r.user.id)).toEqual(["b"]);
     });
 
     it("returns at most 5 rotations", async () => {
