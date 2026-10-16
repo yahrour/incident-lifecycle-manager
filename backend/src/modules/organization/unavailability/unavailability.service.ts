@@ -200,7 +200,7 @@ export class UnavailabilityService {
       where: {
         id: unavailabilityId,
         memberId,
-        status: "PENDING",
+        status: UnavailabilityStatus.PENDING,
       },
     });
     if (result.count === 0) {
@@ -288,7 +288,7 @@ export class UnavailabilityService {
     await this.requireTeamMembership(teamId, requesterId);
 
     const active = {
-      status: "APPROVED",
+      status: UnavailabilityStatus.APPROVED,
       endDate: { gte: new Date() },
     } as const;
 
@@ -392,13 +392,13 @@ export class UnavailabilityService {
       throw new NotFoundException("Unavailability not found");
     }
 
-    if (unavailability.status === "APPROVED") {
+    if (unavailability.status === UnavailabilityStatus.APPROVED) {
       throw new BadRequestException("Unavailability is already approved");
     }
-    if (unavailability.status === "REJECTED") {
+    if (unavailability.status === UnavailabilityStatus.REJECTED) {
       throw new BadRequestException("Cannot approve a rejected unavailability");
     }
-    if (unavailability.status === "EXPIRED") {
+    if (unavailability.status === UnavailabilityStatus.EXPIRED) {
       throw new BadRequestException("Cannot approve an expired unavailability");
     }
 
@@ -408,7 +408,7 @@ export class UnavailabilityService {
         memberId,
       },
       data: {
-        status: "APPROVED",
+        status: UnavailabilityStatus.APPROVED,
       },
     });
   }
@@ -439,13 +439,13 @@ export class UnavailabilityService {
       throw new NotFoundException("Unavailability not found");
     }
 
-    if (unavailability.status === "APPROVED") {
+    if (unavailability.status === UnavailabilityStatus.APPROVED) {
       throw new BadRequestException("Cannot reject an approved unavailability");
     }
-    if (unavailability.status === "REJECTED") {
+    if (unavailability.status === UnavailabilityStatus.REJECTED) {
       throw new BadRequestException("Unavailability is already rejected");
     }
-    if (unavailability.status === "EXPIRED") {
+    if (unavailability.status === UnavailabilityStatus.EXPIRED) {
       throw new BadRequestException("Cannot reject an expired unavailability");
     }
 
@@ -455,7 +455,7 @@ export class UnavailabilityService {
         memberId,
       },
       data: {
-        status: "REJECTED",
+        status: UnavailabilityStatus.REJECTED,
       },
     });
   }
@@ -466,13 +466,13 @@ export class UnavailabilityService {
 
     await this.prisma.unavailability.updateMany({
       where: {
-        status: "PENDING",
+        status: UnavailabilityStatus.PENDING,
         endDate: {
           lt: now,
         },
       },
       data: {
-        status: "EXPIRED",
+        status: UnavailabilityStatus.EXPIRED,
       },
     });
   }

@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { INCIDENT_STATUS } from "../incidents/constants";
+import { UnavailabilityStatus } from "@/generated/prisma/enums";
 
 @Injectable()
 export class OnCallService {
@@ -33,7 +34,7 @@ export class OnCallService {
               where: {
                 startDate: { lte: now },
                 endDate: { gte: now },
-                status: "APPROVED",
+                status: UnavailabilityStatus.APPROVED,
               },
             },
           },
@@ -114,7 +115,7 @@ export class OnCallService {
                   where: {
                     startDate: { lte: now },
                     endDate: { gte: now },
-                    status: "APPROVED",
+                    status: UnavailabilityStatus.APPROVED,
                   },
                 },
               },
@@ -232,7 +233,7 @@ export class OnCallService {
             unavailabilities: {
               where: {
                 endDate: { gte: now },
-                status: "APPROVED",
+                status: UnavailabilityStatus.APPROVED,
               },
             },
           },

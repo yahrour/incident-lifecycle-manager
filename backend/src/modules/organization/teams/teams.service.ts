@@ -11,7 +11,7 @@ import {
 } from "./dto";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { convertDateToUtc } from "@/common/utils/timezone";
-import { Prisma } from "@/generated/prisma/client";
+import { Prisma, UnavailabilityStatus } from "@/generated/prisma/client";
 
 @Injectable()
 export class TeamsService {
@@ -177,7 +177,7 @@ export class TeamsService {
       this.prisma.unavailability.count({
         where: {
           teamMember: { team: { ownerId }, teamId: id },
-          status: "APPROVED",
+          status: UnavailabilityStatus.APPROVED,
           startDate: {
             lte: now,
           },

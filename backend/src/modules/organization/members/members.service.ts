@@ -5,7 +5,7 @@ import {
 } from "@nestjs/common";
 import { OffsetPaginationSearchParams } from "./dto";
 import { PrismaService } from "@/common/prisma/prisma.service";
-import { Prisma } from "@/generated/prisma/client";
+import { Prisma, UnavailabilityStatus } from "@/generated/prisma/client";
 import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
 
 @Injectable()
@@ -98,7 +98,7 @@ export class MembersService {
           },
           unavailabilities: {
             where: {
-              status: "APPROVED",
+              status: UnavailabilityStatus.APPROVED,
               startDate: {
                 lte: now,
               },
@@ -155,7 +155,7 @@ export class MembersService {
           },
           unavailabilities: {
             where: {
-              status: "APPROVED",
+              status: UnavailabilityStatus.APPROVED,
               startDate: {
                 lte: now,
               },
