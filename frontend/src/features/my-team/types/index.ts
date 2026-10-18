@@ -7,8 +7,8 @@ export type Shift = {
       escalationTimeoutMinutes: number;
     };
     position: "PRIMARY" | "SECONDARY";
-    startsAt: Date;
-    endsAt: Date;
+    startsAt: string;
+    endsAt: string;
     incidents: {
       totalAssignedIncidents: number;
       totalUnacknowledgedIncidents: number;
