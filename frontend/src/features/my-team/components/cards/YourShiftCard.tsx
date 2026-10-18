@@ -53,14 +53,14 @@ export function YourShiftCard() {
 
   return (
     <div
-      className={`overflow-hidden rounded-lg border border-l-4 ${
+      className={`rounded-lg border border-l-4 ${
         isPrimary
           ? "border-destructive/25 border-l-destructive bg-white"
           : "border-border/50 border-l-warning bg-white"
       }`}
     >
       <div
-        className={`space-y-3 px-4 py-3 ${isPrimary ? "bg-destructive/[0.06]" : ""}`}
+        className={`space-y-3 px-4 py-3 ${isPrimary ? "bg-destructive/5" : ""}`}
       >
         <div className="flex items-center gap-2">
           <span className="relative flex size-2">
@@ -100,7 +100,7 @@ export function YourShiftCard() {
             : "No incidents waiting on you"}
         </p>
 
-        <dl
+        <div
           className={`grid grid-cols-3 divide-x rounded-md border bg-white ${isPrimary ? "divide-destructive/20 border-destructive/25" : "divide-border/50 border-border/50"}`}
         >
           <Stat label="Assigned" value={totalAssignedIncidents} />
@@ -113,7 +113,7 @@ export function YourShiftCard() {
             label="Escalation"
             value={`${shift.team.escalationTimeoutMinutes}m`}
           />
-        </dl>
+        </div>
       </div>
     </div>
   );
@@ -130,14 +130,14 @@ function Stat({
 }) {
   return (
     <div className="px-3 py-2 text-center">
-      <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+      <span className="block text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
         {label}
-      </dt>
-      <dd
-        className={`font-mono text-base leading-tight ${warn ? "text-primary" : "text-foreground"}`}
+      </span>
+      <span
+        className={`block font-mono text-base leading-tight ${warn ? "text-primary" : "text-foreground"}`}
       >
         {value}
-      </dd>
+      </span>
     </div>
   );
 }

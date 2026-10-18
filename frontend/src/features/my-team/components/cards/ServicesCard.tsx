@@ -16,7 +16,7 @@ export function ServicesCard({ services }: { services: string[] }) {
               key={service}
               className="flex items-center gap-2 text-sm font-medium"
             >
-              <span className="size-1.5 rounded-full bg-muted-foreground shrink-0" />
+              <span className="size-1.5 rounded-full bg-muted-foreground" />
               {service}
             </li>
           ))}

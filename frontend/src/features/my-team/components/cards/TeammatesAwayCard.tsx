@@ -33,10 +33,9 @@ export function TeammatesAwayCard({
           </TableHeader>
 
           <TableBody>
-            {/* no ids are sent to teammates, so key by name */}
             {teammatesAway.map(({ user, unavailabilities }) => (
               <TableRow
-                key={`${user.firstName}-${user.lastName}`}
+                key={`${user.firstName}-${user.lastName}-${unavailabilities[0]?.startDate}`}
                 className="hover:bg-white"
               >
                 <TableCell>

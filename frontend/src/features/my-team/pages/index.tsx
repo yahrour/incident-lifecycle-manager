@@ -4,35 +4,22 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
-import { TeamOverview } from "../components/TeamOverview";
+import { useAuth } from "@/features/auth";
 import { useQuery } from "@tanstack/react-query";
-import { fetchUserMembership } from "../api/membership";
+import { teamKeys } from "../constants";
+import { fetchMyTeam } from "../api/team";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
-import { NoMembershipState } from "../components/NoMembershipState";
 import { ErrorState } from "@/components/ErrorState";
-import { membershipKeys } from "../constants";
+import { NoMembershipState } from "../components/NoMembershipState";
+import { TeamDetails } from "../components/TeamDetails";
 
 export function MyTeam() {
+  const { user } = useAuth();
+
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: membershipKeys.all,
-    queryFn: fetchUserMembership,
+    queryKey: teamKeys.detail(user?.id ?? ""),
+    queryFn: fetchMyTeam,
   });
-
-  if (isPending) {
-    return <FullPageSpinner />;
-  }
-
-  if (isError) {
-    return (
-      <ErrorState
-        onRetry={() => void refetch()}
-        title="Unable to load your team"
-        description="We couldn't load your team membership. Please try again."
-      />
-    );
-  }
-
-  const membership = data.data;
 
   return (
     <div className="w-full">
@@ -48,12 +35,18 @@ export function MyTeam() {
         </Breadcrumb>
       </div>
 
-      {!membership ? (
+      {isPending ? (
+        <FullPageSpinner />
+      ) : isError ? (
+        <ErrorState
+          onRetry={() => void refetch()}
+          title="Unable to load your team"
+          description="Something went wrong while loading your team. Please try again."
+        />
+      ) : !data.data ? (
         <NoMembershipState />
       ) : (
-        <div className="p-6 space-y-6">
-          <TeamOverview />
-        </div>
+        <TeamDetails myTeam={data.data} />
       )}
     </div>
   );
