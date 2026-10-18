@@ -6,6 +6,8 @@
  *  - 10 teams with services, rotation settings and escalation timeouts
  *  - Unavailability windows (past / current / future; approved / pending / rejected),
  *    plus a bulk set of 24 for Amelia Martin (engineer@example.com)
+ *  - Demo scenario: Amelia is the primary on-call right now, and three of her
+ *    teammates are away (two now, one starting in 5 days)
  *  - API keys per SRE (one disabled)
  *  - ~120 incidents over the last 30 days (open / acknowledged / resolved)
  *    with assignees, MTTA/MTTR, linked alerts and responder notes
@@ -148,8 +150,8 @@ const AMELIA_UNAVAILABILITIES = [
   { offset: -21, len: 2, reason: "Family event", status: "APPROVED" },
   { offset: -14, len: 1, reason: "Training day", status: "REJECTED" },
   { offset: -7, len: 1, reason: "Public holiday", status: "APPROVED" },
-  // current
-  { offset: -1, len: 4, reason: "Vacation", status: "APPROVED" },
+  // (nothing current on purpose: she is on call right now, see "Demo scenario")
+  { offset: -4, len: 2, reason: "Vacation", status: "APPROVED" },
   // future
   { offset: 8, len: 2, reason: "Medical appointment", status: "PENDING" },
   { offset: 15, len: 6, reason: "Vacation", status: "PENDING" },
@@ -300,8 +302,49 @@ async function main() {
       status: u.status,
     }))
   );
-  // Clear her existing rows first so re-running doesn't duplicate them
-  await prisma.unavailability.deleteMany({ where: { memberId: ameliaMember.id } });
+
+  // Demo scenario: Amelia is the primary on-call right now, and a few of her
+  // teammates are away. No rnd() calls here, so the rest of the seed is unchanged.
+  const ameliaTeamId = ameliaMember.teamId;
+  const teamMembers = members.filter((m) => m.teamId === ameliaTeamId);
+  // getCurrentOnCall walks members ordered by joinedAt, starting at currentRotationIndex
+  const rotationOrder = [...teamMembers].sort(
+    (a, b) => a.joinedAt.getTime() - b.joinedAt.getTime()
+  );
+  await prisma.team.update({
+    where: { id: ameliaTeamId },
+    data: {
+      currentRotationIndex: rotationOrder.findIndex((m) => m.id === ameliaMember.id),
+      lastRotatedAt: ago(DAY), // rotation is not due for another period - 1 days
+    },
+  });
+
+  const awayTeammates = teamMembers.filter((m) => m.id !== ameliaMember.id).slice(0, 3);
+  const AWAY_NOW = [
+    { offset: -1, len: 4, reason: "Vacation" }, // away now, back in ~3 days
+    { offset: 0, len: 1, reason: "Conference" }, // away now, back tomorrow
+    { offset: 5, len: 3, reason: "Family event" }, // away soon
+  ];
+  const awayIds = new Set(awayTeammates.map((m) => m.id));
+  for (let i = windows.length - 1; i >= 0; i--) {
+    if (awayIds.has(windows[i].memberId)) windows.splice(i, 1);
+  }
+  windows.push(
+    ...awayTeammates.map((m, i) => ({
+      memberId: m.id,
+      startDate: dayOffset(AWAY_NOW[i].offset),
+      endDate: new Date(
+        dayOffset(AWAY_NOW[i].offset + AWAY_NOW[i].len).getTime() + (23 * HOUR + 59 * 60 * SEC)
+      ),
+      reason: AWAY_NOW[i].reason,
+      status: "APPROVED" as const,
+    }))
+  );
+
+  // Clear their existing rows first so re-running doesn't duplicate them
+  await prisma.unavailability.deleteMany({
+    where: { memberId: { in: [ameliaMember.id, ...awayIds] } },
+  });
   await prisma.unavailability.createMany({ data: windows, skipDuplicates: true });
 
   // 4. API keys (deterministic raw keys so reruns don't pile up) ------------
