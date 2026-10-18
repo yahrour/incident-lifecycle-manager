@@ -14,7 +14,7 @@ export default function NotFoundPage() {
   const homePath = user
     ? user.role === "manager"
       ? "/manager/overview"
-      : "/engineer/my-shift"
+      : "/engineer/my-team"
     : "/login";
 
   return (

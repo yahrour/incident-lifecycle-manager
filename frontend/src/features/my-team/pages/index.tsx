@@ -4,15 +4,16 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
-import { OnCallBanner } from "../components/OnCallBanner";
+import { TeamOverview } from "../components/TeamOverview";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUserMembership } from "../api/membership";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { NoMembershipState } from "../components/NoMembershipState";
+import { ErrorState } from "@/components/ErrorState";
 import { membershipKeys } from "../constants";
 
-export function MyShift() {
-  const { data, isPending, isError } = useQuery({
+export function MyTeam() {
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: membershipKeys.all,
     queryFn: fetchUserMembership,
   });
@@ -22,7 +23,13 @@ export function MyShift() {
   }
 
   if (isError) {
-    return <div>failed to fetch, click here try again</div>;
+    return (
+      <ErrorState
+        onRetry={() => void refetch()}
+        title="Unable to load your team"
+        description="We couldn't load your team membership. Please try again."
+      />
+    );
   }
 
   const membership = data.data;
@@ -33,7 +40,9 @@ export function MyShift() {
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbPage>Engineers</BreadcrumbPage>
+              <BreadcrumbPage className="font-medium text-sm">
+                My Team
+              </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
@@ -42,8 +51,8 @@ export function MyShift() {
       {!membership ? (
         <NoMembershipState />
       ) : (
-        <div className="mt-2 p-4 space-y-4">
-          <OnCallBanner />
+        <div className="p-6 space-y-6">
+          <TeamOverview />
         </div>
       )}
     </div>

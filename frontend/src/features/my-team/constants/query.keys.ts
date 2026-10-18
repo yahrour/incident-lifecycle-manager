@@ -6,3 +6,8 @@ export const shiftKeys = {
 export const membershipKeys = {
   all: ["membership"],
 };
+
+export const teamKeys = {
+  all: ["my-team"] as const,
+  detail: (userId: string) => [...teamKeys.all, userId],
+};

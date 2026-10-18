@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { logout } from "../services/logoutService";
 import { useNavigate } from "react-router";
-import { shiftKeys } from "@/features/my-shift/constants";
+import { shiftKeys } from "@/features/my-team/constants";
 import { useAuth } from "../context/AuthContext";
 
 export default function useLogout() {
