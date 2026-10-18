@@ -1,9 +1,17 @@
 name: PR Check & Notify
+
 on:
   pull_request:
     branches:
       - dev
       - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
 
 jobs:
   test:
@@ -12,6 +20,7 @@ jobs:
     defaults:
       run:
         working-directory: ./backend
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -20,6 +29,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
 
       - name: Install Dependencies
         run: npm ci
@@ -30,32 +41,62 @@ jobs:
       - name: Run Tests
         run: npm test
 
-  # This job ALWAYS runs when 'test' completes, whether tests pass OR fail
   notify:
     name: Notify Discord
     needs: test
-    if: always() && (github.event.action == 'opened' || github.event.action == 'synchronize')
+    if: always()
     runs-on: ubuntu-latest
+
     steps:
       - name: Send Discord Notification
+        env:
+          TEST_STATUS: ${{ needs.test.result }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
         run: |
-          STATUS="${{ needs.test.result }}"
-          if [ "$STATUS" = "success" ]; then
+          if [ "$TEST_STATUS" = "success" ]; then
             output="🟢 Tests Passed"
-          else
+          elif [ "$TEST_STATUS" = "failure" ]; then
             output="🔴 Tests Failed"
+          else
+            output="⚠️ Tests $TEST_STATUS"
           fi
 
-          curl -H "Content-Type: application/json" \
-            -X POST \
-            -d "{
-              \"embeds\": [{
-                \"title\": \"🔀 PR Activity ($output)\",
-                \"url\": \"${{ github.event.pull_request.html_url }}\",
-                \"fields\": [
-                  { \"name\": \"Title\", \"value\": \"${{ github.event.pull_request.title }}\" },
-                  { \"name\": \"Author\", \"value\": \"${{ github.actor }}\" }
+          payload=$(jq -n \
+            --arg title "🔀 PR Activity ($output)" \
+            --arg url "$PR_URL" \
+            --arg pr_title "$PR_TITLE" \
+            --arg author "$PR_AUTHOR" \
+            '{
+              embeds: [{
+                title: $title,
+                url: $url,
+                fields: [
+                  {
+                    name: "Title",
+                    value: $pr_title
+                  },
+                  {
+                    name: "Author",
+                    value: $author
+                  }
                 ]
               }]
-            }" \
-            ${{ secrets.DISCORD_WEBHOOK_URL }}
+            }')
+
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "Discord webhook URL is not configured."
+            exit 1
+          fi
+
+          curl --fail-with-body \
+            --show-error \
+            --silent \
+            --retry 3 \
+            -H "Content-Type: application/json" \
+            -X POST \
+            -d "$payload" \
+            "$DISCORD_WEBHOOK_URL"
