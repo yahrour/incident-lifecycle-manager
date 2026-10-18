@@ -17,7 +17,7 @@ import {
 import { InvitePage } from "@/features/invite";
 import { HomeRedirect } from "./HomeRedirect";
 import { Integrations } from "@/features/integrations";
-import { MyShift } from "@/features/my-shift";
+import { MyTeam } from "@/features/my-team";
 import { DeliveryLog } from "@/features/delivery-log";
 import { MyUnavailabilities } from "@/features/my-unavailabilities";
 
@@ -63,14 +63,10 @@ export default function AppRoutes() {
         {/* Engineer only */}
         <Route element={<ProtectedRoute allowedRole="ENGINEER" />}>
           <Route element={<AppLayout />}>
-            <Route path="/engineer/my-shift" element={<MyShift />} />
+            <Route path="/engineer/my-team" element={<MyTeam />} />
             <Route
               path="/engineer/my-unavailabilities"
               element={<MyUnavailabilities />}
-            />
-            <Route
-              path="/engineer/my-team"
-              element={<div>manage my team</div>}
             />
           </Route>
         </Route>

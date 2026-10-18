@@ -21,7 +21,6 @@ import {
   CalendarOff,
   Plug,
   Settings,
-  Home,
   ChevronDown,
   LogOut,
 } from "lucide-react";
@@ -70,7 +69,6 @@ const managerItems = {
 
 const engineerItems = {
   respondItems: [
-    { label: "My shift", href: "/engineer/my-shift", icon: Home },
     { label: "Incidents", href: "/engineer/incidents", icon: AlertTriangle },
     { label: "Delivery log", href: "/engineer/delivery-log", icon: Send },
   ],

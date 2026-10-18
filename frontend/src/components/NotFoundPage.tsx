@@ -1,20 +1,15 @@
 import { Link } from "react-router";
 import { Button } from "./ui/button";
 import { ArrowLeft } from "lucide-react";
+import { useAuth } from "@/features/auth";
+import { Role } from "@/types";
 
 export default function NotFoundPage() {
-  const user = {
-    id: "#1",
-    name: "Tobi",
-    email: "tobi@acme.com",
-    role: "manager" as "manager" | "engineer",
-    team: "Acme Cloud",
-  };
-
+  const { user } = useAuth();
   const homePath = user
-    ? user.role === "manager"
+    ? user.role === Role.SRE
       ? "/manager/overview"
-      : "/engineer/my-shift"
+      : "/engineer/my-team"
     : "/login";
 
   return (

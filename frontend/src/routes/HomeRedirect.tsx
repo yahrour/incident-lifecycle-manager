@@ -13,7 +13,7 @@ export function HomeRedirect() {
       return <Navigate to="/manager/teams" replace />;
 
     case "ENGINEER":
-      return <Navigate to="/engineer/my-shift" replace />;
+      return <Navigate to="/engineer/my-team" replace />;
 
     default:
       return <Navigate to="/login" replace />;
