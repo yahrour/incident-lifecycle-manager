@@ -1,36 +1,33 @@
 # Disaster Recovery Runbook
 
-This document outlines the steps to recover the database.
+Steps to restore the database. Run all commands from the repo root.
 
-## Step 1: Isolate & Stop Traffic
+> **Warning:** the restore drops the current database and replaces it with the backup.
 
-Before restoring, stop the services to prevent users from writing new data while the recovery is running.
+## Step 1: Stop Services
+
+Stop the app and the backup service so nothing writes during the restore.
 
 ```bash
-docker compose stop frontend
-docker compose stop backend
+docker compose stop frontend backend postgres-backup
 ```
 
-## Step 2: Verify Backup Files
+## Step 2: Check Backups
 
-Ensure having a valid backup file in `./backups` directory.
+The script restores the **most recent** `.sql` file in `./backups`.
 
 ```bash
-ls -lh ./backups
+ls -lt ./backups
 ```
 
 ## Step 3: Run the Restore Script
 
 ```bash
-chmod +x ./infra/database/db.restore.sh
 bash ./infra/database/db.restore.sh ./backups
 ```
 
-## Step 4: Bring Services Back Online
-
-Start the services once the recovery process is done.
+## Step 4: Start Services
 
 ```bash
-docker compose start frontend
-docker compose start backend
+docker compose start frontend backend postgres-backup
 ```
