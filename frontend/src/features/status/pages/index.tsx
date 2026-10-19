@@ -17,7 +17,7 @@ export function StatusPage() {
   }
 
   const apiStatus: Status = isError ? "outage" : "operational";
-  const database = data?.details.database;
+  const database = data?.details?.database;
   const dbStatus: Status =
     isError || !database
       ? "unknown"

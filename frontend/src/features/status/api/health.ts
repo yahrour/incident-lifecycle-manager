@@ -10,5 +10,10 @@ export async function fetchHealth() {
     }
   );
 
+  // A 503 from waf (backend down) has no health body
+  if (!response.data?.details) {
+    throw new Error(`Unexpected health response (${response.status})`);
+  }
+
   return response.data;
 }
