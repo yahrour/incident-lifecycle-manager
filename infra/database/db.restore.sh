@@ -20,7 +20,7 @@ log_error()   { echo -e "${RED}ERROR: $1${NC}"; }
 # Resolve the script's own directory, regardless of where it's invoked from
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# infra/.env lives one level up from infra/scripts/
+# infra/.env lives one level up from infra/database/
 ENV_FILE="$SCRIPT_DIR/../.env"
 
 # Ensure environment variables are loaded

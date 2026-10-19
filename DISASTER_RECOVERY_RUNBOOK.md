@@ -22,8 +22,8 @@ ls -lh ./backups
 ## Step 3: Run the Restore Script
 
 ```bash
-chmod +x ./infra/scripts/db.restore.sh
-bash ./infra/scripts/db.restore.sh ./backups
+chmod +x ./infra/database/db.restore.sh
+bash ./infra/database/db.restore.sh ./backups
 ```
 
 ## Step 4: Bring Services Back Online

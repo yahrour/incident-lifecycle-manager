@@ -19,7 +19,7 @@ services:
       retries: 20
   postgres-backup:
     build:
-      context: ./infra/scripts/db-backup-service
+      context: ./infra/database/db-backup-service
       dockerfile: ./Dockerfile
     container_name: incident_postgres_backup
     restart: always
