@@ -13,26 +13,16 @@ log_success() { echo -e "${GREEN}SUCCESS: $1${NC}"; }
 log_warn()    { echo -e "${YELLOW}WARNING: $1${NC}"; }
 log_error()   { echo -e "${RED}ERROR: $1${NC}"; }
 
-notify() {
-  curl -fsS -H "Content-Type: application/json" \
-    -d "{\"content\": \"$1\"}" "$WEBHOOK_URL" >/dev/null
-}
-
 # MAIN LOGIC
-BACKUP_DIR="/backups"
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
-BACKUP_FILE="$BACKUP_DIR/backup_$TIMESTAMP.sql"
+BACKUP_PATH="/backups/backup_$TIMESTAMP.sql"
 
-ls $BACKUP_DIR
+log_info "Starting database backup at $TIMESTAMP"
 
-log_info "Starting database backup at $TIMESTAMP..."
-
-PGPASSWORD=$POSTGRES_PASSWORD pg_dump -h $POSTGRES_HOST -U $POSTGRES_USER -d $POSTGRES_DB > $BACKUP_FILE
+PGPASSWORD=$POSTGRES_PASSWORD pg_dump -h $POSTGRES_HOST -U $POSTGRES_USER -d $POSTGRES_DB > $BACKUP_PATH
 
 if [ $? -eq 0 ]; then
-  log_success "Backup successfully created: $BACKUP_FILE"
-  notify "Database backup succeeded: backup_$TIMESTAMP.sql"
+  log_success "Backup successfully created: $BACKUP_PATH"
 else
   log_error "Backup failed"
-  notify "DATABASE BACKUP FAILED, Check server logs immediately"
 fi

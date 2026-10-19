@@ -75,7 +75,7 @@ docker compose exec -T "$POSTGRES_SERVICE_NAME" psql -U "$POSTGRES_USER" -d "$PO
 # MULTI-SCHEMA VERIFICATION
 
 log_info "Running automatic schema verification..."
-SCHEMAS=("organization" "auth" "alerts")
+SCHEMAS=("organization" "auth" "ingestion" "incident")
 
 for SCHEMA in "${SCHEMAS[@]}"; do
     TABLE_COUNT=$(docker compose exec -T "$POSTGRES_SERVICE_NAME" psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -c "SELECT count(*) FROM information_schema.tables WHERE table_schema='${SCHEMA}';")

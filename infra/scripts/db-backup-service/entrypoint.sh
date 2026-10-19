@@ -5,7 +5,6 @@ export POSTGRES_HOST=$POSTGRES_HOST
 export POSTGRES_USER=$POSTGRES_USER
 export POSTGRES_PASSWORD=$POSTGRES_PASSWORD
 export POSTGRES_DB=$POSTGRES_DB
-export WEBHOOK_URL=$WEBHOOK_URL
 EOF
 
 echo "* * * * * source /etc/environment && /scripts/db.backup.sh" > /etc/crontabs/root
