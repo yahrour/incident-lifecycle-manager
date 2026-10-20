@@ -23,7 +23,7 @@ ls -lt ./backups
 ## Step 3: Run the Restore Script
 
 ```bash
-bash ./infra/database/db.restore.sh ./backups
+bash ./infra/database/db.restore.sh ./infra/.env ./backups
 ```
 
 ## Step 4: Start Services
