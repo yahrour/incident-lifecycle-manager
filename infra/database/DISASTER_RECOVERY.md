@@ -2,14 +2,14 @@
 
 Steps to restore the database. Run all commands from the repo root.
 
-> **Warning:** the restore drops the current database and replaces it with the backup.
+> **Warning:** the restore replaces the current database with the backup. The previous database is kept as `<POSTGRES_DB>_old` until the next restore overwrites it.
 
 ## Step 1: Stop Services
 
 Stop the app and the backup service so nothing writes during the restore.
 
 ```bash
-docker compose stop frontend backend postgres-backup
+docker compose stop frontend backend postgres-backup postgres-exporter
 ```
 
 ## Step 2: Check Backups
@@ -29,5 +29,5 @@ bash ./infra/database/db.restore.sh ./infra/.env ./backups
 ## Step 4: Start Services
 
 ```bash
-docker compose start frontend backend postgres-backup
+docker compose start frontend backend postgres-backup postgres-exporter
 ```
