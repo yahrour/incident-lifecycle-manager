@@ -1,26 +1,27 @@
 import NotFoundPage from "@/components/NotFoundPage";
-import { Route, Routes } from "react-router";
-import { AppLayout } from "./AppLayout";
-import { RequireAuth } from "./RequireAuth";
-import { ProtectedRoute } from "./ProtectedRoute";
 import { SignIn, SignUp } from "@/features/auth";
-import { SettingPage } from "@/features/settings";
-import { GuestOnly } from "./GuestOnly";
+import { DeliveryLog } from "@/features/delivery-log";
+import { Incidents } from "@/features/incidents";
+import { Integrations } from "@/features/integrations";
+import { InvitePage } from "@/features/invite";
 import {
   AllMembers,
-  TeamMembers,
+  AllUnavailabilities,
   Team,
+  TeamMembers,
   Teams,
   TeamUnavailabilities,
-  AllUnavailabilities,
 } from "@/features/organization";
-import { InvitePage } from "@/features/invite";
+import { SettingPage } from "@/features/settings";
+import { Route, Routes } from "react-router";
+import { AppLayout } from "./AppLayout";
+import { GuestOnly } from "./GuestOnly";
 import { HomeRedirect } from "./HomeRedirect";
-import { Integrations } from "@/features/integrations";
 import { MyTeam } from "@/features/my-team";
-import { DeliveryLog } from "@/features/delivery-log";
 import { MyUnavailabilities } from "@/features/my-unavailabilities";
 import { StatusPage } from "@/features/status";
+import { ProtectedRoute } from "./ProtectedRoute";
+import { RequireAuth } from "./RequireAuth";
 
 export default function AppRoutes() {
   return (
@@ -57,6 +58,7 @@ export default function AppRoutes() {
               path="/manager/time-off"
               element={<div>manage time-off</div>}
             />
+            <Route path="/manager/incidents" element={<Incidents />} />
             <Route path="/manager/integrations" element={<Integrations />} />
             <Route path="/manager/delivery-log" element={<DeliveryLog />} />
           </Route>
