@@ -20,12 +20,14 @@ import { Integrations } from "@/features/integrations";
 import { MyTeam } from "@/features/my-team";
 import { DeliveryLog } from "@/features/delivery-log";
 import { MyUnavailabilities } from "@/features/my-unavailabilities";
+import { StatusPage } from "@/features/status";
 
 export default function AppRoutes() {
   return (
     <Routes>
       {/* Public — must stay outside RequireAuth */}
       <Route path="/invite" element={<InvitePage />} />
+      <Route path="/status" element={<StatusPage />} />
       <Route element={<GuestOnly />}>
         <Route path="/login" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
