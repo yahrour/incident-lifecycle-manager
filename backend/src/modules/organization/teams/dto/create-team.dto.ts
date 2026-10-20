@@ -5,8 +5,8 @@ import {
   ArrayUnique,
   IsArray,
   IsDate,
+  IsInt,
   IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsPositive,
   IsString,
@@ -31,7 +31,7 @@ export class CreateTeamDto {
   description?: string;
 
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   @IsPositive()
   @Max(30, {
     message: "rotation period must not exceed 30 days",
@@ -52,7 +52,7 @@ export class CreateTeamDto {
   timezone?: string;
 
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   @IsPositive()
   @Max(1440, {
     message: "escalation timeout must not exceed 1440 minutes (24 hours)",
