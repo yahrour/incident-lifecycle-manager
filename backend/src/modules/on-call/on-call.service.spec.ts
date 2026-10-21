@@ -521,7 +521,8 @@ describe("OnCallService", () => {
 
       expect(prisma.team.updateMany).toHaveBeenCalledWith({
         where: { id: TEAM_ID, lastRotatedAt },
-        data: { lastRotatedAt: NOW, currentRotationIndex: 2 },
+        // the scheduled handover (lastRotatedAt + 7d), not the cron's run time
+        data: { lastRotatedAt: daysFromNow(-7), currentRotationIndex: 2 },
       });
     });
 

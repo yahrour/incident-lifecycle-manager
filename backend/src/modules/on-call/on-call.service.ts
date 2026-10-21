@@ -342,7 +342,9 @@ export class OnCallService {
             lastRotatedAt: team.lastRotatedAt,
           },
           data: {
-            lastRotatedAt: now,
+            lastRotatedAt: new Date(
+              baseTime + team.rotationPeriodDays * 24 * 60 * 60 * 1000
+            ),
             currentRotationIndex: incomingIndex,
           },
         });
