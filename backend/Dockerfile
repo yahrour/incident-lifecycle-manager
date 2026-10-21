@@ -1,8 +1,17 @@
-FROM node:24-slim
+FROM node:24-slim AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
-
 COPY . .
-RUN npx prisma generate
-CMD ["sh", "-c", "npx prisma generate && npx prisma migrate reset --force && npx prisma db push --accept-data-loss && npm run db:seed && npm run start:dev"]
+RUN npx prisma generate && npm run build
+RUN npm prune --omit=dev
+
+FROM node:24-slim
+WORKDIR /app
+
+ENV NODE_ENV=production
+COPY package*.json ./
+COPY --from=builder /app/node_modules /app/node_modules
+COPY --from=builder /app/dist /app/dist
+CMD ["npm", "run", "start:prod"]
+
