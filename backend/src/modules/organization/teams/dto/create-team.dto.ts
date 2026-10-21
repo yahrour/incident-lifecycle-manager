@@ -13,7 +13,6 @@ import {
   IsTimeZone,
   Max,
   MaxLength,
-  MinDate,
   ValidateIf,
 } from "class-validator";
 
@@ -43,9 +42,6 @@ export class CreateTeamDto {
     (o: CreateTeamDto) => o.timezone !== undefined && o.timezone !== null
   )
   @IsDate()
-  @MinDate(() => new Date(), {
-    message: "Rotation start date must be in the future.",
-  })
   rotationStartDate?: Date;
 
   @ValidateIf(

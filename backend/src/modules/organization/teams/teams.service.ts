@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -18,6 +19,16 @@ export class TeamsService {
   constructor(private prisma: PrismaService) {}
 
   async create(ownerId: string, createTeamDto: CreateTeamDto) {
+    const rotationStartDate =
+      createTeamDto.rotationStartDate &&
+      convertDateToUtc(createTeamDto.rotationStartDate, createTeamDto.timezone);
+
+    if (rotationStartDate && rotationStartDate <= new Date()) {
+      throw new BadRequestException(
+        "Rotation start date must be in the future"
+      );
+    }
+
     try {
       const team = await this.prisma.team.create({
         data: {
@@ -26,12 +37,7 @@ export class TeamsService {
           description: createTeamDto.description,
           services: createTeamDto.services,
           rotationPeriodDays: createTeamDto.rotationPeriodDays,
-          rotationStartDate:
-            createTeamDto.rotationStartDate &&
-            convertDateToUtc(
-              createTeamDto.rotationStartDate,
-              createTeamDto.timezone
-            ),
+          rotationStartDate,
           escalationTimeoutMinutes: createTeamDto.escalationTimeoutMinutes,
         },
         omit: {
