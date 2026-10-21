@@ -557,6 +557,7 @@ describe("UnavailabilityService", () => {
       prisma.unavailability.findUnique.mockResolvedValue(
         makeUnavailability() as never
       );
+      prisma.unavailability.updateMany.mockResolvedValue({ count: 1 });
     });
 
     it(`sets a pending unavailability to ${target}`, async () => {
@@ -565,10 +566,21 @@ describe("UnavailabilityService", () => {
       expect(prisma.unavailability.findUnique).toHaveBeenCalledWith({
         where: { id: UNAVAILABILITY_ID, memberId: MEMBER_ID },
       });
-      expect(prisma.unavailability.update).toHaveBeenCalledWith({
-        where: { id: UNAVAILABILITY_ID, memberId: MEMBER_ID },
+      expect(prisma.unavailability.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: UNAVAILABILITY_ID,
+          memberId: MEMBER_ID,
+          status: "PENDING",
+        },
         data: { status: target },
       });
+    });
+
+    it("throws BadRequestException when another request changed the status first", async () => {
+      // passed the pending check, but a concurrent approve/reject won the update
+      prisma.unavailability.updateMany.mockResolvedValue({ count: 0 });
+
+      await expect(run()).rejects.toThrow(BadRequestException);
     });
 
     it("throws NotFoundException when the requester doesn't own the team", async () => {
@@ -577,7 +589,7 @@ describe("UnavailabilityService", () => {
       );
 
       await expect(run()).rejects.toThrow(NotFoundException);
-      expect(prisma.unavailability.update).not.toHaveBeenCalled();
+      expect(prisma.unavailability.updateMany).not.toHaveBeenCalled();
     });
 
     it("throws NotFoundException when the member isn't in the team", async () => {
@@ -600,7 +612,7 @@ describe("UnavailabilityService", () => {
         );
 
         await expect(run()).rejects.toThrow(BadRequestException);
-        expect(prisma.unavailability.update).not.toHaveBeenCalled();
+        expect(prisma.unavailability.updateMany).not.toHaveBeenCalled();
       }
     );
   });
