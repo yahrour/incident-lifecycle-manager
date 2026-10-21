@@ -178,25 +178,30 @@ export class MembersService {
   }
 
   async removeFromTeam(ownerId: string, teamId: string, memberId: number) {
-    try {
-      await this.prisma.teamMember.delete({
-        where: {
-          id: memberId,
-          teamId,
-          team: {
-            ownerId,
-          },
+    await this.prisma.$transaction(async (tx) => {
+      const team = await tx.team.findUnique({
+        where: { id: teamId, ownerId },
+        select: {
+          currentRotationIndex: true,
+          teamMembers: { orderBy: { joinedAt: "asc" }, select: { id: true } },
         },
       });
-    } catch (error) {
-      if (error instanceof PrismaClientKnownRequestError) {
-        if (error.code === "P2025") {
-          throw new NotFoundException("Member doesn't exist");
-        }
+
+      const position =
+        team?.teamMembers.findIndex((member) => member.id === memberId) ?? -1;
+      if (!team || position === -1) {
+        throw new NotFoundException("Member doesn't exist");
       }
 
-      throw error;
-    }
+      await tx.teamMember.delete({ where: { id: memberId } });
+
+      if (position < team.currentRotationIndex) {
+        await tx.team.update({
+          where: { id: teamId },
+          data: { currentRotationIndex: { decrement: 1 } },
+        });
+      }
+    });
   }
 
   async isInTeam(userId: string) {

@@ -271,37 +271,94 @@ describe("MembersService", () => {
   });
 
   describe("removeFromTeam", () => {
-    it("removes the member, scoped to the owner's team", async () => {
-      prisma.teamMember.delete.mockResolvedValue(makeMembers(1)[0] as never);
+    let tx: DeepMockProxy<Prisma.TransactionClient>;
 
-      await expect(
-        service.removeFromTeam(OWNER_ID, TEAM_ID, MEMBER_ID)
-      ).resolves.toBeUndefined();
+    // members with ids 1..4, in joinedAt order
+    const mockTeam = (currentRotationIndex: number) =>
+      tx.team.findUnique.mockResolvedValue({
+        currentRotationIndex,
+        teamMembers: makeMembers(4).map(({ id }) => ({ id })),
+      } as never);
 
-      expect(prisma.teamMember.delete).toHaveBeenCalledWith({
-        where: {
-          id: MEMBER_ID,
-          teamId: TEAM_ID,
-          team: { ownerId: OWNER_ID },
-        },
-      });
+    beforeEach(() => {
+      tx = mockDeep<Prisma.TransactionClient>();
+      prisma.$transaction.mockImplementation(
+        (fn: (tx: Prisma.TransactionClient) => Promise<unknown>) => fn(tx)
+      );
     });
 
-    it("throws NotFoundException when the member doesn't exist (P2025)", async () => {
-      prisma.teamMember.delete.mockRejectedValue(prismaError("P2025"));
+    it("looks up the team scoped to the owner, in rotation order", async () => {
+      mockTeam(0);
+
+      await expect(
+        service.removeFromTeam(OWNER_ID, TEAM_ID, 1)
+      ).resolves.toBeUndefined();
+
+      expect(tx.team.findUnique).toHaveBeenCalledWith({
+        where: { id: TEAM_ID, ownerId: OWNER_ID },
+        select: {
+          currentRotationIndex: true,
+          teamMembers: { orderBy: { joinedAt: "asc" }, select: { id: true } },
+        },
+      });
+      expect(tx.teamMember.delete).toHaveBeenCalledWith({ where: { id: 1 } });
+    });
+
+    it("throws NotFoundException when the team doesn't exist or isn't owned", async () => {
+      tx.team.findUnique.mockResolvedValue(null);
 
       await expect(
         service.removeFromTeam(OWNER_ID, TEAM_ID, MEMBER_ID)
       ).rejects.toThrow(NotFoundException);
+      expect(tx.teamMember.delete).not.toHaveBeenCalled();
+      expect(tx.team.update).not.toHaveBeenCalled();
     });
 
-    it("rethrows unknown errors", async () => {
-      const error = new Error("boom");
-      prisma.teamMember.delete.mockRejectedValue(error);
+    it("throws NotFoundException when the member isn't in the team, without touching the index", async () => {
+      mockTeam(0);
 
       await expect(
-        service.removeFromTeam(OWNER_ID, TEAM_ID, MEMBER_ID)
-      ).rejects.toBe(error);
+        service.removeFromTeam(OWNER_ID, TEAM_ID, 99)
+      ).rejects.toThrow(NotFoundException);
+      expect(tx.teamMember.delete).not.toHaveBeenCalled();
+      expect(tx.team.update).not.toHaveBeenCalled();
+    });
+
+    it("decrements the rotation index when the removed member is before the on-call one", async () => {
+      // on-call is position 2 (id 3); removing position 0 (id 1)
+      mockTeam(2);
+
+      await service.removeFromTeam(OWNER_ID, TEAM_ID, 1);
+
+      expect(tx.team.update).toHaveBeenCalledWith({
+        where: { id: TEAM_ID },
+        data: { currentRotationIndex: { decrement: 1 } },
+      });
+    });
+
+    it.each([
+      ["the on-call member", 3],
+      ["a member after the on-call one", 4],
+    ])("keeps the rotation index when removing %s", async (_, memberId) => {
+      mockTeam(2);
+
+      await service.removeFromTeam(OWNER_ID, TEAM_ID, memberId);
+
+      expect(tx.teamMember.delete).toHaveBeenCalledWith({
+        where: { id: memberId },
+      });
+      expect(tx.team.update).not.toHaveBeenCalled();
+    });
+
+    it("rethrows delete errors without updating the index", async () => {
+      const error = new Error("boom");
+      mockTeam(2);
+      tx.teamMember.delete.mockRejectedValue(error);
+
+      await expect(service.removeFromTeam(OWNER_ID, TEAM_ID, 1)).rejects.toBe(
+        error
+      );
+      expect(tx.team.update).not.toHaveBeenCalled();
     });
   });
 
