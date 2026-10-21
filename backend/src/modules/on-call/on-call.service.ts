@@ -340,6 +340,7 @@ export class OnCallService {
           where: {
             id: team.id,
             lastRotatedAt: team.lastRotatedAt,
+            currentRotationIndex: team.currentRotationIndex,
           },
           data: {
             lastRotatedAt: new Date(
