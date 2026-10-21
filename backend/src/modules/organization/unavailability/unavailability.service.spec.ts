@@ -87,6 +87,35 @@ describe("UnavailabilityService", () => {
 
     beforeEach(() => {
       prisma.teamMember.findUnique.mockResolvedValue(makeMember() as never);
+      prisma.unavailability.findFirst.mockResolvedValue(null);
+    });
+
+    it("looks for an overlapping pending or approved window of the same member", async () => {
+      prisma.unavailability.create.mockResolvedValue(
+        makeUnavailability() as never
+      );
+
+      await service.request(USER_ID, TEAM_ID, MEMBER_ID, dto);
+
+      expect(prisma.unavailability.findFirst).toHaveBeenCalledWith({
+        where: {
+          memberId: MEMBER_ID,
+          status: { in: ["PENDING", "APPROVED"] },
+          startDate: { lt: convertDateToUtc(dto.endDate, "UTC", true) },
+          endDate: { gt: convertDateToUtc(dto.startDate, "UTC") },
+        },
+      });
+    });
+
+    it("throws ConflictException when the window overlaps an existing one", async () => {
+      prisma.unavailability.findFirst.mockResolvedValue(
+        makeUnavailability() as never
+      );
+
+      await expect(
+        service.request(USER_ID, TEAM_ID, MEMBER_ID, dto)
+      ).rejects.toThrow("Unavailability overlaps an existing request");
+      expect(prisma.unavailability.create).not.toHaveBeenCalled();
     });
 
     it("creates a pending window with UTC day boundaries", async () => {

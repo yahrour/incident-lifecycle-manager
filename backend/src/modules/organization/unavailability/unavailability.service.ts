@@ -127,19 +127,40 @@ export class UnavailabilityService {
       throw new BadRequestException("Start date must be before end date");
     }
 
+    // check overlap
+    const startDate = convertDateToUtc(
+      requestUnavailabilityDto.startDate,
+      requestUnavailabilityDto.timezone
+    );
+    const endDate = convertDateToUtc(
+      requestUnavailabilityDto.endDate,
+      requestUnavailabilityDto.timezone,
+      true
+    );
+
+    const overlapping = await this.prisma.unavailability.findFirst({
+      where: {
+        memberId,
+        status: {
+          in: [UnavailabilityStatus.PENDING, UnavailabilityStatus.APPROVED],
+        },
+        startDate: { lt: endDate },
+        endDate: { gt: startDate },
+      },
+    });
+
+    if (overlapping) {
+      throw new ConflictException(
+        "Unavailability overlaps an existing request"
+      );
+    }
+
     try {
       return await this.prisma.unavailability.create({
         data: {
           memberId,
-          startDate: convertDateToUtc(
-            requestUnavailabilityDto.startDate,
-            requestUnavailabilityDto.timezone
-          ),
-          endDate: convertDateToUtc(
-            requestUnavailabilityDto.endDate,
-            requestUnavailabilityDto.timezone,
-            true
-          ),
+          startDate,
+          endDate,
           reason: requestUnavailabilityDto.reason,
         },
       });
