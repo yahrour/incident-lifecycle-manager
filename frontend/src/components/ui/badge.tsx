@@ -22,6 +22,12 @@ const badgeVariants = cva(
         ghost:
           "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
         link: "text-primary underline-offset-4 hover:underline",
+        critical:
+          "bg-red-900/20 text-red-900 dark:bg-red-900/40 dark:text-red-300",
+        high: "bg-red-500/15 text-red-600 dark:bg-red-500/20 dark:text-red-400",
+        medium:
+          "bg-orange-500/15 text-orange-700 dark:bg-orange-400/15 dark:text-orange-400",
+        low: "bg-yellow-400/20 text-yellow-700 dark:bg-yellow-400/15 dark:text-yellow-400",
       },
     },
     defaultVariants: {
