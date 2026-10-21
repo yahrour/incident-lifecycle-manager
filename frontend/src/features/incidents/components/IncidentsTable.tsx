@@ -11,30 +11,8 @@ import { useErrorToast } from "@/hooks/use-error-toast";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { fetchIncidents } from "../api/incidents";
-import type { IncidentStatus } from "../types";
-
-function formatMetricDuration(s: number) {
-  s = Math.round(s);
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  if (h) return `${h}h ${m}m`;
-  if (m) return `${m}m ${s % 60}s`;
-  return `${s}s`;
-}
-
-const statusColor: Record<IncidentStatus, string> = {
-  open: "text-red-600 dark:text-red-400",
-  acknowledged: "text-amber-600 dark:text-amber-400",
-  resolved: "text-emerald-600 dark:text-emerald-400",
-};
-
-const severityColor: Record<IncidentSeverity, string> = {
-  critical: "bg-red-200 text-red-900 dark:bg-red-950 dark:text-red-200",
-  high: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
-  medium:
-    "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
-  low: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300",
-};
+import { severityColor, statusColor } from "../constants";
+import { formatMetricDuration } from "../utils";
 
 export function IncidentsTable() {
   const { data, isError, isPending } = useQuery({
@@ -50,9 +28,8 @@ export function IncidentsTable() {
 
   const incidents = data?.data ?? [];
 
-  if (!incidents) {
-    return <div>No incidents yet</div>;
-  }
+  if (incidents.length === 0)
+    return <div className="text-center">No incidents yet</div>;
 
   return (
     <div>
@@ -68,11 +45,10 @@ export function IncidentsTable() {
             <TableHead>Age</TableHead>
             <TableHead className="text-center">MTTA</TableHead>
             <TableHead className="text-center">MTTR</TableHead>
-            <TableHead>escalation</TableHead>
+            <TableHead className="capitalize">escalation</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {" "}
           {incidents.map((incident) => (
             <TableRow key={incident.id}>
               <TableCell
@@ -91,7 +67,7 @@ export function IncidentsTable() {
                 <span
                   className={`inline-flex items-center gap-1.5 text-xs capitalize ${statusColor[incident.status]}`}
                 >
-                  <span className="size-2 rounded-full bg-current" />{" "}
+                  <span className="size-2 rounded-full bg-current" />
                   {incident.status}
                 </span>
               </TableCell>
