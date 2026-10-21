@@ -253,7 +253,7 @@ describe("OnCallService", () => {
       });
     });
 
-    it("reports the secondary as not on call, with next period's window", async () => {
+    it("reports the secondary as not on call, backing up the current window", async () => {
       mockTeam([makeMember("a"), makeMember("b")]);
 
       const result = await service.getUserOnCallStatus(TEAM_ID, "b");
@@ -263,8 +263,8 @@ describe("OnCallService", () => {
         currentShift: {
           team,
           position: "SECONDARY",
-          startsAt: daysFromNow(4),
-          endsAt: daysFromNow(11),
+          startsAt: daysFromNow(-3),
+          endsAt: daysFromNow(4),
           incidents,
         },
       });

@@ -195,8 +195,8 @@ export class OnCallService {
             escalationTimeoutMinutes: team.escalationTimeoutMinutes,
           },
           position: "SECONDARY",
-          startsAt: this.addDays(baseDate, team.rotationPeriodDays),
-          endsAt: this.addDays(baseDate, team.rotationPeriodDays * 2),
+          startsAt: baseDate,
+          endsAt: this.addDays(baseDate, team.rotationPeriodDays),
           incidents: {
             totalAssignedIncidents,
             totalUnacknowledgedIncidents,
