@@ -420,14 +420,56 @@ describe("OnCallService", () => {
       expect(result?.map((r) => r.user.id)).toEqual(["a", "b"]);
     });
 
-    it("skips a member whose approved leave overlaps their slot", async () => {
-      // b's slot is days 4–11; leave on day 5 overlaps it
+    it("fills a slot with the next available member when the scheduled one is on leave", async () => {
+      // b's slot is days 4–11; leave on day 5 overlaps it, so c covers it
       const leave = [makeLeave(daysFromNow(5), daysFromNow(6))];
       mockTeam([makeMember("a"), makeMember("b", leave), makeMember("c")]);
 
       const result = await service.getUpcomingRotations(OWNER_ID, TEAM_ID);
 
-      expect(result?.map((r) => r.user.id)).toEqual(["c"]);
+      expect(result).toEqual([
+        {
+          user: makeUser("c"),
+          shift: { startDate: daysFromNow(4), endDate: daysFromNow(11) },
+        },
+        {
+          user: makeUser("c"),
+          shift: { startDate: daysFromNow(11), endDate: daysFromNow(18) },
+        },
+      ]);
+    });
+
+    it("skips a covering candidate who is also on leave", async () => {
+      // b and c are both away in b's slot (days 4–11), so d covers it
+      const leave = [makeLeave(daysFromNow(5), daysFromNow(6))];
+      mockTeam([
+        makeMember("a"),
+        makeMember("b", leave),
+        makeMember("c", leave),
+        makeMember("d"),
+      ]);
+
+      const result = await service.getUpcomingRotations(OWNER_ID, TEAM_ID);
+
+      expect(result?.map((r) => r.user.id)).toEqual(["d", "c", "d"]);
+    });
+
+    it("leaves out a slot when everyone is on leave during it", async () => {
+      const leave = [makeLeave(daysFromNow(5), daysFromNow(6))];
+      mockTeam([
+        makeMember("a", leave),
+        makeMember("b", leave),
+        makeMember("c", leave),
+      ]);
+
+      const result = await service.getUpcomingRotations(OWNER_ID, TEAM_ID);
+
+      expect(result).toEqual([
+        {
+          user: makeUser("c"),
+          shift: { startDate: daysFromNow(11), endDate: daysFromNow(18) },
+        },
+      ]);
     });
 
     it("keeps a member whose leave is outside their slot", async () => {
