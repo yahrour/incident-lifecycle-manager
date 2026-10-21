@@ -392,25 +392,28 @@ export class UnavailabilityService {
       throw new NotFoundException("Unavailability not found");
     }
 
-    if (unavailability.status === UnavailabilityStatus.APPROVED) {
-      throw new BadRequestException("Unavailability is already approved");
-    }
-    if (unavailability.status === UnavailabilityStatus.REJECTED) {
-      throw new BadRequestException("Cannot approve a rejected unavailability");
-    }
-    if (unavailability.status === UnavailabilityStatus.EXPIRED) {
-      throw new BadRequestException("Cannot approve an expired unavailability");
+    if (unavailability.status !== UnavailabilityStatus.PENDING) {
+      throw new BadRequestException(
+        "Cannot approve a non pending unavailability"
+      );
     }
 
-    await this.prisma.unavailability.update({
+    const result = await this.prisma.unavailability.updateMany({
       where: {
         id: unavailabilityId,
+        status: UnavailabilityStatus.PENDING,
         memberId,
       },
       data: {
         status: UnavailabilityStatus.APPROVED,
       },
     });
+
+    if (result.count === 0) {
+      throw new BadRequestException(
+        "Cannot approve a non pending unavailability"
+      );
+    }
   }
 
   async reject(
@@ -439,25 +442,28 @@ export class UnavailabilityService {
       throw new NotFoundException("Unavailability not found");
     }
 
-    if (unavailability.status === UnavailabilityStatus.APPROVED) {
-      throw new BadRequestException("Cannot reject an approved unavailability");
-    }
-    if (unavailability.status === UnavailabilityStatus.REJECTED) {
-      throw new BadRequestException("Unavailability is already rejected");
-    }
-    if (unavailability.status === UnavailabilityStatus.EXPIRED) {
-      throw new BadRequestException("Cannot reject an expired unavailability");
+    if (unavailability.status !== UnavailabilityStatus.PENDING) {
+      throw new BadRequestException(
+        "Cannot reject a non pending unavailability"
+      );
     }
 
-    await this.prisma.unavailability.update({
+    const result = await this.prisma.unavailability.updateMany({
       where: {
         id: unavailabilityId,
+        status: UnavailabilityStatus.PENDING,
         memberId,
       },
       data: {
         status: UnavailabilityStatus.REJECTED,
       },
     });
+
+    if (result.count === 0) {
+      throw new BadRequestException(
+        "Cannot reject a non pending unavailability"
+      );
+    }
   }
 
   @Cron(CronExpression.EVERY_5_MINUTES)
