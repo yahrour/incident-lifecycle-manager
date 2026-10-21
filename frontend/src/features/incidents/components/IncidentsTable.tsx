@@ -1,4 +1,6 @@
 import { FullPageSpinner } from "@/components/FullPageSpinner";
+import { SeverityCell } from "@/components/SeverityCell";
+import { StatusDot } from "@/components/StatusDot";
 import {
   Table,
   TableBody,
@@ -51,11 +53,9 @@ export function IncidentsTable() {
         <TableBody>
           {incidents.map((incident) => (
             <TableRow key={incident.id}>
-              <TableCell
-                className={`text-xs text-center capitalize ${severityColor[incident.severity]}`}
-              >
+              <SeverityCell className={severityColor[incident.severity]}>
                 {incident.severity}
-              </TableCell>
+              </SeverityCell>
               <TableCell className="font-medium">{incident.title}</TableCell>
               <TableCell className="text-xs text-muted-foreground">
                 {incident.service}
@@ -64,12 +64,9 @@ export function IncidentsTable() {
                 {incident.team?.name ?? "-"}
               </TableCell>
               <TableCell>
-                <span
-                  className={`inline-flex items-center gap-1.5 text-xs capitalize ${statusColor[incident.status]}`}
-                >
-                  <span className="size-2 rounded-full bg-current" />
+                <StatusDot className={statusColor[incident.status]}>
                   {incident.status}
-                </span>
+                </StatusDot>
               </TableCell>
               <TableCell>
                 {incident.assignedTo
