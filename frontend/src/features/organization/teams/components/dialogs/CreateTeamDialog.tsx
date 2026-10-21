@@ -334,6 +334,10 @@ export function CreateTeamDialog() {
                   </Field>
                 )}
               />
+
+              <FieldDescription className="col-span-2">
+                Rotations use fixed 24-hour days.
+              </FieldDescription>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
