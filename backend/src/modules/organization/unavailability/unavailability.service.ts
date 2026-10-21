@@ -398,6 +398,12 @@ export class UnavailabilityService {
       );
     }
 
+    if (unavailability.endDate < new Date()) {
+      throw new BadRequestException(
+        "Cannot approve an unavailability that has already ended"
+      );
+    }
+
     const result = await this.prisma.unavailability.updateMany({
       where: {
         id: unavailabilityId,
@@ -445,6 +451,12 @@ export class UnavailabilityService {
     if (unavailability.status !== UnavailabilityStatus.PENDING) {
       throw new BadRequestException(
         "Cannot reject a non pending unavailability"
+      );
+    }
+
+    if (unavailability.endDate < new Date()) {
+      throw new BadRequestException(
+        "Cannot reject an unavailability that has already ended"
       );
     }
 
