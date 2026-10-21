@@ -267,25 +267,36 @@ export class OnCallService {
 
     // start from 1 to skip the current on-call engineer
     for (let i = 1; i < totalMembers && upcomingRotations.length < 5; i++) {
-      const member = members[(team.currentRotationIndex + i) % totalMembers];
-
       const startDate = this.addDays(baseTime, team.rotationPeriodDays * i);
       const endDate = this.addDays(startDate, team.rotationPeriodDays);
+      type Member = (typeof members)[0];
+      const isFree = (m: Member) =>
+        !m.unavailabilities.some(
+          (u) => u.startDate < endDate && u.endDate > startDate
+        );
 
-      // available only if no approved leave overlaps their own slot
-      const isAvailable = !member.unavailabilities.some(
-        (u) => u.startDate < endDate && u.endDate > startDate
-      );
-
-      if (isAvailable) {
-        // teammates only get the public fields, never id, email or role
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { id, email, role, ...publicUser } = member.user;
-        upcomingRotations.push({
-          user: isOwner ? member.user : publicUser,
-          shift: { startDate, endDate },
-        });
+      // the scheduled member, or the next available one covering for them
+      let cover: Member | undefined;
+      for (let j = 0; j < totalMembers && !cover; j++) {
+        const candidate =
+          members[(team.currentRotationIndex + i + j) % totalMembers];
+        if (isFree(candidate)) {
+          cover = candidate;
+        }
       }
+
+      // everyone is away for this slot
+      if (!cover) {
+        continue;
+      }
+
+      // teammates only get the public fields
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { id, email, role, ...publicUser } = cover.user;
+      upcomingRotations.push({
+        user: isOwner ? cover.user : publicUser,
+        shift: { startDate, endDate },
+      });
     }
 
     return upcomingRotations;
