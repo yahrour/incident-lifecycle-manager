@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "@/components/ui/toast";
 import { CalendarIcon, Plus, XIcon } from "lucide-react";
-import { format } from "date-fns";
+import { addDays, format } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -289,6 +289,7 @@ export function CreateTeamDialog() {
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
+                          disabled={{ before: addDays(new Date(), 1) }}
                         />
                       </PopoverContent>
                     </Popover>
