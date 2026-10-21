@@ -1,7 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import { Test } from "@nestjs/testing";
-import { ConflictException, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from "@nestjs/common";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
 import { convertDateToUtc } from "@/common/utils/timezone";
@@ -95,6 +99,30 @@ describe("TeamsService", () => {
           data: expect.objectContaining({ rotationStartDate: undefined }),
         })
       );
+    });
+
+    it("throws BadRequestException when the start date is today", async () => {
+      // midnight today has already passed
+      await expect(
+        service.create(OWNER_ID, {
+          ...dto,
+          rotationStartDate: new Date("2026-01-15"),
+        })
+      ).rejects.toThrow(BadRequestException);
+      expect(prisma.team.create).not.toHaveBeenCalled();
+    });
+
+    it("compares the start date in the team's timezone", async () => {
+      // Jan 16 midnight in Kiritimati (UTC+14) is Jan 15 10:00Z, before NOW,
+      // even though Jan 16 00:00Z is after it
+      await expect(
+        service.create(OWNER_ID, {
+          ...dto,
+          rotationStartDate: new Date("2026-01-16"),
+          timezone: "Pacific/Kiritimati",
+        })
+      ).rejects.toThrow(BadRequestException);
+      expect(prisma.team.create).not.toHaveBeenCalled();
     });
 
     it("throws ConflictException when the team already exists (P2002)", async () => {
