@@ -15,11 +15,12 @@ import { formatDistanceToNow } from "date-fns";
 import { fetchIncidents } from "../api/incidents";
 import { severityColor, statusColor } from "../constants";
 import { formatMetricDuration } from "../utils";
+import type { IncidentStatus } from "../types";
 
-export function IncidentsTable() {
+export function IncidentsTable({ status }: { status?: IncidentStatus }) {
   const { data, isError, isPending } = useQuery({
-    queryKey: ["incidentTable"],
-    queryFn: fetchIncidents,
+    queryKey: ["incidentTable", status],
+    queryFn: () => fetchIncidents(status),
   });
   //todolater : change to ErrorState
   useErrorToast(isError, "something went wrong fetching the incidents");
