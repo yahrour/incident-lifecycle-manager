@@ -617,6 +617,38 @@ describe("UnavailabilityService", () => {
     );
   });
 
+  describe("reviewing an unavailability that has already ended", () => {
+    beforeEach(() => {
+      prisma.team.findUnique.mockResolvedValue(makeTeam() as never);
+      prisma.teamMember.findUnique.mockResolvedValue(makeMember() as never);
+      // still PENDING because the expiry cron hasn't run yet
+      prisma.unavailability.findUnique.mockResolvedValue(
+        makeUnavailability({
+          endDate: new Date("2026-01-14T23:59:59.999Z"),
+        }) as never
+      );
+      prisma.unavailability.updateMany.mockResolvedValue({ count: 1 });
+    });
+
+    it("refuses to approve it", async () => {
+      await expect(
+        service.approve(OWNER_ID, TEAM_ID, MEMBER_ID, UNAVAILABILITY_ID)
+      ).rejects.toThrow(
+        "Cannot approve an unavailability that has already ended"
+      );
+      expect(prisma.unavailability.updateMany).not.toHaveBeenCalled();
+    });
+
+    it("refuses to reject it", async () => {
+      await expect(
+        service.reject(OWNER_ID, TEAM_ID, MEMBER_ID, UNAVAILABILITY_ID)
+      ).rejects.toThrow(
+        "Cannot reject an unavailability that has already ended"
+      );
+      expect(prisma.unavailability.updateMany).not.toHaveBeenCalled();
+    });
+  });
+
   describe("expireOverduePending", () => {
     it("expires pending unavailabilities whose end date has passed", async () => {
       await service.expireOverduePending();
