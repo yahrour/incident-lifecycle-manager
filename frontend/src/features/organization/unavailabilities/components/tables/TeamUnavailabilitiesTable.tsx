@@ -4,11 +4,11 @@ import { useErrorToast } from "@/hooks/use-error-toast";
 import type { SortState } from "../../types";
 import { ErrorUnavailabilitiesState } from "../error-states/ErrorUnavailabilitiesState";
 import { NoUnavailabilitiesState } from "../empty-states/NoUnavailabilitiesState";
-import { useEffect } from "react";
 import { UnavailabilitiesTable } from "./UnavailabilitiesTable";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { teamKeys } from "@/features/organization/shared/constants";
 import type { UnavailabilityFilter } from "@/types";
+import { usePreviousPageWhenEmpty } from "@/features/organization/shared/hooks";
 
 export function TeamUnavailabilitiesTable({
   teamId,
@@ -34,11 +34,7 @@ export function TeamUnavailabilitiesTable({
   const unavailabilities = data?.data;
   const totalUnavailabilities = data?.meta?.total ?? 0;
 
-  useEffect(() => {
-    if (unavailabilities && unavailabilities.length === 0 && page > 1) {
-      setPage(page - 1);
-    }
-  }, [unavailabilities, page, setPage]);
+  usePreviousPageWhenEmpty(unavailabilities, page, setPage);
 
   if (isPending) {
     return <FullPageSpinner />;
