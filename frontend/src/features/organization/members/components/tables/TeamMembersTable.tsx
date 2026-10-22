@@ -5,8 +5,8 @@ import { useErrorToast } from "@/hooks/use-error-toast";
 import { Spinner } from "@/components/ui/spinner";
 import type { SortState } from "../../types";
 import { MembersTable } from "./MembersTable";
-import { useEffect } from "react";
 import { teamKeys } from "@/features/organization/shared/constants";
+import { usePreviousPageWhenEmpty } from "@/features/organization/shared/hooks";
 
 export function TeamMembersTable({
   teamId,
@@ -30,11 +30,7 @@ export function TeamMembersTable({
   const members = data?.data;
   const totalMembers = data?.meta?.total ?? 0;
 
-  useEffect(() => {
-    if (members && members.length === 0 && page > 1) {
-      setPage(page - 1);
-    }
-  }, [members, page, setPage]);
+  usePreviousPageWhenEmpty(members, page, setPage);
 
   if (isPending) {
     return (

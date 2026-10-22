@@ -16,9 +16,9 @@ import { ErrorUnavailabilitiesState } from "../error-states/ErrorUnavailabilitie
 import { RemoveUnavailabilityButton } from "../buttons/RemoveUnavailabilityButton";
 import { DEFAULT_LIMIT, unavailabilityKeys } from "../../constants";
 import { formatDuration } from "../../utils/time";
-import { useEffect } from "react";
 import type { UnavailabilityFilter, UnavailabilityStatus } from "@/types";
 import { TablePagination } from "@/components/TablePagination";
+import { usePreviousPageWhenEmpty } from "@/features/organization/shared/hooks";
 
 const statusVariant: Record<
   UnavailabilityStatus,
@@ -69,11 +69,7 @@ export function UnavailabilitiesTable({
   const unavailabilities = data?.data;
   const totalUnavailabilities = data?.meta?.total ?? 0;
 
-  useEffect(() => {
-    if (unavailabilities && unavailabilities.length === 0 && page > 1) {
-      setPage(page - 1);
-    }
-  }, [unavailabilities, page, setPage]);
+  usePreviousPageWhenEmpty(unavailabilities, page, setPage);
 
   if (isPending) {
     return <FullPageSpinner />;
