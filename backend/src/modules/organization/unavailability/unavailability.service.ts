@@ -138,41 +138,46 @@ export class UnavailabilityService {
       true
     );
 
-    const overlapping = await this.prisma.unavailability.findFirst({
-      where: {
-        memberId,
-        status: {
-          in: [UnavailabilityStatus.PENDING, UnavailabilityStatus.APPROVED],
-        },
-        startDate: { lt: endDate },
-        endDate: { gt: startDate },
-      },
-    });
+    return await this.prisma.$transaction(async (tx) => {
+      // lock this member row
+      await tx.$queryRaw`SELECT id FROM "Member" WHERE id = ${memberId} FOR UPDATE`;
 
-    if (overlapping) {
-      throw new ConflictException(
-        "Unavailability overlaps an existing request"
-      );
-    }
-
-    try {
-      return await this.prisma.unavailability.create({
-        data: {
+      const overlapping = await tx.unavailability.findFirst({
+        where: {
           memberId,
-          startDate,
-          endDate,
-          reason: requestUnavailabilityDto.reason,
+          status: {
+            in: [UnavailabilityStatus.PENDING, UnavailabilityStatus.APPROVED],
+          },
+          startDate: { lt: endDate },
+          endDate: { gt: startDate },
         },
       });
-    } catch (error) {
-      if (
-        error instanceof PrismaClientKnownRequestError &&
-        error.code === "P2002"
-      ) {
-        throw new ConflictException("Unavailability window already exists");
+
+      if (overlapping) {
+        throw new ConflictException(
+          "Unavailability overlaps an existing request"
+        );
       }
-      throw error;
-    }
+
+      try {
+        return await tx.unavailability.create({
+          data: {
+            memberId,
+            startDate,
+            endDate,
+            reason: requestUnavailabilityDto.reason,
+          },
+        });
+      } catch (error) {
+        if (
+          error instanceof PrismaClientKnownRequestError &&
+          error.code === "P2002"
+        ) {
+          throw new ConflictException("Unavailability window already exists");
+        }
+        throw error;
+      }
+    });
   }
 
   async findByMember(

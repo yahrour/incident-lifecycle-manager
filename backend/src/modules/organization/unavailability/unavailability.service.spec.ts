@@ -85,19 +85,27 @@ describe("UnavailabilityService", () => {
       reason: "vacation",
     };
 
+    // Client handed to the transaction callback. Kept separate from `prisma`
+    // so a query that wrongly goes through the root client is caught.
+    let tx: MockPrisma;
+
     beforeEach(() => {
+      tx = createMockPrisma();
+      prisma.$transaction.mockImplementation(((
+        callback: (client: unknown) => unknown
+      ) => callback(tx)) as never);
+
       prisma.teamMember.findUnique.mockResolvedValue(makeMember() as never);
-      prisma.unavailability.findFirst.mockResolvedValue(null);
+      tx.$queryRaw.mockResolvedValue([{ id: MEMBER_ID }] as never);
+      tx.unavailability.findFirst.mockResolvedValue(null);
     });
 
     it("looks for an overlapping pending or approved window of the same member", async () => {
-      prisma.unavailability.create.mockResolvedValue(
-        makeUnavailability() as never
-      );
+      tx.unavailability.create.mockResolvedValue(makeUnavailability() as never);
 
       await service.request(USER_ID, TEAM_ID, MEMBER_ID, dto);
 
-      expect(prisma.unavailability.findFirst).toHaveBeenCalledWith({
+      expect(tx.unavailability.findFirst).toHaveBeenCalledWith({
         where: {
           memberId: MEMBER_ID,
           status: { in: ["PENDING", "APPROVED"] },
@@ -107,25 +115,63 @@ describe("UnavailabilityService", () => {
       });
     });
 
+    it("locks the member row, checks for overlaps, then inserts, in that order", async () => {
+      tx.unavailability.create.mockResolvedValue(makeUnavailability() as never);
+
+      await service.request(USER_ID, TEAM_ID, MEMBER_ID, dto);
+
+      const lock = tx.$queryRaw.mock.invocationCallOrder[0];
+      const check = tx.unavailability.findFirst.mock.invocationCallOrder[0];
+      const insert = tx.unavailability.create.mock.invocationCallOrder[0];
+      expect(lock).toBeLessThan(check);
+      expect(check).toBeLessThan(insert);
+    });
+
+    it("takes a FOR UPDATE lock on the requested member", async () => {
+      tx.unavailability.create.mockResolvedValue(makeUnavailability() as never);
+
+      await service.request(USER_ID, TEAM_ID, MEMBER_ID, dto);
+
+      expect(tx.$queryRaw).toHaveBeenCalledTimes(1);
+      const [strings, ...values] = tx.$queryRaw.mock.calls[0] as unknown as [
+        TemplateStringsArray,
+        ...unknown[],
+      ];
+      expect(strings.join("?")).toContain("FOR UPDATE");
+      expect(values).toEqual([MEMBER_ID]);
+    });
+
+    it("runs the check and the insert inside one transaction, never on the root client", async () => {
+      tx.unavailability.create.mockResolvedValue(makeUnavailability() as never);
+
+      await service.request(USER_ID, TEAM_ID, MEMBER_ID, dto);
+
+      expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+      expect(tx.unavailability.findFirst).toHaveBeenCalledTimes(1);
+      expect(tx.unavailability.create).toHaveBeenCalledTimes(1);
+      expect(prisma.unavailability.findFirst).not.toHaveBeenCalled();
+      expect(prisma.unavailability.create).not.toHaveBeenCalled();
+    });
+
     it("throws ConflictException when the window overlaps an existing one", async () => {
-      prisma.unavailability.findFirst.mockResolvedValue(
+      tx.unavailability.findFirst.mockResolvedValue(
         makeUnavailability() as never
       );
 
       await expect(
         service.request(USER_ID, TEAM_ID, MEMBER_ID, dto)
       ).rejects.toThrow("Unavailability overlaps an existing request");
-      expect(prisma.unavailability.create).not.toHaveBeenCalled();
+      expect(tx.unavailability.create).not.toHaveBeenCalled();
     });
 
     it("creates a pending window with UTC day boundaries", async () => {
       const created = makeUnavailability();
-      prisma.unavailability.create.mockResolvedValue(created as never);
+      tx.unavailability.create.mockResolvedValue(created as never);
 
       const result = await service.request(USER_ID, TEAM_ID, MEMBER_ID, dto);
 
       expect(result).toBe(created);
-      expect(prisma.unavailability.create).toHaveBeenCalledWith({
+      expect(tx.unavailability.create).toHaveBeenCalledWith({
         data: {
           memberId: MEMBER_ID,
           startDate: convertDateToUtc(dto.startDate, "UTC"),
@@ -136,9 +182,7 @@ describe("UnavailabilityService", () => {
     });
 
     it("allows a window that starts today", async () => {
-      prisma.unavailability.create.mockResolvedValue(
-        makeUnavailability() as never
-      );
+      tx.unavailability.create.mockResolvedValue(makeUnavailability() as never);
 
       await expect(
         service.request(USER_ID, TEAM_ID, MEMBER_ID, {
@@ -154,6 +198,7 @@ describe("UnavailabilityService", () => {
       await expect(
         service.request(USER_ID, TEAM_ID, MEMBER_ID, dto)
       ).rejects.toThrow(NotFoundException);
+      expect(prisma.$transaction).not.toHaveBeenCalled();
     });
 
     it("throws ForbiddenException when requesting for someone else", async () => {
@@ -164,7 +209,8 @@ describe("UnavailabilityService", () => {
       await expect(
         service.request(USER_ID, TEAM_ID, MEMBER_ID, dto)
       ).rejects.toThrow(ForbiddenException);
-      expect(prisma.unavailability.create).not.toHaveBeenCalled();
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+      expect(tx.unavailability.create).not.toHaveBeenCalled();
     });
 
     it("throws BadRequestException when the start date is in the past", async () => {
@@ -174,7 +220,8 @@ describe("UnavailabilityService", () => {
           startDate: new Date("2026-01-14T00:00:00.000Z"),
         })
       ).rejects.toThrow("Start date can't be in the past");
-      expect(prisma.unavailability.create).not.toHaveBeenCalled();
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+      expect(tx.unavailability.create).not.toHaveBeenCalled();
     });
 
     it("throws BadRequestException when the start date is after the end date", async () => {
@@ -185,11 +232,12 @@ describe("UnavailabilityService", () => {
           endDate: new Date("2026-01-20T00:00:00.000Z"),
         })
       ).rejects.toThrow(BadRequestException);
-      expect(prisma.unavailability.create).not.toHaveBeenCalled();
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+      expect(tx.unavailability.create).not.toHaveBeenCalled();
     });
 
     it("throws ConflictException when the window already exists (P2002)", async () => {
-      prisma.unavailability.create.mockRejectedValue(prismaError("P2002"));
+      tx.unavailability.create.mockRejectedValue(prismaError("P2002"));
 
       await expect(
         service.request(USER_ID, TEAM_ID, MEMBER_ID, dto)
@@ -198,7 +246,7 @@ describe("UnavailabilityService", () => {
 
     it("rethrows unknown errors", async () => {
       const error = new Error("boom");
-      prisma.unavailability.create.mockRejectedValue(error);
+      tx.unavailability.create.mockRejectedValue(error);
 
       await expect(
         service.request(USER_ID, TEAM_ID, MEMBER_ID, dto)
