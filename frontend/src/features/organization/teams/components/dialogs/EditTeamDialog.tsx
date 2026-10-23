@@ -70,7 +70,7 @@ export function EditTeamDialog({ team }: { team: Team }) {
 
     const dirtyFields = form.formState.dirtyFields;
     const changedData = Object.fromEntries(
-      Object.keys(dirtyFields).map((k) => [k, data[k]])
+      Object.keys(dirtyFields).map((k) => [k, data[k as keyof typeof data]])
     );
 
     mutation.mutate(
