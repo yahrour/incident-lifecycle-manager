@@ -14,11 +14,10 @@ export function Integrations() {
 
   return (
     <div>
-      <div className="bg-white flex items-center gap-2 px-4 py-3 border-b">
+      <div className="bg-card flex items-center gap-2 px-4 py-3 border-b">
         <h1 className="font-medium text-sm">Integrations</h1>
       </div>
-            <div className="mt-2 p-4 space-y-4">
-
+      <div className="mt-2 p-4 space-y-4">
         <div className="flex justify-between items-center">
           <Tabs
             value={filter}
@@ -45,7 +44,6 @@ export function Integrations() {
 
         <ApiKeysTable filter={filter} sort={sort} />
       </div>
-
     </div>
   );
 }

@@ -14,7 +14,7 @@ export function TeammatesAwayCard({
   teammatesAway,
 }: Pick<MyTeam, "teammatesAway">) {
   return (
-    <section className="flex-1 rounded-lg border border-border/50 bg-white">
+    <section className="flex-1 rounded-lg border border-border/50 bg-card">
       <div className="flex items-center justify-between border-b border-border/50 px-4 py-3 text-sm font-medium">
         <h2>Teammates away</h2>
       </div>
@@ -26,7 +26,7 @@ export function TeammatesAwayCard({
       ) : (
         <Table containerClassName="border-none rounded-none rounded-b-lg">
           <TableHeader>
-            <TableRow className="text-[11px] text-muted-foreground uppercase tracking-wide hover:bg-[#f2f4f7]">
+            <TableRow className="text-[11px] text-muted-foreground uppercase tracking-wide hover:bg-muted">
               <TableHead>Engineer</TableHead>
               <TableHead className="text-right">Away</TableHead>
             </TableRow>
@@ -36,7 +36,7 @@ export function TeammatesAwayCard({
             {teammatesAway.map(({ user, unavailabilities }) => (
               <TableRow
                 key={`${user.firstName}-${user.lastName}-${unavailabilities[0]?.startDate}`}
-                className="hover:bg-white"
+                className="hover:bg-card"
               >
                 <TableCell>
                   <div className="flex items-center gap-3">
@@ -46,7 +46,7 @@ export function TeammatesAwayCard({
                         {user.lastName[0]}
                       </AvatarFallback>
                     </Avatar>
-                    <p className="text-sm text-[#2a2320]">
+                    <p className="text-sm text-foreground">
                       {user.firstName} {user.lastName}
                     </p>
                   </div>

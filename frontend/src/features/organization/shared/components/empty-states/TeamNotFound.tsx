@@ -3,7 +3,7 @@ import { Link } from "react-router";
 export function TeamNotFound() {
   return (
     <div>
-      <div className="bg-white flex items-center gap-2 px-4 py-3 border-b">
+      <div className="bg-card flex items-center gap-2 px-4 py-3 border-b">
         <Link to="/manager/teams" className="font-medium text-sm">
           Teams
         </Link>

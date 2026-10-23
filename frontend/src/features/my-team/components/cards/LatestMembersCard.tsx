@@ -12,7 +12,7 @@ import type { MyTeam } from "../../types";
 
 export function LatestMembersCard({ members }: Pick<MyTeam, "members">) {
   return (
-    <section className="flex-1 rounded-lg border border-border/50 bg-white">
+    <section className="flex-1 rounded-lg border border-border/50 bg-card">
       <div className="flex items-center justify-between border-b border-border/50 px-4 py-3 text-sm font-medium">
         <h2>Latest members</h2>
       </div>
@@ -24,7 +24,7 @@ export function LatestMembersCard({ members }: Pick<MyTeam, "members">) {
       ) : (
         <Table containerClassName="border-none rounded-none rounded-b-lg">
           <TableHeader>
-            <TableRow className="text-[11px] text-muted-foreground uppercase tracking-wide hover:bg-[#f2f4f7]">
+            <TableRow className="text-[11px] text-muted-foreground uppercase tracking-wide hover:bg-muted">
               <TableHead>Engineer</TableHead>
               <TableHead>Specialty</TableHead>
               <TableHead className="text-right">Joined</TableHead>
@@ -33,7 +33,7 @@ export function LatestMembersCard({ members }: Pick<MyTeam, "members">) {
 
           <TableBody>
             {members.map(({ id, user, joinedAt }) => (
-              <TableRow key={id} className="hover:bg-white">
+              <TableRow key={id} className="hover:bg-card">
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar className="size-7">
@@ -42,7 +42,7 @@ export function LatestMembersCard({ members }: Pick<MyTeam, "members">) {
                         {user.lastName[0]}
                       </AvatarFallback>
                     </Avatar>
-                    <p className="text-sm text-[#2a2320]">
+                    <p className="text-sm text-foreground">
                       {user.firstName} {user.lastName}
                     </p>
                   </div>

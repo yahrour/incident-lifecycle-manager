@@ -15,12 +15,12 @@ export function YourShiftCard() {
   });
 
   if (isPending) {
-    return <div className="h-40 animate-pulse rounded-lg bg-[#f1ece4]" />;
+    return <div className="h-40 animate-pulse rounded-lg bg-muted" />;
   }
 
   if (isError) {
     return (
-      <div className="rounded-lg border border-border/50 bg-white">
+      <div className="rounded-lg border border-border/50 bg-card">
         <ErrorState
           className="h-auto mt-0 py-6"
           onRetry={() => void refetch()}
@@ -35,7 +35,7 @@ export function YourShiftCard() {
 
   if (!shift) {
     return (
-      <div className="rounded-lg border border-border/50 border-l-4 border-l-muted-foreground/40 bg-white px-4 py-3">
+      <div className="rounded-lg border border-border/50 border-l-4 border-l-muted-foreground/40 bg-card px-4 py-3">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           Off duty
         </p>
@@ -55,8 +55,8 @@ export function YourShiftCard() {
     <div
       className={`rounded-lg border border-l-4 ${
         isPrimary
-          ? "border-destructive/25 border-l-destructive bg-white"
-          : "border-border/50 border-l-warning bg-white"
+          ? "border-destructive/25 border-l-destructive bg-card"
+          : "border-border/50 border-l-warning bg-card"
       }`}
     >
       <div
@@ -101,7 +101,7 @@ export function YourShiftCard() {
         </p>
 
         <div
-          className={`grid grid-cols-3 divide-x rounded-md border bg-white ${isPrimary ? "divide-destructive/20 border-destructive/25" : "divide-border/50 border-border/50"}`}
+          className={`grid grid-cols-3 divide-x rounded-md border bg-card ${isPrimary ? "divide-destructive/20 border-destructive/25" : "divide-border/50 border-border/50"}`}
         >
           <Stat label="Assigned" value={totalAssignedIncidents} />
           <Stat

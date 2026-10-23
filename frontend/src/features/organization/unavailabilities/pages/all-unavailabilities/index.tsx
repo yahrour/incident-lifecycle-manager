@@ -21,7 +21,7 @@ export function AllUnavailabilities() {
 
   return (
     <div className="w-full">
-      <div className="bg-white flex items-center gap-2 px-4 py-3 border-b">
+      <div className="bg-card flex items-center gap-2 px-4 py-3 border-b">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>

@@ -1,7 +1,7 @@
 export function ServicesCard({ services }: { services: string[] }) {
   return (
-    <div className="flex-1 rounded-lg border border-border/50 bg-white">
-      <h2 className="border-b border-border/50 px-4 py-3 text-sm font-medium text-[#2a2320]">
+    <div className="flex-1 rounded-lg border border-border/50 bg-card">
+      <h2 className="border-b border-border/50 px-4 py-3 text-sm font-medium text-foreground">
         Services
       </h2>
 

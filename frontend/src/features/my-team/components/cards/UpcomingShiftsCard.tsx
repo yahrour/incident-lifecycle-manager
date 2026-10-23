@@ -6,8 +6,8 @@ export function UpcomingShiftsCard({
   teamUpcomingRotations,
 }: Pick<MyTeam, "teamUpcomingRotations">) {
   return (
-    <div className="flex-1 rounded-lg border border-border/50 bg-white">
-      <h2 className="border-b border-border/50 px-4 py-3 text-sm font-medium text-[#2a2320]">
+    <div className="flex-1 rounded-lg border border-border/50 bg-card">
+      <h2 className="border-b border-border/50 px-4 py-3 text-sm font-medium text-foreground">
         Upcoming rotations
       </h2>
 
@@ -23,7 +23,7 @@ export function UpcomingShiftsCard({
                 key={rotation.shift.startDate}
                 className="flex items-center gap-2"
               >
-                <span className="w-4 text-center text-xs tabular-nums text-[#8a8178]">
+                <span className="w-4 text-center text-xs tabular-nums text-muted-foreground">
                   {index + 1}
                 </span>
 
@@ -39,13 +39,13 @@ export function UpcomingShiftsCard({
                     {rotation.user.firstName} {rotation.user.lastName}
                   </p>
                   {rotation.user.specialty && (
-                    <p className="truncate text-xs text-[#8a8178]">
+                    <p className="truncate text-xs text-muted-foreground">
                       {rotation.user.specialty}
                     </p>
                   )}
                 </div>
 
-                <p className="shrink-0 text-right text-xs tabular-nums text-[#8a8178]">
+                <p className="shrink-0 text-right text-xs tabular-nums text-muted-foreground">
                   {format(rotation.shift.startDate, "MMM d")} -{" "}
                   {format(rotation.shift.endDate, "MMM d")}
                 </p>

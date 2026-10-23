@@ -7,7 +7,7 @@ export function TeamStats({
   awayCount,
 }: Pick<MyTeam, "team" | "membersCount"> & { awayCount: number }) {
   return (
-    <div className="flex w-full bg-white border border-border/50 rounded-xl divide-x divide-border/50 overflow-hidden">
+    <div className="flex w-full bg-card border border-border/50 rounded-xl divide-x divide-border/50 overflow-hidden">
       <StatBlock title="Members" value={membersCount} />
       <StatBlock title="Away" value={awayCount} />
       <StatBlock title="Rotation (day)" value={team.rotationPeriodDays} />

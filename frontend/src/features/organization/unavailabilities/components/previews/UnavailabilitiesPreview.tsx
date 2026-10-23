@@ -27,7 +27,7 @@ export function UnavailabilitiesPreview({ teamId }: { teamId: string }) {
   );
 
   return (
-    <section className="flex-1 rounded-lg border border-border/50  bg-white">
+    <section className="flex-1 rounded-lg border border-border/50  bg-card">
       <div className="flex items-center justify-between border-b border-border/50 px-4 py-3 text-sm font-medium">
         <h2>Unavailabilities</h2>
         <Link
@@ -41,7 +41,7 @@ export function UnavailabilitiesPreview({ teamId }: { teamId: string }) {
       {isPending ? (
         <div className="space-y-2 p-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-10 animate-pulse rounded bg-[#f1ece4]" />
+            <div key={i} className="h-10 animate-pulse rounded bg-muted" />
           ))}
         </div>
       ) : isError ? (
@@ -71,10 +71,10 @@ export function UnavailabilitiesPreview({ teamId }: { teamId: string }) {
                 />
 
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm text-[#2a2320]">
+                  <p className="truncate text-sm text-foreground">
                     {user.firstName} {user.lastName}
                   </p>
-                  <p className="truncate text-xs text-[#8a8178]">
+                  <p className="truncate text-xs text-muted-foreground">
                     {item.reason ?? "No reason given"}
                   </p>
                 </div>
