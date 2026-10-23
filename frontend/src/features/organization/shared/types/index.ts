@@ -8,6 +8,7 @@ export type Team = {
   rotationPeriodDays: number;
   rotationStartDate: Date;
   escalationTimeoutMinutes: number;
+  createdAt: string;
 };
 
 export type User = {

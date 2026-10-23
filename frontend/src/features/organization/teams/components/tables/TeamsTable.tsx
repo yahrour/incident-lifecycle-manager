@@ -20,18 +20,23 @@ import {
   teamKeys,
 } from "@/features/organization/shared/constants";
 import { TablePagination } from "@/components/TablePagination";
+import { useState } from "react";
+import { format } from "date-fns";
+import { ChevronsUpDown } from "lucide-react";
 
 export function TeamsTable({
   search,
-  sort,
   page,
   setPage,
 }: {
   search: string;
-  sort: SortState;
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
 }) {
+  const [sort, setSort] = useState<SortState>({
+    field: "createdAt",
+    order: "asc",
+  });
   const navigate = useNavigate();
   const [teamsQuery, metricsQuery] = useQueries({
     queries: [
@@ -71,12 +76,25 @@ export function TeamsTable({
     return <NoTeamsState />;
   }
 
+  const toggleSort = () => {
+    setSort({
+      ...sort,
+      order: sort.order === "desc" ? "asc" : "desc",
+    });
+  };
+
   return (
     <>
       <Table>
         <TableHeader>
           <TableRow className="uppercase hover:bg-transparent">
             <TableHead className="w-2/5">team</TableHead>
+            <TableHead className="flex items-center">
+              <span>Requested At</span>
+              <button className="cursor-pointer" onClick={toggleSort}>
+                <ChevronsUpDown size={18} />
+              </button>
+            </TableHead>
             <TableHead>services</TableHead>
             <TableHead>members</TableHead>
             <TableHead>rotation</TableHead>
@@ -102,6 +120,9 @@ export function TeamsTable({
               >
                 <TableCell className="font-medium text-sm flex-1">
                   {team.name}
+                </TableCell>
+                <TableCell className="text-xs">
+                  {format(team.createdAt, "yyyy-MM-dd")}
                 </TableCell>
                 <TableCell>
                   {team.services.slice(0, 2).join(" • ")}
