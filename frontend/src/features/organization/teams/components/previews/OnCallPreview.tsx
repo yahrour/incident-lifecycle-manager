@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router";
 import type { ChainUser } from "../../types";
 import { teamKeys } from "@/features/organization/shared/constants";
+import { InlineErrorState } from "@/components/InlineErrorState";
 
 export function OnCallPreview({ teamId }: { teamId: string }) {
   const { data, isPending, isError, refetch } = useQuery({
@@ -33,15 +34,10 @@ export function OnCallPreview({ teamId }: { teamId: string }) {
             ))}
           </div>
         ) : isError ? (
-          <p className="text-sm text-[#2a2320]">
-            Couldn't load who's on call.{" "}
-            <button
-              onClick={() => void refetch()}
-              className="text-warning hover:underline"
-            >
-              Try again
-            </button>
-          </p>
+          <InlineErrorState
+            message="Couldn't load who's on call"
+            onRetry={() => void refetch()}
+          />
         ) : !primary ? (
           <p className="text-center text-sm text-muted-foreground">
             Nobody is on call for this team.

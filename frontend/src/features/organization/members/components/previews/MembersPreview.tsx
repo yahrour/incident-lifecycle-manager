@@ -12,6 +12,7 @@ import { Link } from "react-router";
 import { fetchMembersPreview } from "@/features/organization/members/api/members";
 import { formatJoined } from "../../utils/time";
 import { teamKeys } from "@/features/organization/shared/constants";
+import { InlineErrorState } from "@/components/InlineErrorState";
 
 export function MembersPreview({ teamId }: { teamId: string }) {
   const { data, isPending, isError, refetch } = useQuery({
@@ -34,15 +35,10 @@ export function MembersPreview({ teamId }: { teamId: string }) {
       </div>
 
       {isError ? (
-        <p className="px-4 py-6 text-center text-sm">
-          Couldn't load members.{" "}
-          <button
-            onClick={() => void refetch()}
-            className="text-[#e8742c] hover:underline"
-          >
-            Try again
-          </button>
-        </p>
+        <InlineErrorState
+          message="Couldn't load members."
+          onRetry={() => void refetch()}
+        />
       ) : !isPending && members.length === 0 ? (
         <p className="px-4 py-6 text-center text-sm text-muted-foreground">
           No engineers in this team yet.

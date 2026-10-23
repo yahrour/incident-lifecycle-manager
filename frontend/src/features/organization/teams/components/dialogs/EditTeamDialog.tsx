@@ -69,11 +69,9 @@ export function EditTeamDialog({ team }: { team: Team }) {
     setErrors([]);
 
     const dirtyFields = form.formState.dirtyFields;
-    const changedData: Record<string, unknown> = {};
-    // Extract changed fields
-    for (const key of Object.keys(data) as (keyof typeof data)[]) {
-      changedData[key] = dirtyFields[key] ? data[key] : undefined;
-    }
+    const changedData = Object.fromEntries(
+      Object.keys(dirtyFields).map((k) => [k, data[k as keyof typeof data]])
+    );
 
     mutation.mutate(
       { id: team.id, ...(changedData as typeof data) },

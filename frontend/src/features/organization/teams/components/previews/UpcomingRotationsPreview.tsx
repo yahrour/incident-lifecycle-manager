@@ -6,6 +6,7 @@ import { Link } from "react-router";
 import type { UpcomingRotation } from "../../types";
 import { format } from "date-fns";
 import { teamKeys } from "@/features/organization/shared/constants";
+import { InlineErrorState } from "@/components/InlineErrorState";
 
 export function UpcomingRotationsPreview({ teamId }: { teamId: string }) {
   const { data, isPending, isError, refetch } = useQuery({
@@ -32,15 +33,10 @@ export function UpcomingRotationsPreview({ teamId }: { teamId: string }) {
             ))}
           </div>
         ) : isError ? (
-          <p className="text-sm text-[#2a2320]">
-            Couldn't load upcoming rotations.{" "}
-            <button
-              onClick={() => void refetch()}
-              className="text-warning hover:underline"
-            >
-              Try again
-            </button>
-          </p>
+          <InlineErrorState
+            message="Couldn't load upcoming rotations"
+            onRetry={() => void refetch()}
+          />
         ) : !upcomingRotations || upcomingRotations.length === 0 ? (
           <p className="text-center text-sm text-muted-foreground">
             No upcoming rotations scheduled.

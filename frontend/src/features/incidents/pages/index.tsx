@@ -1,6 +1,8 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { IncidentsTable } from "../components/IncidentsTable";
+import { useState } from "react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { INCIDENT_STATUS, type IncidentStatus } from "../types";
 
 export function Incidents() {

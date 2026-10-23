@@ -18,6 +18,7 @@ import { fetchIncidents } from "../api/incidents";
 import { severityColor, statusColor } from "../constants";
 import type { IncidentStatus } from "../types";
 import { formatMetricDuration } from "../utils";
+import type { IncidentStatus } from "../types";
 
 export function IncidentsTable({ status }: { status?: IncidentStatus }) {
   const [cursors, setCursors] = useState<(string | undefined)[]>([undefined]);

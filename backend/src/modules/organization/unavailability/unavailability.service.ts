@@ -127,31 +127,57 @@ export class UnavailabilityService {
       throw new BadRequestException("Start date must be before end date");
     }
 
-    try {
-      return await this.prisma.unavailability.create({
-        data: {
+    // check overlap
+    const startDate = convertDateToUtc(
+      requestUnavailabilityDto.startDate,
+      requestUnavailabilityDto.timezone
+    );
+    const endDate = convertDateToUtc(
+      requestUnavailabilityDto.endDate,
+      requestUnavailabilityDto.timezone,
+      true
+    );
+
+    return await this.prisma.$transaction(async (tx) => {
+      // lock this member row
+      await tx.$queryRaw`SELECT id FROM "Member" WHERE id = ${memberId} FOR UPDATE`;
+
+      const overlapping = await tx.unavailability.findFirst({
+        where: {
           memberId,
-          startDate: convertDateToUtc(
-            requestUnavailabilityDto.startDate,
-            requestUnavailabilityDto.timezone
-          ),
-          endDate: convertDateToUtc(
-            requestUnavailabilityDto.endDate,
-            requestUnavailabilityDto.timezone,
-            true
-          ),
-          reason: requestUnavailabilityDto.reason,
+          status: {
+            in: [UnavailabilityStatus.PENDING, UnavailabilityStatus.APPROVED],
+          },
+          startDate: { lt: endDate },
+          endDate: { gt: startDate },
         },
       });
-    } catch (error) {
-      if (
-        error instanceof PrismaClientKnownRequestError &&
-        error.code === "P2002"
-      ) {
-        throw new ConflictException("Unavailability window already exists");
+
+      if (overlapping) {
+        throw new ConflictException(
+          "Unavailability overlaps an existing request"
+        );
       }
-      throw error;
-    }
+
+      try {
+        return await tx.unavailability.create({
+          data: {
+            memberId,
+            startDate,
+            endDate,
+            reason: requestUnavailabilityDto.reason,
+          },
+        });
+      } catch (error) {
+        if (
+          error instanceof PrismaClientKnownRequestError &&
+          error.code === "P2002"
+        ) {
+          throw new ConflictException("Unavailability window already exists");
+        }
+        throw error;
+      }
+    });
   }
 
   async findByMember(

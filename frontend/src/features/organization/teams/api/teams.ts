@@ -15,10 +15,12 @@ export async function fetchTeams(
   const offset = (page - 1) * DEFAULT_LIMIT;
   const params = new URLSearchParams({
     ...(search.length > 0 && { search: search }),
+    offset: String(offset),
+    limit: String(DEFAULT_LIMIT),
     sortField: sort.field,
     sortOrder: sort.order,
   });
-  const apiEndpoint = `/teams?offset=${offset}&limit=${DEFAULT_LIMIT}&${params.toString()}`;
+  const apiEndpoint = `/teams?${params.toString()}`;
   const response = await apiClient.get<ApiResponse<Team[]>>(apiEndpoint);
   return response.data;
 }
