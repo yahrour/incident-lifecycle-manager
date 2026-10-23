@@ -18,11 +18,13 @@ export async function fetchTeamMembers(
 ) {
   const offset = (page - 1) * DEFAULT_LIMIT;
   const params = new URLSearchParams({
+    offset: String(offset),
+    limit: String(DEFAULT_LIMIT),
     sortField: sort.field,
     sortOrder: sort.order,
   });
   const response = await apiClient.get<ApiResponse<Member[]>>(
-    `/teams/${id}/members?offset=${offset}&limit=${DEFAULT_LIMIT}&${params.toString()}`
+    `/teams/${id}/members?${params.toString()}`
   );
   return response.data;
 }
@@ -30,11 +32,13 @@ export async function fetchTeamMembers(
 export async function fetchAllMembers(page: number, sort: SortState) {
   const offset = (page - 1) * DEFAULT_LIMIT;
   const params = new URLSearchParams({
+    offset: String(offset),
+    limit: String(DEFAULT_LIMIT),
     sortField: sort.field,
     sortOrder: sort.order,
   });
   const response = await apiClient.get<ApiResponse<Member[]>>(
-    `/teams/members?offset=${offset}&limit=${DEFAULT_LIMIT}&${params.toString()}`
+    `/teams/members?${params.toString()}`
   );
   return response.data;
 }
