@@ -1,6 +1,6 @@
-import { IncidentsTable } from "../components/IncidentsTable";
-import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from "react";
+import { IncidentsTable } from "../components/IncidentsTable";
 import { INCIDENT_STATUS, type IncidentStatus } from "../types";
 
 export function Incidents() {
@@ -28,7 +28,10 @@ export function Incidents() {
             ))}
           </TabsList>
         </Tabs>
-        <IncidentsTable status={status === "all" ? undefined : status} />
+        <IncidentsTable
+          key={status}
+          status={status === "all" ? undefined : status}
+        />
       </div>
     </>
   );

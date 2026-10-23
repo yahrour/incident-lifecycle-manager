@@ -1,6 +1,7 @@
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { SeverityCell } from "@/components/SeverityCell";
 import { StatusDot } from "@/components/StatusDot";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -10,17 +11,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useErrorToast } from "@/hooks/use-error-toast";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
+import { useState } from "react";
 import { fetchIncidents } from "../api/incidents";
 import { severityColor, statusColor } from "../constants";
-import { formatMetricDuration } from "../utils";
 import type { IncidentStatus } from "../types";
+import { formatMetricDuration } from "../utils";
 
 export function IncidentsTable({ status }: { status?: IncidentStatus }) {
-  const { data, isError, isPending } = useQuery({
-    queryKey: ["incidentTable", status],
-    queryFn: () => fetchIncidents(status),
+  const [cursors, setCursors] = useState<(string | undefined)[]>([undefined]);
+  const cursor = cursors[cursors.length - 1];
+  const { data, isError, isPending, isFetching } = useQuery({
+    queryKey: ["incidentTable", status, cursor],
+    queryFn: () => fetchIncidents(status, cursor),
+    placeholderData: keepPreviousData,
   });
   //todolater : change to ErrorState
   useErrorToast(isError, "something went wrong fetching the incidents");
@@ -30,9 +35,6 @@ export function IncidentsTable({ status }: { status?: IncidentStatus }) {
   }
 
   const incidents = data?.data ?? [];
-
-  if (incidents.length === 0)
-    return <div className="text-center">No incidents yet</div>;
 
   return (
     <div>
@@ -52,6 +54,13 @@ export function IncidentsTable({ status }: { status?: IncidentStatus }) {
           </TableRow>
         </TableHeader>
         <TableBody>
+          {incidents.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={10} className="text-center">
+                {isError ? "Couldn't load incidents" : "No matching incidents"}
+              </TableCell>
+            </TableRow>
+          )}
           {incidents.map((incident) => (
             <TableRow key={incident.id}>
               <SeverityCell className={severityColor[incident.severity]}>
@@ -92,6 +101,29 @@ export function IncidentsTable({ status }: { status?: IncidentStatus }) {
           ))}
         </TableBody>
       </Table>
+      <nav
+        aria-label="Incidents pagination"
+        className="flex items-center justify-end gap-3 mt-4"
+      >
+        <Button
+          variant="outline"
+          disabled={cursors.length === 1 || isFetching}
+          onClick={() => setCursors((current) => current.slice(0, -1))}
+        >
+          Previous
+        </Button>
+        <span aria-live="polite">Page {cursors.length}</span>
+        <Button
+          variant="outline"
+          disabled={!data?.meta?.nextCursor || isFetching || isError}
+          onClick={() => {
+            const next = data?.meta?.nextCursor;
+            if (next) setCursors((current) => [...current, next]);
+          }}
+        >
+          Next
+        </Button>
+      </nav>
     </div>
   );
 }
