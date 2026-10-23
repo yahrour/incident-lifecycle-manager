@@ -3,20 +3,23 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { fetchAllMembers } from "../../api/members";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { Spinner } from "@/components/ui/spinner";
-import type { SortState } from "../../types";
 import { MembersTable } from "./MembersTable";
 import { memberKeys } from "@/features/organization/shared/constants";
 import { usePreviousPageWhenEmpty } from "@/features/organization/shared/hooks";
+import { useState } from "react";
+import type { SortState } from "../../types";
 
 export function AllMembersTable({
   page,
   setPage,
-  sort,
 }: {
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
-  sort: SortState;
 }) {
+  const [sort, setSort] = useState<SortState>({
+    field: "joinedAt",
+    order: "asc",
+  });
   const { data, isPending, isError } = useQuery({
     queryKey: memberKeys.list(page, sort),
     queryFn: () => fetchAllMembers(page, sort),
@@ -47,6 +50,8 @@ export function AllMembersTable({
       page={page}
       setPage={setPage}
       showOrgWide={true}
+      sort={sort}
+      setSort={setSort}
     />
   );
 }
