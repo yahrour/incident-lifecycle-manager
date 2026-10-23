@@ -12,20 +12,15 @@ import { fetchTeam } from "../../../shared/api/teams";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { TeamNotFound } from "../../../shared/components/empty-states/TeamNotFound";
 import { useState } from "react";
-import type { SortState } from "../../types";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TeamUnavailabilitiesTable } from "../../components/tables/TeamUnavailabilitiesTable";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { teamKeys } from "@/features/organization/shared/constants";
-import { SortOrderToggle } from "@/components/SortOrderToggle";
+import type { UnavailabilityFilter } from "@/types";
 
 export function TeamUnavailabilities() {
   const [page, setPage] = useState(1);
-  const [filter, setFilter] = useState<"all" | "pending">("all");
-  const [sort, setSort] = useState<SortState>({
-    field: "createdAt",
-    order: "desc",
-  });
+  const [filter, setFilter] = useState<UnavailabilityFilter>("all");
   const { id: teamId } = useParams();
   const { data, isPending, isError } = useQuery({
     queryKey: teamKeys.detail(teamId as string),
@@ -74,15 +69,9 @@ export function TeamUnavailabilities() {
         <div className="flex justify-between">
           <Tabs
             value={filter}
-            onValueChange={(v: "all" | "pending") => {
+            onValueChange={(v: UnavailabilityFilter) => {
               setFilter(v);
               setPage(1);
-              if (v === "pending") {
-                setSort({
-                  field: "createdAt",
-                  order: "desc",
-                });
-              }
             }}
           >
             <TabsList>
@@ -94,17 +83,9 @@ export function TeamUnavailabilities() {
               </TabsTrigger>
             </TabsList>
           </Tabs>
-          <SortOrderToggle
-            order={sort.order}
-            onChange={(order) => {
-              setSort({ ...sort, order });
-              setPage(1);
-            }}
-          />
         </div>
         <TeamUnavailabilitiesTable
           teamId={team.id}
-          sort={sort}
           page={page}
           setPage={setPage}
           filter={filter}
