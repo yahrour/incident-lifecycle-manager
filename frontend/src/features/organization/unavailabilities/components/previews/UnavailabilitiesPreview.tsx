@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router";
 import { fetchUnavailabilitiesPreview } from "../../api/unavailabilities";
 import { teamKeys } from "@/features/organization/shared/constants";
+import { InlineErrorState } from "@/components/InlineErrorState";
 
 const formatDay = (date: Date | string) => {
   const d = new Date(date);
@@ -44,15 +45,10 @@ export function UnavailabilitiesPreview({ teamId }: { teamId: string }) {
           ))}
         </div>
       ) : isError ? (
-        <p className="px-4 py-6 text-center text-sm text-[#2a2320]">
-          Couldn't load unavailability.{" "}
-          <button
-            onClick={() => void refetch()}
-            className="text-[#e8742c] hover:underline"
-          >
-            Try again
-          </button>
-        </p>
+        <InlineErrorState
+          message="Couldn't load unavailability"
+          onRetry={() => void refetch()}
+        />
       ) : items.length === 0 ? (
         <p className="px-4 py-3 text-center text-sm text-muted-foreground">
           No time off logged for this team.

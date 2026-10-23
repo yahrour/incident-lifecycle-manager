@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 export function usePreviousPageWhenEmpty(
-  items: readonly unknown[],
+  items: readonly unknown[] | undefined,
   page: number,
   setPage: React.Dispatch<React.SetStateAction<number>>
 ) {

@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchStats } from "../../api/teams";
 import { Spinner } from "@/components/ui/spinner";
-import { Button } from "@/components/ui/button";
 import { StatBlock } from "./StatBlock";
 import type { Team } from "@/features/organization/shared/types";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { teamKeys } from "@/features/organization/shared/constants";
+import { InlineErrorState } from "@/components/InlineErrorState";
 
 export function TeamStats({ team }: { team: Team }) {
   const { data, isPending, isError, refetch } = useQuery({
@@ -27,16 +27,10 @@ export function TeamStats({ team }: { team: Team }) {
 
   if (isError || !stats) {
     return (
-      <div className="flex w-full items-center justify-center bg-white border border-border/50 rounded-xl p-4 text-sm text-muted-foreground">
-        Couldn't load team stats.
-        <Button
-          variant="link"
-          onClick={() => void refetch()}
-          className="text-[#e8742c] hover:underline"
-        >
-          Try again
-        </Button>
-      </div>
+      <InlineErrorState
+        message="Couldn't load team stats"
+        onRetry={() => void refetch()}
+      />
     );
   }
 
