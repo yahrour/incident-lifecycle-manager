@@ -81,6 +81,7 @@ export function TeamsTable({
       ...sort,
       order: sort.order === "desc" ? "asc" : "desc",
     });
+    setPage(1);
   };
 
   return (
