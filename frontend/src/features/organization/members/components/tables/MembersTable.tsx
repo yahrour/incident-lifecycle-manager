@@ -9,7 +9,6 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import { removeMember } from "../../api/members";
 import { Spinner } from "@/components/ui/spinner";
-import { Badge } from "@/components/ui/badge";
 import { formatJoined } from "../../utils/time";
 import { ChevronsUpDown, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,6 +25,7 @@ import {
 } from "@/features/organization/shared/constants";
 import { TablePagination } from "@/components/TablePagination";
 import type { SortState } from "../../types";
+import { StatusDot } from "@/components/StatusDot";
 
 export function MembersTable({
   members,
@@ -134,12 +134,9 @@ export function MembersTable({
                   {member.user.specialty}
                 </TableCell>
                 <TableCell>
-                  <Badge
-                    variant={isAway ? "warning" : "success"}
-                    className="uppercase"
-                  >
-                    {isAway ? "AWAY" : "AVAILABLE"}
-                  </Badge>
+                  <StatusDot variant={isAway ? "warning" : "success"}>
+                    {isAway ? "Away" : "Available"}
+                  </StatusDot>
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
                   {formatJoined(member.joinedAt)}

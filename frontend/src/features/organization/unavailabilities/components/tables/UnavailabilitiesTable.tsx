@@ -6,7 +6,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router";
 import { useMutation } from "@tanstack/react-query";
@@ -28,6 +27,7 @@ import { TablePagination } from "@/components/TablePagination";
 import { format } from "date-fns";
 import { ChevronsUpDown } from "lucide-react";
 import type { SortState } from "../../types";
+import { StatusDot } from "@/components/StatusDot";
 
 const statusVariant: Record<
   UnavailabilityStatus,
@@ -165,9 +165,12 @@ export function UnavailabilitiesTable({
                   {unavailability.reason}
                 </TableCell>
                 <TableCell>
-                  <Badge variant={statusVariant[unavailability.status]}>
-                    {unavailability.status}
-                  </Badge>
+                  <StatusDot
+                    variant={statusVariant[unavailability.status]}
+                    className="capitalize"
+                  >
+                    {unavailability.status.toLowerCase()}
+                  </StatusDot>
                 </TableCell>
                 <TableCell className="text-xs text-right text-muted-foreground space-x-2">
                   <Button
