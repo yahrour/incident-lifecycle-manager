@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router";
 import { fetchUnavailabilitiesPreview } from "../../api/unavailabilities";
 import { teamKeys } from "@/features/organization/shared/constants";
 import { InlineErrorState } from "@/components/InlineErrorState";
+import { StatusDot } from "@/components/StatusDot";
 
 const formatDay = (date: Date | string) => {
   const d = new Date(date);
@@ -80,7 +80,7 @@ export function UnavailabilitiesPreview({ teamId }: { teamId: string }) {
                 </div>
 
                 <div className="shrink-0 text-right">
-                  <Badge
+                  <StatusDot
                     variant={
                       item.status === "APPROVED"
                         ? "success"
@@ -88,10 +88,10 @@ export function UnavailabilitiesPreview({ teamId }: { teamId: string }) {
                           ? "warning"
                           : "destructive"
                     }
-                    className="uppercase"
+                    className="capitalize"
                   >
                     {item.status}
-                  </Badge>
+                  </StatusDot>
                   <p className="mt-1 text-xs">
                     {formatDay(item.startDate)} - {formatDay(item.endDate)}
                   </p>
