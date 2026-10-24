@@ -12,6 +12,7 @@ import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { ErrorState } from "@/components/ErrorState";
 import { NoMembershipState } from "../components/NoMembershipState";
 import { TeamDetails } from "../components/TeamDetails";
+import { Page } from "@/components/Page";
 
 export function MyTeam() {
   const { user } = useAuth();
@@ -22,8 +23,8 @@ export function MyTeam() {
   });
 
   return (
-    <div className="w-full">
-      <div className="bg-card flex items-center gap-2 px-4 py-3 border-b">
+    <Page
+      header={
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -33,8 +34,8 @@ export function MyTeam() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-      </div>
-
+      }
+    >
       {isPending ? (
         <FullPageSpinner />
       ) : isError ? (
@@ -48,6 +49,6 @@ export function MyTeam() {
       ) : (
         <TeamDetails myTeam={data.data} />
       )}
-    </div>
+    </Page>
   );
 }
