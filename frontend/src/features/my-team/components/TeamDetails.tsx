@@ -11,7 +11,7 @@ export function TeamDetails({ myTeam }: { myTeam: MyTeam }) {
     myTeam;
 
   return (
-    <div className="p-6 space-y-6">
+    <>
       <div>
         <h1 className="text-3xl font-semibold tracking-tight capitalize text-foreground">
           {team.name}
@@ -38,6 +38,6 @@ export function TeamDetails({ myTeam }: { myTeam: MyTeam }) {
           <TeammatesAwayCard teammatesAway={teammatesAway} />
         </div>
       </div>
-    </div>
+    </>
   );
 }
