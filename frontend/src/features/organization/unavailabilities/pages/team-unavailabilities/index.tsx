@@ -17,6 +17,7 @@ import { TeamUnavailabilitiesTable } from "../../components/tables/TeamUnavailab
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { teamKeys } from "@/features/organization/shared/constants";
 import type { UnavailabilityFilter } from "@/types";
+import { Page } from "@/components/Page";
 
 export function TeamUnavailabilities() {
   const [page, setPage] = useState(1);
@@ -40,8 +41,8 @@ export function TeamUnavailabilities() {
   }
 
   return (
-    <div className="w-full">
-      <div className="bg-card flex items-center gap-2 px-4 py-3 border-b">
+    <Page
+      header={
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -63,34 +64,32 @@ export function TeamUnavailabilities() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
+      }
+    >
+      <div className="flex justify-between">
+        <Tabs
+          value={filter}
+          onValueChange={(v: UnavailabilityFilter) => {
+            setFilter(v);
+            setPage(1);
+          }}
+        >
+          <TabsList>
+            <TabsTrigger value="all" className="cursor-pointer">
+              All
+            </TabsTrigger>
+            <TabsTrigger value="pending" className="cursor-pointer">
+              Pending
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
-
-      <div className="p-4 space-y-4">
-        <div className="flex justify-between">
-          <Tabs
-            value={filter}
-            onValueChange={(v: UnavailabilityFilter) => {
-              setFilter(v);
-              setPage(1);
-            }}
-          >
-            <TabsList>
-              <TabsTrigger value="all" className="cursor-pointer">
-                All
-              </TabsTrigger>
-              <TabsTrigger value="pending" className="cursor-pointer">
-                Pending
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-        <TeamUnavailabilitiesTable
-          teamId={team.id}
-          page={page}
-          setPage={setPage}
-          filter={filter}
-        />
-      </div>
-    </div>
+      <TeamUnavailabilitiesTable
+        teamId={team.id}
+        page={page}
+        setPage={setPage}
+        filter={filter}
+      />
+    </Page>
   );
 }
