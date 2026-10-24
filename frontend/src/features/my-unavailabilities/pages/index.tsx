@@ -15,6 +15,7 @@ import { ErrorUnavailabilitiesState } from "../components/error-states/ErrorUnav
 import { RequestUnavailabilityDialog } from "../components/dialogs/RequestUnavailabilityDialog";
 import { membershipKeys } from "../constants";
 import type { UnavailabilityFilter } from "@/types";
+import { Page } from "@/components/Page";
 
 export function MyUnavailabilities() {
   const [page, setPage] = useState(1);
@@ -41,8 +42,8 @@ export function MyUnavailabilities() {
   const membership = data.data;
 
   return (
-    <div className="w-full">
-      <div className="bg-card flex items-center gap-2 px-4 py-3 border-b">
+    <Page
+      header={
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -50,11 +51,12 @@ export function MyUnavailabilities() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-      </div>
+      }
+    >
       {!membership ? (
         <NoMembershipState />
       ) : (
-        <div className="p-4 space-y-4">
+        <>
           <div className="flex justify-between">
             <Tabs
               value={filter}
@@ -92,8 +94,8 @@ export function MyUnavailabilities() {
             page={page}
             setPage={setPage}
           />
-        </div>
+        </>
       )}
-    </div>
+    </Page>
   );
 }
