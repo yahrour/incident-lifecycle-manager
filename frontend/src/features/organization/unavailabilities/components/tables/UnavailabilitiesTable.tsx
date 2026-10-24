@@ -25,6 +25,9 @@ import { formatDuration } from "@/utils/time";
 import type { UnavailabilityStatus } from "@/types";
 import type { UnavailabilityWithTeamMember } from "@/features/organization/shared/types";
 import { TablePagination } from "@/components/TablePagination";
+import { format } from "date-fns";
+import { ChevronsUpDown } from "lucide-react";
+import type { SortState } from "../../types";
 
 const statusVariant: Record<
   UnavailabilityStatus,
@@ -42,12 +45,16 @@ export function UnavailabilitiesTable({
   totalUnavailabilities,
   page,
   setPage,
+  sort,
+  setSort,
 }: {
   unavailabilities: UnavailabilityWithTeamMember[];
   showOrgWide: boolean;
   totalUnavailabilities: number;
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
+  sort: SortState;
+  setSort: React.Dispatch<React.SetStateAction<SortState>>;
 }) {
   const approveMutation = useMutation({
     mutationFn: ({
@@ -95,6 +102,14 @@ export function UnavailabilitiesTable({
     },
   });
 
+  const toggleSort = () => {
+    setSort({
+      ...sort,
+      order: sort.order === "desc" ? "asc" : "desc",
+    });
+    setPage(1);
+  };
+
   return (
     <div className="space-y-4">
       <Table>
@@ -102,6 +117,12 @@ export function UnavailabilitiesTable({
           <TableRow className="uppercase hover:bg-transparent">
             <TableHead className="w-2/5">Engineer</TableHead>
             {showOrgWide && <TableHead>Team</TableHead>}
+            <TableHead className="flex items-center">
+              <span>Requested At</span>
+              <button className="cursor-pointer" onClick={toggleSort}>
+                <ChevronsUpDown size={18} />
+              </button>
+            </TableHead>
             <TableHead>Dates</TableHead>
             <TableHead>Reason</TableHead>
             <TableHead>Status</TableHead>
@@ -131,6 +152,9 @@ export function UnavailabilitiesTable({
                     </Link>
                   </TableCell>
                 )}
+                <TableCell className="text-xs">
+                  {format(unavailability.createdAt, "yyyy-MM-dd")}
+                </TableCell>
                 <TableCell className="text-xs">
                   {formatDuration(
                     unavailability.startDate,

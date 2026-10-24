@@ -5,19 +5,13 @@ import {
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
 import { useState } from "react";
-import type { SortState } from "../../types";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AllUnavailabilitiesTable } from "../../components/tables/AllUnavailabilitiesTable";
 import type { UnavailabilityFilter } from "@/types";
-import { SortOrderToggle } from "@/components/SortOrderToggle";
 
 export function AllUnavailabilities() {
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState<UnavailabilityFilter>("all");
-  const [sort, setSort] = useState<SortState>({
-    field: "createdAt",
-    order: "desc",
-  });
 
   return (
     <div className="w-full">
@@ -35,15 +29,9 @@ export function AllUnavailabilities() {
         <div className="flex justify-between">
           <Tabs
             value={filter}
-            onValueChange={(v: "all" | "pending") => {
+            onValueChange={(v: UnavailabilityFilter) => {
               setFilter(v);
               setPage(1);
-              if (v === "pending") {
-                setSort({
-                  field: "createdAt",
-                  order: "desc",
-                });
-              }
             }}
           >
             <TabsList>
@@ -64,16 +52,8 @@ export function AllUnavailabilities() {
               </TabsTrigger>
             </TabsList>
           </Tabs>
-          <SortOrderToggle
-            order={sort.order}
-            onChange={(order) => {
-              setSort({ ...sort, order });
-              setPage(1);
-            }}
-          />
         </div>
         <AllUnavailabilitiesTable
-          sort={sort}
           page={page}
           setPage={setPage}
           filter={filter}

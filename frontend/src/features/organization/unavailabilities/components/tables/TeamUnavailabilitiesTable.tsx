@@ -9,20 +9,24 @@ import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { teamKeys } from "@/features/organization/shared/constants";
 import type { UnavailabilityFilter } from "@/types";
 import { usePreviousPageWhenEmpty } from "@/features/organization/shared/hooks";
+import { useState } from "react";
 
 export function TeamUnavailabilitiesTable({
   teamId,
-  sort,
   page,
   setPage,
   filter,
 }: {
   teamId: string;
-  sort: SortState;
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
   filter: UnavailabilityFilter;
 }) {
+  const [sort, setSort] = useState<SortState>({
+    field: "createdAt",
+    order: "desc",
+  });
+
   const { data, isError, isPending, refetch } = useQuery({
     queryKey: teamKeys.unavailabilitiesList(teamId, page, sort, filter),
     queryFn: () => fetchTeamUnavailabilities(teamId, page, sort, filter),
@@ -53,6 +57,8 @@ export function TeamUnavailabilitiesTable({
       totalUnavailabilities={totalUnavailabilities}
       page={page}
       setPage={setPage}
+      sort={sort}
+      setSort={setSort}
     />
   );
 }
