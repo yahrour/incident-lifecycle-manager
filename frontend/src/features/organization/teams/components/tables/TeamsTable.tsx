@@ -13,7 +13,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { NoTeamsState } from "../empty-states/NoTeamsState";
-import type { SortState } from "../../types";
+import type { SortField, SortState } from "../../types";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import {
   DEFAULT_LIMIT,
@@ -76,9 +76,9 @@ export function TeamsTable({
     return <NoTeamsState />;
   }
 
-  const toggleSort = () => {
+  const toggleSort = (field: SortField) => {
     setSort({
-      ...sort,
+      field,
       order: sort.order === "desc" ? "asc" : "desc",
     });
     setPage(1);
@@ -89,16 +89,38 @@ export function TeamsTable({
       <Table>
         <TableHeader>
           <TableRow className="uppercase hover:bg-transparent">
-            <TableHead className="w-2/5">team</TableHead>
+            <TableHead className="w-2/5">
+              <div className="flex items-center">
+                <span>team</span>
+                <button
+                  className="cursor-pointer"
+                  onClick={() => toggleSort("name")}
+                >
+                  <ChevronsUpDown size={18} />
+                </button>
+              </div>
+            </TableHead>
+
             <TableHead className="flex items-center">
-              <span>Requested At</span>
-              <button className="cursor-pointer" onClick={toggleSort}>
+              <span>created at</span>
+              <button
+                className="cursor-pointer"
+                onClick={() => toggleSort("createdAt")}
+              >
                 <ChevronsUpDown size={18} />
               </button>
             </TableHead>
             <TableHead>services</TableHead>
             <TableHead>members</TableHead>
-            <TableHead>rotation</TableHead>
+            <TableHead className="flex items-center">
+              <span>rotation</span>
+              <button
+                className="cursor-pointer"
+                onClick={() => toggleSort("rotationPeriodDays")}
+              >
+                <ChevronsUpDown size={18} />
+              </button>
+            </TableHead>
             <TableHead>on-call now</TableHead>
             <TableHead>escalates(min)</TableHead>
           </TableRow>
