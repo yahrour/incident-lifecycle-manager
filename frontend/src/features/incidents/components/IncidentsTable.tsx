@@ -16,7 +16,6 @@ import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
 import { fetchIncidents } from "../api/incidents";
 import { severityColor, statusColor } from "../constants";
-import type { IncidentStatus } from "../types";
 import { formatMetricDuration } from "../utils";
 import type { IncidentStatus } from "../types";
 
