@@ -17,7 +17,7 @@ export function TeamStats({ team }: { team: Team }) {
 
   if (isPending) {
     return (
-      <div className="flex w-full bg-white border border-border/50 rounded-xl overflow-hidden h-24">
+      <div className="flex w-full bg-card border border-border/50 rounded-xl overflow-hidden h-24">
         <Spinner className="m-auto size-5" />
       </div>
     );
@@ -35,7 +35,7 @@ export function TeamStats({ team }: { team: Team }) {
   }
 
   return (
-    <div className="flex w-full bg-white border border-border/50 rounded-xl divide-x divide-border/50 overflow-hidden">
+    <div className="flex w-full bg-card border border-border/50 rounded-xl divide-x divide-border/50 overflow-hidden">
       <StatBlock title="Members" value={stats.memberCount} />
       <StatBlock title="Away Now" value={stats.activeUnavailabilityCount} />
       <StatBlock title="Rotation (day)" value={team.rotationPeriodDays} />

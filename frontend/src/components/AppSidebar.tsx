@@ -83,6 +83,17 @@ const engineerItems = {
   setupItems: [{ label: "Settings", href: "/settings", icon: Settings }],
 };
 
+const groupLabelClass =
+  "px-2 text-xs font-bold tracking-wider text-sidebar-foreground/50";
+
+const navButtonClass = (active: boolean) =>
+  cn(
+    "gap-2.5 rounded-lg text-sm font-medium",
+    active
+      ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground"
+      : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+  );
+
 export function AppSidebar() {
   const location = useLocation();
   const { user, isLoading } = useAuth();
@@ -97,118 +108,65 @@ export function AppSidebar() {
   const items = user.role === Role.SRE ? managerItems : engineerItems;
   const userFullName = user.firstName + " " + user.lastName;
 
+  const groups = [
+    { label: "RESPOND", items: items.respondItems },
+    { label: "ORG", items: items.orgItems },
+    { label: "SETUP", items: items.setupItems },
+  ];
+
   return (
-    <Sidebar className="border-none bg-primary" collapsible="icon">
+    <Sidebar className="border-sidebar-border" collapsible="icon">
       <SidebarHeader className="flex flex-row items-center justify-between p-4 group-data-[collapsible=icon]:justify-center">
         <div className="flex flex-row items-center group-data-[collapsible=icon]:hidden">
           <img src="/icon.svg" alt="icon" className="w-8" />
         </div>
-        <SidebarTrigger className="z-50 hover:bg-transparent hover:text-white" />
+        <SidebarTrigger className="z-50 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
       </SidebarHeader>
 
       <SidebarContent className="gap-6 px-2">
-        <SidebarGroup className="space-y-2">
-          <SidebarGroupLabel className="px-2 text-xs text-muted/50 font-bold tracking-wider">
-            RESPOND
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="space-y-0.5">
-              {items.respondItems.map((item) => (
-                <SidebarMenuItem key={item.label}>
-                  <SidebarMenuButton
-                    className={cn(
-                      "text-sm gap-2.5 rounded-lg font-medium",
-                      location.pathname.includes(item.href)
-                        ? "bg-secondary text-white hover:bg-secondary"
-                        : "text-muted/70"
-                    )}
-                    render={
-                      <Link to={item.href}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.label}</span>
-                      </Link>
-                    }
-                  />
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup className="space-y-0.5">
-          <SidebarGroupLabel className="px-2 text-xs text-muted/50 font-bold tracking-wider">
-            ORG
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {items.orgItems.map((item) => (
-                <SidebarMenuItem key={item.label}>
-                  <SidebarMenuButton
-                    className={cn(
-                      "text-sm gap-2.5 rounded-lg font-medium",
-                      location.pathname.includes(item.href)
-                        ? "bg-secondary text-white hover:bg-secondary"
-                        : "text-muted/70"
-                    )}
-                    render={
-                      <Link to={item.href}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.label}</span>
-                      </Link>
-                    }
-                  />
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup className="space-y-0.5">
-          <SidebarGroupLabel className="px-2 text-xs text-muted/50 font-bold tracking-wider">
-            SETUP
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {items.setupItems.map((item) => (
-                <SidebarMenuItem key={item.label}>
-                  <SidebarMenuButton
-                    className={cn(
-                      "text-sm gap-2.5 rounded-lg font-medium",
-                      location.pathname.includes(item.href)
-                        ? "bg-secondary text-white hover:bg-secondary"
-                        : "text-muted/70"
-                    )}
-                    render={
-                      <Link to={item.href}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.label}</span>
-                      </Link>
-                    }
-                  />
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {groups.map((group) => (
+          <SidebarGroup key={group.label} className="space-y-0.5">
+            <SidebarGroupLabel className={groupLabelClass}>
+              {group.label}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="space-y-0.5">
+                {group.items.map((item) => (
+                  <SidebarMenuItem key={item.label}>
+                    <SidebarMenuButton
+                      className={navButtonClass(
+                        location.pathname.includes(item.href)
+                      )}
+                      render={
+                        <Link to={item.href}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.label}</span>
+                        </Link>
+                      }
+                    />
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-white/10 px-2 py-3">
+      <SidebarFooter className="border-t border-sidebar-border px-2 py-3">
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
               <Button
                 variant="ghost"
-                className="group hover:bg-transparent aria-expanded:bg-transparent hover:text-white aria-expanded:text-white"
+                className="group text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground aria-expanded:bg-sidebar-accent aria-expanded:text-sidebar-accent-foreground"
               />
             }
           >
-            <div className="relative">
-              <Avatar className="h-8 w-8 bg-purple-400 text-white">
-                <AvatarFallback className="bg-purple-400 text-xs text-white">
-                  {user.avatarInitials}
-                </AvatarFallback>
-              </Avatar>
-            </div>
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="bg-primary text-xs text-primary-foreground">
+                {user.avatarInitials}
+              </AvatarFallback>
+            </Avatar>
             <div className="flex-1 text-left group-data-[collapsible=icon]:hidden">
               {userFullName.length > 20 ? (
                 <Tooltip>
@@ -224,9 +182,9 @@ export function AppSidebar() {
               ) : (
                 <p className="text-sm font-medium">{userFullName}</p>
               )}
-              <p className="text-xs text-muted-foreground">{user.role}</p>
+              <p className="text-xs text-sidebar-foreground/60">{user.role}</p>
             </div>
-            <ChevronDown className="group-aria-expanded:rotate-180 transition-all duration-300" />
+            <ChevronDown className="transition-all duration-300 group-aria-expanded:rotate-180" />
           </DropdownMenuTrigger>
           <DropdownMenuContent className="px-2.5">
             <DropdownMenuGroup className="py-2">
@@ -240,7 +198,7 @@ export function AppSidebar() {
             <DropdownMenuSeparator />
             <DropdownMenuGroup className="py-2">
               <DropdownMenuItem
-                className="cursor-pointer hover:bg-muted-foreground/10!"
+                className="cursor-pointer"
                 render={<Link to={"/settings"} />}
               >
                 <Settings />

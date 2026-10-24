@@ -17,8 +17,8 @@ export function UpcomingRotationsPreview({ teamId }: { teamId: string }) {
   const upcomingRotations = data?.data ?? [];
 
   return (
-    <div className="flex-1 rounded-lg border border-border/50 bg-white">
-      <h2 className="border-b border-border/50 px-4 py-3 text-sm font-medium text-[#2a2320]">
+    <div className="flex-1 rounded-lg border border-border/50 bg-card">
+      <h2 className="border-b border-border/50 px-4 py-3 text-sm font-medium text-foreground">
         Upcoming rotations
       </h2>
 
@@ -26,10 +26,7 @@ export function UpcomingRotationsPreview({ teamId }: { teamId: string }) {
         {isPending ? (
           <div className="space-y-2">
             {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-10 animate-pulse rounded bg-[#f1ece4]"
-              />
+              <div key={i} className="h-10 animate-pulse rounded bg-muted" />
             ))}
           </div>
         ) : isError ? (
@@ -72,7 +69,7 @@ function RotationRow({
 
   return (
     <li className="flex items-center gap-2">
-      <span className="w-4 text-center text-xs tabular-nums text-[#8a8178]">
+      <span className="w-4 text-center text-xs tabular-nums text-muted-foreground">
         {position}
       </span>
 
@@ -87,13 +84,13 @@ function RotationRow({
           <p className="truncate text-sm font-medium">{name}</p>
         </div>
         {engineer.user.specialty && (
-          <p className="truncate text-xs text-[#8a8178]">
+          <p className="truncate text-xs text-muted-foreground">
             {engineer.user.specialty}
           </p>
         )}
       </div>
 
-      <p className="shrink-0 text-right text-xs tabular-nums text-[#8a8178]">
+      <p className="shrink-0 text-right text-xs tabular-nums text-muted-foreground">
         {format(start, "MMM d")} - {format(end, "MMM d")}
       </p>
 

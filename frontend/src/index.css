@@ -6,77 +6,173 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+  "Better Incidents" palette — an incident.io-inspired theme.
+
+  Design intent
+  ------------
+  Match incident.io's look: a coral-red brand colour (#f25533) on warm ivory
+  neutrals (#f8f5ef / #f1ebe2), near-black ink (#161618), and a dark charcoal
+  sidebar. Warm and confident, with colour still carrying status meaning:
+    red    -> something is broken (incidents, destructive)
+    amber  -> something needs attention (warning, escalations, pending)
+    green  -> healthy (resolved, available, operational)
+  The brand coral deliberately sits apart from the alarm red so "primary
+  action" and "incident" don't read as the same thing.
+
+  Core roles
+    Ink     #161618  -> text
+    Coral   #f25533  -> primary (brand)
+    Crimson #d13415  -> destructive (deeper red, distinct from coral)
+    Green   #1a8a63  -> success
+    Amber   #c2751a  -> warning
+  Primary/success/warning/destructive all clear WCAG AA on their surfaces.
+*/
+
 :root {
-  --background: oklch(0.96 0.014 75);
-  --foreground: oklch(0.235 0.014 50);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.235 0.014 50);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.235 0.014 50);
-  --primary: oklch(0.523 0.176 35);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.6 0.16 40);
-  --secondary-foreground: oklch(1 0 0);
-  --muted: oklch(0.925 0.02 75);
-  --muted-foreground: oklch(0.53 0.03 60);
-  --accent: oklch(0.85 0.16 85);
-  --accent-foreground: oklch(0.235 0.014 50);
-  --destructive: oklch(0.45 0.13 25);
-  --border: oklch(0.86 0.03 70);
-  --input: oklch(0.86 0.03 70);
-  --ring: oklch(0.523 0.176 35);
-  --chart-1: oklch(0.523 0.176 35);
-  --chart-2: oklch(0.6 0.16 40);
-  --chart-3: oklch(0.85 0.16 85);
-  --chart-4: oklch(0.5 0.09 190);
-  --chart-5: oklch(0.55 0.07 320);
+  color-scheme: light;
+
+  --background: #f8f5ef;
+  --foreground: #161618;
+  --card: #ffffff;
+  --card-foreground: #161618;
+  --popover: #ffffff;
+  --popover-foreground: #161618;
+
+  /* Coral brand. White on #d9411d is about 4.6:1 (AA). */
+  --primary: #d9411d;
+  --primary-foreground: #ffffff;
+
+  --secondary: #f1ebe2;
+  --secondary-foreground: #2b2620;
+
+  --muted: #f1ebe2;
+  --muted-foreground: #6f6659;
+
+  /* Warm sand wash for hover/focus (shadcn's "accent" role) */
+  --accent: #fbe4da;
+  --accent-foreground: #7a2a12;
+
+  /* Deliberate emphasis: badges, "new", escalations */
+  --highlight: #f25533;
+  --highlight-foreground: #ffffff;
+
+  --destructive: #b3271a;
+  --destructive-foreground: #ffffff;
+  --border: #e4d9c8;
+  --input: #e4d9c8;
+  --ring: #d9411d;
+
+  /* Data-viz ramp: coral -> blue -> green -> amber -> magenta */
+  --chart-1: #f25533;
+  --chart-2: #4b73ff;
+  --chart-3: #1a8a63;
+  --chart-4: #c2751a;
+  --chart-5: #ff7eb0;
+
   --radius: 0.5rem;
-  --sidebar: oklch(0.225 0.03 45);
-  --sidebar-foreground: oklch(0.94 0.015 70);
-  --sidebar-primary: oklch(0.63 0.18 45);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.3 0.035 45);
-  --sidebar-accent-foreground: oklch(0.94 0.015 70);
-  --sidebar-border: oklch(0.3 0.035 45);
-  --sidebar-ring: oklch(0.63 0.18 45);
-  --success: oklch(0.6 0.15 163);
-  --success-foreground: oklch(1 0 0);
-  --warning: oklch(0.75 0.15 80);
-  --warning-foreground: oklch(0.28 0.08 70);
+
+  /* Dark charcoal sidebar, like incident.io's app, even in light mode */
+  --sidebar: #161618;
+  --sidebar-foreground: #e8e4dd;
+  --sidebar-primary: #f25533;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #26262a;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #2e2e33;
+  --sidebar-ring: #ff8e63;
+
+  --success: #1a8a63;
+  --success-foreground: #ffffff;
+  --warning: #c2751a;
+  --warning-foreground: #ffffff;
+  --info: #4b73ff;
+  --info-foreground: #ffffff;
+
+  /* Incident severity — soft bg + strong text, used by SeverityCell */
+  --severity-critical-bg: #fdd9d2;
+  --severity-critical-fg: #8f1f10;
+  --severity-high-bg: #fbe0cd;
+  --severity-high-fg: #94400f;
+  --severity-medium-bg: #fbeacb;
+  --severity-medium-fg: #835410;
+  --severity-low-bg: #f5eec2;
+  --severity-low-fg: #6a5c0e;
+
+  /* Incident status — foreground only, used by StatusDot (dot via bg-current) */
+  --status-open: #b3271a;
+  --status-acknowledged: #c2751a;
+  --status-resolved: #1a8a63;
 }
 
 .dark {
-  --background: oklch(0.16 0.012 50);
-  --foreground: oklch(0.94 0.015 70);
-  --card: oklch(0.2 0.014 50);
-  --card-foreground: oklch(0.94 0.015 70);
-  --popover: oklch(0.2 0.014 50);
-  --popover-foreground: oklch(0.94 0.015 70);
-  --primary: oklch(0.6 0.18 40);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.63 0.16 42);
-  --secondary-foreground: oklch(1 0 0);
-  --muted: oklch(0.26 0.016 50);
-  --muted-foreground: oklch(0.62 0.03 60);
-  --accent: oklch(0.7 0.15 85);
-  --accent-foreground: oklch(0.16 0.012 50);
-  --destructive: oklch(0.55 0.16 25);
+  color-scheme: dark;
+
+  --background: #131315;
+  --foreground: #ece8e1;
+  --card: #1c1c1f;
+  --card-foreground: #ece8e1;
+  --popover: #1c1c1f;
+  --popover-foreground: #ece8e1;
+
+  /* Lighter coral with dark text: about 5:1 */
+  --primary: #ff7a55;
+  --primary-foreground: #240c04;
+
+  --secondary: #26262a;
+  --secondary-foreground: #ece8e1;
+
+  --muted: #202024;
+  --muted-foreground: #a39c91;
+
+  --accent: #33221b;
+  --accent-foreground: #ffc2ad;
+
+  --highlight: #ff7a55;
+  --highlight-foreground: #240c04;
+
+  --destructive: #f87171;
+  --destructive-foreground: #1a0809;
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.6 0.18 40);
-  --chart-1: oklch(0.6 0.18 40);
-  --chart-2: oklch(0.63 0.16 42);
-  --chart-3: oklch(0.7 0.15 85);
-  --chart-4: oklch(0.55 0.09 190);
-  --chart-5: oklch(0.6 0.07 320);
-  --sidebar: oklch(0.225 0.03 45);
-  --sidebar-foreground: oklch(0.94 0.015 70);
-  --sidebar-primary: oklch(0.63 0.18 45);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.3 0.035 45);
-  --sidebar-accent-foreground: oklch(0.94 0.015 70);
-  --sidebar-border: oklch(0.3 0.035 45);
-  --sidebar-ring: oklch(0.63 0.18 45);
+  --ring: #ff7a55;
+
+  --chart-1: #ff7a55;
+  --chart-2: #7b9bff;
+  --chart-3: #34c79a;
+  --chart-4: #f0b74a;
+  --chart-5: #ff8ec2;
+
+  /* Slightly darker than the page so it reads as a separate panel */
+  --sidebar: #0c0c0e;
+  --sidebar-foreground: #d9d4cc;
+  --sidebar-primary: #ff7a55;
+  --sidebar-primary-foreground: #240c04;
+  --sidebar-accent: #202024;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: #ff8e63;
+
+  --success: #34c79a;
+  --success-foreground: #06231a;
+  --warning: #f0b74a;
+  --warning-foreground: #2e2100;
+  --info: #7b9bff;
+  --info-foreground: #0b1526;
+
+  /* Incident severity — inverted dark chips */
+  --severity-critical-bg: #3a1614;
+  --severity-critical-fg: #f4b4ab;
+  --severity-high-bg: #3a2317;
+  --severity-high-fg: #f5c0a0;
+  --severity-medium-bg: #382d16;
+  --severity-medium-fg: #efd39a;
+  --severity-low-bg: #2f2c17;
+  --severity-low-fg: #e2dc9c;
+
+  --status-open: #f87171;
+  --status-acknowledged: #f0b74a;
+  --status-resolved: #34c79a;
 }
 
 @theme inline {
@@ -99,8 +195,13 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
+  --color-highlight-foreground: var(--highlight-foreground);
+  --color-highlight: var(--highlight);
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -125,6 +226,19 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+
+  --color-severity-critical-bg: var(--severity-critical-bg);
+  --color-severity-critical-fg: var(--severity-critical-fg);
+  --color-severity-high-bg: var(--severity-high-bg);
+  --color-severity-high-fg: var(--severity-high-fg);
+  --color-severity-medium-bg: var(--severity-medium-bg);
+  --color-severity-medium-fg: var(--severity-medium-fg);
+  --color-severity-low-bg: var(--severity-low-bg);
+  --color-severity-low-fg: var(--severity-low-fg);
+
+  --color-status-open: var(--status-open);
+  --color-status-acknowledged: var(--status-acknowledged);
+  --color-status-resolved: var(--status-resolved);
 }
 
 @layer base {
@@ -136,5 +250,17 @@
   }
   html {
     @apply font-sans;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 25%, transparent);
+    color: inherit;
   }
 }

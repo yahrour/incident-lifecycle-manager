@@ -18,8 +18,8 @@ export function OnCallPreview({ teamId }: { teamId: string }) {
   const [primary, secondary] = data?.data?.chain ?? [];
 
   return (
-    <div className="flex-1 rounded-lg border border-border/50 bg-white">
-      <h2 className="border-b border-border/50 px-4 py-3 text-sm font-medium text-[#2a2320]">
+    <div className="flex-1 rounded-lg border border-border/50 bg-card">
+      <h2 className="border-b border-border/50 px-4 py-3 text-sm font-medium text-foreground">
         On call right now
       </h2>
 
@@ -27,10 +27,7 @@ export function OnCallPreview({ teamId }: { teamId: string }) {
         {isPending ? (
           <div className="space-y-2">
             {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-10 animate-pulse rounded bg-[#f1ece4]"
-              />
+              <div key={i} className="h-10 animate-pulse rounded bg-muted" />
             ))}
           </div>
         ) : isError ? (
@@ -47,7 +44,7 @@ export function OnCallPreview({ teamId }: { teamId: string }) {
             <Person engineer={primary} label="Primary" />
             {secondary && (
               <>
-                <p className="text-xs text-[#8a8178]">
+                <p className="text-xs text-muted-foreground">
                   Escalates to secondary if not acknowledged within{" "}
                   {data.data!.escalationTimeoutMinutes} min
                 </p>
@@ -74,8 +71,8 @@ function Person({ engineer, label }: { engineer: ChainUser; label: string }) {
       </Avatar>
 
       <div className="flex-1">
-        <p className="text-sm font-medium text-[#2a2320]">{name}</p>
-        <p className="text-xs text-[#8a8178]">
+        <p className="text-sm font-medium text-foreground">{name}</p>
+        <p className="text-xs text-muted-foreground">
           {label} · {engineer.specialty}
         </p>
       </div>

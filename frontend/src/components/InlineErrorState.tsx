@@ -15,7 +15,7 @@ export function InlineErrorState({
   return (
     <div
       className={cn(
-        "flex w-full items-center justify-center bg-white p-4 text-sm text-muted-foreground rounded-lg",
+        "flex w-full items-center justify-center bg-card p-4 text-sm text-muted-foreground rounded-lg",
         className
       )}
     >

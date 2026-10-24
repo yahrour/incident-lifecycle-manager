@@ -15,13 +15,13 @@ export default function NotFoundPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="flex flex-col items-center text-center">
-        <span className="text-xs font-semibold tracking-widest text-[#a39a8b]">
+        <span className="text-xs font-semibold tracking-widest text-muted-foreground">
           ERROR 404
         </span>
-        <h1 className="mt-2 text-3xl font-bold text-[#2a2521]">
+        <h1 className="mt-2 text-3xl font-bold text-foreground">
           This page went off-call
         </h1>
-        <p className="mt-3 max-w-sm text-sm text-[#6b6459]">
+        <p className="mt-3 max-w-sm text-sm text-muted-foreground">
           This route isn't on-call right now. It may have moved, or the link's
           gone stale.
         </p>
@@ -29,7 +29,6 @@ export default function NotFoundPage() {
         <div className="mt-6 flex items-center gap-3">
           <Button
             nativeButton={false}
-            className=" bg-orange-600 text-white hover:bg-orange-700"
             render={
               <Link className="flex" to={homePath}>
                 <ArrowLeft className="h-4 w-4" />
