@@ -16,6 +16,7 @@ import { fetchTeam } from "../../../shared/api/teams";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { teamKeys } from "@/features/organization/shared/constants";
 import { InviteDialog } from "../../components/invite-dialog";
+import { Page } from "@/components/Page";
 
 export function TeamMembers() {
   const { id: teamId } = useParams();
@@ -39,8 +40,8 @@ export function TeamMembers() {
   }
 
   return (
-    <div>
-      <div className="bg-card flex items-center gap-2 px-4 py-3 border-b">
+    <Page
+      header={
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -62,14 +63,12 @@ export function TeamMembers() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
+      }
+    >
+      <div className="flex justify-end">
+        <InviteDialog team={team} />
       </div>
-
-      <div className="p-4 space-y-4 mt-2">
-        <div className="flex justify-end">
-          <InviteDialog team={team} />
-        </div>
-        <TeamMembersTable page={page} setPage={setPage} teamId={team.id} />
-      </div>
-    </div>
+      <TeamMembersTable page={page} setPage={setPage} teamId={team.id} />
+    </Page>
   );
 }

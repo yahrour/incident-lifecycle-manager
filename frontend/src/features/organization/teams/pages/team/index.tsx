@@ -21,6 +21,7 @@ import { TeamNotFound } from "@/features/organization/shared/components/empty-st
 import { UpcomingRotationsPreview } from "../../components/previews/UpcomingRotationsPreview";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { teamKeys } from "@/features/organization/shared/constants";
+import { Page } from "@/components/Page";
 
 export function Team() {
   const { id: teamId } = useParams();
@@ -43,8 +44,8 @@ export function Team() {
   }
 
   return (
-    <div className="w-full">
-      <div className="bg-card flex items-center gap-2 px-4 py-3 border-b">
+    <Page
+      header={
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -58,32 +59,30 @@ export function Team() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-      </div>
-
-      <div className="p-6 space-y-6">
-        <div className="flex flex-wrap justify-between items-center gap-3">
-          <h1 className="text-3xl font-semibold tracking-tight capitalize text-foreground">
-            {team.name}
-          </h1>
-          <div className="space-x-2">
-            <EditTeamDialog team={team} />
-            <DeleteTeamDialog teamId={team.id} />
-          </div>
-        </div>
-
-        <TeamStats team={team} />
-        <div className="grid items-start gap-6 lg:grid-cols-3">
-          <div className="space-y-4 lg:sticky lg:top-6 lg:order-last">
-            <OnCallPreview teamId={team.id} />
-            <UpcomingRotationsPreview teamId={team.id} />
-            <ServicesPreview services={team.services} />
-          </div>
-          <main className="min-w-0 space-y-6 lg:col-span-2">
-            <MembersPreview teamId={team.id} />
-            <UnavailabilitiesPreview teamId={team.id} />
-          </main>
+      }
+    >
+      <div className="flex flex-wrap justify-between items-center gap-3">
+        <h1 className="text-3xl font-semibold tracking-tight capitalize text-foreground">
+          {team.name}
+        </h1>
+        <div className="space-x-2">
+          <EditTeamDialog team={team} />
+          <DeleteTeamDialog teamId={team.id} />
         </div>
       </div>
-    </div>
+
+      <TeamStats team={team} />
+      <div className="grid items-start gap-6 lg:grid-cols-3">
+        <div className="space-y-4 lg:sticky lg:top-6 lg:order-last">
+          <OnCallPreview teamId={team.id} />
+          <UpcomingRotationsPreview teamId={team.id} />
+          <ServicesPreview services={team.services} />
+        </div>
+        <main className="min-w-0 space-y-6 lg:col-span-2">
+          <MembersPreview teamId={team.id} />
+          <UnavailabilitiesPreview teamId={team.id} />
+        </main>
+      </div>
+    </Page>
   );
 }
