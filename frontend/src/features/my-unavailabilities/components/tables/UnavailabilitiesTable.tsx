@@ -6,7 +6,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { fetchMemberUnavailabilities } from "../../api/unavailability";
 import type { Membership, SortState } from "../../types";
@@ -22,6 +21,7 @@ import { usePreviousPageWhenEmpty } from "@/features/organization/shared/hooks";
 import { useState } from "react";
 import { ChevronsUpDown } from "lucide-react";
 import { format } from "date-fns";
+import { StatusDot } from "@/components/StatusDot";
 
 const statusVariant: Record<
   UnavailabilityStatus,
@@ -106,7 +106,7 @@ export function UnavailabilitiesTable({
       <Table>
         <TableHeader>
           <TableRow className="uppercase hover:bg-transparent">
-            <TableHead className="w-2/5">Reason</TableHead>
+            <TableHead>Reason</TableHead>
             <TableHead className="flex items-center">
               <span>Requested At</span>
               <button className="cursor-pointer" onClick={toggleSort}>
@@ -136,9 +136,12 @@ export function UnavailabilitiesTable({
                   )}
                 </TableCell>
                 <TableCell>
-                  <Badge variant={statusVariant[unavailability.status]}>
-                    {unavailability.status}
-                  </Badge>
+                  <StatusDot
+                    variant={statusVariant[unavailability.status]}
+                    className="capitalize!"
+                  >
+                    {unavailability.status.toLowerCase()}
+                  </StatusDot>
                 </TableCell>
                 <TableCell className="p-0! m-0! ">
                   <RemoveUnavailabilityButton
