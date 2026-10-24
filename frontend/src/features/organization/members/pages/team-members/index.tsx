@@ -15,6 +15,7 @@ import { TeamNotFound } from "../../../shared/components/empty-states/TeamNotFou
 import { fetchTeam } from "../../../shared/api/teams";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { teamKeys } from "@/features/organization/shared/constants";
+import { InviteDialog } from "../../components/invite-dialog";
 
 export function TeamMembers() {
   const { id: teamId } = useParams();
@@ -64,6 +65,9 @@ export function TeamMembers() {
       </div>
 
       <div className="p-4 space-y-4 mt-2">
+        <div className="flex justify-end">
+          <InviteDialog team={team} />
+        </div>
         <TeamMembersTable page={page} setPage={setPage} teamId={team.id} />
       </div>
     </div>
