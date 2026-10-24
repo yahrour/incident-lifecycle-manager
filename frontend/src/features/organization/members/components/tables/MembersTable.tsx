@@ -11,7 +11,7 @@ import { removeMember } from "../../api/members";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
 import { formatJoined } from "../../utils/time";
-import { Trash } from "lucide-react";
+import { ChevronsUpDown, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { queryClient } from "@/lib/queryClient";
@@ -25,6 +25,7 @@ import {
   unavailabilityKeys,
 } from "@/features/organization/shared/constants";
 import { TablePagination } from "@/components/TablePagination";
+import type { SortState } from "../../types";
 
 export function MembersTable({
   members,
@@ -32,12 +33,16 @@ export function MembersTable({
   page,
   setPage,
   showOrgWide,
+  sort,
+  setSort,
 }: {
   members: Member[];
   totalMembers: number;
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
   showOrgWide: boolean;
+  sort: SortState;
+  setSort: React.Dispatch<React.SetStateAction<SortState>>;
 }) {
   const [pendingMemberId, setPendingMemberId] = useState<number | null>(null);
   const mutation = useMutation({
@@ -72,6 +77,14 @@ export function MembersTable({
     mutation.mutate({ teamId, memberId });
   };
 
+  const toggleSort = () => {
+    setSort({
+      ...sort,
+      order: sort.order === "desc" ? "asc" : "desc",
+    });
+    setPage(1);
+  };
+
   return (
     <>
       <Table>
@@ -82,7 +95,12 @@ export function MembersTable({
             <TableHead>Role</TableHead>
             <TableHead>Specialty</TableHead>
             <TableHead>Availability</TableHead>
-            <TableHead>Joined</TableHead>
+            <TableHead className="flex items-center">
+              <span>Joined</span>
+              <button className="cursor-pointer" onClick={toggleSort}>
+                <ChevronsUpDown size={18} />
+              </button>
+            </TableHead>
             <TableHead className="w-16">Actions</TableHead>
           </TableRow>
         </TableHeader>

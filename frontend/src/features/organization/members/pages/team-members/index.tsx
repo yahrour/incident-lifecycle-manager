@@ -11,20 +11,14 @@ import {
 } from "@/components/ui/breadcrumb";
 import { TeamMembersTable } from "../../components/tables/TeamMembersTable";
 import { useState } from "react";
-import { type SortState } from "../../types";
 import { TeamNotFound } from "../../../shared/components/empty-states/TeamNotFound";
-import { InviteDialog } from "../../components/invite-dialog";
 import { fetchTeam } from "../../../shared/api/teams";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { teamKeys } from "@/features/organization/shared/constants";
-import { SortOrderToggle } from "@/components/SortOrderToggle";
+import { InviteDialog } from "../../components/invite-dialog";
 
 export function TeamMembers() {
   const { id: teamId } = useParams();
-  const [sort, setSort] = useState<SortState>({
-    field: "joinedAt",
-    order: "asc",
-  });
   const [page, setPage] = useState(1);
 
   const { data, isPending, isError } = useQuery({
@@ -71,22 +65,10 @@ export function TeamMembers() {
       </div>
 
       <div className="p-4 space-y-4 mt-2">
-        <div className="flex justify-end items-center gap-2">
-          <SortOrderToggle
-            order={sort.order}
-            onChange={(order) => {
-              setSort({ ...sort, order });
-              setPage(1);
-            }}
-          />
+        <div className="flex justify-end">
           <InviteDialog team={team} />
         </div>
-        <TeamMembersTable
-          page={page}
-          setPage={setPage}
-          sort={sort}
-          teamId={team.id}
-        />
+        <TeamMembersTable page={page} setPage={setPage} teamId={team.id} />
       </div>
     </div>
   );
