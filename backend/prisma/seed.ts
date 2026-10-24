@@ -226,19 +226,30 @@ async function main() {
   const teams: Team[] = [];
   for (const [i, t] of TEAMS.entries()) {
     const startDaysAgo = int(3, 30);
+
+    // Distinct createdAt per team, oldest first (frontend is the oldest).
+    // 430+ days ago so every team predates its members' joinedAt (max 400 days ago).
+    // Teams are 21 days apart and the time-of-day offset is under 24h, so values never collide.
+    const createdAt = ago(
+      (430 + (TEAMS.length - 1 - i) * 21) * DAY + ((i * 7919) % 86_400) * SEC
+    );
+
+    const ownerId = sres[i % sres.length].id;
+
     const team = await prisma.team.upsert({
-      where: { name: t.name },
-      update: {},
+      where: { ownerId_name: { ownerId, name: t.name } },
+      update: { createdAt }, // also fixes teams that already exist
       create: {
         name: t.name,
         description: t.description,
         services: [...t.services],
-        ownerId: sres[i % sres.length].id,
+        ownerId,
         rotationPeriodDays: t.period,
         rotationStartDate: ago(startDaysAgo * DAY),
         currentRotationIndex: Math.floor(startDaysAgo / t.period) % PER_TEAM,
         lastRotatedAt: ago((startDaysAgo % t.period) * DAY),
         escalationTimeoutMinutes: t.escalation,
+        createdAt,
       },
     });
     teams.push(team);
@@ -320,26 +331,19 @@ async function main() {
   });
 
   const awayTeammates = teamMembers.filter((m) => m.id !== ameliaMember.id).slice(0, 3);
-  const AWAY_NOW = [
-    { offset: -1, len: 4, reason: "Vacation" }, // away now, back in ~3 days
-    { offset: 0, len: 1, reason: "Conference" }, // away now, back tomorrow
-    { offset: 5, len: 3, reason: "Family event" }, // away soon
-  ];
   const awayIds = new Set(awayTeammates.map((m) => m.id));
   for (let i = windows.length - 1; i >= 0; i--) {
     if (awayIds.has(windows[i].memberId)) windows.splice(i, 1);
   }
-  windows.push(
-    ...awayTeammates.map((m, i) => ({
-      memberId: m.id,
-      startDate: dayOffset(AWAY_NOW[i].offset),
-      endDate: new Date(
-        dayOffset(AWAY_NOW[i].offset + AWAY_NOW[i].len).getTime() + (23 * HOUR + 59 * 60 * SEC)
-      ),
-      reason: AWAY_NOW[i].reason,
-      status: "APPROVED" as const,
-    }))
-  );
+  const usedCreatedAt = new Set<number>();
+    windows.forEach((w, i) => {
+      const lead = (2 + (i % 5)) * DAY + ((i * 7919) % 86_400) * SEC;
+      let t = Math.min(new Date(w.startDate).getTime() - lead, NOW - HOUR);
+      while (usedCreatedAt.has(t)) t += 1;
+      usedCreatedAt.add(t);
+      w.createdAt = new Date(t);
+    });
+
 
   // Clear their existing rows first so re-running doesn't duplicate them
   await prisma.unavailability.deleteMany({
