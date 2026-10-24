@@ -13,25 +13,30 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { NoTeamsState } from "../empty-states/NoTeamsState";
-import type { SortState } from "../../types";
+import type { SortField, SortState } from "../../types";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import {
   DEFAULT_LIMIT,
   teamKeys,
 } from "@/features/organization/shared/constants";
 import { TablePagination } from "@/components/TablePagination";
+import { useState } from "react";
+import { format } from "date-fns";
+import { ChevronsUpDown } from "lucide-react";
 
 export function TeamsTable({
   search,
-  sort,
   page,
   setPage,
 }: {
   search: string;
-  sort: SortState;
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
 }) {
+  const [sort, setSort] = useState<SortState>({
+    field: "createdAt",
+    order: "asc",
+  });
   const navigate = useNavigate();
   const [teamsQuery, metricsQuery] = useQueries({
     queries: [
@@ -71,15 +76,51 @@ export function TeamsTable({
     return <NoTeamsState />;
   }
 
+  const toggleSort = (field: SortField) => {
+    setSort({
+      field,
+      order: sort.order === "desc" ? "asc" : "desc",
+    });
+    setPage(1);
+  };
+
   return (
     <>
       <Table>
         <TableHeader>
           <TableRow className="uppercase hover:bg-transparent">
-            <TableHead className="w-2/5">team</TableHead>
+            <TableHead className="w-2/5">
+              <div className="flex items-center">
+                <span>team</span>
+                <button
+                  className="cursor-pointer"
+                  onClick={() => toggleSort("name")}
+                >
+                  <ChevronsUpDown size={18} />
+                </button>
+              </div>
+            </TableHead>
+
+            <TableHead className="flex items-center">
+              <span>created at</span>
+              <button
+                className="cursor-pointer"
+                onClick={() => toggleSort("createdAt")}
+              >
+                <ChevronsUpDown size={18} />
+              </button>
+            </TableHead>
             <TableHead>services</TableHead>
             <TableHead>members</TableHead>
-            <TableHead>rotation</TableHead>
+            <TableHead className="flex items-center">
+              <span>rotation</span>
+              <button
+                className="cursor-pointer"
+                onClick={() => toggleSort("rotationPeriodDays")}
+              >
+                <ChevronsUpDown size={18} />
+              </button>
+            </TableHead>
             <TableHead>on-call now</TableHead>
             <TableHead>escalates(min)</TableHead>
           </TableRow>
@@ -102,6 +143,9 @@ export function TeamsTable({
               >
                 <TableCell className="font-medium text-sm flex-1">
                   {team.name}
+                </TableCell>
+                <TableCell className="text-xs">
+                  {format(team.createdAt, "yyyy-MM-dd")}
                 </TableCell>
                 <TableCell>
                   {team.services.slice(0, 2).join(" • ")}

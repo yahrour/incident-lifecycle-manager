@@ -7,17 +7,11 @@ import {
 import { Search, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CreateTeamDialog } from "../../components/dialogs/CreateTeamDialog";
-import { SortControls } from "@/components/SortControls";
-import type { SortState } from "../../types";
 
 export function Teams() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [sort, setSort] = useState<SortState>({
-    field: "createdAt",
-    order: "asc",
-  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -59,29 +53,10 @@ export function Teams() {
             )}
           </InputGroup>
 
-          <div className="flex items-center gap-4">
-            <SortControls
-              sort={sort}
-              onChange={(s) => {
-                setSort(s);
-                setPage(1);
-              }}
-              options={[
-                { value: "name", label: "Name" },
-                { value: "createdAt", label: "Created at" },
-                { value: "rotationPeriodDays", label: "Rotation period" },
-              ]}
-            />
-            <CreateTeamDialog />
-          </div>
+          <CreateTeamDialog />
         </div>
 
-        <TeamsTable
-          search={debouncedSearch}
-          sort={sort}
-          page={page}
-          setPage={setPage}
-        />
+        <TeamsTable search={debouncedSearch} page={page} setPage={setPage} />
       </div>
     </div>
   );

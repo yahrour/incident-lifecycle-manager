@@ -36,7 +36,7 @@ export type OnCall = {
   chain: ChainUser[];
 } | null;
 
-type SortField = "name" | "rotationPeriodDays" | "createdAt";
+export type SortField = "name" | "rotationPeriodDays" | "createdAt";
 export type SortState = SortStateAbstract<SortField>;
 export type UpcomingRotation = {
   user: User;
