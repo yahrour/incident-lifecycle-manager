@@ -1,3 +1,5 @@
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from "react";
 import { IncidentsTable } from "../components/IncidentsTable";
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,7 +30,10 @@ export function Incidents() {
             ))}
           </TabsList>
         </Tabs>
-        <IncidentsTable status={status === "all" ? undefined : status} />
+        <IncidentsTable
+          key={status}
+          status={status === "all" ? undefined : status}
+        />
       </div>
     </>
   );
