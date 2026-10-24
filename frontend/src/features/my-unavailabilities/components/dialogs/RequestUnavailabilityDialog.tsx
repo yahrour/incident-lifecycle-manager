@@ -43,8 +43,7 @@ import { requestUnavailability } from "../../api/unavailability";
 import { useMutation } from "@tanstack/react-query";
 import { Textarea } from "@/components/ui/textarea";
 import { unavailabilityKeys } from "../../constants";
-import { toZonedTime } from 'date-fns-tz';
-
+import { toZonedTime } from "date-fns-tz";
 
 type RequestUnavailabilitySchema = z.input<typeof requestUnavailabilitySchema>;
 const TIMEZONES = Intl.supportedValuesOf("timeZone");
@@ -108,7 +107,7 @@ export function RequestUnavailabilityDialog({
     >
       <DialogTrigger
         render={
-          <Button variant="secondary" className="px-4">
+          <Button className="px-4">
             <CalendarOff data-icon="inline-start" />
             Request
           </Button>
@@ -157,7 +156,12 @@ export function RequestUnavailabilityDialog({
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
-                          disabled={{ before: toZonedTime(new Date(), form.watch("timezone")) }}
+                          disabled={{
+                            before: toZonedTime(
+                              new Date(),
+                              form.watch("timezone")
+                            ),
+                          }}
                         />
                       </PopoverContent>
                     </Popover>
@@ -195,7 +199,12 @@ export function RequestUnavailabilityDialog({
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
-                          disabled={{ before: toZonedTime(form.watch("startDate"), form.watch("timezone")) }}
+                          disabled={{
+                            before: toZonedTime(
+                              form.watch("startDate"),
+                              form.watch("timezone")
+                            ),
+                          }}
                         />
                       </PopoverContent>
                     </Popover>

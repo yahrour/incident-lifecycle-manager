@@ -175,7 +175,7 @@ export function UnavailabilitiesTable({
                 <TableCell className="text-xs text-right text-muted-foreground space-x-2">
                   <Button
                     size={"xs"}
-                    className="bg-success text-xs hover:bg-success/90"
+                    variant="success"
                     onClick={() =>
                       approveMutation.mutate({
                         teamId: unavailability.teamMember.team.id,
@@ -190,7 +190,6 @@ export function UnavailabilitiesTable({
                   <Button
                     size={"xs"}
                     variant="destructive"
-                    className="text-xs"
                     onClick={() =>
                       rejectMutation.mutate({
                         teamId: unavailability.teamMember.team.id,
