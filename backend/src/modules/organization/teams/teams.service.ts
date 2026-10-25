@@ -46,25 +46,19 @@ export class TeamsService {
       return JSON.stringify(teams, null, 2);
     }
 
-    return stringify(
-      teams.map((t) => ({
-        ...t,
-        services: t.services.join(";"),
-      })),
-      {
-        header: true,
-        columns: [
-          { key: "name", header: "Name" },
-          { key: "description", header: "Description" },
-          { key: "rotationPeriodDays", header: "Rotation (days)" },
-          {
-            key: "escalationTimeoutMinutes",
-            header: "Escalation timeout (min)",
-          },
-          { key: "services", header: "Services" },
-        ],
-      }
-    );
+    return stringify(teams, {
+      header: true,
+      columns: [
+        { key: "name", header: "Name" },
+        { key: "description", header: "Description" },
+        { key: "rotationPeriodDays", header: "Rotation (days)" },
+        {
+          key: "escalationTimeoutMinutes",
+          header: "Escalation timeout (min)",
+        },
+        { key: "services", header: "Services" },
+      ],
+    });
   }
 
   async create(ownerId: string, createTeamDto: CreateTeamDto) {
