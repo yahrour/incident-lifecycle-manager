@@ -101,7 +101,7 @@ export function MembersTable({
                 <ChevronsUpDown size={18} />
               </button>
             </TableHead>
-            <TableHead className="w-16">Actions</TableHead>
+            <TableHead className="w-12">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -143,8 +143,8 @@ export function MembersTable({
                 </TableCell>
                 <TableCell className="p-0! m-0!">
                   <Button
-                    variant="destructive"
-                    className="bg-transparent"
+                    variant="ghost"
+                    className="text-destructive! hover:bg-destructive/10! mx-auto block"
                     onClick={() => handleRemove(member.teamId, member.id)}
                     disabled={mutation.isPending}
                     size="sm"

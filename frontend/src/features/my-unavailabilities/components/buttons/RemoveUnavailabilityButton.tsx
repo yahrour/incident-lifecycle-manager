@@ -52,8 +52,8 @@ export function RemoveUnavailabilityButton({
 
   return (
     <Button
-      variant="destructive"
-      className="bg-transparent ml-3"
+      variant="ghost"
+      className="text-destructive! hover:bg-destructive/10! mx-auto block"
       onClick={handleRemove}
       disabled={mutation.isPending || unavailabilityStatus !== "PENDING"}
       size="sm"

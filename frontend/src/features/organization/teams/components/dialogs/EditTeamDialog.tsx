@@ -144,7 +144,7 @@ export function EditTeamDialog({ team }: { team: Team }) {
     >
       <DialogTrigger
         render={
-          <Button variant="outline" className="px-4">
+          <Button variant="secondary" className="px-4">
             <Pen data-icon="inline-start" />
             Edit
           </Button>

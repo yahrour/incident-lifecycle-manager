@@ -43,11 +43,7 @@ export function InviteLink({ url }: { url: string }) {
           className="font-mono text-xs"
           aria-label="Invite link"
         />
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => void copyLink()}
-        >
+        <Button type="button" variant="outline" onClick={() => void copyLink()}>
           {copied ? <CopyCheck /> : <Copy />}
           {copied ? "Copied" : "Copy"}
         </Button>

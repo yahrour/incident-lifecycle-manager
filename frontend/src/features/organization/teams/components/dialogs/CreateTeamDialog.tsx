@@ -145,7 +145,7 @@ export function CreateTeamDialog() {
     >
       <DialogTrigger
         render={
-          <Button className="cursor-pointer" variant="secondary">
+          <Button className="cursor-pointer">
             <Plus data-icon="inline-start" />
             Create team
           </Button>

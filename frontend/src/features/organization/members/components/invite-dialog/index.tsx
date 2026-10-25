@@ -19,7 +19,7 @@ export function InviteDialog({ team }: { team: Team }) {
 
   return (
     <Dialog onOpenChange={handleOpenChange}>
-      <DialogTrigger render={<Button variant="secondary" />}>
+      <DialogTrigger render={<Button />}>
         <UserPlus />
         Invite engineer
       </DialogTrigger>
