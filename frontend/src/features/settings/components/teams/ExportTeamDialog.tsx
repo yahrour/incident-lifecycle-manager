@@ -15,6 +15,8 @@ import { FileDown, FileJson, FileSpreadsheet } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import type { ExportFileFormat } from "../../types";
 import { exportTeams } from "../../api/teams";
+import { isAxiosError } from "axios";
+import { toast } from "@/components/ui/toast";
 
 const FORMATS = [
   {
@@ -49,6 +51,17 @@ export function ExportTeamDialog({
 
   const mutation = useMutation({
     mutationFn: () => exportTeams(format),
+    onError: (error) => {
+      setOpen(false);
+      const description =
+        isAxiosError(error) && !error.response
+          ? "Couldn't reach the server, Check your connection."
+          : "Something went wrong while exporting your teams.";
+      toast.add({ type: "error", title: "Couldn't export teams", description });
+    },
+    onSuccess: () => {
+      setOpen(false);
+    },
   });
 
   return (
