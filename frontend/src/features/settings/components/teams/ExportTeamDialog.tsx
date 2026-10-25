@@ -17,6 +17,7 @@ import type { ExportFileFormat } from "../../types";
 import { exportTeams } from "../../api/teams";
 import { isAxiosError } from "axios";
 import { toast } from "@/components/ui/toast";
+import { Spinner } from "@/components/ui/spinner";
 
 const FORMATS = [
   {
@@ -128,11 +129,20 @@ export function ExportTeamDialog({
           </DialogClose>
           <Button
             type="button"
-            disabled={!format}
+            disabled={!format || mutation.isPending}
             onClick={() => mutation.mutate()}
           >
-            <FileDown data-icon="inline-start" />
-            Download {format.toUpperCase()}
+            {mutation.isPending ? (
+              <>
+                <Spinner />
+                Exporting...
+              </>
+            ) : (
+              <>
+                <FileDown data-icon="inline-start" />
+                Download {format.toUpperCase()}
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
