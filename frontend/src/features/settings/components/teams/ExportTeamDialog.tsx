@@ -81,7 +81,7 @@ export function ExportTeamDialog({
             id="exportFormat"
             role="radiogroup"
             aria-label="File format"
-            className="grid grid-cols-2 gap-3"
+            className="grid grid-cols-2 gap-2"
           >
             {FORMATS.map((option) => {
               const Icon = option.icon;
@@ -91,7 +91,6 @@ export function ExportTeamDialog({
                 <button
                   key={option.value}
                   type="button"
-                  role="radio"
                   aria-checked={selected}
                   onClick={() => setFormat(option.value)}
                   className={cn(
