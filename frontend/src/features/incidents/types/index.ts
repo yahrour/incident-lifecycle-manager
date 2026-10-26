@@ -46,4 +46,30 @@ type Incident = {
   updatedAt: string;
 };
 
-export type { Incident, IncidentSeverity, IncidentStatus };
+type IncidentDetails = Incident & {
+  notes: {
+    id: string;
+    content: string;
+    createdAt: string;
+    author: User;
+  }[];
+  alerts: {
+    id: string;
+    provider: string;
+    title: string;
+    severity: string;
+    status: string;
+    occurredAt: string;
+    receivedAt: string;
+  }[];
+  timeline: {
+    type: string;
+    at: string;
+    noteId?: string;
+    alertId?: string;
+    actor?: User;
+    status?: string;
+  }[];
+};
+
+export type { Incident, IncidentDetails, IncidentSeverity, IncidentStatus };

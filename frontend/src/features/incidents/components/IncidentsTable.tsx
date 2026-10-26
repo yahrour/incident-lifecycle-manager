@@ -14,16 +14,19 @@ import { useErrorToast } from "@/hooks/use-error-toast";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import { fetchIncidents } from "../api/incidents";
 import { severityColor, statusColor } from "../constants";
-import { formatMetricDuration } from "../utils";
 import type { IncidentStatus } from "../types";
+import { formatMetricDuration } from "../utils";
 
 export function IncidentsTable({ status }: { status?: IncidentStatus }) {
   const [cursors, setCursors] = useState<(string | undefined)[]>([undefined]);
   const cursor = cursors[cursors.length - 1];
+  const navigate = useNavigate();
+
   const { data, isError, isPending, isFetching } = useQuery({
-    queryKey: ["incidentTable", status, cursor],
+    queryKey: ["incidents", status, cursor],
     queryFn: () => fetchIncidents(status, cursor),
     placeholderData: keepPreviousData,
   });
@@ -62,7 +65,13 @@ export function IncidentsTable({ status }: { status?: IncidentStatus }) {
             </TableRow>
           )}
           {incidents.map((incident) => (
-            <TableRow key={incident.id}>
+            <TableRow
+              key={incident.id}
+              className="hover:cursor-pointer"
+              onClick={() => {
+                void navigate(`/manager/incidents/${incident.id}`);
+              }}
+            >
               <SeverityCell className={severityColor[incident.severity]}>
                 {incident.severity}
               </SeverityCell>
