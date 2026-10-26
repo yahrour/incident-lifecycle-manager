@@ -13,6 +13,7 @@ import {
 } from "@nestjs/common";
 import {
   CreateTeamDto,
+  ExportTeamDto,
   OffsetPaginationSearchParams,
   UpdateTeamDto,
 } from "./dto";
@@ -38,6 +39,15 @@ export class TeamsController {
   ) {
     const result = await this.teamsService.create(user.sub, createTeamDto);
     return apiResponse(result);
+  }
+
+  @Get("export")
+  @Roles(Role.SRE)
+  async export(
+    @Query() query: ExportTeamDto,
+    @ActiveUser() user: ActiveUserData
+  ) {
+    return await this.teamsService.export(user.sub, query.format);
   }
 
   @Patch(":teamId")

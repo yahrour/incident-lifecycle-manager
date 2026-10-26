@@ -14,6 +14,7 @@ async function bootstrap() {
     origin:
       configService.get<string>("FRONTEND_URL") ?? "http://localhost:5173",
     credentials: true,
+    exposedHeaders: ["Content-Disposition"],
   });
   app.setGlobalPrefix("/api");
   app.useGlobalPipes(

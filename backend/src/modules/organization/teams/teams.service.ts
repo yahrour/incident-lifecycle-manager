@@ -3,6 +3,7 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  StreamableFile,
 } from "@nestjs/common";
 import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
 import {
@@ -13,10 +14,53 @@ import {
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { convertDateToUtc } from "@/common/utils/timezone";
 import { Prisma, UnavailabilityStatus } from "@/generated/prisma/client";
+import { stringify } from "csv-stringify/sync";
+import { DateTime } from "luxon";
+
+type FileFormat = "json" | "csv";
+type TeamExport = {
+  name: string;
+  description: string | null;
+  services: string[];
+  rotationPeriodDays: number;
+  escalationTimeoutMinutes: number;
+};
 
 @Injectable()
 export class TeamsService {
   constructor(private prisma: PrismaService) {}
+
+  getContentType(fileFormat: FileFormat) {
+    return fileFormat === "json" ? "application/json" : "text/csv";
+  }
+
+  generateFilename(fileFormat: FileFormat) {
+    const dt = DateTime.now();
+    const timestamp = dt.toFormat("yyyy-MM-dd");
+    const filename = `teams-${timestamp}.${fileFormat}`;
+    return filename;
+  }
+
+  serialize(teams: TeamExport[], fileFormat: FileFormat): string {
+    if (fileFormat === "json") {
+      return JSON.stringify(teams, null, 2);
+    }
+
+    return stringify(teams, {
+      escape_formulas: true,
+      header: true,
+      columns: [
+        { key: "name", header: "Name" },
+        { key: "description", header: "Description" },
+        { key: "rotationPeriodDays", header: "Rotation (days)" },
+        {
+          key: "escalationTimeoutMinutes",
+          header: "Escalation timeout (min)",
+        },
+        { key: "services", header: "Services" },
+      ],
+    });
+  }
 
   async create(ownerId: string, createTeamDto: CreateTeamDto) {
     const rotationStartDate =
@@ -222,5 +266,25 @@ export class TeamsService {
 
       throw error;
     }
+  }
+
+  async export(ownerId: string, fileFormat: FileFormat) {
+    const teams = await this.prisma.team.findMany({
+      where: { ownerId },
+      select: {
+        name: true,
+        description: true,
+        rotationPeriodDays: true,
+        escalationTimeoutMinutes: true,
+        services: true,
+      },
+    });
+
+    const content = this.serialize(teams, fileFormat);
+
+    return new StreamableFile(Buffer.from(content), {
+      type: this.getContentType(fileFormat),
+      disposition: `attachment; filename="${this.generateFilename(fileFormat)}"`,
+    });
   }
 }

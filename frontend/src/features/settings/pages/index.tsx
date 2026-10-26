@@ -1,7 +1,9 @@
-import { ProfileForm } from "../components/ProfileForm";
+import { ProfileForm } from "../components/profile/ProfileForm";
 import { Spinner } from "@/components/ui/spinner";
 import { useUserSettings } from "../hooks/useUserSettings";
 import { CircleAlert } from "lucide-react";
+import { TeamsSettings } from "../components/teams/TeamsSettings";
+import { Page } from "@/components/Page";
 
 export default function SettingsPage() {
   const { data: user, isLoading, isError } = useUserSettings();
@@ -29,14 +31,9 @@ export default function SettingsPage() {
     );
   }
   return (
-    <div>
-      <div className="bg-card flex items-center gap-2 px-4 py-3 border-b">
-        <h1 className="font-medium text-sm">Settings</h1>
-      </div>
-
-      <div className="w-full space-y-6 p-6">
-        <ProfileForm user={user} />
-      </div>
-    </div>
+    <Page header={<h1 className="font-medium text-sm">Settings</h1>}>
+      <ProfileForm user={user} />
+      {user.role === "SRE" && <TeamsSettings />}
+    </Page>
   );
 }

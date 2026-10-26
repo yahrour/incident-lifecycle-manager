@@ -29,10 +29,10 @@ import {
   ComboboxList,
 } from "@/components/ui/combobox";
 
-import { settingsSchema, type SettingsFormValues } from "../schema";
+import { settingsSchema, type SettingsFormValues } from "../../schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { User } from "@/types";
-import useUpdateProfile from "../hooks/useUpdateProfile";
+import useUpdateProfile from "../../hooks/useUpdateProfile";
 import { toast } from "@/components/ui/toast";
 
 const timezones = Intl.supportedValuesOf("timeZone");
