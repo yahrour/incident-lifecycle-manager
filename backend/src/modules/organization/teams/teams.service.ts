@@ -53,7 +53,6 @@ export class TeamsService {
   }
 
   serializeTeams(teams: TeamExport[], fileFormat: FileFormat): string {
-  serialize(teams: TeamExport[], fileFormat: FileFormat): string {
     if (fileFormat === "json") {
       return JSON.stringify(teams, null, 2);
     }

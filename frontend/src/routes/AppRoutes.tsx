@@ -22,7 +22,6 @@ import { MyUnavailabilities } from "@/features/my-unavailabilities";
 import { StatusPage } from "@/features/status";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { RequireAuth } from "./RequireAuth";
-import { IncidentsDetails } from "@/features/incidents/pages";
 
 export default function AppRoutes() {
   return (
@@ -60,10 +59,6 @@ export default function AppRoutes() {
               element={<div>manage time-off</div>}
             />
             <Route path="/manager/incidents" element={<Incidents />} />
-            <Route
-              path="/manager/incidents/:id"
-              element={<IncidentsDetails />}
-            />
             <Route path="/manager/integrations" element={<Integrations />} />
             <Route path="/manager/delivery-log" element={<DeliveryLog />} />
           </Route>
