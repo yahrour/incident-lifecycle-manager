@@ -12,6 +12,7 @@ import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { fetchIncident } from "../api/incidents";
 import { IncidentsTable } from "../components/IncidentsTable";
+import { AddNoteForm, IncidentActions } from "../components/IncidentActions";
 import { INCIDENT_STATUS, type IncidentStatus } from "../types";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { StatusDot } from "@/components/StatusDot";
@@ -108,9 +109,12 @@ export function IncidentsDetails() {
               {incident.team?.name ?? "No team"}
             </span>
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            {incident.title}
-          </h1>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              {incident.title}
+            </h1>
+            <IncidentActions incident={incident} />
+          </div>
         </div>
         <dl className="grid gap-px overflow-hidden rounded-lg border bg-border/50 text-sm sm:grid-cols-2 lg:grid-cols-5">
           <div className="bg-card p-4">
@@ -171,6 +175,7 @@ export function IncidentsDetails() {
 
             <section className="space-y-3 border-t pt-6">
               <h2 className="font-semibold">Notes</h2>
+              <AddNoteForm incidentId={incident.id} />
               {incident.notes.length === 0 && (
                 <p className="text-sm text-muted-foreground">No notes yet.</p>
               )}
