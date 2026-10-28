@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
   StreamableFile,
+  UnprocessableEntityException,
 } from "@nestjs/common";
 import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
 import {
@@ -16,6 +17,8 @@ import { convertDateToUtc } from "@/common/utils/timezone";
 import { Prisma, UnavailabilityStatus } from "@/generated/prisma/client";
 import { stringify } from "csv-stringify/sync";
 import { DateTime } from "luxon";
+import { importTeamsSchema } from "./schemas";
+import { parse } from "csv-parse/sync";
 
 type FileFormat = "json" | "csv";
 type TeamExport = {
@@ -41,7 +44,15 @@ export class TeamsService {
     return filename;
   }
 
-  serialize(teams: TeamExport[], fileFormat: FileFormat): string {
+  getFileFormat(filename: string) {
+    return filename.split(".").pop()?.toLowerCase();
+  }
+
+  isValidFileFormat(fileformat: unknown) {
+    return fileformat === "json" || fileformat === "csv";
+  }
+
+  serializeTeams(teams: TeamExport[], fileFormat: FileFormat): string {
     if (fileFormat === "json") {
       return JSON.stringify(teams, null, 2);
     }
@@ -60,6 +71,69 @@ export class TeamsService {
         { key: "services", header: "Services" },
       ],
     });
+  }
+
+  validateImportedTeams(rows: unknown) {
+    const result = importTeamsSchema.validate(rows, {
+      errors: { label: "key", wrap: { label: false } },
+    });
+
+    if (result.error) {
+      const [detail] = result.error.details;
+      const [index] = detail.path;
+      const where = typeof index === "number" ? `Row ${index + 1}: ` : "";
+      throw new UnprocessableEntityException(`${where}${detail.message}`);
+    }
+
+    return result.value;
+  }
+
+  parseJsonTeams(buffer: string) {
+    let rows: unknown;
+
+    try {
+      rows = JSON.parse(buffer);
+    } catch {
+      throw new BadRequestException("Invalid JSON file");
+    }
+
+    return this.validateImportedTeams(rows);
+  }
+
+  parseCsvTeams(buffer: string) {
+    let rows: unknown;
+    const HEADER_TO_FIELD = {
+      Name: "name",
+      Description: "description",
+      "Rotation (days)": "rotationPeriodDays",
+      "Escalation timeout (min)": "escalationTimeoutMinutes",
+      Services: "services",
+    };
+
+    try {
+      rows = parse(buffer, {
+        columns: (header) =>
+          header.map(
+            (h) => (HEADER_TO_FIELD as Record<string, string>)[h] ?? h
+          ),
+        skip_empty_lines: true,
+        trim: true,
+        cast: (value, context) => {
+          if (context.column === "services") {
+            try {
+              return JSON.parse(value) as string[];
+            } catch {
+              return value;
+            }
+          }
+          return value;
+        },
+      });
+    } catch {
+      throw new BadRequestException("Invalid CSV file");
+    }
+
+    return this.validateImportedTeams(rows);
   }
 
   async create(ownerId: string, createTeamDto: CreateTeamDto) {
@@ -280,11 +354,52 @@ export class TeamsService {
       },
     });
 
-    const content = this.serialize(teams, fileFormat);
+    const content = this.serializeTeams(teams, fileFormat);
 
     return new StreamableFile(Buffer.from(content), {
       type: this.getContentType(fileFormat),
       disposition: `attachment; filename="${this.generateFilename(fileFormat)}"`,
     });
+  }
+
+  async import(ownerId: string, file: Express.Multer.File) {
+    // Validate File Extension
+    const format = this.getFileFormat(file.originalname);
+    if (!this.isValidFileFormat(format)) {
+      throw new BadRequestException("something wrong with the file extension");
+    }
+
+    // Parse
+    const teams =
+      format === "json"
+        ? this.parseJsonTeams(file.buffer.toString())
+        : this.parseCsvTeams(file.buffer.toString());
+
+    // Create
+    const { created, skipped } = await this.prisma.$transaction(async (tx) => {
+      const names = teams.map((team) => team.name);
+      const existing = await tx.team.findMany({
+        where: { ownerId, name: { in: names } },
+        select: { name: true },
+      });
+      const existingNames = new Set(existing.map((t) => t.name));
+
+      const toCreate = teams.filter((t) => !existingNames.has(t.name));
+
+      if (toCreate.length > 0) {
+        const { count } = await tx.team.createMany({
+          data: toCreate.map((t) => ({ ...t, ownerId })),
+          skipDuplicates: true,
+        });
+        return { created: count, skipped: teams.length - count };
+      }
+
+      return {
+        created: 0,
+        skipped: teams.length,
+      };
+    });
+
+    return { total: teams.length, created, skipped };
   }
 }

@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Download, FileDown } from "lucide-react";
+import { Download, FileDown, FileUp, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ExportTeamDialog } from "./ExportTeamDialog";
+import { ImportTeamDialog } from "./ImportTeamDialog";
 
 type ActiveDialog = "import" | "export" | null;
 
@@ -65,12 +66,31 @@ export function TeamsSettings() {
               </Button>
             }
           />
+          <Row
+            icon={<FileUp />}
+            title="Import teams"
+            description="Create teams from a JSON or CSV file."
+            action={
+              <Button
+                variant="outline"
+                aria-label="Import teams"
+                onClick={() => setDialog("import")}
+              >
+                <Upload aria-hidden="true" data-icon="inline-start" />
+                Import
+              </Button>
+            }
+          />
         </div>
       </div>
 
       <ExportTeamDialog
         open={dialog === "export"}
         onOpenChange={(open) => setDialog(open ? "export" : null)}
+      />
+      <ImportTeamDialog
+        open={dialog === "import"}
+        onOpenChange={(open) => setDialog(open ? "import" : null)}
       />
     </section>
   );

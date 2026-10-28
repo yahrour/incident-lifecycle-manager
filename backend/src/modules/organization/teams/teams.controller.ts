@@ -10,6 +10,9 @@ import {
   HttpCode,
   HttpStatus,
   Query,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
 } from "@nestjs/common";
 import {
   CreateTeamDto,
@@ -23,6 +26,8 @@ import type { ActiveUserData } from "@/common/interfaces/active-user.interface";
 import { Roles } from "@/common/decorators/roles.decorator";
 import { Role } from "@/generated/prisma/enums";
 import { apiResponse } from "@/common/utils/api-response";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { FileExtensionValidator } from "./pipes/FileExtensionValidator";
 
 @Controller({
   path: "teams",
@@ -48,6 +53,25 @@ export class TeamsController {
     @ActiveUser() user: ActiveUserData
   ) {
     return await this.teamsService.export(user.sub, query.format);
+  }
+
+  @Post("import")
+  @UseInterceptors(FileInterceptor("file"))
+  @Roles(Role.SRE)
+  async import(
+    @UploadedFile(
+      new ParseFilePipe({
+        fileIsRequired: true,
+        validators: [
+          new FileExtensionValidator({ extensions: ["json", "csv"] }),
+        ],
+      })
+    )
+    file: Express.Multer.File,
+    @ActiveUser() user: ActiveUserData
+  ) {
+    const result = await this.teamsService.import(user.sub, file);
+    return apiResponse(result);
   }
 
   @Patch(":teamId")
