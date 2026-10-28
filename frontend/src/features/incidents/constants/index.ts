@@ -12,3 +12,10 @@ export const severityColor: Record<IncidentSeverity, string> = {
   medium: "bg-severity-medium-bg text-severity-medium-fg",
   low: "bg-severity-low-bg text-severity-low-fg",
 };
+
+export const timelineColor: Record<string, string> = {
+  created: statusColor.open,
+  acknowledged: statusColor.acknowledged,
+  resolved: statusColor.resolved,
+  escalated: "text-severity-critical-fg",
+};

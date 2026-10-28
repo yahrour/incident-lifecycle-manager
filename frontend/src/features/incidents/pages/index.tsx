@@ -16,7 +16,8 @@ import { AddNoteForm, IncidentActions } from "../components/IncidentActions";
 import { INCIDENT_STATUS, type IncidentStatus } from "../types";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { StatusDot } from "@/components/StatusDot";
-import { severityColor, statusColor } from "../constants";
+import { severityColor, statusColor, timelineColor } from "../constants";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format, formatDistanceToNow } from "date-fns";
 import { formatMetricDuration } from "../utils";
@@ -76,12 +77,12 @@ export function IncidentsDetails() {
   if (!incident) return <p className="p-6">Incident not found</p>;
 
   return (
-    <>
-      <div className="bg-card px-4 py-3 border-b">
+    <div className="lg:flex lg:h-svh lg:flex-col">
+      <div className="shrink-0 bg-card px-4 py-3 border-b">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink render={<Link to="/manager/incidents" />}>
+              <BreadcrumbLink render={<Link to=".." relative="path" />}>
                 Incidents
               </BreadcrumbLink>
             </BreadcrumbItem>
@@ -93,8 +94,8 @@ export function IncidentsDetails() {
         </Breadcrumb>
       </div>
       {/* severity / status / title */}
-      <div className="space-y-6 p-6">
-        <div className="space-y-3">
+      <div className="space-y-6 p-6 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+        <div className="shrink-0 space-y-3">
           <div className="flex flex-wrap items-center gap-3">
             <Badge className={`${severityColor[incident.severity]} capitalize`}>
               {incident.severity}
@@ -116,7 +117,7 @@ export function IncidentsDetails() {
             <IncidentActions incident={incident} />
           </div>
         </div>
-        <dl className="grid gap-px overflow-hidden rounded-lg border bg-border/50 text-sm sm:grid-cols-2 lg:grid-cols-5">
+        <dl className="grid shrink-0 gap-px overflow-hidden rounded-lg border bg-border/50 text-sm sm:grid-cols-2 lg:grid-cols-5">
           <div className="bg-card p-4">
             <dt className="text-muted-foreground">Assignee</dt>
             <dd>
@@ -150,81 +151,108 @@ export function IncidentsDetails() {
             <dd>{incident.alerts.length}</dd>
           </div>
         </dl>
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="min-w-0 space-y-6 lg:col-span-2">
-            <section className="space-y-3 border-t pt-6">
-              <h2 className="font-semibold">Timeline</h2>
-              <ol className="space-y-3 text-sm">
+        <div className="grid gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-3">
+          <div className="min-w-0 space-y-6 px-4 lg:col-span-2 lg:overflow-y-auto">
+            <section className="space-y-4 border-t pt-6">
+              <h2 className="font-semibold justify-between">Timeline</h2>
+              <ol className="relative space-y-5 border-l pl-6 text-sm">
                 {incident.timeline.map((event) => (
                   <li
                     key={`${event.type}-${event.at}-${event.noteId ?? event.alertId ?? ""}`}
+                    className="relative"
                   >
-                    <p className="capitalize">
+                    <span
+                      className={`absolute top-1.5 -left-[29px] size-2.5 rounded-full bg-current ring-4 ring-background ${timelineColor[event.type] ?? "text-muted-foreground"}`}
+                    />
+                    <p className="font-medium capitalize">
                       {event.type.replaceAll("_", " ")}
+                      {event.status && (
+                        <span className="font-normal text-muted-foreground">
+                          {" "}
+                          · {event.status}
+                        </span>
+                      )}
                     </p>
                     <p className="text-muted-foreground">
-                      {format(event.at, "dd/MM/yyyy HH:mm")}
                       {event.actor &&
-                        ` · ${event.actor.firstName} ${event.actor.lastName}`}
-                      {event.status && ` · ${event.status}`}
+                        `by ${event.actor.firstName} ${event.actor.lastName} · `}
+                      <time
+                        dateTime={event.at}
+                        title={format(event.at, "dd/MM/yyyy HH:mm")}
+                      >
+                        {formatDistanceToNow(event.at, { addSuffix: true })}
+                      </time>
                     </p>
                   </li>
                 ))}
               </ol>
             </section>
 
-            <section className="space-y-3 border-t pt-6">
-              <h2 className="font-semibold">Notes</h2>
-              <AddNoteForm incidentId={incident.id} />
+            <section className="space-y-4 border-t pt-6">
+              <h2 className="font-semibold">
+                Notes{" "}
+                <span className="font-normal text-muted-foreground">
+                  {incident.notes.length}
+                </span>
+              </h2>
               {incident.notes.length === 0 && (
                 <p className="text-sm text-muted-foreground">No notes yet.</p>
               )}
               {incident.notes.map((note) => (
-                <div key={note.id} className="space-y-1 text-sm">
-                  <p className="text-muted-foreground">
-                    {note.author.firstName} {note.author.lastName} ·{" "}
-                    {format(note.createdAt, "dd/MM/yyyy HH:mm")}
-                  </p>
-                  <p className="whitespace-pre-wrap">{note.content}</p>
-                </div>
+                <article key={note.id} className="flex gap-3 text-sm">
+                  <Avatar size="sm">
+                    <AvatarFallback>
+                      {note.author.firstName[0]}
+                      {note.author.lastName[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1 space-y-1 rounded-lg border bg-card p-3">
+                    <div className="flex flex-wrap items-baseline gap-x-3">
+                      <p className="font-medium">
+                        {note.author.firstName} {note.author.lastName}
+                      </p>
+                      <time
+                        dateTime={note.createdAt}
+                        title={format(note.createdAt, "dd/MM/yyyy HH:mm")}
+                        className="text-xs text-muted-foreground"
+                      >
+                        {formatDistanceToNow(note.createdAt, {
+                          addSuffix: true,
+                        })}
+                      </time>
+                    </div>
+                    <p className="whitespace-pre-wrap">{note.content}</p>
+                  </div>
+                </article>
               ))}
+              <AddNoteForm incidentId={incident.id} />
             </section>
           </div>
-          <div className="min-w-0 space-y-6">
-            <dl className="grid gap-4 border-t pt-6 text-sm sm:grid-cols-2 lg:grid-cols-1">
-              <div>
-                <dt className="text-muted-foreground">Created</dt>
-                <dd>{format(incident.createdAt, "dd/MM/yyyy HH:mm")}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Updated</dt>
-                <dd>{format(incident.updatedAt, "dd/MM/yyyy HH:mm")}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Acknowledged</dt>
-                <dd>
-                  {incident.acknowledgedAt
-                    ? format(incident.acknowledgedAt, "dd/MM/yyyy HH:mm")
-                    : "—"}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Escalated</dt>
-                <dd>
-                  {incident.escalatedAt
-                    ? format(incident.escalatedAt, "dd/MM/yyyy HH:mm")
-                    : "—"}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Resolved</dt>
-                <dd>
-                  {incident.resolvedAt
-                    ? format(incident.resolvedAt, "dd/MM/yyyy HH:mm")
-                    : "—"}
-                </dd>
-              </div>
-            </dl>
+          <div className="min-w-0 space-y-6 px-4 lg:overflow-y-auto">
+            <section className="space-y-4 border-t pt-6">
+              <h2 className="font-semibold">Dates</h2>
+              <dl className="divide-y rounded-lg border bg-card text-sm">
+                {(
+                  [
+                    ["Created", incident.createdAt],
+                    ["Updated", incident.updatedAt],
+                    ["Acknowledged", incident.acknowledgedAt],
+                    ["Escalated", incident.escalatedAt],
+                    ["Resolved", incident.resolvedAt],
+                  ] as const
+                ).map(([label, date]) => (
+                  <div
+                    key={label}
+                    className="flex items-center justify-between gap-3 px-4 py-2.5"
+                  >
+                    <dt className="text-muted-foreground">{label}</dt>
+                    <dd className="text-right tabular-nums">
+                      {date ? format(date, "dd/MM/yyyy HH:mm") : "—"}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
 
             <section className="space-y-3 border-t pt-6">
               <h2 className="font-semibold">Linked alerts</h2>
@@ -249,6 +277,6 @@ export function IncidentsDetails() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

@@ -111,7 +111,11 @@ function ReassignSelect({
       disabled={isPending}
     >
       <SelectTrigger className="w-48" aria-label="Reassign incident">
-        <SelectValue placeholder="Assign to..." />
+        <SelectValue>
+          {incident.assignedTo
+            ? `${incident.assignedTo.firstName} ${incident.assignedTo.lastName}`
+            : "Assign to..."}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {members.map(({ user }) => (
