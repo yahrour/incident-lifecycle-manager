@@ -58,7 +58,6 @@ export class TeamsService {
     }
 
     return stringify(teams, {
-      escape_formulas: true,
       header: true,
       columns: [
         { key: "name", header: "Name" },
