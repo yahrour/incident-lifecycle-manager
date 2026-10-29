@@ -52,7 +52,6 @@ const TIMEZONES = Intl.supportedValuesOf("timeZone");
 const toDefaults = (u: Unavailability) => ({
   startDate: new Date(u.startDate),
   endDate: new Date(u.endDate),
-  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   reason: u.reason ?? "",
 });
 
