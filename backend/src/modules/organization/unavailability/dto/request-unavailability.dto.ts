@@ -1,6 +1,6 @@
 import {
   IsDate,
-  IsOptional,
+  IsNotEmpty,
   IsString,
   IsTimeZone,
   MaxLength,
@@ -16,8 +16,8 @@ export class RequestUnavailabilityDto {
   @IsTimeZone()
   timezone: string;
 
-  @IsOptional()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(255, { message: "reason must not exceed 255 characters" })
-  reason?: string;
+  reason: string;
 }

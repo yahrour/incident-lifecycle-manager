@@ -6,7 +6,11 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
-import { RequestUnavailabilityDto, OffsetPaginationSearchParams } from "./dto";
+import {
+  RequestUnavailabilityDto,
+  OffsetPaginationSearchParams,
+  UpdateUnavailabilityDto,
+} from "./dto";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import {
   Team,
@@ -140,7 +144,7 @@ export class UnavailabilityService {
 
     return await this.prisma.$transaction(async (tx) => {
       // lock this member row
-      await tx.$queryRaw`SELECT id FROM "Member" WHERE id = ${memberId} FOR UPDATE`;
+      await tx.$queryRaw`SELECT id FROM "organization"."team_members" WHERE id = ${memberId} FOR UPDATE`;
 
       const overlapping = await tx.unavailability.findFirst({
         where: {
@@ -177,6 +181,90 @@ export class UnavailabilityService {
         }
         throw error;
       }
+    });
+  }
+
+  async update(
+    requesterUserId: string,
+    teamId: string,
+    memberId: number,
+    unavailabilityId: number,
+    updateUnavailabilityDto: UpdateUnavailabilityDto
+  ) {
+    await this.requireSelfMember(memberId, teamId, requesterUserId);
+
+    const now = new Date();
+    if (
+      convertDateToUtc(
+        updateUnavailabilityDto.startDate,
+        updateUnavailabilityDto.timezone,
+        true
+      ) < now
+    ) {
+      throw new BadRequestException("Start date can't be in the past");
+    }
+
+    // convert to UTC
+    const startDate = convertDateToUtc(
+      updateUnavailabilityDto.startDate,
+      updateUnavailabilityDto.timezone
+    );
+
+    const endDate = convertDateToUtc(
+      updateUnavailabilityDto.endDate,
+      updateUnavailabilityDto.timezone,
+      true
+    );
+
+    const currentUnavailability = await this.prisma.unavailability.findUnique({
+      where: { id: unavailabilityId, memberId },
+    });
+
+    if (!currentUnavailability) {
+      throw new NotFoundException("Unavailability doesn't exist");
+    }
+
+    if (currentUnavailability.status !== UnavailabilityStatus.PENDING) {
+      throw new BadRequestException(
+        "Cannot update a non pending unavailability"
+      );
+    }
+
+    if (updateUnavailabilityDto.startDate > updateUnavailabilityDto.endDate) {
+      throw new BadRequestException(
+        "end date should be greater than start date"
+      );
+    }
+
+    return await this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "organization"."team_members" WHERE id = ${memberId} FOR UPDATE`;
+
+      const overlapping = await tx.unavailability.findFirst({
+        where: {
+          memberId,
+          id: { not: unavailabilityId },
+          status: {
+            in: [UnavailabilityStatus.PENDING, UnavailabilityStatus.APPROVED],
+          },
+          startDate: { lt: endDate },
+          endDate: { gt: startDate },
+        },
+      });
+
+      if (overlapping) {
+        throw new ConflictException(
+          "Unavailability overlaps an existing request"
+        );
+      }
+
+      return await tx.unavailability.update({
+        where: { id: unavailabilityId, memberId },
+        data: {
+          startDate: startDate,
+          endDate: endDate,
+          reason: updateUnavailabilityDto.reason,
+        },
+      });
     });
   }
 

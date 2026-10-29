@@ -10,9 +10,10 @@ import {
   HttpCode,
   HttpStatus,
   Query,
+  Put,
 } from "@nestjs/common";
 import { UnavailabilityService } from "./unavailability.service";
-import { RequestUnavailabilityDto } from "./dto";
+import { RequestUnavailabilityDto, UpdateUnavailabilityDto } from "./dto";
 import { Roles } from "@/common/decorators/roles.decorator";
 import { Role } from "@/generated/prisma/enums";
 import { ActiveUser } from "@/common/decorators/active-user.decorator";
@@ -39,6 +40,24 @@ export class UnavailabilityController {
       teamId,
       memberId,
       requestUnavailabilityDto
+    );
+    return apiResponse(result);
+  }
+
+  @Put(":teamId/members/:memberId/unavailabilities/:unavailabilityId")
+  async update(
+    @Param("teamId", ParseUUIDPipe) teamId: string,
+    @Param("memberId", ParseIntPipe) memberId: number,
+    @Param("unavailabilityId", ParseIntPipe) unavailabilityId: number,
+    @ActiveUser() user: ActiveUserData,
+    @Body() updateUnavailabilityDto: UpdateUnavailabilityDto
+  ) {
+    const result = await this.unavailabilityService.update(
+      user.sub,
+      teamId,
+      memberId,
+      unavailabilityId,
+      updateUnavailabilityDto
     );
     return apiResponse(result);
   }
