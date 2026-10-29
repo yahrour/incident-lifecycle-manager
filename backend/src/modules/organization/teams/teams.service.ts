@@ -116,7 +116,6 @@ export class TeamsService {
             (h) => (HEADER_TO_FIELD as Record<string, string>)[h] ?? h
           ),
         skip_empty_lines: true,
-        trim: true,
         cast: (value, context) => {
           if (context.column === "services") {
             try {
@@ -368,11 +367,12 @@ export class TeamsService {
       throw new BadRequestException("something wrong with the file extension");
     }
 
+    // Excel and many editors prepend a UTF-8 BOM
+    const text = file.buffer.toString().replace(/^\uFEFF/, "");
+
     // Parse
     const teams =
-      format === "json"
-        ? this.parseJsonTeams(file.buffer.toString())
-        : this.parseCsvTeams(file.buffer.toString());
+      format === "json" ? this.parseJsonTeams(text) : this.parseCsvTeams(text);
 
     // Create
     const { created, skipped } = await this.prisma.$transaction(async (tx) => {
@@ -387,7 +387,10 @@ export class TeamsService {
 
       if (toCreate.length > 0) {
         const { count } = await tx.team.createMany({
-          data: toCreate.map((t) => ({ ...t, ownerId })),
+          data: toCreate.map((team) => ({
+            ownerId,
+            ...team,
+          })),
           skipDuplicates: true,
         });
         return { created: count, skipped: teams.length - count };
