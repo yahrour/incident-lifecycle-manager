@@ -8,6 +8,7 @@ import type {
   updateUnavailabilitySchema,
 } from "../schemas";
 import { format } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 
 export async function fetchMemberUnavailabilities({
   filter,
@@ -76,8 +77,8 @@ export async function updateUnavailability(
 ) {
   const body = {
     ...data,
-    startDate: format(data.startDate, "yyyy-MM-dd"),
-    endDate: format(data.endDate, "yyyy-MM-dd"),
+    startDate: formatInTimeZone(data.startDate, "UTC", "yyyy-MM-dd"),
+    endDate: formatInTimeZone(data.endDate, "UTC", "yyyy-MM-dd"),
   };
   await apiClient.put(
     `/teams/${teamId}/members/${memberId}/unavailabilities/${unavailabilityId}`,

@@ -52,14 +52,13 @@ export class UnavailabilityController {
     @ActiveUser() user: ActiveUserData,
     @Body() updateUnavailabilityDto: UpdateUnavailabilityDto
   ) {
-    const result = await this.unavailabilityService.update(
+    await this.unavailabilityService.update(
       user.sub,
       teamId,
       memberId,
       unavailabilityId,
       updateUnavailabilityDto
     );
-    return apiResponse(result);
   }
 
   @Get("unavailabilities")

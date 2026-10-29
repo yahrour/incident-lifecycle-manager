@@ -224,19 +224,13 @@ export class UnavailabilityService {
       throw new NotFoundException("Unavailability doesn't exist");
     }
 
-    if (currentUnavailability.status !== UnavailabilityStatus.PENDING) {
-      throw new BadRequestException(
-        "Cannot update a non pending unavailability"
-      );
-    }
-
     if (updateUnavailabilityDto.startDate > updateUnavailabilityDto.endDate) {
       throw new BadRequestException(
         "end date should be greater than start date"
       );
     }
 
-    return await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT id FROM "organization"."team_members" WHERE id = ${memberId} FOR UPDATE`;
 
       const overlapping = await tx.unavailability.findFirst({
@@ -257,27 +251,19 @@ export class UnavailabilityService {
         );
       }
 
-      try {
-        return await tx.unavailability.update({
-          where: {
-            id: unavailabilityId,
-            memberId,
-            status: UnavailabilityStatus.PENDING,
-          },
-          data: {
-            startDate: startDate,
-            endDate: endDate,
-            reason: updateUnavailabilityDto.reason,
-          },
-        });
-      } catch (error) {
-        if (
-          error instanceof PrismaClientKnownRequestError &&
-          error.code === "P2002"
-        ) {
-          throw new ConflictException("Unavailability window already exists");
-        }
-        throw error;
+      const result = await tx.unavailability.updateMany({
+        where: {
+          id: unavailabilityId,
+          memberId,
+          status: UnavailabilityStatus.PENDING,
+        },
+        data: { startDate, endDate, reason: updateUnavailabilityDto.reason },
+      });
+
+      if (result.count === 0) {
+        throw new ConflictException(
+          "Unavailability was modified or removed by another request"
+        );
       }
     });
   }
