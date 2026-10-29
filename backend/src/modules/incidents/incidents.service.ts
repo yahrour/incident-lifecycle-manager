@@ -14,6 +14,7 @@ import { CreateIncidentDto } from "./dto/create-incident.dto";
 import { FindIncidentsDto } from "./dto/find-incidents.dto";
 import { INCIDENT_STATUS } from "./constants";
 import { createIncidentFingerprint } from "./utils/incident-fingerprint";
+import { IncidentsGateway } from "./incidents.gateway";
 
 @Injectable()
 export class IncidentsService {
@@ -21,7 +22,8 @@ export class IncidentsService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly onCallService: OnCallService
+    private readonly onCallService: OnCallService,
+    private readonly gateway: IncidentsGateway
   ) {}
 
   private encodeCursor(id: string) {
@@ -203,12 +205,12 @@ export class IncidentsService {
   async createNote(userId: string, incidentId: string, content: string) {
     const incident = await this.prisma.incident.findFirst({
       where: { id: incidentId, ...this.accessibleBy(userId) },
-      select: { id: true },
+      select: { id: true, teamId: true, status: true, assignedToId: true },
     });
 
     if (!incident) throw new NotFoundException("Incident doesn't exist");
 
-    return this.prisma.incidentNote.create({
+    const note = await this.prisma.incidentNote.create({
       data: { incidentId: incident.id, authorId: userId, content },
       include: {
         author: {
@@ -216,6 +218,8 @@ export class IncidentsService {
         },
       },
     });
+    this.gateway.incidentChanged(incident);
+    return note;
   }
 
   async create(ownerId: string, createIncidentDto: CreateIncidentDto) {
@@ -231,7 +235,7 @@ export class IncidentsService {
       throw new ConflictException("No on-call engineer available");
     }
 
-    return this.prisma.incident.create({
+    const incident = await this.prisma.incident.create({
       data: {
         ...createIncidentDto,
         fingerprint: createIncidentFingerprint(
@@ -242,6 +246,8 @@ export class IncidentsService {
         assignedToId: assigneeUserId,
       },
     });
+    this.gateway.incidentChanged(incident);
+    return incident;
   }
 
   async createFromAlert(
@@ -282,10 +288,8 @@ export class IncidentsService {
       },
     };
 
-    let incident = await this.prisma.incident.findUnique({
-      where,
-      select: { id: true },
-    });
+    const select = { id: true, teamId: true, status: true, assignedToId: true };
+    let incident = await this.prisma.incident.findUnique({ where, select });
     if (!incident) {
       if (alert.status === "resolved") return null;
       const onCall = await this.onCallService.getCurrentOnCall(
@@ -309,13 +313,14 @@ export class IncidentsService {
             ({ position }) => position === "PRIMARY"
           )?.id,
         },
-        select: { id: true },
+        select,
       });
     }
 
     await this.prisma.incidentAlert.create({
       data: { alertId, incidentId: incident.id },
     });
+    this.gateway.incidentChanged(incident);
     return incident.id;
   }
 
@@ -356,14 +361,15 @@ export class IncidentsService {
       },
     });
 
-    if (!note) return update;
-
-    const [updated] = await this.prisma.$transaction([
-      update,
-      this.prisma.incidentNote.create({
-        data: { incidentId, authorId: ownerId, content: note },
-      }),
-    ]);
+    const [updated] = note
+      ? await this.prisma.$transaction([
+          update,
+          this.prisma.incidentNote.create({
+            data: { incidentId, authorId: ownerId, content: note },
+          }),
+        ])
+      : [await update];
+    this.gateway.incidentChanged(updated);
     return updated;
   }
 
@@ -401,7 +407,11 @@ export class IncidentsService {
       throw new ConflictException("Incident is no longer open");
     }
 
-    return this.prisma.incident.findUnique({ where: { id: incidentId } });
+    const updated = await this.prisma.incident.findUnique({
+      where: { id: incidentId },
+    });
+    if (updated) this.gateway.incidentChanged(updated);
+    return updated;
   }
 
   async resolve(userId: string, incidentId: string) {
@@ -442,7 +452,11 @@ export class IncidentsService {
       throw new ConflictException("Incident is no longer acknowledged");
     }
 
-    return this.prisma.incident.findUnique({ where: { id: incidentId } });
+    const updated = await this.prisma.incident.findUnique({
+      where: { id: incidentId },
+    });
+    if (updated) this.gateway.incidentChanged(updated);
+    return updated;
   }
   @Cron(CronExpression.EVERY_MINUTE)
   async escalateUnacknowledged() {
@@ -478,7 +492,7 @@ export class IncidentsService {
             return engineer.position === "PRIMARY";
           });
           if (primary) {
-            await this.prisma.incident.updateMany({
+            const { count } = await this.prisma.incident.updateMany({
               where: {
                 id: incident.id,
                 status: INCIDENT_STATUS.OPEN,
@@ -486,6 +500,12 @@ export class IncidentsService {
               },
               data: { assignedToId: primary.id },
             });
+            if (count > 0) {
+              this.gateway.incidentChanged({
+                ...incident,
+                assignedToId: primary.id,
+              });
+            }
           }
           continue;
         }
@@ -498,7 +518,7 @@ export class IncidentsService {
             ? secondary.id
             : incident.team.ownerId;
 
-        await this.prisma.incident.updateMany({
+        const { count } = await this.prisma.incident.updateMany({
           where: {
             id: incident.id,
             status: INCIDENT_STATUS.OPEN,
@@ -507,6 +527,12 @@ export class IncidentsService {
 
           data: { assignedToId: escalateToId, escalatedAt: new Date() },
         });
+        if (count > 0) {
+          this.gateway.incidentChanged({
+            ...incident,
+            assignedToId: escalateToId,
+          });
+        }
       } catch (error) {
         this.logger.error(`Failed to escalate incident ${incident.id}`, error);
       }

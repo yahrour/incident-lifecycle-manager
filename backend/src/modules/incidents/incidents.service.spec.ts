@@ -10,8 +10,12 @@ import { ConflictException, NotFoundException } from "@nestjs/common";
 import type { PrismaService } from "src/common/prisma/prisma.service";
 import type { OnCallService } from "@/modules/on-call/on-call.service";
 import { createIncidentFingerprint } from "./utils/incident-fingerprint";
+import type { IncidentsGateway } from "./incidents.gateway";
 
 describe("IncidentsService", () => {
+  const gateway = {
+    incidentChanged: jest.fn(),
+  } as unknown as IncidentsGateway;
   const incident = {
     teamId: "22222222-2222-4222-8222-222222222222",
     title: "API errors",
@@ -68,7 +72,7 @@ describe("IncidentsService", () => {
       ],
     });
     const onCall = { getCurrentOnCall } as unknown as OnCallService;
-    const service = new IncidentsService(prisma, onCall);
+    const service = new IncidentsService(prisma, onCall, gateway);
 
     await service.create("owner-id", incident);
 
@@ -99,7 +103,7 @@ describe("IncidentsService", () => {
     const prisma = {
       incident: { findMany, count },
     } as unknown as PrismaService;
-    const service = new IncidentsService(prisma, {} as OnCallService);
+    const service = new IncidentsService(prisma, {} as OnCallService, gateway);
 
     await service.findAll("viewer-id", {
       assigneeId: "engineer-id",
@@ -133,7 +137,7 @@ describe("IncidentsService", () => {
       const prisma = { incident: { create } } as unknown as PrismaService;
       const getCurrentOnCall = jest.fn().mockResolvedValue(onCallResult);
       const onCall = { getCurrentOnCall } as unknown as OnCallService;
-      const service = new IncidentsService(prisma, onCall);
+      const service = new IncidentsService(prisma, onCall, gateway);
 
       await expect(service.create("owner-id", incident)).rejects.toBeInstanceOf(
         ConflictException
@@ -155,7 +159,7 @@ describe("IncidentsService", () => {
       incident: { findFirst: findIncident, update },
       teamMember: { findFirst: findMember },
     } as unknown as PrismaService;
-    const service = new IncidentsService(prisma, {} as OnCallService);
+    const service = new IncidentsService(prisma, {} as OnCallService, gateway);
 
     await expect(
       service.reassign("owner-id", "incident-id", "engineer-id")
@@ -183,7 +187,7 @@ describe("IncidentsService", () => {
       },
       teamMember: { findFirst: jest.fn().mockResolvedValue(null) },
     } as unknown as PrismaService;
-    const service = new IncidentsService(prisma, {} as OnCallService);
+    const service = new IncidentsService(prisma, {} as OnCallService, gateway);
 
     await expect(
       service.reassign("owner-id", "incident-id", "outsider-id")
@@ -203,7 +207,7 @@ describe("IncidentsService", () => {
       mttrSeconds: 2100,
     });
     const prisma = { incident: { findFirst } } as unknown as PrismaService;
-    const service = new IncidentsService(prisma, {} as OnCallService);
+    const service = new IncidentsService(prisma, {} as OnCallService, gateway);
 
     await expect(service.findOne("user-id", "incident-id")).resolves.toEqual(
       expect.objectContaining({
@@ -241,7 +245,7 @@ describe("IncidentsService", () => {
       incident: { findFirst },
       alert: { findMany },
     } as unknown as PrismaService;
-    const service = new IncidentsService(prisma, {} as OnCallService);
+    const service = new IncidentsService(prisma, {} as OnCallService, gateway);
 
     await expect(service.findOne("user-id", "incident-id")).resolves.toEqual(
       expect.objectContaining({
@@ -273,7 +277,7 @@ describe("IncidentsService", () => {
       incident: { findFirst },
       incidentNote: { create },
     } as unknown as PrismaService;
-    const service = new IncidentsService(prisma, {} as OnCallService);
+    const service = new IncidentsService(prisma, {} as OnCallService, gateway);
 
     await expect(
       service.createNote("user-id", "incident-id", "Mitigation started")
@@ -298,7 +302,7 @@ describe("IncidentsService", () => {
       incident: { findFirst: jest.fn().mockResolvedValue(null) },
       incidentNote: { create: jest.fn() },
     } as unknown as PrismaService;
-    const service = new IncidentsService(prisma, {} as OnCallService);
+    const service = new IncidentsService(prisma, {} as OnCallService, gateway);
 
     await expect(
       service.createNote("user-id", "incident-id", "Private update")
@@ -316,7 +320,7 @@ describe("IncidentsService", () => {
       mttrSeconds: null,
     });
     const prisma = { incident: { findFirst } } as unknown as PrismaService;
-    const service = new IncidentsService(prisma, {} as OnCallService);
+    const service = new IncidentsService(prisma, {} as OnCallService, gateway);
 
     await expect(service.findOne("user-id", "incident-id")).resolves.toEqual(
       expect.objectContaining({
@@ -346,7 +350,7 @@ describe("IncidentsService", () => {
       incident: { create: jest.fn(), findFirst, findUnique, updateMany },
     } as unknown as PrismaService;
     const onCall = {} as OnCallService;
-    const service = new IncidentsService(prisma, onCall);
+    const service = new IncidentsService(prisma, onCall, gateway);
 
     await service.acknowledge("engineer-id", "incident-id");
 
@@ -383,7 +387,7 @@ describe("IncidentsService", () => {
     const prisma = {
       incident: { findFirst, updateMany },
     } as unknown as PrismaService;
-    const service = new IncidentsService(prisma, {} as OnCallService);
+    const service = new IncidentsService(prisma, {} as OnCallService, gateway);
 
     await expect(
       service.acknowledge("engineer-id", "incident-id")
@@ -409,7 +413,7 @@ describe("IncidentsService", () => {
       incident: { create: jest.fn(), findFirst, findUnique, updateMany },
     } as unknown as PrismaService;
     const onCall = {} as OnCallService;
-    const service = new IncidentsService(prisma, onCall);
+    const service = new IncidentsService(prisma, onCall, gateway);
 
     await service.resolve("engineer-id", "incident-id");
 
@@ -453,9 +457,13 @@ describe("IncidentsService", () => {
     const getCurrentOnCall = jest.fn().mockResolvedValue({
       chain: [{ position: "PRIMARY", id: "primary-id" }],
     });
-    const service = new IncidentsService(prisma, {
-      getCurrentOnCall,
-    } as unknown as OnCallService);
+    const service = new IncidentsService(
+      prisma,
+      {
+        getCurrentOnCall,
+      } as unknown as OnCallService,
+      gateway
+    );
 
     await expect(
       service.createFromAlert("owner-id", "a1", alert)
@@ -496,7 +504,7 @@ describe("IncidentsService", () => {
     const prisma = {
       incident: { findMany, count },
     } as unknown as PrismaService;
-    const service = new IncidentsService(prisma, {} as OnCallService);
+    const service = new IncidentsService(prisma, {} as OnCallService, gateway);
 
     await service.findAll("viewer-id", {
       service: "checkout-api",
@@ -531,7 +539,7 @@ describe("IncidentsService", () => {
       notes: [{ id: "note-id", createdAt: noteAt, author }],
     });
     const prisma = { incident: { findFirst } } as unknown as PrismaService;
-    const service = new IncidentsService(prisma, {} as OnCallService);
+    const service = new IncidentsService(prisma, {} as OnCallService, gateway);
 
     const result = await service.findOne("user-id", "incident-id");
 
@@ -555,7 +563,7 @@ describe("IncidentsService", () => {
       },
       teamMember: { findFirst: jest.fn() },
     } as unknown as PrismaService;
-    const service = new IncidentsService(prisma, {} as OnCallService);
+    const service = new IncidentsService(prisma, {} as OnCallService, gateway);
 
     await expect(
       service.reassign("owner-id", "incident-id", "engineer-id")
@@ -586,7 +594,7 @@ describe("IncidentsService", () => {
       incidentNote: { create: createNote },
       $transaction,
     } as unknown as PrismaService;
-    const service = new IncidentsService(prisma, {} as OnCallService);
+    const service = new IncidentsService(prisma, {} as OnCallService, gateway);
 
     await expect(
       service.reassign("owner-id", "incident-id", "engineer-id", "Handover")
@@ -614,7 +622,7 @@ describe("IncidentsService", () => {
         updateMany,
       },
     } as unknown as PrismaService;
-    const service = new IncidentsService(prisma, {} as OnCallService);
+    const service = new IncidentsService(prisma, {} as OnCallService, gateway);
 
     await expect(
       service.resolve("engineer-id", "incident-id")
@@ -630,7 +638,7 @@ describe("IncidentsService", () => {
     const prisma = {
       incident: { findFirst, updateMany },
     } as unknown as PrismaService;
-    const service = new IncidentsService(prisma, {} as OnCallService);
+    const service = new IncidentsService(prisma, {} as OnCallService, gateway);
 
     await expect(
       service.acknowledge("outsider-id", "incident-id")
@@ -695,9 +703,13 @@ describe("IncidentsService", () => {
         { position: "SECONDARY", id: "secondary-id" },
       ],
     });
-    const service = new IncidentsService(prisma, {
-      getCurrentOnCall,
-    } as unknown as OnCallService);
+    const service = new IncidentsService(
+      prisma,
+      {
+        getCurrentOnCall,
+      } as unknown as OnCallService,
+      gateway
+    );
 
     await service.escalateUnacknowledged();
 
