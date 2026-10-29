@@ -13,10 +13,10 @@ const teamSchema = Joi.object<Team>({
   rotationPeriodDays: Joi.number().integer().min(1).max(30).required(),
   escalationTimeoutMinutes: Joi.number().integer().min(1).max(1440).required(),
   services: Joi.array()
-    .items(Joi.string().trim().min(1))
+    .items(Joi.string().trim().min(1).max(25))
     .min(1)
     .max(20)
-    .unique()
+    .unique((a: string, b: string) => a.toLowerCase() === b.toLowerCase())
     .required(),
 });
 
