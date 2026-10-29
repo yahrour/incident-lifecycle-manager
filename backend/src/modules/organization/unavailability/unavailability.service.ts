@@ -257,14 +257,28 @@ export class UnavailabilityService {
         );
       }
 
-      return await tx.unavailability.update({
-        where: { id: unavailabilityId, memberId },
-        data: {
-          startDate: startDate,
-          endDate: endDate,
-          reason: updateUnavailabilityDto.reason,
-        },
-      });
+      try {
+        return await tx.unavailability.update({
+          where: {
+            id: unavailabilityId,
+            memberId,
+            status: UnavailabilityStatus.PENDING,
+          },
+          data: {
+            startDate: startDate,
+            endDate: endDate,
+            reason: updateUnavailabilityDto.reason,
+          },
+        });
+      } catch (error) {
+        if (
+          error instanceof PrismaClientKnownRequestError &&
+          error.code === "P2002"
+        ) {
+          throw new ConflictException("Unavailability window already exists");
+        }
+        throw error;
+      }
     });
   }
 
