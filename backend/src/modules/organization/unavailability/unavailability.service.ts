@@ -131,14 +131,13 @@ export class UnavailabilityService {
       throw new BadRequestException("Start date must be before end date");
     }
 
-    // check overlap
     const startDate = convertDateToUtc(
       requestUnavailabilityDto.startDate,
-      requestUnavailabilityDto.timezone
+      "UTC"
     );
     const endDate = convertDateToUtc(
       requestUnavailabilityDto.endDate,
-      requestUnavailabilityDto.timezone,
+      "UTC",
       true
     );
 
@@ -152,8 +151,8 @@ export class UnavailabilityService {
           status: {
             in: [UnavailabilityStatus.PENDING, UnavailabilityStatus.APPROVED],
           },
-          startDate: { lt: endDate },
-          endDate: { gt: startDate },
+          startDate: { lte: endDate },
+          endDate: { gte: startDate },
         },
       });
 
@@ -204,15 +203,13 @@ export class UnavailabilityService {
       throw new BadRequestException("Start date can't be in the past");
     }
 
-    // convert to UTC
     const startDate = convertDateToUtc(
       updateUnavailabilityDto.startDate,
-      updateUnavailabilityDto.timezone
+      "UTC"
     );
-
     const endDate = convertDateToUtc(
       updateUnavailabilityDto.endDate,
-      updateUnavailabilityDto.timezone,
+      "UTC",
       true
     );
 
@@ -240,8 +237,8 @@ export class UnavailabilityService {
           status: {
             in: [UnavailabilityStatus.PENDING, UnavailabilityStatus.APPROVED],
           },
-          startDate: { lt: endDate },
-          endDate: { gt: startDate },
+          startDate: { lte: endDate },
+          endDate: { gte: startDate },
         },
       });
 

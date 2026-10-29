@@ -308,7 +308,7 @@ async function main() {
 
       const startDate = dayOffset(offset);
       const endDate = new Date(
-        dayOffset(offset + len).getTime() + (23 * HOUR + 59 * 60 * SEC)
+        dayOffset(offset + len).getTime() + (23 * HOUR + 59 * 60 * SEC + 999)
       );
 
       // Skip windows that would overlap one already accepted for this member.
@@ -338,7 +338,7 @@ async function main() {
     ...AMELIA_UNAVAILABILITIES.map((u) => ({
       memberId: ameliaMember.id,
       startDate: dayOffset(u.offset),
-      endDate: new Date(dayOffset(u.offset + u.len).getTime() + (23 * HOUR + 59 * 60 * SEC)),
+      endDate: new Date(dayOffset(u.offset + u.len).getTime() + (23 * HOUR + 59 * 60 * SEC + 999)),
       reason: u.reason,
       status: u.status,
     }))

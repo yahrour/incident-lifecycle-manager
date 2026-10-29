@@ -109,8 +109,8 @@ describe("UnavailabilityService", () => {
         where: {
           memberId: MEMBER_ID,
           status: { in: ["PENDING", "APPROVED"] },
-          startDate: { lt: convertDateToUtc(dto.endDate, "UTC", true) },
-          endDate: { gt: convertDateToUtc(dto.startDate, "UTC") },
+          startDate: { lte: convertDateToUtc(dto.endDate, "UTC", true) },
+          endDate: { gte: convertDateToUtc(dto.startDate, "UTC") },
         },
       });
     });
@@ -190,6 +190,40 @@ describe("UnavailabilityService", () => {
           startDate: new Date("2026-01-15T00:00:00.000Z"),
         })
       ).resolves.toBeDefined();
+    });
+
+    it("does not treat adjacent days as overlapping, even with a non-UTC offset", async () => {
+      tx.unavailability.create.mockResolvedValue(makeUnavailability() as never);
+
+      // Jan 21-Jan 29 in Africa/Casablanca (UTC+1) is adjacent to an existing
+      // Jan 17-Jan 20 window. Storing with the offset previously shifted the day
+      // back to Jan 20 23:00Z and produced a false overlap; the day-granular
+      // overlap check must not collide here.
+      await expect(
+        service.request(USER_ID, TEAM_ID, MEMBER_ID, {
+          ...dto,
+          startDate: new Date("2027-01-21T00:00:00.000Z"),
+          endDate: new Date("2027-01-29T00:00:00.000Z"),
+          timezone: "Africa/Casablanca",
+        })
+      ).resolves.toBeDefined();
+
+      expect(tx.unavailability.findFirst).toHaveBeenCalledWith({
+        where: {
+          memberId: MEMBER_ID,
+          status: { in: ["PENDING", "APPROVED"] },
+          startDate: { lte: new Date("2027-01-29T23:59:59.999Z") },
+          endDate: { gte: new Date("2027-01-21T00:00:00.000Z") },
+        },
+      });
+      const [createArgs] = tx.unavailability.create.mock
+        .calls[0] as unknown as [{ data: { startDate: Date; endDate: Date } }];
+      expect(createArgs.data.startDate).toEqual(
+        new Date("2027-01-21T00:00:00.000Z")
+      );
+      expect(createArgs.data.endDate).toEqual(
+        new Date("2027-01-29T23:59:59.999Z")
+      );
     });
 
     it("throws NotFoundException when the member isn't in the team", async () => {
@@ -315,8 +349,8 @@ describe("UnavailabilityService", () => {
           memberId: MEMBER_ID,
           id: { not: UNAVAILABILITY_ID },
           status: { in: ["PENDING", "APPROVED"] },
-          startDate: { lt: convertDateToUtc(dto.endDate, "UTC", true) },
-          endDate: { gt: convertDateToUtc(dto.startDate, "UTC") },
+          startDate: { lte: convertDateToUtc(dto.endDate, "UTC", true) },
+          endDate: { gte: convertDateToUtc(dto.startDate, "UTC") },
         },
       });
     });

@@ -29,7 +29,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { format } from "date-fns";
+import { format, startOfDay } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Combobox,
@@ -49,9 +49,16 @@ import type { Unavailability } from "@/types";
 type UpdateUnavailabilitySchema = z.input<typeof updateUnavailabilitySchema>;
 const TIMEZONES = Intl.supportedValuesOf("timeZone");
 
+const toLocalDay = (utcDay: string | Date) => {
+  const d = new Date(utcDay);
+  return startOfDay(
+    new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+  );
+};
+
 const toDefaults = (u: Unavailability) => ({
-  startDate: new Date(u.startDate),
-  endDate: new Date(u.endDate),
+  startDate: toLocalDay(u.startDate),
+  endDate: toLocalDay(u.endDate),
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   reason: u.reason ?? "",
 });
