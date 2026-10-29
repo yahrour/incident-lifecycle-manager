@@ -251,19 +251,29 @@ export class UnavailabilityService {
         );
       }
 
-      const result = await tx.unavailability.updateMany({
-        where: {
-          id: unavailabilityId,
-          memberId,
-          status: UnavailabilityStatus.PENDING,
-        },
-        data: { startDate, endDate, reason: updateUnavailabilityDto.reason },
-      });
+      try {
+        const result = await tx.unavailability.updateMany({
+          where: {
+            id: unavailabilityId,
+            memberId,
+            status: UnavailabilityStatus.PENDING,
+          },
+          data: { startDate, endDate, reason: updateUnavailabilityDto.reason },
+        });
 
-      if (result.count === 0) {
-        throw new ConflictException(
-          "Unavailability was modified or removed by another request"
-        );
+        if (result.count === 0) {
+          throw new ConflictException(
+            "Unavailability was modified or removed by another request"
+          );
+        }
+      } catch (error) {
+        if (
+          error instanceof PrismaClientKnownRequestError &&
+          error.code === "P2002"
+        ) {
+          throw new ConflictException("Unavailability window already exists");
+        }
+        throw error;
       }
     });
   }

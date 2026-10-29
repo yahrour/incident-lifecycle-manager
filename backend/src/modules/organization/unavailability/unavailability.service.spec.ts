@@ -371,6 +371,14 @@ describe("UnavailabilityService", () => {
       );
     });
 
+    it("throws ConflictException when the new window collides with an existing one (P2002)", async () => {
+      tx.unavailability.updateMany.mockRejectedValue(prismaError("P2002"));
+
+      await expect(
+        service.update(USER_ID, TEAM_ID, MEMBER_ID, UNAVAILABILITY_ID, dto)
+      ).rejects.toThrow("Unavailability window already exists");
+    });
+
     it("throws ConflictException when the new window overlaps an existing one", async () => {
       tx.unavailability.findFirst.mockResolvedValue(
         makeUnavailability({ id: 99 }) as never
