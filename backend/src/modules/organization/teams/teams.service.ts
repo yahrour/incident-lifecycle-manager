@@ -48,10 +48,6 @@ export class TeamsService {
     return filename.split(".").pop()?.toLowerCase();
   }
 
-  isValidFileFormat(fileformat: unknown) {
-    return fileformat === "json" || fileformat === "csv";
-  }
-
   serializeTeams(teams: TeamExport[], fileFormat: FileFormat): string {
     if (fileFormat === "json") {
       return JSON.stringify(teams, null, 2);
@@ -361,11 +357,7 @@ export class TeamsService {
   }
 
   async import(ownerId: string, file: Express.Multer.File) {
-    // Validate File Extension
     const format = this.getFileFormat(file.originalname);
-    if (!this.isValidFileFormat(format)) {
-      throw new BadRequestException("something wrong with the file extension");
-    }
 
     // Excel and many editors prepend a UTF-8 BOM
     const text = file.buffer.toString().replace(/^\uFEFF/, "");
