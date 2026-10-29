@@ -72,6 +72,11 @@ export default function AppRoutes() {
         {/* Engineer only */}
         <Route element={<ProtectedRoute allowedRole="ENGINEER" />}>
           <Route element={<AppLayout />}>
+            <Route path="/engineer/incidents" element={<Incidents />} />
+            <Route
+              path="/engineer/incidents/:id"
+              element={<IncidentsDetails />}
+            />
             <Route path="/engineer/my-team" element={<MyTeam />} />
             <Route
               path="/engineer/my-unavailabilities"
