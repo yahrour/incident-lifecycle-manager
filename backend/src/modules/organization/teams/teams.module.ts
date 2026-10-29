@@ -13,7 +13,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         limits: {
-          fileSize: Number(config.get("IMPORT_MAX_FILE_BYTES") ?? 1024 * 1024),
+          fileSize: Number(config.get("IMPORT_MAX_FILE_BYTES")),
           files: 1,
         },
       }),
