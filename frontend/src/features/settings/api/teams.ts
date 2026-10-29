@@ -1,6 +1,7 @@
 import { apiClient } from "@/lib/apiClient";
-import type { ExportFileFormat } from "../types";
+import type { ExportFileFormat, ImportResponse } from "../types";
 import { generateFilename, getFilenameFromDisposition } from "../utils";
+import type { ApiResponse } from "@/types";
 
 export async function exportTeams(fileFormat: ExportFileFormat) {
   const response = await apiClient.get(`/teams/export?format=${fileFormat}`, {
@@ -28,4 +29,18 @@ export async function exportTeams(fileFormat: ExportFileFormat) {
   }
 
   return response;
+}
+
+export async function importTeams(formData: FormData) {
+  const response = await apiClient.post<ApiResponse<ImportResponse>>(
+    "/teams/import",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+
+  return response.data;
 }

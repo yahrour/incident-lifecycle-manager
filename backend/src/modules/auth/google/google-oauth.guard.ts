@@ -25,10 +25,7 @@ export class GoogleOAuthGuard extends AuthGuard("google") {
     };
   }
 
-  handleRequest<TUser>(
-    error: unknown,
-    user: TUser | false
-  ): TUser | null {
+  handleRequest<TUser>(error: unknown, user: TUser | false): TUser | null {
     return error || !user ? null : user;
   }
 }
