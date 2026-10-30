@@ -271,6 +271,23 @@ async function main() {
 
   // 3. Unavailabilities ----------------------------------------------------
   const windows: Prisma.UnavailabilityCreateManyInput[] = [];
+
+  // Overlap guard: a member must never have two windows whose [start, end]
+  // ranges intersect. Tracks the already-accepted ranges per member so a
+  // colliding window can be dropped without disturbing the RNG sequence
+  // (every window is still generated exactly as before; we only decide
+  // whether to keep it afterwards).
+  const acceptedRanges = new Map<number, Array<{ start: number; end: number }>>();
+  const overlapsAccepted = (memberId: number, start: number, end: number) => {
+    const ranges = acceptedRanges.get(memberId);
+    return !!ranges?.some((r) => start <= r.end && end >= r.start);
+  };
+  const rememberRange = (memberId: number, start: number, end: number) => {
+    const ranges = acceptedRanges.get(memberId) ?? [];
+    ranges.push({ start, end });
+    acceptedRanges.set(memberId, ranges);
+  };
+
   for (const m of members) {
     if (!chance(0.4)) continue;
     const kinds = chance(0.5) ? ["past", "current", "future"] : ["past", "future"];
@@ -287,11 +304,24 @@ async function main() {
           : kind === "past"
             ? chance(0.8) ? "APPROVED" : "REJECTED"
             : pick(["PENDING", "PENDING", "PENDING", "REJECTED"] as const);
+      const reason = pick(UNAVAILABILITY_REASONS);
+
+      const startDate = dayOffset(offset);
+      const endDate = new Date(
+        dayOffset(offset + len).getTime() + (23 * HOUR + 59 * 60 * SEC + 999)
+      );
+
+      // Skip windows that would overlap one already accepted for this member.
+      if (overlapsAccepted(m.id, startDate.getTime(), endDate.getTime())) {
+        continue;
+      }
+      rememberRange(m.id, startDate.getTime(), endDate.getTime());
+
       windows.push({
         memberId: m.id,
-        startDate: dayOffset(offset),
-        endDate: new Date(dayOffset(offset + len).getTime() + (23 * HOUR + 59 * 60 * SEC)),
-        reason: pick(UNAVAILABILITY_REASONS),
+        startDate,
+        endDate,
+        reason,
         status,
       });
     }
@@ -308,7 +338,7 @@ async function main() {
     ...AMELIA_UNAVAILABILITIES.map((u) => ({
       memberId: ameliaMember.id,
       startDate: dayOffset(u.offset),
-      endDate: new Date(dayOffset(u.offset + u.len).getTime() + (23 * HOUR + 59 * 60 * SEC)),
+      endDate: new Date(dayOffset(u.offset + u.len).getTime() + (23 * HOUR + 59 * 60 * SEC + 999)),
       reason: u.reason,
       status: u.status,
     }))

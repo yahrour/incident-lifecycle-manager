@@ -22,6 +22,7 @@ import { useState } from "react";
 import { ChevronsUpDown } from "lucide-react";
 import { format } from "date-fns";
 import { StatusDot } from "@/components/StatusDot";
+import { UpdateUnavailabilityDialog } from "../dialogs/UpdateUnavailabilityDialog";
 
 const statusVariant: Record<
   UnavailabilityStatus,
@@ -143,13 +144,20 @@ export function UnavailabilitiesTable({
                     {unavailability.status.toLowerCase()}
                   </StatusDot>
                 </TableCell>
-                <TableCell className="p-0! m-0! ">
-                  <RemoveUnavailabilityButton
-                    teamId={membership.team.id}
-                    memberId={membership.memberId}
-                    unavailabilityId={unavailability.id}
-                    unavailabilityStatus={unavailability.status}
-                  />
+                <TableCell className="p-0! m-0!">
+                  <div className="flex items-center">
+                    <UpdateUnavailabilityDialog
+                      unavailability={unavailability}
+                      teamId={membership.team.id}
+                      memberId={membership.memberId}
+                    />
+                    <RemoveUnavailabilityButton
+                      teamId={membership.team.id}
+                      memberId={membership.memberId}
+                      unavailabilityId={unavailability.id}
+                      unavailabilityStatus={unavailability.status}
+                    />
+                  </div>
                 </TableCell>
               </TableRow>
             );

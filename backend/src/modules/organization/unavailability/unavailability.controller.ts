@@ -10,9 +10,10 @@ import {
   HttpCode,
   HttpStatus,
   Query,
+  Put,
 } from "@nestjs/common";
 import { UnavailabilityService } from "./unavailability.service";
-import { RequestUnavailabilityDto } from "./dto";
+import { RequestUnavailabilityDto, UpdateUnavailabilityDto } from "./dto";
 import { Roles } from "@/common/decorators/roles.decorator";
 import { Role } from "@/generated/prisma/enums";
 import { ActiveUser } from "@/common/decorators/active-user.decorator";
@@ -28,19 +29,37 @@ export class UnavailabilityController {
   constructor(private readonly unavailabilityService: UnavailabilityService) {}
 
   @Post(":teamId/members/:memberId/unavailabilities")
+  @HttpCode(HttpStatus.NO_CONTENT)
   async request(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @ActiveUser() user: ActiveUserData,
     @Body() requestUnavailabilityDto: RequestUnavailabilityDto
   ) {
-    const result = await this.unavailabilityService.request(
+    await this.unavailabilityService.request(
       user.sub,
       teamId,
       memberId,
       requestUnavailabilityDto
     );
-    return apiResponse(result);
+  }
+
+  @Put(":teamId/members/:memberId/unavailabilities/:unavailabilityId")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async update(
+    @Param("teamId", ParseUUIDPipe) teamId: string,
+    @Param("memberId", ParseIntPipe) memberId: number,
+    @Param("unavailabilityId", ParseIntPipe) unavailabilityId: number,
+    @ActiveUser() user: ActiveUserData,
+    @Body() updateUnavailabilityDto: UpdateUnavailabilityDto
+  ) {
+    await this.unavailabilityService.update(
+      user.sub,
+      teamId,
+      memberId,
+      unavailabilityId,
+      updateUnavailabilityDto
+    );
   }
 
   @Get("unavailabilities")

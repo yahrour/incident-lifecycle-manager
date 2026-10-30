@@ -3,7 +3,10 @@ import type { ApiResponse, Unavailability } from "@/types";
 import type { SortState } from "../types";
 import { DEFAULT_LIMIT } from "../constants";
 import z from "zod";
-import type { requestUnavailabilitySchema } from "../schemas";
+import type {
+  requestUnavailabilitySchema,
+  updateUnavailabilitySchema,
+} from "../schemas";
 import { format } from "date-fns";
 
 export async function fetchMemberUnavailabilities({
@@ -60,6 +63,24 @@ export async function requestUnavailability(
   };
   await apiClient.post(
     `/teams/${teamId}/members/${memberId}/unavailabilities`,
+    body
+  );
+}
+
+type UpdateUnavailabilitySchema = z.input<typeof updateUnavailabilitySchema>;
+export async function updateUnavailability(
+  data: UpdateUnavailabilitySchema,
+  teamId: string,
+  memberId: number,
+  unavailabilityId: number
+) {
+  const body = {
+    ...data,
+    startDate: format(data.startDate, "yyyy-MM-dd"),
+    endDate: format(data.endDate, "yyyy-MM-dd"),
+  };
+  await apiClient.put(
+    `/teams/${teamId}/members/${memberId}/unavailabilities/${unavailabilityId}`,
     body
   );
 }

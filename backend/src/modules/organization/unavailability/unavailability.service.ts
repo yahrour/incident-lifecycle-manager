@@ -6,14 +6,19 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
-import { RequestUnavailabilityDto, OffsetPaginationSearchParams } from "./dto";
+import {
+  RequestUnavailabilityDto,
+  OffsetPaginationSearchParams,
+  UpdateUnavailabilityDto,
+} from "./dto";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import {
+  Prisma,
   Team,
   TeamMember,
   UnavailabilityStatus,
 } from "@/generated/prisma/client";
-import { convertDateToUtc } from "@/common/utils/timezone";
+import { convertDateToUtc, toLocalDayValue } from "@/common/utils/timezone";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { FILTER_FIELD } from "./constants";
 
@@ -88,6 +93,42 @@ export class UnavailabilityService {
     }
   }
 
+  /**
+   * Finds an existing pending/approved window for the member that overlaps the
+   * given day range. Compares calendar days (in `timezone`) rather than the raw
+   * stored instants, so two windows that are merely adjacent (e.g. Jan 17-20 vs
+   * Jan 21-29) never collide because of a timezone offset or end-of-day skew.
+   */
+  private async findOverlappingByDay(
+    tx: Prisma.TransactionClient,
+    memberId: number,
+    startDate: Date,
+    endDate: Date,
+    timezone: string,
+    excludeId?: number
+  ) {
+    const startDay = toLocalDayValue(startDate, timezone);
+    const endDay = toLocalDayValue(endDate, timezone);
+
+    const candidates = await tx.unavailability.findMany({
+      where: {
+        memberId,
+        ...(excludeId !== undefined && { id: { not: excludeId } }),
+        status: {
+          in: [UnavailabilityStatus.PENDING, UnavailabilityStatus.APPROVED],
+        },
+      },
+      select: { startDate: true, endDate: true },
+    });
+
+    // Two inclusive day ranges overlap iff startA <= endB && endA >= startB.
+    return candidates.some((u) => {
+      const uStartDay = toLocalDayValue(u.startDate, timezone);
+      const uEndDay = toLocalDayValue(u.endDate, timezone);
+      return uStartDay <= endDay && uEndDay >= startDay;
+    });
+  }
+
   private async requireSelfMember(
     memberId: number,
     teamId: string,
@@ -127,7 +168,6 @@ export class UnavailabilityService {
       throw new BadRequestException("Start date must be before end date");
     }
 
-    // check overlap
     const startDate = convertDateToUtc(
       requestUnavailabilityDto.startDate,
       requestUnavailabilityDto.timezone
@@ -140,18 +180,15 @@ export class UnavailabilityService {
 
     return await this.prisma.$transaction(async (tx) => {
       // lock this member row
-      await tx.$queryRaw`SELECT id FROM "Member" WHERE id = ${memberId} FOR UPDATE`;
+      await tx.$queryRaw`SELECT id FROM "organization"."team_members" WHERE id = ${memberId} FOR UPDATE`;
 
-      const overlapping = await tx.unavailability.findFirst({
-        where: {
-          memberId,
-          status: {
-            in: [UnavailabilityStatus.PENDING, UnavailabilityStatus.APPROVED],
-          },
-          startDate: { lt: endDate },
-          endDate: { gt: startDate },
-        },
-      });
+      const overlapping = await this.findOverlappingByDay(
+        tx,
+        memberId,
+        requestUnavailabilityDto.startDate,
+        requestUnavailabilityDto.endDate,
+        requestUnavailabilityDto.timezone
+      );
 
       if (overlapping) {
         throw new ConflictException(
@@ -160,7 +197,7 @@ export class UnavailabilityService {
       }
 
       try {
-        return await tx.unavailability.create({
+        await tx.unavailability.create({
           data: {
             memberId,
             startDate,
@@ -168,6 +205,93 @@ export class UnavailabilityService {
             reason: requestUnavailabilityDto.reason,
           },
         });
+      } catch (error) {
+        if (
+          error instanceof PrismaClientKnownRequestError &&
+          error.code === "P2002"
+        ) {
+          throw new ConflictException("Unavailability window already exists");
+        }
+        throw error;
+      }
+    });
+  }
+
+  async update(
+    requesterUserId: string,
+    teamId: string,
+    memberId: number,
+    unavailabilityId: number,
+    updateUnavailabilityDto: UpdateUnavailabilityDto
+  ) {
+    await this.requireSelfMember(memberId, teamId, requesterUserId);
+
+    const now = new Date();
+    if (
+      convertDateToUtc(
+        updateUnavailabilityDto.startDate,
+        updateUnavailabilityDto.timezone,
+        true
+      ) < now
+    ) {
+      throw new BadRequestException("Start date can't be in the past");
+    }
+
+    const startDate = convertDateToUtc(
+      updateUnavailabilityDto.startDate,
+      updateUnavailabilityDto.timezone
+    );
+    const endDate = convertDateToUtc(
+      updateUnavailabilityDto.endDate,
+      updateUnavailabilityDto.timezone,
+      true
+    );
+
+    if (updateUnavailabilityDto.startDate > updateUnavailabilityDto.endDate) {
+      throw new BadRequestException("Start date must be before end date");
+    }
+
+    const currentUnavailability = await this.prisma.unavailability.findUnique({
+      where: { id: unavailabilityId, memberId },
+    });
+
+    if (!currentUnavailability) {
+      throw new NotFoundException("Unavailability doesn't exist");
+    }
+
+    return await this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "organization"."team_members" WHERE id = ${memberId} FOR UPDATE`;
+
+      const overlapping = await this.findOverlappingByDay(
+        tx,
+        memberId,
+        updateUnavailabilityDto.startDate,
+        updateUnavailabilityDto.endDate,
+        updateUnavailabilityDto.timezone,
+        unavailabilityId
+      );
+
+      if (overlapping) {
+        throw new ConflictException(
+          "Unavailability overlaps an existing request"
+        );
+      }
+
+      try {
+        const result = await tx.unavailability.updateMany({
+          where: {
+            id: unavailabilityId,
+            memberId,
+            status: UnavailabilityStatus.PENDING,
+          },
+          data: { startDate, endDate, reason: updateUnavailabilityDto.reason },
+        });
+
+        if (result.count === 0) {
+          throw new ConflictException(
+            "Unavailability was modified or removed by another request"
+          );
+        }
       } catch (error) {
         if (
           error instanceof PrismaClientKnownRequestError &&

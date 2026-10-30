@@ -24,3 +24,10 @@ export function convertDateToUtc(
 
   return dateUtc;
 }
+
+export function toLocalDayValue(
+  value: Date,
+  timezone: string = DEFAULT_TIMEZONE
+): number {
+  return DateTime.fromJSDate(value).setZone(timezone).startOf("day").toMillis();
+}
