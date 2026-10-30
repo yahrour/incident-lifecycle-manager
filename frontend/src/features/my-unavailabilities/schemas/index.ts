@@ -9,7 +9,11 @@ export const requestUnavailabilitySchema = z
     timezone: z.string().refine((tz) => isValidTimeZone(tz), {
       error: "Invalid IANA timezone",
     }),
-    reason: z.string().trim().max(255, "reason must not exceed 255 characters"),
+    reason: z
+      .string()
+      .trim()
+      .min(1)
+      .max(255, "reason must not exceed 255 characters"),
   })
   .refine((d) => !isBefore(d.startDate, startOfDay(new Date())), {
     path: ["startDate"],
@@ -29,7 +33,11 @@ export const updateUnavailabilitySchema = z
       .refine((tz) => isValidTimeZone(tz), {
         error: "Invalid IANA timezone",
       }),
-    reason: z.string().trim().max(255, "reason must not exceed 255 characters"),
+    reason: z
+      .string()
+      .trim()
+      .min(1)
+      .max(255, "reason must not exceed 255 characters"),
   })
   .refine((d) => !isBefore(d.startDate, startOfDay(new Date())), {
     path: ["startDate"],

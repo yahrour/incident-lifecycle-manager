@@ -197,7 +197,7 @@ export class UnavailabilityService {
       }
 
       try {
-        return await tx.unavailability.create({
+        await tx.unavailability.create({
           data: {
             memberId,
             startDate,
@@ -247,6 +247,10 @@ export class UnavailabilityService {
       true
     );
 
+    if (updateUnavailabilityDto.startDate > updateUnavailabilityDto.endDate) {
+      throw new BadRequestException("Start date must be before end date");
+    }
+
     const currentUnavailability = await this.prisma.unavailability.findUnique({
       where: { id: unavailabilityId, memberId },
     });
@@ -255,13 +259,7 @@ export class UnavailabilityService {
       throw new NotFoundException("Unavailability doesn't exist");
     }
 
-    if (updateUnavailabilityDto.startDate > updateUnavailabilityDto.endDate) {
-      throw new BadRequestException(
-        "end date should be greater than start date"
-      );
-    }
-
-    await this.prisma.$transaction(async (tx) => {
+    return await this.prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT id FROM "organization"."team_members" WHERE id = ${memberId} FOR UPDATE`;
 
       const overlapping = await this.findOverlappingByDay(

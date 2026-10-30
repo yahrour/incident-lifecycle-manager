@@ -29,22 +29,23 @@ export class UnavailabilityController {
   constructor(private readonly unavailabilityService: UnavailabilityService) {}
 
   @Post(":teamId/members/:memberId/unavailabilities")
+  @HttpCode(HttpStatus.NO_CONTENT)
   async request(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @ActiveUser() user: ActiveUserData,
     @Body() requestUnavailabilityDto: RequestUnavailabilityDto
   ) {
-    const result = await this.unavailabilityService.request(
+    await this.unavailabilityService.request(
       user.sub,
       teamId,
       memberId,
       requestUnavailabilityDto
     );
-    return apiResponse(result);
   }
 
   @Put(":teamId/members/:memberId/unavailabilities/:unavailabilityId")
+  @HttpCode(HttpStatus.NO_CONTENT)
   async update(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,

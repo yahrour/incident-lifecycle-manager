@@ -164,12 +164,8 @@ describe("UnavailabilityService", () => {
     });
 
     it("creates a pending window with timezone-aware day boundaries", async () => {
-      const created = makeUnavailability();
-      tx.unavailability.create.mockResolvedValue(created as never);
+      await service.request(USER_ID, TEAM_ID, MEMBER_ID, dto);
 
-      const result = await service.request(USER_ID, TEAM_ID, MEMBER_ID, dto);
-
-      expect(result).toBe(created);
       expect(tx.unavailability.create).toHaveBeenCalledWith({
         data: {
           memberId: MEMBER_ID,
@@ -181,19 +177,15 @@ describe("UnavailabilityService", () => {
     });
 
     it("allows a window that starts today", async () => {
-      tx.unavailability.create.mockResolvedValue(makeUnavailability() as never);
-
       await expect(
         service.request(USER_ID, TEAM_ID, MEMBER_ID, {
           ...dto,
           startDate: new Date("2026-01-15T00:00:00.000Z"),
         })
-      ).resolves.toBeDefined();
+      ).resolves.toBeUndefined();
     });
 
     it("does not treat adjacent days as overlapping, even with a non-UTC offset", async () => {
-      tx.unavailability.create.mockResolvedValue(makeUnavailability() as never);
-
       // Jan 21-Jan 29 in Africa/Casablanca (UTC+1) is adjacent to an existing
       // Jan 17-Jan 20 window. Storing timezone-aware boundaries shifts the start
       // to Jan 20 23:00Z, so the day-granular overlap check must still not
@@ -214,7 +206,7 @@ describe("UnavailabilityService", () => {
           endDate: new Date("2027-01-29T00:00:00.000Z"),
           timezone: "Africa/Casablanca",
         })
-      ).resolves.toBeDefined();
+      ).resolves.toBeUndefined();
 
       const [createArgs] = tx.unavailability.create.mock
         .calls[0] as unknown as [{ data: { startDate: Date; endDate: Date } }];
