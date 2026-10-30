@@ -97,7 +97,7 @@ describe("UnavailabilityService", () => {
 
       prisma.teamMember.findUnique.mockResolvedValue(makeMember() as never);
       tx.$queryRaw.mockResolvedValue([{ id: MEMBER_ID }] as never);
-      tx.unavailability.findFirst.mockResolvedValue(null);
+      tx.unavailability.findMany.mockResolvedValue([]);
     });
 
     it("looks for an overlapping pending or approved window of the same member", async () => {
@@ -105,13 +105,12 @@ describe("UnavailabilityService", () => {
 
       await service.request(USER_ID, TEAM_ID, MEMBER_ID, dto);
 
-      expect(tx.unavailability.findFirst).toHaveBeenCalledWith({
+      expect(tx.unavailability.findMany).toHaveBeenCalledWith({
         where: {
           memberId: MEMBER_ID,
           status: { in: ["PENDING", "APPROVED"] },
-          startDate: { lte: convertDateToUtc(dto.endDate, "UTC", true) },
-          endDate: { gte: convertDateToUtc(dto.startDate, "UTC") },
         },
+        select: { startDate: true, endDate: true },
       });
     });
 
@@ -121,7 +120,7 @@ describe("UnavailabilityService", () => {
       await service.request(USER_ID, TEAM_ID, MEMBER_ID, dto);
 
       const lock = tx.$queryRaw.mock.invocationCallOrder[0];
-      const check = tx.unavailability.findFirst.mock.invocationCallOrder[0];
+      const check = tx.unavailability.findMany.mock.invocationCallOrder[0];
       const insert = tx.unavailability.create.mock.invocationCallOrder[0];
       expect(lock).toBeLessThan(check);
       expect(check).toBeLessThan(insert);
@@ -147,16 +146,16 @@ describe("UnavailabilityService", () => {
       await service.request(USER_ID, TEAM_ID, MEMBER_ID, dto);
 
       expect(prisma.$transaction).toHaveBeenCalledTimes(1);
-      expect(tx.unavailability.findFirst).toHaveBeenCalledTimes(1);
+      expect(tx.unavailability.findMany).toHaveBeenCalledTimes(1);
       expect(tx.unavailability.create).toHaveBeenCalledTimes(1);
-      expect(prisma.unavailability.findFirst).not.toHaveBeenCalled();
+      expect(prisma.unavailability.findMany).not.toHaveBeenCalled();
       expect(prisma.unavailability.create).not.toHaveBeenCalled();
     });
 
     it("throws ConflictException when the window overlaps an existing one", async () => {
-      tx.unavailability.findFirst.mockResolvedValue(
-        makeUnavailability() as never
-      );
+      tx.unavailability.findMany.mockResolvedValue([
+        makeUnavailability(),
+      ] as never);
 
       await expect(
         service.request(USER_ID, TEAM_ID, MEMBER_ID, dto)
@@ -164,7 +163,7 @@ describe("UnavailabilityService", () => {
       expect(tx.unavailability.create).not.toHaveBeenCalled();
     });
 
-    it("creates a pending window with UTC day boundaries", async () => {
+    it("creates a pending window with timezone-aware day boundaries", async () => {
       const created = makeUnavailability();
       tx.unavailability.create.mockResolvedValue(created as never);
 
@@ -174,8 +173,8 @@ describe("UnavailabilityService", () => {
       expect(tx.unavailability.create).toHaveBeenCalledWith({
         data: {
           memberId: MEMBER_ID,
-          startDate: convertDateToUtc(dto.startDate, "UTC"),
-          endDate: convertDateToUtc(dto.endDate, "UTC", true),
+          startDate: convertDateToUtc(dto.startDate, dto.timezone),
+          endDate: convertDateToUtc(dto.endDate, dto.timezone, true),
           reason: "vacation",
         },
       });
@@ -196,9 +195,18 @@ describe("UnavailabilityService", () => {
       tx.unavailability.create.mockResolvedValue(makeUnavailability() as never);
 
       // Jan 21-Jan 29 in Africa/Casablanca (UTC+1) is adjacent to an existing
-      // Jan 17-Jan 20 window. Storing with the offset previously shifted the day
-      // back to Jan 20 23:00Z and produced a false overlap; the day-granular
-      // overlap check must not collide here.
+      // Jan 17-Jan 20 window. Storing timezone-aware boundaries shifts the start
+      // to Jan 20 23:00Z, so the day-granular overlap check must still not
+      // collide with a window ending on Jan 20.
+      tx.unavailability.findMany.mockResolvedValue([
+        makeUnavailability({
+          id: 99,
+          // Jan 17 - Jan 20 as properly stored for Africa/Casablanca (UTC+1)
+          startDate: new Date("2027-01-16T23:00:00.000Z"),
+          endDate: new Date("2027-01-20T22:59:59.999Z"),
+        }),
+      ] as never);
+
       await expect(
         service.request(USER_ID, TEAM_ID, MEMBER_ID, {
           ...dto,
@@ -208,21 +216,14 @@ describe("UnavailabilityService", () => {
         })
       ).resolves.toBeDefined();
 
-      expect(tx.unavailability.findFirst).toHaveBeenCalledWith({
-        where: {
-          memberId: MEMBER_ID,
-          status: { in: ["PENDING", "APPROVED"] },
-          startDate: { lte: new Date("2027-01-29T23:59:59.999Z") },
-          endDate: { gte: new Date("2027-01-21T00:00:00.000Z") },
-        },
-      });
       const [createArgs] = tx.unavailability.create.mock
         .calls[0] as unknown as [{ data: { startDate: Date; endDate: Date } }];
+      // Jan 21 00:00 local (UTC+1) = Jan 20 23:00Z; Jan 29 end-of-day local = Jan 29 22:59:59.999Z
       expect(createArgs.data.startDate).toEqual(
-        new Date("2027-01-21T00:00:00.000Z")
+        new Date("2027-01-20T23:00:00.000Z")
       );
       expect(createArgs.data.endDate).toEqual(
-        new Date("2027-01-29T23:59:59.999Z")
+        new Date("2027-01-29T22:59:59.999Z")
       );
     });
 
@@ -310,11 +311,11 @@ describe("UnavailabilityService", () => {
       prisma.teamMember.findUnique.mockResolvedValue(makeMember() as never);
       prisma.unavailability.findUnique.mockResolvedValue(existing as never);
       tx.$queryRaw.mockResolvedValue([{ id: MEMBER_ID }] as never);
-      tx.unavailability.findFirst.mockResolvedValue(null);
+      tx.unavailability.findMany.mockResolvedValue([]);
       tx.unavailability.updateMany.mockResolvedValue({ count: 1 });
     });
 
-    it("updates the pending window with the new UTC boundaries and reason", async () => {
+    it("updates the pending window with the new timezone-aware boundaries and reason", async () => {
       await service.update(USER_ID, TEAM_ID, MEMBER_ID, UNAVAILABILITY_ID, dto);
 
       expect(tx.unavailability.updateMany).toHaveBeenCalledWith({
@@ -324,8 +325,8 @@ describe("UnavailabilityService", () => {
           status: "PENDING",
         },
         data: {
-          startDate: convertDateToUtc(dto.startDate, "UTC"),
-          endDate: convertDateToUtc(dto.endDate, "UTC", true),
+          startDate: convertDateToUtc(dto.startDate, dto.timezone),
+          endDate: convertDateToUtc(dto.endDate, dto.timezone, true),
           reason: "conference",
         },
       });
@@ -344,14 +345,13 @@ describe("UnavailabilityService", () => {
     it("excludes the record being updated from the overlap check", async () => {
       await service.update(USER_ID, TEAM_ID, MEMBER_ID, UNAVAILABILITY_ID, dto);
 
-      expect(tx.unavailability.findFirst).toHaveBeenCalledWith({
+      expect(tx.unavailability.findMany).toHaveBeenCalledWith({
         where: {
           memberId: MEMBER_ID,
           id: { not: UNAVAILABILITY_ID },
           status: { in: ["PENDING", "APPROVED"] },
-          startDate: { lte: convertDateToUtc(dto.endDate, "UTC", true) },
-          endDate: { gte: convertDateToUtc(dto.startDate, "UTC") },
         },
+        select: { startDate: true, endDate: true },
       });
     });
 
@@ -359,7 +359,7 @@ describe("UnavailabilityService", () => {
       await service.update(USER_ID, TEAM_ID, MEMBER_ID, UNAVAILABILITY_ID, dto);
 
       const lock = tx.$queryRaw.mock.invocationCallOrder[0];
-      const check = tx.unavailability.findFirst.mock.invocationCallOrder[0];
+      const check = tx.unavailability.findMany.mock.invocationCallOrder[0];
       const write = tx.unavailability.updateMany.mock.invocationCallOrder[0];
       expect(lock).toBeLessThan(check);
       expect(check).toBeLessThan(write);
@@ -380,9 +380,9 @@ describe("UnavailabilityService", () => {
       await service.update(USER_ID, TEAM_ID, MEMBER_ID, UNAVAILABILITY_ID, dto);
 
       expect(prisma.$transaction).toHaveBeenCalledTimes(1);
-      expect(tx.unavailability.findFirst).toHaveBeenCalledTimes(1);
+      expect(tx.unavailability.findMany).toHaveBeenCalledTimes(1);
       expect(tx.unavailability.updateMany).toHaveBeenCalledTimes(1);
-      expect(prisma.unavailability.findFirst).not.toHaveBeenCalled();
+      expect(prisma.unavailability.findMany).not.toHaveBeenCalled();
       expect(prisma.unavailability.updateMany).not.toHaveBeenCalled();
     });
 
@@ -414,9 +414,13 @@ describe("UnavailabilityService", () => {
     });
 
     it("throws ConflictException when the new window overlaps an existing one", async () => {
-      tx.unavailability.findFirst.mockResolvedValue(
-        makeUnavailability({ id: 99 }) as never
-      );
+      tx.unavailability.findMany.mockResolvedValue([
+        makeUnavailability({
+          id: 99,
+          startDate: new Date("2026-01-26T00:00:00.000Z"),
+          endDate: new Date("2026-01-28T23:59:59.999Z"),
+        }),
+      ] as never);
 
       await expect(
         service.update(USER_ID, TEAM_ID, MEMBER_ID, UNAVAILABILITY_ID, dto)

@@ -13,11 +13,12 @@ import {
 } from "./dto";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import {
+  Prisma,
   Team,
   TeamMember,
   UnavailabilityStatus,
 } from "@/generated/prisma/client";
-import { convertDateToUtc } from "@/common/utils/timezone";
+import { convertDateToUtc, toLocalDayValue } from "@/common/utils/timezone";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { FILTER_FIELD } from "./constants";
 
@@ -92,6 +93,42 @@ export class UnavailabilityService {
     }
   }
 
+  /**
+   * Finds an existing pending/approved window for the member that overlaps the
+   * given day range. Compares calendar days (in `timezone`) rather than the raw
+   * stored instants, so two windows that are merely adjacent (e.g. Jan 17-20 vs
+   * Jan 21-29) never collide because of a timezone offset or end-of-day skew.
+   */
+  private async findOverlappingByDay(
+    tx: Prisma.TransactionClient,
+    memberId: number,
+    startDate: Date,
+    endDate: Date,
+    timezone: string,
+    excludeId?: number
+  ) {
+    const startDay = toLocalDayValue(startDate, timezone);
+    const endDay = toLocalDayValue(endDate, timezone);
+
+    const candidates = await tx.unavailability.findMany({
+      where: {
+        memberId,
+        ...(excludeId !== undefined && { id: { not: excludeId } }),
+        status: {
+          in: [UnavailabilityStatus.PENDING, UnavailabilityStatus.APPROVED],
+        },
+      },
+      select: { startDate: true, endDate: true },
+    });
+
+    // Two inclusive day ranges overlap iff startA <= endB && endA >= startB.
+    return candidates.some((u) => {
+      const uStartDay = toLocalDayValue(u.startDate, timezone);
+      const uEndDay = toLocalDayValue(u.endDate, timezone);
+      return uStartDay <= endDay && uEndDay >= startDay;
+    });
+  }
+
   private async requireSelfMember(
     memberId: number,
     teamId: string,
@@ -133,11 +170,11 @@ export class UnavailabilityService {
 
     const startDate = convertDateToUtc(
       requestUnavailabilityDto.startDate,
-      "UTC"
+      requestUnavailabilityDto.timezone
     );
     const endDate = convertDateToUtc(
       requestUnavailabilityDto.endDate,
-      "UTC",
+      requestUnavailabilityDto.timezone,
       true
     );
 
@@ -145,16 +182,13 @@ export class UnavailabilityService {
       // lock this member row
       await tx.$queryRaw`SELECT id FROM "organization"."team_members" WHERE id = ${memberId} FOR UPDATE`;
 
-      const overlapping = await tx.unavailability.findFirst({
-        where: {
-          memberId,
-          status: {
-            in: [UnavailabilityStatus.PENDING, UnavailabilityStatus.APPROVED],
-          },
-          startDate: { lte: endDate },
-          endDate: { gte: startDate },
-        },
-      });
+      const overlapping = await this.findOverlappingByDay(
+        tx,
+        memberId,
+        requestUnavailabilityDto.startDate,
+        requestUnavailabilityDto.endDate,
+        requestUnavailabilityDto.timezone
+      );
 
       if (overlapping) {
         throw new ConflictException(
@@ -205,11 +239,11 @@ export class UnavailabilityService {
 
     const startDate = convertDateToUtc(
       updateUnavailabilityDto.startDate,
-      "UTC"
+      updateUnavailabilityDto.timezone
     );
     const endDate = convertDateToUtc(
       updateUnavailabilityDto.endDate,
-      "UTC",
+      updateUnavailabilityDto.timezone,
       true
     );
 
@@ -230,17 +264,14 @@ export class UnavailabilityService {
     await this.prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT id FROM "organization"."team_members" WHERE id = ${memberId} FOR UPDATE`;
 
-      const overlapping = await tx.unavailability.findFirst({
-        where: {
-          memberId,
-          id: { not: unavailabilityId },
-          status: {
-            in: [UnavailabilityStatus.PENDING, UnavailabilityStatus.APPROVED],
-          },
-          startDate: { lte: endDate },
-          endDate: { gte: startDate },
-        },
-      });
+      const overlapping = await this.findOverlappingByDay(
+        tx,
+        memberId,
+        updateUnavailabilityDto.startDate,
+        updateUnavailabilityDto.endDate,
+        updateUnavailabilityDto.timezone,
+        unavailabilityId
+      );
 
       if (overlapping) {
         throw new ConflictException(
