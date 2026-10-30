@@ -6,7 +6,7 @@ export function AppLayout() {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <main className="flex-1 relative">
+      <main className="flex-1 relative overflow-y-auto">
         <Outlet />
       </main>
     </SidebarProvider>
