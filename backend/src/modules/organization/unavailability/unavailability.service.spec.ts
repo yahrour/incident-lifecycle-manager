@@ -7,6 +7,7 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
+import { DateTime } from "luxon";
 import { convertDateToUtc } from "@/common/utils/timezone";
 import { SORT_ORDER } from "@/common/constants";
 import { createMockPrisma, MockPrisma } from "../../../../test/prisma-mock";
@@ -210,12 +211,25 @@ describe("UnavailabilityService", () => {
 
       const [createArgs] = tx.unavailability.create.mock
         .calls[0] as unknown as [{ data: { startDate: Date; endDate: Date } }];
-      // Jan 21 00:00 local (UTC+1) = Jan 20 23:00Z; Jan 29 end-of-day local = Jan 29 22:59:59.999Z
+
+      // Assert the offset relative to the input rather than a hard-coded UTC
+      // instant, so the test stays valid regardless of the runner's tz database
+      // version (Morocco's rules change with Ramadan).
+      const offsetMs =
+        DateTime.fromObject(
+          { year: 2027, month: 1, day: 21 },
+          { zone: "Africa/Casablanca" }
+        ).offset *
+        60 *
+        1000;
+
+      // Jan 21 00:00 local = start of day shifted back by the zone offset
       expect(createArgs.data.startDate).toEqual(
-        new Date("2027-01-20T23:00:00.000Z")
+        new Date(new Date("2027-01-21T00:00:00.000Z").getTime() - offsetMs)
       );
+      // Jan 29 end-of-day local = 23:59:59.999 local shifted back by the offset
       expect(createArgs.data.endDate).toEqual(
-        new Date("2027-01-29T22:59:59.999Z")
+        new Date(new Date("2027-01-29T23:59:59.999Z").getTime() - offsetMs)
       );
     });
 
