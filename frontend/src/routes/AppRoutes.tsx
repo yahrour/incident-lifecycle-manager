@@ -16,7 +16,7 @@ import { SettingPage } from "@/features/settings";
 import { Route, Routes } from "react-router";
 import { AppLayout } from "./AppLayout";
 import { GuestOnly } from "./GuestOnly";
-import { HomeRedirect } from "./HomeRedirect";
+import { LandingOrDashboard } from "./LandingOrDashboard";
 import { MyTeam } from "@/features/my-team";
 import { MyUnavailabilities } from "@/features/my-unavailabilities";
 import { StatusPage } from "@/features/status";
@@ -27,16 +27,18 @@ import { IncidentsDetails } from "@/features/incidents/pages";
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* Public — must stay outside RequireAuth */}
+      {/* Public pages */}
+      <Route path="/" element={<LandingOrDashboard />} />
       <Route path="/invite" element={<InvitePage />} />
       <Route path="/status" element={<StatusPage />} />
+
       <Route element={<GuestOnly />}>
         <Route path="/login" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
       </Route>
+
       {/* Everything below requires being logged in */}
       <Route element={<RequireAuth />}>
-        <Route path="/" element={<HomeRedirect />} />
         {/* Manager only */}
         <Route element={<ProtectedRoute allowedRole="SRE" />}>
           <Route element={<AppLayout />}>

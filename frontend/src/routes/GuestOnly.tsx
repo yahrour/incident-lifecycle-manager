@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useSearchParams } from "react-router";
 import { useAuth } from "@/features/auth";
-import { getSafeRedirect } from "@/lib/redirect";
+import { getDashboardPath, getSafeRedirect } from "@/lib/redirect";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 export function GuestOnly() {
   const [searchParams] = useSearchParams();
@@ -8,7 +8,7 @@ export function GuestOnly() {
   const { user, isLoading } = useAuth();
   if (isLoading) return <FullPageSpinner />;
   if (user) {
-    return <Navigate to={redirect ?? "/"} replace />;
+    return <Navigate to={redirect ?? getDashboardPath(user.role)} replace />;
   }
   return <Outlet />;
 }
