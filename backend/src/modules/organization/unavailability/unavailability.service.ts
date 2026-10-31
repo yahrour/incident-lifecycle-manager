@@ -367,71 +367,59 @@ export class UnavailabilityService {
   ) {
     await this.requireOwnedTeam(teamId, requesterId);
 
-    try {
-      const [unavailabilities, total] = await Promise.all([
-        this.prisma.unavailability.findMany({
-          where: {
-            teamMember: {
-              teamId,
-              team: { ownerId: requesterId },
-            },
-            ...this.buildStatusWhere(query.filterField),
+    const [unavailabilities, total] = await Promise.all([
+      this.prisma.unavailability.findMany({
+        where: {
+          teamMember: {
+            teamId,
+            team: { ownerId: requesterId },
           },
-          include: {
-            teamMember: {
-              select: {
-                id: true,
-                team: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
+          ...this.buildStatusWhere(query.filterField),
+        },
+        include: {
+          teamMember: {
+            select: {
+              id: true,
+              team: {
+                select: {
+                  id: true,
+                  name: true,
                 },
-                user: {
-                  select: {
-                    id: true,
-                    firstName: true,
-                    lastName: true,
-                    email: true,
-                    specialty: true,
-                    role: true,
-                  },
+              },
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                  specialty: true,
+                  role: true,
                 },
               },
             },
           },
-          skip: query.offset,
-          take: query.limit,
-          ...(query.sortField && {
-            orderBy: [
-              { [query.sortField]: query.sortOrder },
-              { id: query.sortOrder },
-            ],
-          }),
+        },
+        skip: query.offset,
+        take: query.limit,
+        ...(query.sortField && {
+          orderBy: [
+            { [query.sortField]: query.sortOrder },
+            { id: query.sortOrder },
+          ],
         }),
-        this.prisma.unavailability.count({
-          where: {
-            teamMember: {
-              teamId,
-              team: { ownerId: requesterId },
-            },
-            ...this.buildStatusWhere(query.filterField),
+      }),
+      this.prisma.unavailability.count({
+        where: {
+          teamMember: {
+            teamId,
+            team: { ownerId: requesterId },
           },
-        }),
-      ]);
+          ...this.buildStatusWhere(query.filterField),
+        },
+      }),
+    ]);
 
-      return { unavailabilities, total };
-    } catch (error) {
-      if (
-        error instanceof PrismaClientKnownRequestError &&
-        error.code === "P2025"
-      ) {
-        throw new NotFoundException(
-          "Cursor references a no-longer-existing unavailability"
-        );
-      }
-      throw error;
-    }
+    return { unavailabilities, total };
   }
 
   async findTeammatesAway(requesterId: string, teamId: string) {
