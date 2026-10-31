@@ -8,7 +8,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { SeverityCell } from "@/components/SeverityCell";
+import { StatusDot } from "@/components/StatusDot";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { TablePagination } from "./AlertsPagination";
@@ -16,19 +17,17 @@ import { fetchAlerts } from "../api/alerts";
 import type { Alert } from "../types";
 import { NoAlertsState } from "./empty-states/NoAlertsState";
 import { REFETCH_INTERVAL_MS } from "../constants";
+import { cn } from "@/lib/utils";
 
-const severityVariant: Record<
-  Alert["severity"],
-  "destructive" | "warning" | "outline"
-> = {
-  critical: "destructive",
-  warning: "warning",
-  info: "outline",
+const severityColor: Record<Alert["severity"], string> = {
+  critical: "bg-severity-critical-bg text-severity-critical-fg",
+  warning: "bg-severity-medium-bg text-severity-medium-fg",
+  info: "bg-severity-low-bg text-severity-low-fg",
 };
 
-const statusVariant: Record<Alert["status"], "warning" | "success"> = {
-  firing: "warning",
-  resolved: "success",
+const statusColor: Record<Alert["status"], string> = {
+  firing: "text-status-open",
+  resolved: "text-status-resolved",
 };
 
 export function DeliveryLogTable({
@@ -62,21 +61,24 @@ export function DeliveryLogTable({
     <div className="space-y-4">
       <Table>
         <TableHeader>
-          <TableRow className="uppercase hover:bg-transparent">
-            <TableHead className="w-2/5">Alert</TableHead>
+          <TableRow>
+            <TableHead>Severity</TableHead>
+            <TableHead>Alert</TableHead>
             <TableHead>Provider</TableHead>
             <TableHead>Service</TableHead>
-            <TableHead>Severity</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Received</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {alerts.map((alert) => (
-            <TableRow key={alert.id} className="w-full">
+            <TableRow key={alert.id}>
+              <SeverityCell className={cn(severityColor[alert.severity], "w-[100px]")}>
+                {alert.severity}
+              </SeverityCell>
               <TableCell>
-                <p className="font-medium text-sm">{alert.title}</p>
-                <p className="text-xs text-muted-foreground">{alert.message}</p>
+                <p className="font-medium">{alert.title}</p>
+                {/* <p className="text-xs text-muted-foreground">{alert.message}</p> */}
               </TableCell>
               <TableCell className="text-xs text-muted-foreground">
                 {alert.provider}
@@ -85,20 +87,9 @@ export function DeliveryLogTable({
                 {alert.service ?? "—"}
               </TableCell>
               <TableCell>
-                <Badge
-                  variant={severityVariant[alert.severity]}
-                  className="uppercase"
-                >
-                  {alert.severity}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <Badge
-                  variant={statusVariant[alert.status]}
-                  className="uppercase"
-                >
+                <StatusDot className={statusColor[alert.status]}>
                   {alert.status}
-                </Badge>
+                </StatusDot>
               </TableCell>
               <TableCell className="text-xs text-right text-muted-foreground">
                 {format(alert.receivedAt, "PP p")}

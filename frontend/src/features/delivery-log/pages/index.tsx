@@ -10,7 +10,7 @@ export function DeliveryLog() {
         <h1 className="font-medium text-sm">Delivery log</h1>
       </div>
 
-      <div className="mt-2 p-4 space-y-4">
+      <div className="p-6 space-y-6">
         <DeliveryLogTable page={page} setPage={setPage} />
       </div>
     </div>
