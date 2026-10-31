@@ -2,15 +2,12 @@ import { Link } from "react-router";
 import { Button } from "./ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/features/auth";
-import { Role } from "@/types";
+import { getDashboardPath } from "@/lib/redirect";
+
 
 export default function NotFoundPage() {
   const { user } = useAuth();
-  const homePath = user
-    ? user.role === Role.SRE
-      ? "/manager/overview"
-      : "/engineer/my-team"
-    : "/login";
+  const homePath = user ? getDashboardPath(user.role) : "/";
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">

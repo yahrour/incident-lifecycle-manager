@@ -1,3 +1,5 @@
+import type {Role} from "@/types";
+
 export function getSafeRedirect(value: string | null): string | null {
   if (
     !value ||
@@ -8,4 +10,17 @@ export function getSafeRedirect(value: string | null): string | null {
     return null;
   }
   return value;
+}
+
+
+export function getDashboardPath(role: Role) : string
+{
+  switch (role) {
+    case "SRE":
+      return "/manager/teams";
+    case "ENGINEER":
+      return "/engineer/my-team";
+    default:
+      return "/login";
+  }
 }
