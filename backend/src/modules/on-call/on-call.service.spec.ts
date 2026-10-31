@@ -83,14 +83,21 @@ describe("OnCallService", () => {
         teamMembers: members,
       } as never);
 
-    it("looks the team up scoped to the owner and only loads active approved leave", async () => {
+    it("guards on team ownership and only loads active approved leave", async () => {
       mockTeam([]);
 
       await service.getCurrentOnCall(OWNER_ID, TEAM_ID);
 
+      // the ownership guard fetches just the owner id
+      expect(prisma.team.findUnique).toHaveBeenCalledWith({
+        where: { id: TEAM_ID },
+        select: { ownerId: true },
+      });
+
+      // the chain query loads members and their active approved leave
       expect(prisma.team.findUnique).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: TEAM_ID, ownerId: OWNER_ID },
+          where: { id: TEAM_ID },
           include: {
             teamMembers: expect.objectContaining({
               orderBy: { joinedAt: "asc" },

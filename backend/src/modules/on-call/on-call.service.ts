@@ -12,10 +12,23 @@ export class OnCallService {
     return new Date(date.getTime() + n * 24 * 60 * 60 * 1000);
   }
 
-  async getCurrentOnCall(ownerId: string, teamId: string) {
+  private async requireOwnedTeam(teamId: string, ownerId: string) {
+    const team = await this.prisma.team.findUnique({
+      where: { id: teamId },
+      select: { ownerId: true },
+    });
+
+    if (!team || team.ownerId !== ownerId) {
+      throw new NotFoundException("Team doesn't exist");
+    }
+
+    return team;
+  }
+
+  private async getTeamCurrentOnCall(teamId: string) {
     const now = new Date();
     const team = await this.prisma.team.findUnique({
-      where: { id: teamId, ownerId },
+      where: { id: teamId },
       include: {
         teamMembers: {
           orderBy: { joinedAt: "asc" },
@@ -96,31 +109,16 @@ export class OnCallService {
     };
   }
 
+  async getCurrentOnCall(ownerId: string, teamId: string) {
+    await this.requireOwnedTeam(teamId, ownerId);
+    return this.getTeamCurrentOnCall(teamId);
+  }
+
   async getUserOnCallStatus(teamId: string, userId: string) {
-    const now = new Date();
     const [team, totalAssignedIncidents, totalUnacknowledgedIncidents] =
       await Promise.all([
         this.prisma.team.findUnique({
           where: { id: teamId },
-          include: {
-            teamMembers: {
-              orderBy: { joinedAt: "asc" },
-              select: {
-                user: {
-                  select: {
-                    id: true,
-                  },
-                },
-                unavailabilities: {
-                  where: {
-                    startDate: { lte: now },
-                    endDate: { gte: now },
-                    status: UnavailabilityStatus.APPROVED,
-                  },
-                },
-              },
-            },
-          },
         }),
         this.prisma.incident.count({
           where: {
@@ -140,34 +138,16 @@ export class OnCallService {
       throw new NotFoundException("Team doesn't exist");
     }
 
-    const members = team.teamMembers;
-    const totalMembers = members.length;
+    const onCall = await this.getTeamCurrentOnCall(teamId);
 
-    type Member = (typeof members)[0];
-    let primary: Member | null = null;
-    let secondary: Member | null = null;
-
-    for (let i = 0; i < totalMembers; i++) {
-      const currentRotationIndex =
-        (team.currentRotationIndex + i) % totalMembers;
-      const member = members[currentRotationIndex];
-
-      const isAvailable = member.unavailabilities.length === 0;
-
-      if (isAvailable) {
-        if (!primary) {
-          primary = member;
-        } else if (!secondary) {
-          secondary = member;
-          break;
-        }
-      }
+    if (!onCall) {
+      return { isOnCall: false, currentShift: null };
     }
 
     const baseDate = new Date(
       Math.max(team.lastRotatedAt.getTime(), team.rotationStartDate.getTime())
     );
-    if (primary && primary.user.id === userId) {
+    if (onCall.chain[0] && onCall.chain[0].id === userId) {
       return {
         isOnCall: true,
         currentShift: {
@@ -185,7 +165,7 @@ export class OnCallService {
           },
         },
       };
-    } else if (secondary && secondary.user.id === userId) {
+    } else if (onCall.chain[1] && onCall.chain[1].id === userId) {
       return {
         isOnCall: false,
         currentShift: {
@@ -204,6 +184,7 @@ export class OnCallService {
         },
       };
     }
+
     return {
       isOnCall: false,
       currentShift: null,
