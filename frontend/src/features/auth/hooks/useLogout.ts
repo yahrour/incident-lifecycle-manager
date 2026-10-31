@@ -8,9 +8,7 @@ export default function useLogout() {
 
   return useMutation({
     mutationFn: logout,
-    onSettled: async () => {
-      await queryClient.cancelQueries();
-      queryClient.clear();
+    onSettled: () => {
       queryClient.setQueryData(["session"], null);
       void navigate("/login", { replace: true });
     },
