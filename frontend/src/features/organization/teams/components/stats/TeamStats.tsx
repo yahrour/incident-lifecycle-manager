@@ -35,7 +35,7 @@ export function TeamStats({ team }: { team: Team }) {
   }
 
   return (
-    <div className="flex w-full bg-card border border-border/50 rounded-xl divide-x divide-border/50 overflow-hidden">
+    <div className="flex flex-wrap w-full bg-card border border-border/50 rounded-xl divide-x max-sm:divide-y divide-border/50 overflow-hidden">
       <StatBlock title="Members" value={stats.memberCount} />
       <StatBlock title="Away Now" value={stats.activeUnavailabilityCount} />
       <StatBlock title="Rotation (day)" value={team.rotationPeriodDays} />
