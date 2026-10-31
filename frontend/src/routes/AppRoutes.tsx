@@ -23,6 +23,7 @@ import { StatusPage } from "@/features/status";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { RequireAuth } from "./RequireAuth";
 import { IncidentsDetails } from "@/features/incidents/pages";
+import { PrivacyPage, TermsPage } from "@/features/landing";
 
 export default function AppRoutes() {
   return (
@@ -31,6 +32,9 @@ export default function AppRoutes() {
       <Route path="/" element={<LandingOrDashboard />} />
       <Route path="/invite" element={<InvitePage />} />
       <Route path="/status" element={<StatusPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
+
 
       <Route element={<GuestOnly />}>
         <Route path="/login" element={<SignIn />} />
