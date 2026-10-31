@@ -133,6 +133,7 @@ export class TeamsService {
   async create(ownerId: string, createTeamDto: CreateTeamDto) {
     const rotationStartDate =
       createTeamDto.rotationStartDate &&
+      createTeamDto.timezone &&
       convertDateToUtc(createTeamDto.rotationStartDate, createTeamDto.timezone);
 
     if (rotationStartDate && rotationStartDate <= new Date()) {

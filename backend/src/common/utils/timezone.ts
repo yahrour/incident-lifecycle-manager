@@ -1,9 +1,8 @@
 import { DateTime } from "luxon";
-import { DEFAULT_TIMEZONE } from "../constants";
 
 export function convertDateToUtc(
   date: Date,
-  timezone: string = DEFAULT_TIMEZONE,
+  timezone: string,
   endOfDay = false
 ) {
   const dateUtc = DateTime.fromObject(
@@ -25,9 +24,6 @@ export function convertDateToUtc(
   return dateUtc;
 }
 
-export function toLocalDayValue(
-  value: Date,
-  timezone: string = DEFAULT_TIMEZONE
-): number {
+export function toLocalDayValue(value: Date, timezone: string): number {
   return DateTime.fromJSDate(value).setZone(timezone).startOf("day").toMillis();
 }
