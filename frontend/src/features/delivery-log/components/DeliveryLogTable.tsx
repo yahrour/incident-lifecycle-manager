@@ -78,7 +78,6 @@ export function DeliveryLogTable({
               </SeverityCell>
               <TableCell>
                 <p className="font-medium">{alert.title}</p>
-                {/* <p className="text-xs text-muted-foreground">{alert.message}</p> */}
               </TableCell>
               <TableCell className="text-xs text-muted-foreground">
                 {alert.provider}
