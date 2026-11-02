@@ -15,7 +15,7 @@ import { TeamNotFound } from "../../../shared/components/empty-states/TeamNotFou
 import { fetchTeam } from "../../../shared/api/teams";
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { teamKeys } from "@/features/organization/shared/constants";
-import { InviteDialog } from "../../components/invite-dialog";
+import { InviteDialog } from "../../../shared/components/invite-dialog";
 import { Page } from "@/components/Page";
 
 export function TeamMembers() {

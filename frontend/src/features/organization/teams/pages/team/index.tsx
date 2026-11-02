@@ -22,6 +22,7 @@ import { UpcomingRotationsPreview } from "../../components/previews/UpcomingRota
 import { FullPageSpinner } from "@/components/FullPageSpinner";
 import { teamKeys } from "@/features/organization/shared/constants";
 import { Page } from "@/components/Page";
+import { InviteDialog } from "@/features/organization/shared/components/invite-dialog";
 
 export function Team() {
   const { id: teamId } = useParams();
@@ -68,6 +69,7 @@ export function Team() {
         <div className="space-x-2">
           <EditTeamDialog team={team} />
           <DeleteTeamDialog teamId={team.id} />
+          <InviteDialog team={team} />
         </div>
       </div>
 
