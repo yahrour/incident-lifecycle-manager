@@ -1,8 +1,7 @@
-import { Controller, Post, Body, Get, Patch } from "@nestjs/common";
+import { Req, Controller, Post, Body, Get, Patch } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
-import { ActiveUser } from "@/common/decorators/active-user.decorator";
-import type { ActiveUserData } from "@/common/interfaces/active-user.interface";
+import type { AuthRequest } from "@/common/interfaces/active-user.interface";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { apiResponse } from "@/common/utils/api-response";
 import { Roles } from "@/common/decorators/roles.decorator";
@@ -21,14 +20,14 @@ export class UsersController {
   }
 
   @Get("me")
-  async getProfile(@ActiveUser() user: ActiveUserData) {
+  async getProfile(@Req() { user }: AuthRequest) {
     const profile = await this.usersService.getProfile(user.sub);
     return apiResponse(profile);
   }
 
   @Patch("me")
   async updateProfile(
-    @ActiveUser() user: ActiveUserData,
+    @Req() { user }: AuthRequest,
     @Body() dto: UpdateProfileDto
   ) {
     const profile = await this.usersService.updateProfile(user.sub, dto);
@@ -37,21 +36,21 @@ export class UsersController {
 
   @Get("me/on-call")
   @Roles(Role.ENGINEER)
-  async getMyOnCallStatus(@ActiveUser() user: ActiveUserData) {
+  async getMyOnCallStatus(@Req() { user }: AuthRequest) {
     const result = await this.usersService.getMyOnCallStatus(user.sub);
     return apiResponse(result);
   }
 
   @Get("me/membership")
   @Roles(Role.ENGINEER)
-  async getMyMembership(@ActiveUser() user: ActiveUserData) {
+  async getMyMembership(@Req() { user }: AuthRequest) {
     const result = await this.usersService.getMyMembership(user.sub);
     return apiResponse(result);
   }
 
   @Get("me/team")
   @Roles(Role.ENGINEER)
-  async getMyTeam(@ActiveUser() user: ActiveUserData) {
+  async getMyTeam(@Req() { user }: AuthRequest) {
     const result = await this.usersService.getMyTeam(user.sub);
     return apiResponse(result);
   }

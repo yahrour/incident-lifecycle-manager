@@ -8,10 +8,10 @@ import {
   HttpStatus,
   ParseIntPipe,
   Query,
+  Req,
 } from "@nestjs/common";
 import { MembersService } from "./members.service";
-import { ActiveUser } from "@/common/decorators/active-user.decorator";
-import type { ActiveUserData } from "@/common/interfaces/active-user.interface";
+import type { AuthRequest } from "@/common/interfaces/active-user.interface";
 import { Roles } from "@/common/decorators/roles.decorator";
 import { Role } from "@/generated/prisma/enums";
 import { OffsetPaginationSearchParams } from "./dto";
@@ -28,7 +28,7 @@ export class MembersController {
   @Roles(Role.SRE)
   async findAllForOwner(
     @Query() query: OffsetPaginationSearchParams,
-    @ActiveUser() user: ActiveUserData
+    @Req() { user }: AuthRequest
   ) {
     const { members, total } = await this.membersService.findAllForOwner(
       user.sub,
@@ -42,7 +42,7 @@ export class MembersController {
   async findByTeam(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Query() query: OffsetPaginationSearchParams,
-    @ActiveUser() user: ActiveUserData
+    @Req() { user }: AuthRequest
   ) {
     const { members, total } = await this.membersService.findByTeam(
       user.sub,
@@ -58,7 +58,7 @@ export class MembersController {
   async removeFromTeam(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
-    @ActiveUser() user: ActiveUserData
+    @Req() { user }: AuthRequest
   ) {
     await this.membersService.removeFromTeam(user.sub, teamId, memberId);
   }

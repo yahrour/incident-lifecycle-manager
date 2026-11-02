@@ -11,13 +11,13 @@ import {
   HttpStatus,
   Query,
   Put,
+  Req,
 } from "@nestjs/common";
 import { UnavailabilityService } from "./unavailability.service";
 import { RequestUnavailabilityDto, UpdateUnavailabilityDto } from "./dto";
 import { Roles } from "@/common/decorators/roles.decorator";
 import { Role } from "@/generated/prisma/enums";
-import { ActiveUser } from "@/common/decorators/active-user.decorator";
-import type { ActiveUserData } from "@/common/interfaces/active-user.interface";
+import type { AuthRequest } from "@/common/interfaces/active-user.interface";
 import { OffsetPaginationSearchParams } from "./dto";
 import { apiResponse } from "@/common/utils/api-response";
 
@@ -33,7 +33,7 @@ export class UnavailabilityController {
   async request(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
-    @ActiveUser() user: ActiveUserData,
+    @Req() { user }: AuthRequest,
     @Body() requestUnavailabilityDto: RequestUnavailabilityDto
   ) {
     await this.unavailabilityService.request(
@@ -50,7 +50,7 @@ export class UnavailabilityController {
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @Param("unavailabilityId", ParseIntPipe) unavailabilityId: number,
-    @ActiveUser() user: ActiveUserData,
+    @Req() { user }: AuthRequest,
     @Body() updateUnavailabilityDto: UpdateUnavailabilityDto
   ) {
     await this.unavailabilityService.update(
@@ -66,7 +66,7 @@ export class UnavailabilityController {
   @Roles(Role.SRE)
   async findAllForOwner(
     @Query() query: OffsetPaginationSearchParams,
-    @ActiveUser() user: ActiveUserData
+    @Req() { user }: AuthRequest
   ) {
     const { unavailabilities, total } =
       await this.unavailabilityService.findAllForOwner(user.sub, query);
@@ -78,7 +78,7 @@ export class UnavailabilityController {
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @Query() query: OffsetPaginationSearchParams,
-    @ActiveUser() user: ActiveUserData
+    @Req() { user }: AuthRequest
   ) {
     const { unavailabilities, total } =
       await this.unavailabilityService.findByMember(
@@ -96,7 +96,7 @@ export class UnavailabilityController {
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @Param("unavailabilityId", ParseIntPipe) unavailabilityId: number,
-    @ActiveUser() user: ActiveUserData
+    @Req() { user }: AuthRequest
   ) {
     await this.unavailabilityService.cancel(
       user.sub,
@@ -111,7 +111,7 @@ export class UnavailabilityController {
   async findByTeam(
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Query() query: OffsetPaginationSearchParams,
-    @ActiveUser() user: ActiveUserData
+    @Req() { user }: AuthRequest
   ) {
     const { unavailabilities, total } =
       await this.unavailabilityService.findByTeam(user.sub, teamId, query);
@@ -125,7 +125,7 @@ export class UnavailabilityController {
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @Param("unavailabilityId", ParseIntPipe) unavailabilityId: number,
-    @ActiveUser() user: ActiveUserData
+    @Req() { user }: AuthRequest
   ) {
     await this.unavailabilityService.approve(
       user.sub,
@@ -142,7 +142,7 @@ export class UnavailabilityController {
     @Param("teamId", ParseUUIDPipe) teamId: string,
     @Param("memberId", ParseIntPipe) memberId: number,
     @Param("unavailabilityId", ParseIntPipe) unavailabilityId: number,
-    @ActiveUser() user: ActiveUserData
+    @Req() { user }: AuthRequest
   ) {
     await this.unavailabilityService.reject(
       user.sub,

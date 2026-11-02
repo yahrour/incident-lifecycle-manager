@@ -11,9 +11,6 @@ import { UsersModule } from "@/modules/users/users.module";
 import { InviteModule } from "@/modules/invite/invite.module";
 import { IngestionModule } from "@/modules/ingestion/ingestion.module";
 import { IncidentsModule } from "@/modules/incidents/incidents.module";
-import { APP_GUARD } from "@nestjs/core";
-import { AccessTokenGuard } from "@/common/guards/access-token/access-token.guard";
-import { RolesGuard } from "@/common/guards/roles.guard";
 import { ScheduleModule } from "@nestjs/schedule";
 import { LoggerMiddleware } from "@/common/middleware/logger.middleware";
 import { MonitoringModule } from "./modules/monitoring/monitoring.module";
@@ -36,11 +33,6 @@ import { MonitoringModule } from "./modules/monitoring/monitoring.module";
     IngestionModule,
     IncidentsModule,
     MonitoringModule,
-  ],
-  controllers: [],
-  providers: [
-    { provide: APP_GUARD, useClass: AccessTokenGuard },
-    { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
 export class AppModule implements NestModule {

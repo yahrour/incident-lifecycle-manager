@@ -7,11 +7,11 @@ import {
   Patch,
   Post,
   Query,
+  Req,
 } from "@nestjs/common";
 import { Role } from "@/generated/prisma/enums";
-import { ActiveUser } from "@/common/decorators/active-user.decorator";
 import { Roles } from "@/common/decorators/roles.decorator";
-import type { ActiveUserData } from "@/common/interfaces/active-user.interface";
+import type { AuthRequest } from "@/common/interfaces/active-user.interface";
 import { apiResponse } from "@/common/utils/api-response";
 import { CreateIncidentDto } from "./dto/create-incident.dto";
 import { FindIncidentsDto } from "./dto/find-incidents.dto";
@@ -27,7 +27,7 @@ export class IncidentsController {
   @Roles(Role.SRE, Role.ENGINEER)
   async findAll(
     @Query() query: FindIncidentsDto,
-    @ActiveUser() user: ActiveUserData
+    @Req() { user }: AuthRequest
   ) {
     const { data, total, nextCursor } = await this.incidentsService.findAll(
       user.sub,
@@ -41,7 +41,7 @@ export class IncidentsController {
   @Roles(Role.SRE, Role.ENGINEER)
   async findOne(
     @Param("id", ParseUUIDPipe) id: string,
-    @ActiveUser() user: ActiveUserData
+    @Req() { user }: AuthRequest
   ) {
     const incident = await this.incidentsService.findOne(user.sub, id);
     return apiResponse(incident);
@@ -52,7 +52,7 @@ export class IncidentsController {
   async createNote(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() createIncidentNoteDto: CreateIncidentNoteDto,
-    @ActiveUser() user: ActiveUserData
+    @Req() { user }: AuthRequest
   ) {
     const note = await this.incidentsService.createNote(
       user.sub,
@@ -66,7 +66,7 @@ export class IncidentsController {
   @Roles(Role.SRE)
   async create(
     @Body() createIncidentDto: CreateIncidentDto,
-    @ActiveUser() user: ActiveUserData
+    @Req() { user }: AuthRequest
   ) {
     const incident = await this.incidentsService.create(
       user.sub,
@@ -80,7 +80,7 @@ export class IncidentsController {
   async reassign(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() reassignIncidentDto: ReassignIncidentDto,
-    @ActiveUser() user: ActiveUserData
+    @Req() { user }: AuthRequest
   ) {
     const incident = await this.incidentsService.reassign(
       user.sub,
@@ -95,7 +95,7 @@ export class IncidentsController {
   @Roles(Role.ENGINEER)
   async acknowledge(
     @Param("id", ParseUUIDPipe) id: string,
-    @ActiveUser() user: ActiveUserData
+    @Req() { user }: AuthRequest
   ) {
     const incident = await this.incidentsService.acknowledge(user.sub, id);
     return apiResponse(incident);
@@ -105,7 +105,7 @@ export class IncidentsController {
   @Roles(Role.ENGINEER)
   async resolve(
     @Param("id", ParseUUIDPipe) id: string,
-    @ActiveUser() user: ActiveUserData
+    @Req() { user }: AuthRequest
   ) {
     const incident = await this.incidentsService.resolve(user.sub, id);
     return apiResponse(incident);

@@ -1,9 +1,8 @@
-import { Body, Controller, Get, Post, Query } from "@nestjs/common";
+import { Req, Body, Controller, Get, Post, Query } from "@nestjs/common";
 import { InviteService } from "./invite.service";
 import { CreateInvite } from "./dto/create-invite.dto";
 import { RegisterViaInviteDto } from "./dto/register-via-invite.dto";
-import { ActiveUser } from "@/common/decorators/active-user.decorator";
-import type { ActiveUserData } from "@/common/interfaces/active-user.interface";
+import type { AuthRequest } from "@/common/interfaces/active-user.interface";
 import { Public } from "@/common/decorators/public.decorator";
 import { Roles } from "@/common/decorators/roles.decorator";
 import { Role } from "@/generated/prisma/enums";
@@ -21,7 +20,7 @@ export class InviteController {
   @Post("create")
   async create(
     @Body() createInvite: CreateInvite,
-    @ActiveUser() activeUser: ActiveUserData
+    @Req() { user: activeUser }: AuthRequest
   ) {
     const result = await this.inviteService.createInvite(
       createInvite,
@@ -46,7 +45,7 @@ export class InviteController {
   @Post("accept")
   async acceptInvite(
     @Body() dto: AcceptInviteDto,
-    @ActiveUser() activeUser: ActiveUserData
+    @Req() { user: activeUser }: AuthRequest
   ) {
     await this.inviteService.accept(dto.token, activeUser);
   }
