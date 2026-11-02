@@ -12,8 +12,16 @@ import { Namespace, Socket } from "socket.io";
 
 @WebSocketGateway({
   namespace: "/incidents",
+  path: "/api/socket.io",
   cors: {
-    origin: process.env.FRONTEND_URL ?? "http://localhost:5173",
+    origin: (
+      origin: string | undefined,
+      callback: (error: Error | null, allow: boolean) => void
+    ) =>
+      callback(
+        null,
+        origin === (process.env.FRONTEND_URL ?? "http://localhost:5173")
+      ),
     credentials: true,
   },
 })
