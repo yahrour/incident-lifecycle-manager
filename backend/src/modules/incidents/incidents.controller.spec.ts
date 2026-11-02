@@ -13,7 +13,7 @@ describe("IncidentsController", () => {
     const controller = new IncidentsController(incidentsService as never);
 
     await expect(
-      controller.findAll({} as never, { sub: "user-id" } as never)
+      controller.findAll({} as never, { user: { sub: "user-id" } } as never)
     ).resolves.toEqual({
       data: incidents,
       meta: { total: 1, nextCursor: "next-cursor" },
@@ -32,7 +32,7 @@ describe("IncidentsController", () => {
     const controller = new IncidentsController(incidentsService as never);
 
     await expect(
-      controller.findOne("incident-id", { sub: "user-id" } as never)
+      controller.findOne("incident-id", { user: { sub: "user-id" } } as never)
     ).resolves.toEqual({ data: incident });
   });
 
@@ -45,7 +45,7 @@ describe("IncidentsController", () => {
 
     await expect(
       controller.createNote("incident-id", { content: note.content }, {
-        sub: "user-id",
+        user: { sub: "user-id" },
       } as never)
     ).resolves.toEqual({ data: note });
   });
@@ -58,7 +58,9 @@ describe("IncidentsController", () => {
     const controller = new IncidentsController(incidentsService as never);
 
     await expect(
-      controller.acknowledge("incident-id", { sub: "user-id" } as never)
+      controller.acknowledge("incident-id", {
+        user: { sub: "user-id" },
+      } as never)
     ).resolves.toEqual({ data: incident });
   });
 
@@ -70,7 +72,7 @@ describe("IncidentsController", () => {
     const controller = new IncidentsController(incidentsService as never);
 
     await expect(
-      controller.resolve("incident-id", { sub: "user-id" } as never)
+      controller.resolve("incident-id", { user: { sub: "user-id" } } as never)
     ).resolves.toEqual({ data: incident });
   });
 });

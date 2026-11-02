@@ -8,11 +8,11 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Req,
 } from "@nestjs/common";
 import { Role } from "@/generated/prisma/enums";
-import { ActiveUser } from "@/common/decorators/active-user.decorator";
 import { Roles } from "@/common/decorators/roles.decorator";
-import type { ActiveUserData } from "@/common/interfaces/active-user.interface";
+import type { AuthRequest } from "@/common/interfaces/active-user.interface";
 import { CreateApiKey } from "./dto/create-api-key.dto";
 import { ApiKeyService } from "./api-key.service";
 
@@ -25,7 +25,7 @@ export class ApiKeyController {
 
   @Post("create")
   @Roles(Role.SRE)
-  async create(@ActiveUser() user: ActiveUserData, @Body() dto: CreateApiKey) {
+  async create(@Req() { user }: AuthRequest, @Body() dto: CreateApiKey) {
     const { apiKey, prefix, expiresAt } = await this.apiKeyService.create(
       user.sub,
       dto.name,
@@ -37,7 +37,7 @@ export class ApiKeyController {
 
   @Get()
   @Roles(Role.SRE)
-  async findAll(@ActiveUser() user: ActiveUserData) {
+  async findAll(@Req() { user }: AuthRequest) {
     const apiKeys = await this.apiKeyService.findAll(user.sub);
 
     return { data: apiKeys };
@@ -47,7 +47,7 @@ export class ApiKeyController {
   @Roles(Role.SRE)
   @HttpCode(HttpStatus.NO_CONTENT)
   async disable(
-    @ActiveUser() user: ActiveUserData,
+    @Req() { user }: AuthRequest,
     @Param("id", ParseUUIDPipe) id: string
   ) {
     await this.apiKeyService.disable(user.sub, id);
@@ -57,7 +57,7 @@ export class ApiKeyController {
   @Roles(Role.SRE)
   @HttpCode(HttpStatus.NO_CONTENT)
   async enable(
-    @ActiveUser() user: ActiveUserData,
+    @Req() { user }: AuthRequest,
     @Param("id", ParseUUIDPipe) id: string
   ) {
     await this.apiKeyService.enable(user.sub, id);
@@ -67,7 +67,7 @@ export class ApiKeyController {
   @Roles(Role.SRE)
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(
-    @ActiveUser() user: ActiveUserData,
+    @Req() { user }: AuthRequest,
     @Param("id", ParseUUIDPipe) id: string
   ) {
     await this.apiKeyService.delete(user.sub, id);
