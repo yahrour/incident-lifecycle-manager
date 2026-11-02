@@ -38,37 +38,27 @@ export class InviteService {
     if (currUser.email === createInvite.inviteEmail) {
       throw new BadRequestException("You can't invite yourself to a team.");
     }
-
-    const existingInvite = await this.prisma.inviteToken.findFirst({
-      where: {
-        email: createInvite.inviteEmail,
-        teamId: createInvite.teamId,
-        used: false,
-        expiresAt: { gt: new Date() },
-      },
-    });
-
-    if (existingInvite) {
-      await this.prisma.inviteToken.delete({
-        where: { id: existingInvite.id },
-      });
-    }
-
-    const { rawToken, hashedToken } = generateSecureToken();
-
-    const inviteTtlDays = this.configService.getOrThrow<number>(
-      "INVITE_TOKEN_TTL_DAYS"
+    const expiresAt = new Date(
+      Date.now() + createInvite.expiresIn * 60 * 60 * 1000
     );
-
-    await this.prisma.inviteToken.create({
-      data: {
-        token: hashedToken,
-        email: createInvite.inviteEmail,
-        teamId: createInvite.teamId,
-        expiresAt: new Date(Date.now() + inviteTtlDays * 24 * 60 * 60 * 1000),
-      },
+    const { rawToken, hashedToken } = generateSecureToken();
+    await this.prisma.$transaction(async (tx) => {
+      await tx.inviteToken.deleteMany({
+        where: {
+          email: createInvite.inviteEmail,
+          teamId: createInvite.teamId,
+          used: false,
+        },
+      });
+      await tx.inviteToken.create({
+        data: {
+          token: hashedToken,
+          email: createInvite.inviteEmail,
+          teamId: createInvite.teamId,
+          expiresAt,
+        },
+      });
     });
-
     return this.buildInviteLinkResponse(rawToken);
   }
 

@@ -1,14 +1,14 @@
 import {
   IsEmail,
   IsString,
-  IsOptional,
-  MinLength,
   MaxLength,
   IsNotEmpty,
   IsTimeZone,
+  IsByteLength,
+  MinLength,
 } from "class-validator";
 import { Trim } from "src/common/transformers/trim.transformer";
-import { Transform } from "class-transformer";
+import { NormalizeEmail } from "@/common/transformers/normalize-email";
 
 export class SignUp {
   @Trim()
@@ -23,9 +23,7 @@ export class SignUp {
   @MaxLength(50)
   lastName: string;
 
-  @Transform(({ value }: { value: unknown }) =>
-    typeof value === "string" ? value.trim().toLowerCase() : value
-  )
+  @NormalizeEmail()
   @IsNotEmpty()
   @IsEmail()
   @MaxLength(255)
@@ -34,19 +32,10 @@ export class SignUp {
   @IsNotEmpty()
   @IsString()
   @MinLength(8)
-  @MaxLength(72)
+  @IsByteLength(0, 72)
   password: string;
 
-  @Trim()
   @IsString()
-  @IsOptional()
-  @MaxLength(100)
-  specialty?: string;
-
-  @Trim()
-  @IsString()
-  @IsOptional()
-  @MaxLength(64)
-  @IsTimeZone({ message: "Invalid IANA time zone format." })
+  @IsTimeZone()
   timezone: string = "UTC";
 }

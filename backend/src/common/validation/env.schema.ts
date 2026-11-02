@@ -15,5 +15,7 @@ export const validationSchema = Joi.object({
   JWT_ISSUER: Joi.string().required(),
   GOOGLE_CLIENT_ID: Joi.string().required(),
   GOOGLE_CLIENT_SECRET: Joi.string().required(),
+  GOOGLE_CALLBACK_URL: Joi.string().uri().required(),
+  FRONTEND_URL: Joi.string().uri().required(),
   IMPORT_MAX_FILE_BYTES: Joi.number().required(),
 });

@@ -6,12 +6,10 @@ import {
   IsOptional,
   IsUUID,
 } from "class-validator";
-import { Transform } from "class-transformer";
+import { NormalizeEmail } from "@/common/transformers/normalize-email";
 
 export class CreateInvite {
-  @Transform(({ value }: { value: unknown }) =>
-    typeof value === "string" ? value.trim().toLowerCase() : value
-  )
+  @NormalizeEmail()
   @IsNotEmpty()
   @IsEmail()
   inviteEmail: string;

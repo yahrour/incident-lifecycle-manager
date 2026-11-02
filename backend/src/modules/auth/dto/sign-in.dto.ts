@@ -1,15 +1,13 @@
-import { IsEmail, IsString, MaxLength } from "class-validator";
-import { Transform } from "class-transformer";
+import { IsByteLength, IsEmail, IsString, MaxLength } from "class-validator";
+import { NormalizeEmail } from "@/common/transformers/normalize-email";
 
 export class SignIn {
-  @Transform(({ value }: { value: unknown }) =>
-    typeof value === "string" ? value.trim().toLowerCase() : value
-  )
+  @NormalizeEmail()
   @IsEmail()
   @MaxLength(255)
   email: string;
 
   @IsString()
-  @MaxLength(72)
+  @IsByteLength(0, 72)
   password: string;
 }
