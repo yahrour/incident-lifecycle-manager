@@ -60,7 +60,7 @@ describe("IncidentsService", () => {
   });
 
   it("assigns a new incident to the primary on-call engineer", async () => {
-    const create = jest.fn();
+    const create = jest.fn().mockResolvedValue(incident);
     const prisma = { incident: { create } } as unknown as PrismaService;
     const getCurrentOnCall = jest.fn().mockResolvedValue({
       chain: [
