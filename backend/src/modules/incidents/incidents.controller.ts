@@ -8,6 +8,7 @@ import {
   Post,
   Query,
   Req,
+  Sse,
 } from "@nestjs/common";
 import { Role } from "@/generated/prisma/enums";
 import { Roles } from "@/common/decorators/roles.decorator";
@@ -35,6 +36,12 @@ export class IncidentsController {
     );
 
     return apiResponse(data, { total, nextCursor });
+  }
+
+  @Sse("events")
+  @Roles(Role.SRE, Role.ENGINEER)
+  events(@Req() { user }: AuthRequest) {
+    return this.incidentsService.events(user.sub);
   }
 
   @Get(":id")
