@@ -14,7 +14,6 @@ import { SignIn } from "./dto/sign-in.dto";
 import { AuthService } from "./auth.service";
 import type { Response, Request } from "express";
 import { Public } from "@/common/decorators/public.decorator";
-import { RefrechTokenDto } from "./dto/refresh-token.dto";
 import {
   ACCESS_COOKIE_OPTIONS,
   REFRESH_COOKIE_OPTIONS,
@@ -59,14 +58,11 @@ export class AuthController {
   @Post("refresh-tokens")
   async refreshTokens(
     @Req() request: Request,
-    @Body() refrechTokenDto: RefrechTokenDto,
     @Res({ passthrough: true }) response: Response
   ) {
-    const cookies = request.cookies as Record<string, string> | undefined;
-    const oldRefreshToken =
-      cookies?.["refreshToken"] ?? refrechTokenDto.refreshToken;
-    if (!oldRefreshToken) {
-      throw new UnauthorizedException("No refresh token provided");
+    const oldRefreshToken: unknown = request.cookies?.["refreshToken"];
+    if (typeof oldRefreshToken !== "string" || oldRefreshToken.length === 0) {
+      throw new UnauthorizedException("Invalid or expired session");
     }
 
     const { accessToken, refreshToken } =
