@@ -1,6 +1,6 @@
 FROM postgres:18-alpine
 
-RUN apk add --no-cache curl bash
+RUN apk add bash
 
 WORKDIR /scripts
 

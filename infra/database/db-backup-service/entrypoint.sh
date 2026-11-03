@@ -9,4 +9,4 @@ EOF
 
 echo "* * * * * source /etc/environment && /scripts/db.backup.sh" > /etc/crontabs/root
 
-exec crond -f -d 8
+exec crond -f

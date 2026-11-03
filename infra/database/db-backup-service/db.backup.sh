@@ -16,7 +16,7 @@ BACKUP_PATH="/backups/backup_$TIMESTAMP.sql"
 
 log_info "Starting database backup at $TIMESTAMP"
 
-if PGPASSWORD=$POSTGRES_PASSWORD pg_dump -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -d "$POSTGRES_DB" > "$BACKUP_PATH.tmp"; then
+if PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -d "$POSTGRES_DB" > "$BACKUP_PATH.tmp"; then
   mv "$BACKUP_PATH.tmp" "$BACKUP_PATH"
   log_success "Backup successfully created: $BACKUP_PATH"
 else
