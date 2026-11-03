@@ -1,25 +1,35 @@
 import { Link } from "react-router";
-import { LogoSvg } from "./LogoSvg";
+import { Wordmark } from "./Wordmark";
 
-export function LandingNavbar({ variant = "landing" }: { variant?: "landing" | "legal" }) {
+export function LandingNavbar({
+  variant = "landing",
+}: {
+  variant?: "landing" | "legal";
+}) {
   return (
-    <nav className="relative z-50 border-b border-[#e8e3dd] bg-[rgba(254,254,254,0.8)] backdrop-blur-[14px]">
-      <div className="flex items-center justify-between h-[clamp(56px,3.2vw,72px)] px-[clamp(18px,3vw,42px)]">
-        <Link to="/" className="flex items-center gap-2.5 no-underline font-bold text-[15px] text-[#1a1a1a]">
-          <LogoSvg className="w-[30px] h-[30px] shrink-0" />
-          Better Incidents
+    <nav className="relative z-50">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center h-[clamp(64px,4vw,88px)] px-[clamp(18px,3vw,42px)] max-md:flex max-md:justify-between">
+        <div className="max-md:hidden" />
+
+        <Link to="/" className="no-underline justify-self-center">
+          <Wordmark />
+          <span className="sr-only">Incident Lifecycle Manager — home</span>
         </Link>
+
         {variant === "landing" ? (
-          <div className="flex items-center gap-2">
-            <Link to="/login" className="inline-flex items-center px-[17px] py-[9px] rounded-[10px] text-[clamp(13px,calc(0.25vw+12px),15px)] font-semibold no-underline border-[1.5px] border-[#e8e3dd] bg-transparent text-[#1a1a1a] hover:bg-[#faf8f5] transition-all duration-200">
+          <div className="flex items-center justify-end">
+            <Link
+              to="/login"
+              className="inline-flex items-center rounded-full text-[13px] font-semibold no-underline px-[15px] py-[7px] bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-200"
+            >
               Log in
-            </Link>
-            <Link to="/signup" className="inline-flex items-center px-[17px] py-[9px] rounded-[10px] text-[clamp(13px,calc(0.25vw+12px),15px)] font-semibold no-underline bg-[#E0641F] text-white hover:bg-[#c9561a] hover:-translate-y-px transition-all duration-200">
-              Sign up
             </Link>
           </div>
         ) : (
-          <Link to="/" className="text-[13px] font-semibold text-[#7a7672] no-underline hover:text-[#1a1a1a] transition-colors duration-150">
+          <Link
+            to="/"
+            className="justify-self-end text-[13px] font-semibold text-muted-foreground no-underline hover:text-foreground transition-colors duration-150"
+          >
             ← Back to home
           </Link>
         )}
