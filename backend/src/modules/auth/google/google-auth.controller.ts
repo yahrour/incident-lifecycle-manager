@@ -19,7 +19,9 @@ export class GoogleAuthController {
   ) {}
   @Get()
   @UseGuards(GoogleOAuthGuard)
-  start() {}
+  redirectToGoogle() {
+    // Passport handles the redirect.
+  }
 
   @Get("callback")
   @UseGuards(GoogleOAuthGuard)
