@@ -137,7 +137,7 @@ export class InviteService {
     const isMember = await this.membersService.isInTeam(user.id);
     if (isMember) {
       throw new ConflictException(
-        "You're already in a team. Leave it before joining a new one."
+        "You're already a member of a team. Please contact your current SRE to have you removed before joining another team."
       );
     }
     try {
