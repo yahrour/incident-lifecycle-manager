@@ -1,5 +1,6 @@
 FROM postgres:18-alpine
 
+RUN apk update
 RUN apk add bash
 
 WORKDIR /scripts
