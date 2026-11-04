@@ -3,6 +3,7 @@ import { SignIn, SignUp } from "@/features/auth";
 import { DeliveryLog } from "@/features/delivery-log";
 import { Incidents } from "@/features/incidents";
 import { Integrations } from "@/features/integrations";
+import { Overview } from "@/features/overview";
 import { InvitePage } from "@/features/invite";
 import {
   AllMembers,
@@ -63,6 +64,7 @@ export default function AppRoutes() {
               path="/manager/time-off"
               element={<div>manage time-off</div>}
             />
+            <Route path="/manager/overview" element={<Overview />} />
             <Route path="/manager/incidents" element={<Incidents />} />
             <Route
               path="/manager/incidents/:id"

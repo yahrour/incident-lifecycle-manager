@@ -1,10 +1,20 @@
 import { apiClient } from "@/lib/apiClient";
 import type { ApiResponse, User } from "@/types";
-import type { Incident, IncidentDetails, IncidentStatus } from "../types";
+import type {
+  Incident,
+  IncidentDetails,
+  IncidentSeverity,
+  IncidentStatus,
+} from "../types";
 
-export async function fetchIncidents(status?: IncidentStatus, cursor?: string) {
+export async function fetchIncidents(
+  status?: IncidentStatus,
+  cursor?: string,
+  limit = 10,
+  severity?: IncidentSeverity
+) {
   const response = await apiClient.get<ApiResponse<Incident[]>>("/incidents", {
-    params: { status, cursor, limit: 10 },
+    params: { status, cursor, limit, severity },
   });
 
   return response.data;
