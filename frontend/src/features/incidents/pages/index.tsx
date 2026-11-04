@@ -21,8 +21,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format, formatDistanceToNow } from "date-fns";
 import { formatMetricDuration } from "../utils";
+import { useIncidentEvents } from "../hooks/useIncidentEvents";
 
 export function Incidents() {
+  useIncidentEvents();
   const [status, setStatus] = useState<IncidentStatus | "all">("all");
   return (
     <>
@@ -57,6 +59,7 @@ export function Incidents() {
 }
 
 export function IncidentsDetails() {
+  useIncidentEvents();
   const { id } = useParams();
 
   const { data, isError, isPending } = useQuery({

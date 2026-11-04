@@ -19,7 +19,6 @@ import { createIncidentFingerprint } from "./utils/incident-fingerprint";
 type IncidentChange = {
   id: string;
   teamId: string | null;
-  status: string;
   assignedToId: string | null;
 };
 
@@ -51,12 +50,12 @@ export class IncidentsService {
           )
         );
       }),
-      map(({ id, status }) => ({ data: { id, status } }))
+      map(({ id }) => ({ data: { id } }))
     );
   }
 
-  private changed({ id, teamId, status, assignedToId }: IncidentChange) {
-    this.changes.next({ id, teamId, status, assignedToId });
+  private changed({ id, teamId, assignedToId }: IncidentChange) {
+    this.changes.next({ id, teamId, assignedToId });
   }
 
   private encodeCursor(id: string) {
@@ -238,7 +237,7 @@ export class IncidentsService {
   async createNote(userId: string, incidentId: string, content: string) {
     const incident = await this.prisma.incident.findFirst({
       where: { id: incidentId, ...this.accessibleBy(userId) },
-      select: { id: true, teamId: true, status: true, assignedToId: true },
+      select: { id: true, teamId: true, assignedToId: true },
     });
 
     if (!incident) throw new NotFoundException("Incident doesn't exist");
@@ -321,7 +320,7 @@ export class IncidentsService {
       },
     };
 
-    const select = { id: true, teamId: true, status: true, assignedToId: true };
+    const select = { id: true, teamId: true, assignedToId: true };
     let incident = await this.prisma.incident.findUnique({ where, select });
     if (!incident) {
       if (alert.status === "resolved") return null;
