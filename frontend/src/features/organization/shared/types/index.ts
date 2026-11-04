@@ -32,7 +32,7 @@ export type Member = {
   };
 };
 
-export type TeamMember = {
+type TeamMember = {
   id: number;
   user: User;
   team: {

@@ -6,7 +6,7 @@ import { ImportTeamDialog } from "./ImportTeamDialog";
 
 type ActiveDialog = "import" | "export" | null;
 
-export function Row({
+function Row({
   icon,
   title,
   description,
