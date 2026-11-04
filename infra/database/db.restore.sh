@@ -30,7 +30,7 @@ fi
 TMP_DB="${POSTGRES_DB}_tmp"
 OLD_DB="${POSTGRES_DB}_old"
 
-psql() { docker compose exec -T -e PGOPTIONS='-c client_min_messages=warning' "$POSTGRES_SERVICE_NAME" psql -U "$POSTGRES_USER" -q -v ON_ERROR_STOP=1 "$@"; }
+psql() { docker compose exec -T "$POSTGRES_SERVICE_NAME" psql -U "$POSTGRES_USER" -q -v ON_ERROR_STOP=1 "$@"; }
 
 log_info "Restoring $BACKUP"
 
