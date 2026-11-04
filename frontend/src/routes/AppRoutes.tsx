@@ -16,25 +16,23 @@ import { SettingPage } from "@/features/settings";
 import { Route, Routes } from "react-router";
 import { AppLayout } from "./AppLayout";
 import { GuestOnly } from "./GuestOnly";
-import { LandingOrDashboard } from "./LandingOrDashboard";
 import { MyTeam } from "@/features/my-team";
 import { MyUnavailabilities } from "@/features/my-unavailabilities";
 import { StatusPage } from "@/features/status";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { RequireAuth } from "./RequireAuth";
 import { IncidentsDetails } from "@/features/incidents/pages";
-import { PrivacyPage, TermsPage } from "@/features/landing";
+import { LandingPage, PrivacyPage, TermsPage } from "@/features/landing";
 
 export default function AppRoutes() {
   return (
     <Routes>
       {/* Public pages */}
-      <Route path="/" element={<LandingOrDashboard />} />
+      <Route path="/" element={<LandingPage />} />
       <Route path="/invite" element={<InvitePage />} />
       <Route path="/status" element={<StatusPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms" element={<TermsPage />} />
-
 
       <Route element={<GuestOnly />}>
         <Route path="/login" element={<SignIn />} />
