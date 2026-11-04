@@ -654,6 +654,80 @@ describe("IncidentsService", () => {
     );
   });
 
+  function streamSetup() {
+    const findUnique = jest.fn();
+    const updateMany = jest.fn().mockResolvedValue({ count: 1 });
+    const prisma = {
+      team: { findMany: jest.fn().mockResolvedValue([{ id: "team-id" }]) },
+      incident: {
+        findFirst: jest.fn().mockResolvedValue({
+          id: "incident-id",
+          status: "acknowledged",
+          assignedToId: "engineer-id",
+          createdAt: new Date(Date.now() - 5_000),
+        }),
+        findUnique,
+        updateMany,
+      },
+    } as unknown as PrismaService;
+    const service = new IncidentsService(prisma, {} as OnCallService);
+    const received: unknown[] = [];
+    const subscription = service
+      .events("viewer-id")
+      .subscribe((event) => received.push(event));
+    return { prisma, service, findUnique, updateMany, received, subscription };
+  }
+
+  it("streams changes for the user's teams and assignments only", async () => {
+    const { prisma, service, findUnique, received, subscription } =
+      streamSetup();
+    await new Promise(setImmediate);
+
+    findUnique
+      .mockResolvedValueOnce({ id: "mine", teamId: "team-id" })
+      .mockResolvedValueOnce({ id: "other", teamId: "other-team" })
+      .mockResolvedValueOnce({
+        id: "assigned",
+        teamId: null,
+        assignedToId: "viewer-id",
+      })
+      .mockResolvedValueOnce({ id: "resolved", teamId: "team-id" });
+    await service.acknowledge("engineer-id", "incident-id");
+    await service.acknowledge("engineer-id", "incident-id");
+    await service.acknowledge("engineer-id", "incident-id");
+    await service.resolve("engineer-id", "incident-id");
+    subscription.unsubscribe();
+
+    expect(prisma.team.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          OR: [
+            { ownerId: "viewer-id" },
+            { teamMembers: { some: { userId: "viewer-id" } } },
+          ],
+        },
+      })
+    );
+    expect(received).toEqual([
+      { data: { id: "mine" } },
+      { data: { id: "assigned" } },
+      { data: { id: "resolved" } },
+    ]);
+  });
+
+  it("streams nothing when an acknowledge loses the race", async () => {
+    const { service, updateMany, received, subscription } = streamSetup();
+    await new Promise(setImmediate);
+    updateMany.mockResolvedValue({ count: 0 });
+
+    await expect(
+      service.acknowledge("engineer-id", "incident-id")
+    ).rejects.toBeInstanceOf(ConflictException);
+    subscription.unsubscribe();
+
+    expect(received).toEqual([]);
+  });
+
   it("escalates overdue open incidents to the secondary, or to the team owner without one", async () => {
     const team = { id: "team-id", ownerId: "owner-id" };
     const minutesAgo = (minutes: number) =>
