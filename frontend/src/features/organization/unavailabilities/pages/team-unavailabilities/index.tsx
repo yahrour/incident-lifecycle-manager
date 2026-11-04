@@ -78,8 +78,17 @@ export function TeamUnavailabilities() {
             <TabsTrigger value="all" className="cursor-pointer">
               All
             </TabsTrigger>
+            <TabsTrigger value="approved" className="cursor-pointer">
+              Approved
+            </TabsTrigger>
             <TabsTrigger value="pending" className="cursor-pointer">
               Pending
+            </TabsTrigger>
+            <TabsTrigger value="rejected" className="cursor-pointer">
+              Rejected
+            </TabsTrigger>
+            <TabsTrigger value="expired" className="cursor-pointer">
+              Expired
             </TabsTrigger>
           </TabsList>
         </Tabs>
