@@ -9,7 +9,7 @@
 :root {
   color-scheme: light;
 
-  --background: #f8f5ef;
+  --background: #f4f2ee;
   --foreground: #161618;
   --card: #ffffff;
   --card-foreground: #161618;
@@ -33,8 +33,8 @@
 
   --destructive: #b3271a;
   --destructive-foreground: #ffffff;
-  --border: #e4d9c8;
-  --input: #e4d9c8;
+  --border: #e5e1d9;
+  --input: #d9d4cb;
   --ring: #d9411d;
 
   --chart-1: #f25533;
@@ -226,6 +226,10 @@
   h5,
   h6 {
     @apply font-heading;
+  }
+  /* linkding-style soft lift on cards */
+  [data-slot="card"] {
+    @apply shadow-sm dark:shadow-none;
   }
   ::selection {
     background: color-mix(in oklab, var(--primary) 25%, transparent);
