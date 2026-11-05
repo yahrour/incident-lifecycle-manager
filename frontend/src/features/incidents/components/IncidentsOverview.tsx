@@ -18,7 +18,7 @@ import {
   // type IncidentStatus,
 } from "../types";
 import { IncidentsTable } from "./IncidentsTable";
-import { RowStats } from "@/features/overview/components/stats/RowStats";
+import { RowStats } from "./RowStats";
 
 const createdConfig = {
   count: { label: "Incidents", color: "var(--chart-1)" },
