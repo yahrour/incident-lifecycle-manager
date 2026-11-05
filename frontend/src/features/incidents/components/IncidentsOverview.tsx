@@ -1,4 +1,4 @@
-import { StatusDot } from "@/components/StatusDot";
+// import { StatusDot } from "@/components/StatusDot";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
@@ -11,13 +11,14 @@ import { format, isSameDay, subDays } from "date-fns";
 import { Link } from "react-router";
 import { Area, AreaChart, Bar, BarChart, XAxis, YAxis } from "recharts";
 import { fetchIncidents } from "../api/incidents";
-import { statusColor } from "../constants";
+// import { statusColor } from "../constants";
 import {
   INCIDENT_SEVERITIES,
   INCIDENT_STATUS,
-  type IncidentStatus,
+  // type IncidentStatus,
 } from "../types";
 import { IncidentsTable } from "./IncidentsTable";
+import { RowStats } from "@/features/overview/components/stats/RowStats";
 
 const createdConfig = {
   count: { label: "Incidents", color: "var(--chart-1)" },
@@ -27,25 +28,25 @@ const severityConfig = {
   count: { label: "Open" },
 } satisfies ChartConfig;
 
-function StatusCount({ status }: { status: IncidentStatus }) {
-  const { data, isError } = useQuery({
-    queryKey: ["incidents", status, "count"],
-    queryFn: () => fetchIncidents(status, undefined, 1),
-  });
+// function StatusCount({ status }: { status: IncidentStatus }) {
+//   const { data, isError } = useQuery({
+//     queryKey: ["incidents", status, "count"],
+//     queryFn: () => fetchIncidents(status, undefined, 1),
+//   });
 
-  return (
-    <Card>
-      <CardHeader>
-        <StatusDot className={statusColor[status]}>{status}</StatusDot>
-        {isError ? (
-          <p className="text-xs text-destructive">Couldn't load</p>
-        ) : (
-          <CardTitle className="text-2xl">{data?.meta?.total ?? "–"}</CardTitle>
-        )}
-      </CardHeader>
-    </Card>
-  );
-}
+//   return (
+//     <Card>
+//       <CardHeader>
+//         <StatusDot className={statusColor[status]}>{status}</StatusDot>
+//         {isError ? (
+//           <p className="text-xs text-destructive">Couldn't load</p>
+//         ) : (
+//           <CardTitle className="text-2xl">{data?.meta?.total ?? "–"}</CardTitle>
+//         )}
+//       </CardHeader>
+//     </Card>
+//   );
+// }
 
 function IncidentsCreatedChart() {
   const { data } = useQuery({
@@ -136,11 +137,21 @@ export function IncidentsOverview() {
   const total = data?.meta?.total;
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-3">
+      {/**/}
+      {/*<div className="grid gap-4 sm:grid-cols-3">
         {Object.values(INCIDENT_STATUS).map((status) => (
           <StatusCount key={status} status={status} />
         ))}
-      </div>
+      </div>*/}
+      <RowStats
+        acknowledgedIncidents={1}
+        openIncidents={2}
+        resolvedIncidents={3}
+        totalTeam={4}
+        awayNowCount={5}
+      />
+
+      {/**/}
       <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
         <IncidentsCreatedChart />
         <OpenBySeverityChart />
