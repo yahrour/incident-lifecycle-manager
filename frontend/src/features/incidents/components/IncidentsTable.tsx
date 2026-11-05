@@ -69,7 +69,9 @@ export function IncidentsTable({ status }: { status?: IncidentStatus }) {
               key={incident.id}
               className="hover:cursor-pointer"
               onClick={() => {
-                void navigate(incident.id);
+                void navigate(`../incidents/${incident.id}`, {
+                  relative: "path",
+                });
               }}
             >
               <SeverityCell className={severityColor[incident.severity]}>
