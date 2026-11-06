@@ -7,6 +7,7 @@ import { Page } from "@/components/Page";
 
 export default function SettingsPage() {
   const { data: user, isLoading, isError } = useUserSettings();
+
   if (isLoading) {
     return (
       <div className="flex min-h-75 items-center justify-center">
@@ -14,6 +15,7 @@ export default function SettingsPage() {
       </div>
     );
   }
+
   if (isError || !user) {
     return (
       <div className="flex min-h-75 items-center justify-center p-6">
@@ -30,6 +32,7 @@ export default function SettingsPage() {
       </div>
     );
   }
+
   return (
     <Page header={<h1 className="font-medium text-sm">Settings</h1>}>
       <ProfileForm user={user} />

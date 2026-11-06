@@ -10,6 +10,7 @@ export default function useLogout() {
     mutationFn: logout,
     onSettled: () => {
       queryClient.setQueryData(["session"], null);
+      queryClient.clear();
       void navigate("/login", { replace: true });
     },
   });
