@@ -20,7 +20,13 @@ import { severityColor, statusColor } from "../constants";
 import type { IncidentStatus } from "../types";
 import { formatMetricDuration } from "../utils";
 
-export function IncidentsTable({ status }: { status?: IncidentStatus }) {
+export function IncidentsTable({
+  status,
+  compact,
+}: {
+  status?: IncidentStatus;
+  compact?: boolean;
+}) {
   const [cursors, setCursors] = useState<(string | undefined)[]>([undefined]);
   const cursor = cursors[cursors.length - 1];
   const navigate = useNavigate();
@@ -47,19 +53,19 @@ export function IncidentsTable({ status }: { status?: IncidentStatus }) {
             <TableHead>Severity</TableHead>
             <TableHead>Incidents</TableHead>
             <TableHead>Service</TableHead>
-            <TableHead>Team</TableHead>
+            {!compact && <TableHead>Team</TableHead>}
             <TableHead>Status</TableHead>
             <TableHead>Assignee</TableHead>
             <TableHead>Age</TableHead>
-            <TableHead className="text-center">MTTA</TableHead>
-            <TableHead className="text-center">MTTR</TableHead>
+            {!compact && <TableHead className="text-center">MTTA</TableHead>}
+            {!compact && <TableHead className="text-center">MTTR</TableHead>}
             <TableHead className="capitalize">escalation</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {incidents.length === 0 && (
             <TableRow>
-              <TableCell colSpan={10} className="text-center">
+              <TableCell colSpan={compact ? 7 : 10} className="text-center">
                 {isError ? "Couldn't load incidents" : "No matching incidents"}
               </TableCell>
             </TableRow>
@@ -81,9 +87,11 @@ export function IncidentsTable({ status }: { status?: IncidentStatus }) {
               <TableCell className="text-xs text-muted-foreground">
                 {incident.service}
               </TableCell>
-              <TableCell className="text-xs text-muted-foreground">
-                {incident.team?.name ?? "-"}
-              </TableCell>
+              {!compact && (
+                <TableCell className="text-xs text-muted-foreground">
+                  {incident.team?.name ?? "-"}
+                </TableCell>
+              )}
               <TableCell>
                 <StatusDot className={statusColor[incident.status]}>
                   {incident.status}
@@ -95,16 +103,20 @@ export function IncidentsTable({ status }: { status?: IncidentStatus }) {
                   : "Unassigned"}
               </TableCell>
               <TableCell>{formatDistanceToNow(incident.createdAt)}</TableCell>
-              <TableCell className="text-center">
-                {incident.mttaSeconds
-                  ? formatMetricDuration(incident.mttaSeconds)
-                  : "-"}
-              </TableCell>
-              <TableCell className="text-center">
-                {incident.mttrSeconds
-                  ? formatMetricDuration(incident.mttrSeconds)
-                  : "-"}
-              </TableCell>
+              {!compact && (
+                <TableCell className="text-center">
+                  {incident.mttaSeconds
+                    ? formatMetricDuration(incident.mttaSeconds)
+                    : "-"}
+                </TableCell>
+              )}
+              {!compact && (
+                <TableCell className="text-center">
+                  {incident.mttrSeconds
+                    ? formatMetricDuration(incident.mttrSeconds)
+                    : "-"}
+                </TableCell>
+              )}
               <TableCell className="text-center">
                 {incident.escalatedAt ? "Escalated" : "-"}
               </TableCell>
@@ -114,7 +126,7 @@ export function IncidentsTable({ status }: { status?: IncidentStatus }) {
       </Table>
       <nav
         aria-label="Incidents pagination"
-        className="flex items-center justify-end gap-3 mt-4"
+        className="flex items-center justify-center gap-3 mt-4"
       >
         <Button
           variant="outline"
