@@ -1,5 +1,6 @@
-import { StatusDot } from "@/components/StatusDot";
+// import { StatusDot } from "@/components/StatusDot";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress, ProgressLabel } from "@/components/ui/progress";
 import {
   ChartContainer,
   ChartTooltip,
@@ -8,44 +9,42 @@ import {
 } from "@/components/ui/chart";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { format, isSameDay, subDays } from "date-fns";
+import type { CSSProperties } from "react";
 import { Link } from "react-router";
-import { Area, AreaChart, Bar, BarChart, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, XAxis, YAxis } from "recharts";
 import { fetchIncidents } from "../api/incidents";
-import { statusColor } from "../constants";
+// import { statusColor } from "../constants";
 import {
   INCIDENT_SEVERITIES,
   INCIDENT_STATUS,
-  type IncidentStatus,
+  // type IncidentStatus,
 } from "../types";
 import { IncidentsTable } from "./IncidentsTable";
+import { RowStats } from "./RowStats";
 
 const createdConfig = {
   count: { label: "Incidents", color: "var(--chart-1)" },
 } satisfies ChartConfig;
 
-const severityConfig = {
-  count: { label: "Open" },
-} satisfies ChartConfig;
+// function StatusCount({ status }: { status: IncidentStatus }) {
+//   const { data, isError } = useQuery({
+//     queryKey: ["incidents", status, "count"],
+//     queryFn: () => fetchIncidents(status, undefined, 1),
+//   });
 
-function StatusCount({ status }: { status: IncidentStatus }) {
-  const { data, isError } = useQuery({
-    queryKey: ["incidents", status, "count"],
-    queryFn: () => fetchIncidents(status, undefined, 1),
-  });
-
-  return (
-    <Card>
-      <CardHeader>
-        <StatusDot className={statusColor[status]}>{status}</StatusDot>
-        {isError ? (
-          <p className="text-xs text-destructive">Couldn't load</p>
-        ) : (
-          <CardTitle className="text-2xl">{data?.meta?.total ?? "–"}</CardTitle>
-        )}
-      </CardHeader>
-    </Card>
-  );
-}
+//   return (
+//     <Card>
+//       <CardHeader>
+//         <StatusDot className={statusColor[status]}>{status}</StatusDot>
+//         {isError ? (
+//           <p className="text-xs text-destructive">Couldn't load</p>
+//         ) : (
+//           <CardTitle className="text-2xl">{data?.meta?.total ?? "–"}</CardTitle>
+//         )}
+//       </CardHeader>
+//     </Card>
+//   );
+// }
 
 function IncidentsCreatedChart() {
   const { data } = useQuery({
@@ -96,33 +95,35 @@ function OpenBySeverityChart() {
         fetchIncidents(INCIDENT_STATUS.OPEN, undefined, 1, severity),
     })),
   });
-  const chartData = INCIDENT_SEVERITIES.map((severity, i) => ({
+  const rows = INCIDENT_SEVERITIES.map((severity, i) => ({
     severity,
     count: counts[i]?.data?.meta?.total ?? 0,
-    fill: `var(--severity-${severity}-fg)`,
   })).reverse();
+  const total = rows.reduce((sum, { count }) => sum + count, 0);
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-sm">Open by severity</CardTitle>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={severityConfig} className="h-48 w-full">
-          <BarChart data={chartData} layout="vertical">
-            <XAxis type="number" hide allowDecimals={false} />
-            <YAxis
-              dataKey="severity"
-              type="category"
-              tickLine={false}
-              axisLine={false}
-              className="capitalize"
-              width={64}
-            />
-            <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-            <Bar dataKey="count" radius={4} />
-          </BarChart>
-        </ChartContainer>
+      <CardContent className="space-y-3">
+        {rows.map(({ severity, count }) => (
+          <Progress
+            key={severity}
+            value={total ? (count / total) * 100 : 0}
+            className="gap-1.5 [&_[data-slot=progress-indicator]]:bg-(--bar)"
+            style={
+              { "--bar": `var(--severity-${severity}-fg)` } as CSSProperties
+            }
+          >
+            <ProgressLabel className="text-xs capitalize">
+              {severity}
+            </ProgressLabel>
+            <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+              {count}
+            </span>
+          </Progress>
+        ))}
       </CardContent>
     </Card>
   );
@@ -136,11 +137,21 @@ export function IncidentsOverview() {
   const total = data?.meta?.total;
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-3">
+      {/**/}
+      {/*<div className="grid gap-4 sm:grid-cols-3">
         {Object.values(INCIDENT_STATUS).map((status) => (
           <StatusCount key={status} status={status} />
         ))}
-      </div>
+      </div>*/}
+      <RowStats
+        acknowledgedIncidents={1}
+        openIncidents={2}
+        resolvedIncidents={3}
+        totalTeam={4}
+        awayNowCount={5}
+      />
+
+      {/**/}
       <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
         <IncidentsCreatedChart />
         <OpenBySeverityChart />
@@ -151,7 +162,7 @@ export function IncidentsOverview() {
         ) : (
           <>
             <h2 className="font-medium text-sm">Needs attention</h2>
-            <IncidentsTable status={INCIDENT_STATUS.OPEN} />
+            <IncidentsTable status={INCIDENT_STATUS.OPEN} compact />
           </>
         )}
       </div>
@@ -166,7 +177,7 @@ export function IncidentsOverview() {
             All {"→"}
           </Link>
         </div>
-        <IncidentsTable />
+        <IncidentsTable compact />
       </div>
     </div>
   );
