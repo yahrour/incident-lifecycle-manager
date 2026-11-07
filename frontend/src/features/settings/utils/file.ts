@@ -8,16 +8,17 @@ export function generateFilename(fileFormat: ExportFileFormat) {
   return filename;
 }
 
-const FILENAME_REGEX = /^.*filename[^;=\n]*=((['"]).*?\2|[^;\n]*)[\n;]?$/i;
-
 export function getFilenameFromDisposition(
   header: unknown
 ): string | undefined {
   if (typeof header !== "string") return undefined;
 
-  const match = FILENAME_REGEX.exec(header);
-  // group 1 still includes the surrounding quotes, so strip them
-  return match?.[1]?.replace(/['"]/g, "").trim() || undefined;
+  const part = header
+    .split(";")
+    .map((p) => p.trim())
+    .find((p) => p.toLowerCase().startsWith("filename="));
+
+  return part?.slice("filename=".length).replace(/"/g, "").trim() || undefined;
 }
 
 export function formatFileSize(bytes: number): string {
