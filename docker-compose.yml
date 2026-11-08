@@ -46,6 +46,7 @@ services:
       - IPC_LOCK
     volumes:
       - vault_token:/vault/runtime
+      - vault_data:/vault/data
     env_file:
       - ./infra/vault/.env
     networks:
@@ -70,16 +71,17 @@ services:
   backend:
     build:
       context: ./backend
-    environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
     env_file:
       - ./backend/.env
     volumes:
       - ./backend/src:/app/src
       - ./backend/prisma:/app/prisma
+      - vault_token:/vault/runtime:ro
     depends_on:
       postgres:
         condition: service_healthy
+      vault:
+        condition: service_started
     healthcheck:
       test:
         [
@@ -167,6 +169,7 @@ volumes:
   prometheus_data:
   postgres_data:
   vault_token:
+  vault_data:
   grafana-data:
 
 networks:

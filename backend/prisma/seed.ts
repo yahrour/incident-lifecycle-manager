@@ -26,10 +26,9 @@ import { createHash } from "crypto";
 import * as bcrypt from "bcrypt";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Prisma, PrismaClient, Role } from "../src/generated/prisma/client";
+import { loadSecretsFromVault } from "../src/vault/load-secrets";
 
-const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
-});
+let prisma!: PrismaClient;
 
 const PASSWORD = "Password123!";
 const PER_TEAM = 5;
@@ -168,6 +167,10 @@ const AMELIA_UNAVAILABILITIES = [
 // ── Main ────────────────────────────────────────────────────────────────
 async function main() {
   console.log("Seeding…");
+  await loadSecretsFromVault();
+  prisma = new PrismaClient({
+    adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
+  });
   const passwordHash = await bcrypt.hash(PASSWORD, 10);
 
   // 1. Users ---------------------------------------------------------------

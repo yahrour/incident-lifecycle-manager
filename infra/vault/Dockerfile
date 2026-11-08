@@ -2,6 +2,7 @@ FROM hashicorp/vault:1.18
 
 RUN apk add --no-cache jq
 
+COPY config.hcl /vault/config/config.hcl
 COPY init.sh /usr/local/bin/init.sh
 COPY policy.hcl /usr/local/bin/policy.hcl
 
