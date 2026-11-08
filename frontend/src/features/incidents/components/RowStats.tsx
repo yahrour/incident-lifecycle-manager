@@ -7,9 +7,9 @@ export function RowStats({
   totalTeam,
   awayNowCount,
 }: {
-  openIncidents: number;
-  acknowledgedIncidents: number;
-  resolvedIncidents: number;
+  openIncidents: number | string;
+  acknowledgedIncidents: number | string;
+  resolvedIncidents: number | string;
   totalTeam: number;
   awayNowCount: number;
 }) {
