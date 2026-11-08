@@ -1,5 +1,10 @@
-// import { StatusDot } from "@/components/StatusDot";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import {
   ChartContainer,
@@ -13,38 +18,13 @@ import type { CSSProperties } from "react";
 import { Link } from "react-router";
 import { Area, AreaChart, XAxis, YAxis } from "recharts";
 import { fetchIncidents } from "../api/incidents";
-// import { statusColor } from "../constants";
-import {
-  INCIDENT_SEVERITIES,
-  INCIDENT_STATUS,
-  // type IncidentStatus,
-} from "../types";
+import { INCIDENT_SEVERITIES, INCIDENT_STATUS } from "../types";
 import { IncidentsTable } from "./IncidentsTable";
 import { RowStats } from "./RowStats";
 
 const createdConfig = {
   count: { label: "Incidents", color: "var(--chart-1)" },
 } satisfies ChartConfig;
-
-// function StatusCount({ status }: { status: IncidentStatus }) {
-//   const { data, isError } = useQuery({
-//     queryKey: ["incidents", status, "count"],
-//     queryFn: () => fetchIncidents(status, undefined, 1),
-//   });
-
-//   return (
-//     <Card>
-//       <CardHeader>
-//         <StatusDot className={statusColor[status]}>{status}</StatusDot>
-//         {isError ? (
-//           <p className="text-xs text-destructive">Couldn't load</p>
-//         ) : (
-//           <CardTitle className="text-2xl">{data?.meta?.total ?? "–"}</CardTitle>
-//         )}
-//       </CardHeader>
-//     </Card>
-//   );
-// }
 
 function IncidentsCreatedChart() {
   const { data } = useQuery({
@@ -70,7 +50,12 @@ function IncidentsCreatedChart() {
       <CardContent>
         <ChartContainer config={createdConfig} className="h-48 w-full">
           <AreaChart data={chartData}>
-            <XAxis dataKey="day" tickLine={false} axisLine={false} />
+            <XAxis
+              dataKey="day"
+              tickLine={false}
+              axisLine={false}
+              minTickGap={16}
+            />
             <YAxis allowDecimals={false} width={24} axisLine={false} />
             <ChartTooltip content={<ChartTooltipContent />} />
             <Area
@@ -136,13 +121,7 @@ export function IncidentsOverview() {
   });
   const total = data?.meta?.total;
   return (
-    <div className="space-y-6">
-      {/**/}
-      {/*<div className="grid gap-4 sm:grid-cols-3">
-        {Object.values(INCIDENT_STATUS).map((status) => (
-          <StatusCount key={status} status={status} />
-        ))}
-      </div>*/}
+    <div className="space-y-4">
       <RowStats
         acknowledgedIncidents={1}
         openIncidents={2}
@@ -151,34 +130,39 @@ export function IncidentsOverview() {
         awayNowCount={5}
       />
 
-      {/**/}
-      <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
+      <div className="grid gap-4 lg:grid-cols-[2fr_1fr] *:min-w-0">
         <IncidentsCreatedChart />
         <OpenBySeverityChart />
       </div>
-      <div className="space-y-3">
-        {total === 0 ? (
-          <h2 className="font-medium text-sm">Nothing needs attention</h2>
-        ) : (
-          <>
-            <h2 className="font-medium text-sm">Needs attention</h2>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">
+            {total === 0 ? "Nothing needs attention" : "Needs attention"}
+          </CardTitle>
+        </CardHeader>
+        {total !== 0 && (
+          <CardContent>
             <IncidentsTable status={INCIDENT_STATUS.OPEN} compact />
-          </>
+          </CardContent>
         )}
-      </div>
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="font-medium text-sm">Latest incidents</h2>
-          <Link
-            to="../incidents"
-            relative="path"
-            className="text-xs text-muted-foreground hover:underline"
-          >
-            All {"→"}
-          </Link>
-        </div>
-        <IncidentsTable compact />
-      </div>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">Latest incidents</CardTitle>
+          <CardAction>
+            <Link
+              to="../incidents"
+              relative="path"
+              className="text-xs text-muted-foreground hover:underline"
+            >
+              All {"→"}
+            </Link>
+          </CardAction>
+        </CardHeader>
+        <CardContent>
+          <IncidentsTable compact />
+        </CardContent>
+      </Card>
     </div>
   );
 }

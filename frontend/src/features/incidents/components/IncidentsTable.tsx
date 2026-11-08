@@ -31,12 +31,13 @@ export function IncidentsTable({
   const cursor = cursors[cursors.length - 1];
   const navigate = useNavigate();
 
+  const limit = compact ? 5 : 10;
+
   const { data, isError, isPending, isFetching } = useQuery({
-    queryKey: ["incidents", status, cursor],
-    queryFn: () => fetchIncidents(status, cursor),
+    queryKey: ["incidents", status, cursor, limit],
+    queryFn: () => fetchIncidents(status, cursor, limit),
     placeholderData: keepPreviousData,
   });
-  //todolater : change to ErrorState
   useErrorToast(isError, "something went wrong fetching the incidents");
 
   if (isPending) {
@@ -124,29 +125,31 @@ export function IncidentsTable({
           ))}
         </TableBody>
       </Table>
-      <nav
-        aria-label="Incidents pagination"
-        className="flex items-center justify-center gap-3 mt-4"
-      >
-        <Button
-          variant="outline"
-          disabled={cursors.length === 1 || isFetching}
-          onClick={() => setCursors((current) => current.slice(0, -1))}
+      {!compact && (
+        <nav
+          aria-label="Incidents pagination"
+          className="flex items-center justify-center gap-3 mt-4"
         >
-          Previous
-        </Button>
-        <span aria-live="polite">Page {cursors.length}</span>
-        <Button
-          variant="outline"
-          disabled={!data?.meta?.nextCursor || isFetching || isError}
-          onClick={() => {
-            const next = data?.meta?.nextCursor;
-            if (next) setCursors((current) => [...current, next]);
-          }}
-        >
-          Next
-        </Button>
-      </nav>
+          <Button
+            variant="outline"
+            disabled={cursors.length === 1 || isFetching}
+            onClick={() => setCursors((current) => current.slice(0, -1))}
+          >
+            Previous
+          </Button>
+          <span aria-live="polite">Page {cursors.length}</span>
+          <Button
+            variant="outline"
+            disabled={!data?.meta?.nextCursor || isFetching || isError}
+            onClick={() => {
+              const next = data?.meta?.nextCursor;
+              if (next) setCursors((current) => [...current, next]);
+            }}
+          >
+            Next
+          </Button>
+        </nav>
+      )}
     </div>
   );
 }
