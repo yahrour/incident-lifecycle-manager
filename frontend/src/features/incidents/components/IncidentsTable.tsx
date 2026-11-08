@@ -38,7 +38,6 @@ export function IncidentsTable({
     queryFn: () => fetchIncidents(status, cursor, limit),
     placeholderData: keepPreviousData,
   });
-  //todolater : change to ErrorState
   useErrorToast(isError, "something went wrong fetching the incidents");
 
   if (isPending) {

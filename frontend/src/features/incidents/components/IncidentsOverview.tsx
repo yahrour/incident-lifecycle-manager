@@ -1,4 +1,3 @@
-// import { StatusDot } from "@/components/StatusDot";
 import {
   Card,
   CardAction,
@@ -19,38 +18,13 @@ import type { CSSProperties } from "react";
 import { Link } from "react-router";
 import { Area, AreaChart, XAxis, YAxis } from "recharts";
 import { fetchIncidents } from "../api/incidents";
-// import { statusColor } from "../constants";
-import {
-  INCIDENT_SEVERITIES,
-  INCIDENT_STATUS,
-  // type IncidentStatus,
-} from "../types";
+import { INCIDENT_SEVERITIES, INCIDENT_STATUS } from "../types";
 import { IncidentsTable } from "./IncidentsTable";
 import { RowStats } from "./RowStats";
 
 const createdConfig = {
   count: { label: "Incidents", color: "var(--chart-1)" },
 } satisfies ChartConfig;
-
-// function StatusCount({ status }: { status: IncidentStatus }) {
-//   const { data, isError } = useQuery({
-//     queryKey: ["incidents", status, "count"],
-//     queryFn: () => fetchIncidents(status, undefined, 1),
-//   });
-
-//   return (
-//     <Card>
-//       <CardHeader>
-//         <StatusDot className={statusColor[status]}>{status}</StatusDot>
-//         {isError ? (
-//           <p className="text-xs text-destructive">Couldn't load</p>
-//         ) : (
-//           <CardTitle className="text-2xl">{data?.meta?.total ?? "–"}</CardTitle>
-//         )}
-//       </CardHeader>
-//     </Card>
-//   );
-// }
 
 function IncidentsCreatedChart() {
   const { data } = useQuery({
@@ -148,12 +122,6 @@ export function IncidentsOverview() {
   const total = data?.meta?.total;
   return (
     <div className="space-y-4">
-      {/**/}
-      {/*<div className="grid gap-4 sm:grid-cols-3">
-        {Object.values(INCIDENT_STATUS).map((status) => (
-          <StatusCount key={status} status={status} />
-        ))}
-      </div>*/}
       <RowStats
         acknowledgedIncidents={1}
         openIncidents={2}
@@ -162,7 +130,6 @@ export function IncidentsOverview() {
         awayNowCount={5}
       />
 
-      {/**/}
       <div className="grid gap-4 lg:grid-cols-[2fr_1fr] *:min-w-0">
         <IncidentsCreatedChart />
         <OpenBySeverityChart />
