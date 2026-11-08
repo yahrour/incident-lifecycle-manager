@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Lock, LockOpen } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { StatusDot } from "@/components/StatusDot";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -16,22 +16,17 @@ import { toast } from "@/components/ui/toast";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { queryClient } from "@/lib/queryClient";
 import { disableApiKey, enableApiKey, fetchApiKeys } from "../api/apiKeys";
-import type { ApiKey, ApiKeyFilter, SortState } from "../types";
+import type { ApiKey, ApiKeyFilter } from "../types";
 import { DeleteApiKeyDialog } from "./DeleteApiKeyDialog";
 
 function StatusBadge({ apiKey }: { apiKey: ApiKey }) {
-  if (apiKey.isExpired) return <Badge variant="destructive">Expired</Badge>;
-  if (!apiKey.enabled) return <Badge variant="warning">Disabled</Badge>;
-  return <Badge variant="success">Active</Badge>;
+  if (apiKey.isExpired)
+    return <StatusDot variant="destructive">Expired</StatusDot>;
+  if (!apiKey.enabled) return <StatusDot variant="warning">Disabled</StatusDot>;
+  return <StatusDot variant="success">Active</StatusDot>;
 }
 
-export function ApiKeysTable({
-  filter,
-  sort,
-}: {
-  filter: ApiKeyFilter;
-  sort: SortState;
-}) {
+export function ApiKeysTable({ filter }: { filter: ApiKeyFilter }) {
   const { data, isError, isPending } = useQuery({
     queryKey: ["apiKeys"],
     queryFn: fetchApiKeys,
@@ -70,14 +65,11 @@ export function ApiKeysTable({
     );
   }
 
-  const direction = sort.order === "asc" ? 1 : -1;
-  const visibleKeys = apiKeys
-    .filter((apiKey) => {
-      if (filter === "active") return apiKey.enabled && !apiKey.isExpired;
-      if (filter === "disabled") return !apiKey.enabled;
-      return true;
-    })
-    .sort((a, b) => direction * a[sort.field].localeCompare(b[sort.field]));
+  const visibleKeys = apiKeys.filter((apiKey: ApiKey) => {
+    if (filter === "active") return apiKey.enabled && !apiKey.isExpired;
+    if (filter === "disabled") return !apiKey.enabled;
+    return true;
+  });
 
   if (visibleKeys.length === 0) {
     return (

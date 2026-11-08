@@ -15,5 +15,3 @@ export type CreatedApiKey = {
 };
 
 export type ApiKeyFilter = "all" | "active" | "disabled";
-export type SortField = "createdAt" | "expiresAt" | "name";
-export type SortState = { field: SortField; order: "asc" | "desc" };
