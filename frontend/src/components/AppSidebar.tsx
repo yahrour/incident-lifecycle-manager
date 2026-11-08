@@ -70,7 +70,6 @@ const managerItems = {
 const engineerItems = {
   respondItems: [
     { label: "Incidents", href: "/engineer/incidents", icon: AlertTriangle },
-    { label: "Delivery log", href: "/engineer/delivery-log", icon: Send },
   ],
   orgItems: [
     { label: "My Team", href: "/engineer/my-team", icon: Users },
