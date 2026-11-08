@@ -18,10 +18,14 @@ export function CreateApiKeyDialog() {
 
   return (
     <Dialog onOpenChange={handleOpenChange}>
-      <DialogTrigger render={<Button variant="secondary" />}>
-        <Plus data-icon="inline-start" />
-        Create API key
-      </DialogTrigger>
+      <DialogTrigger
+        render={
+          <Button className="cursor-pointer">
+            <Plus data-icon="inline-start" />
+            Create API key
+          </Button>
+        }
+      ></DialogTrigger>
 
       <DialogContent className="max-w-lg!">
         {createdKey ? (

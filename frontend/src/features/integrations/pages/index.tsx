@@ -2,15 +2,10 @@ import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ApiKeysTable } from "../components/ApiKeysTable";
 import { CreateApiKeyDialog } from "../components/create-api-key-dialog";
-import { SortControls } from "../components/SortControls";
-import type { ApiKeyFilter, SortState } from "../types";
+import type { ApiKeyFilter } from "../types";
 
 export function Integrations() {
   const [filter, setFilter] = useState<ApiKeyFilter>("all");
-  const [sort, setSort] = useState<SortState>({
-    field: "createdAt",
-    order: "desc",
-  });
 
   return (
     <div>
@@ -36,13 +31,10 @@ export function Integrations() {
             </TabsList>
           </Tabs>
 
-          <div className="flex items-center gap-4">
-            <SortControls sort={sort} onSortChange={setSort} />
-            <CreateApiKeyDialog />
-          </div>
+          <CreateApiKeyDialog />
         </div>
 
-        <ApiKeysTable filter={filter} sort={sort} />
+        <ApiKeysTable filter={filter} />
       </div>
     </div>
   );
