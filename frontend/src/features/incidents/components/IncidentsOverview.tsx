@@ -115,17 +115,19 @@ function OpenBySeverityChart() {
 }
 
 export function IncidentsOverview() {
-  const { data } = useQuery({
-    queryKey: ["incidents", INCIDENT_STATUS.OPEN, "count"],
-    queryFn: () => fetchIncidents(INCIDENT_STATUS.OPEN, undefined, 1),
+  const [open, acknowledged, resolved] = useQueries({
+    queries: Object.values(INCIDENT_STATUS).map((status) => ({
+      queryKey: ["incidents", status, "count"],
+      queryFn: () => fetchIncidents(status, undefined, 1),
+    })),
   });
-  const total = data?.meta?.total;
+  const total = open?.data?.meta?.total;
   return (
     <div className="space-y-4">
       <RowStats
-        acknowledgedIncidents={1}
-        openIncidents={2}
-        resolvedIncidents={3}
+        openIncidents={total ?? "–"}
+        acknowledgedIncidents={acknowledged?.data?.meta?.total ?? "–"}
+        resolvedIncidents={resolved?.data?.meta?.total ?? "–"}
         totalTeam={4}
         awayNowCount={5}
       />
