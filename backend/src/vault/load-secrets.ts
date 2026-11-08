@@ -1,44 +1,76 @@
 import axios from "axios";
-import { setAppSecrets } from "@/vault/secrets-store";
+import { readFileSync } from "node:fs";
 
 interface VaultKvV2Response<T> {
-  data: {
-    data: T;
-  };
+  data: { data: T };
 }
 
 interface AppSecrets {
-  DATABASE_URL: string;
-  JWT_SECRET: string;
-  JWT_REFRESH_SECRET: string;
-  GOOGLE_CLIENT_ID: string;
-  GOOGLE_CLIENT_SECRET: string;
-  MAIL_USER: string;
-  MAIL_PASS: string;
-  DISCORD_CLIENT_ID: string;
-  DISCORD_CLIENT_SECRET: string;
+  DATABASE_URL?: string;
+  JWT_SECRET?: string;
+  JWT_REFRESH_SECRET?: string;
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
+  MAIL_USER?: string;
+  MAIL_PASS?: string;
+  DISCORD_CLIENT_ID?: string;
+  DISCORD_CLIENT_SECRET?: string;
+}
+
+const SECRET_KEYS: (keyof AppSecrets)[] = [
+  "DATABASE_URL",
+  "JWT_SECRET",
+  "JWT_REFRESH_SECRET",
+  "GOOGLE_CLIENT_ID",
+  "GOOGLE_CLIENT_SECRET",
+  "MAIL_USER",
+  "MAIL_PASS",
+  "DISCORD_CLIENT_ID",
+  "DISCORD_CLIENT_SECRET",
+];
+
+const TOKEN_FILE = "/vault/runtime/backend-token";
+const RETRY_MAX = 60;
+const RETRY_DELAY_MS = 1000;
+
+function tryReadToken(): string | null {
+  try {
+    const t = readFileSync(TOKEN_FILE, "utf8").trim();
+    return t || null;
+  } catch {
+    return null;
+  }
 }
 
 export async function loadSecretsFromVault(): Promise<void> {
   const vaultAddr = process.env.VAULT_ADDR;
-  const vaultToken = process.env.VAULT_TOKEN;
+  if (!vaultAddr) throw new Error("[Vault] VAULT_ADDR not set");
 
-  if (!vaultAddr || !vaultToken) {
-    throw new Error("[Vault] VAULT_ADDR or VAULT_TOKEN not set!!");
-  }
-
-  try {
-    const { data } = await axios.get<VaultKvV2Response<AppSecrets>>(
-      `${vaultAddr}/v1/secret/data/incident-lifecycle-manager`,
-      { headers: { "X-Vault-Token": vaultToken } }
-    );
-
-    setAppSecrets(data.data.data);
-
-    console.log("[Vault] App secrets loaded into memory.");
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error(`[Vault] Failed to load secrets: ${message}`);
-    throw new Error("[Vault] Secret loading failed — aborting startup.");
+  for (let attempt = 1; attempt <= RETRY_MAX; attempt++) {
+    const token = tryReadToken();
+    if (token) {
+      try {
+        const { data } = await axios.get<VaultKvV2Response<AppSecrets>>(
+          `${vaultAddr}/v1/secret/data/incident-lifecycle-manager`,
+          { headers: { "X-Vault-Token": token }, timeout: 3000 }
+        );
+        for (const key of SECRET_KEYS) {
+          const value = data.data.data[key];
+          if (value) process.env[key] = value;
+        }
+        console.log("[Vault] App secrets loaded into process.env.");
+        return;
+      } catch (err) {
+        if (attempt === RETRY_MAX) {
+          const msg = err instanceof Error ? err.message : String(err);
+          throw new Error(`[Vault] Read failed after ${RETRY_MAX}s: ${msg}`);
+        }
+      }
+    } else if (attempt === RETRY_MAX) {
+      throw new Error(
+        `[Vault] Backend token never appeared at ${TOKEN_FILE} after ${RETRY_MAX}s`
+      );
+    }
+    await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
   }
 }
