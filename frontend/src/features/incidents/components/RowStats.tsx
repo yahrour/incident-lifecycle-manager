@@ -14,7 +14,7 @@ export function RowStats({
   awayNowCount: number;
 }) {
   return (
-    <div className="flex w-full bg-card border border-border/50 rounded-xl divide-x divide-border/50 overflow-hidden">
+    <div className="flex flex-wrap w-full gap-px bg-border/50 border border-border/50 rounded-xl overflow-hidden *:basis-40 *:bg-card">
       <StatBlock title="Incidents (Open)" value={openIncidents} />
       <StatBlock
         title="Incidents (Acknowledged)"
