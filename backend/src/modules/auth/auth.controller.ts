@@ -14,11 +14,7 @@ import { SignIn } from "./dto/sign-in.dto";
 import { AuthService } from "./auth.service";
 import type { Response, Request } from "express";
 import { Public } from "@/common/decorators/public.decorator";
-import {
-  baseCookie,
-  accessCookieOptions,
-  refreshCookieOptions,
-} from "./auth-cookie.constants";
+import { baseCookie, setAuthCookies } from "./auth-cookie.constants";
 import { apiResponse } from "@/common/utils/api-response";
 
 @Public()
@@ -31,28 +27,6 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly configService: ConfigService
   ) {}
-
-  private setAuthCookies(
-    response: Response,
-    tokens: { accessToken: string; refreshToken: string }
-  ) {
-    const accessTtl = this.configService.getOrThrow<number>(
-      "JWT_ACCESS_TOKEN_TTL"
-    );
-    const refreshTtl = this.configService.getOrThrow<number>(
-      "JWT_REFRESH_TOKEN_TTL"
-    );
-    response.cookie(
-      "accessToken",
-      tokens.accessToken,
-      accessCookieOptions(accessTtl)
-    );
-    response.cookie(
-      "refreshToken",
-      tokens.refreshToken,
-      refreshCookieOptions(refreshTtl)
-    );
-  }
 
   @Post("sign-up")
   signUp(@Body() signUp: SignUp) {
@@ -72,7 +46,7 @@ export class AuthController {
         message: "Invalid email or password",
       });
     }
-    this.setAuthCookies(response, result);
+    setAuthCookies(response, result, this.configService);
     return apiResponse({ success: true });
   }
 
@@ -88,7 +62,7 @@ export class AuthController {
     }
 
     const tokens = await this.authService.refrechTokens(oldRefreshToken);
-    this.setAuthCookies(response, tokens);
+    setAuthCookies(response, tokens, this.configService);
 
     return { message: "Tokens refreshed" };
   }

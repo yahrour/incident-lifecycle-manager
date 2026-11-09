@@ -4,10 +4,7 @@ import { Public } from "@/common/decorators/public.decorator";
 import { GoogleAuthService } from "./google-auth.service";
 import { GoogleProfile } from "./google.strategy";
 import { ConfigService } from "@nestjs/config";
-import {
-  ACCESS_COOKIE_OPTIONS,
-  REFRESH_COOKIE_OPTIONS,
-} from "../auth-cookie.constants";
+import { setAuthCookies } from "../auth-cookie.constants";
 import { GoogleOAuthGuard, safeRedirect } from "./google-oauth.guard";
 
 @Public()
@@ -41,12 +38,7 @@ export class GoogleAuthController {
       if (!result.success) {
         return response.redirect(`${frontendUrl}/login?error=google`);
       }
-      response.cookie(
-        "refreshToken",
-        result.refreshToken,
-        REFRESH_COOKIE_OPTIONS
-      );
-      response.cookie("accessToken", result.accessToken, ACCESS_COOKIE_OPTIONS);
+      setAuthCookies(response, result, this.configService);
       return response.redirect(`${frontendUrl}${redirect}`);
     } catch {
       return response.redirect(`${frontendUrl}/login?error=google`);
