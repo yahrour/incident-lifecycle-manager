@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -72,30 +71,6 @@ export class AuthController {
     response.cookie("accessToken", accessToken, ACCESS_COOKIE_OPTIONS);
 
     return { message: "Tokens refreshed" };
-  }
-
-  @Get("session")
-  async session(
-    @Req() request: Request,
-    @Res({ passthrough: true }) response: Response
-  ) {
-    const cookies = request.cookies as Record<string, string> | undefined;
-
-    const { user, tokens } = await this.authService.getSession(
-      cookies?.["accessToken"],
-      cookies?.["refreshToken"]
-    );
-
-    if (tokens) {
-      response.cookie(
-        "refreshToken",
-        tokens.refreshToken,
-        REFRESH_COOKIE_OPTIONS
-      );
-      response.cookie("accessToken", tokens.accessToken, ACCESS_COOKIE_OPTIONS);
-    }
-
-    return { user };
   }
 
   @HttpCode(HttpStatus.NO_CONTENT)
