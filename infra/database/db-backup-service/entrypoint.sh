@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "POSTGRES_HOST=$POSTGRES_HOST" > /etc/environment
+echo "export POSTGRES_HOST=$POSTGRES_HOST" > /etc/environment
 
 echo "* * * * * source /etc/environment && /scripts/db.backup.sh" > /etc/crontabs/root
 

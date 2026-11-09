@@ -60,7 +60,6 @@ vault kv put secret/grafana \
     GRAFANA_ADMIN_USER="${GRAFANA_ADMIN_USER}" \
     GRAFANA_ADMIN_PASSWORD="${GRAFANA_ADMIN_PASSWORD}" >/dev/null
 
-# Built from the postgres secrets so the two can never drift apart.
 DATABASE_URL="postgresql://$(uri "$POSTGRES_USER"):$(uri "$POSTGRES_PASSWORD")@postgres:5432/$(uri "$POSTGRES_DB")"
 
 echo "[Vault] Writing application secrets..."
@@ -86,7 +85,7 @@ echo "$BACKEND_TOKEN" > "$TOKEN_FILE"
 chmod 600 "$TOKEN_FILE"
 
 # Write secrets to files for containers that read *_FILE variables.
-render() { printf '%s' "$(vault kv get -field="$2" "secret/$1")" > "$SECRETS_DIR/$3"; }
+render() { v=$(vault kv get -field="$2" "secret/$1"); printf '%s' "$v" > "$SECRETS_DIR/$3"; }
 
 echo "[Vault] Rendering secret files..."
 render postgres POSTGRES_USER          postgres_user
