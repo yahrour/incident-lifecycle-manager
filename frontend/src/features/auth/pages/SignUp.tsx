@@ -14,11 +14,12 @@ import { signUpSchema, type SignUpCredentials } from "../schemas";
 import { GoogleButton } from "../components/GoogleButton";
 import { parseApiError } from "@/utils/api";
 import { ErrorSection } from "@/components/ErrorSection";
+import { AccountCreated } from "@/components/AccountCreated";
 
 type FieldErrors = Partial<Record<keyof SignUpCredentials, string>>;
 
 export default function SignUp() {
-  const { mutate, data, isPending, isSuccess, error } = useSignUp();
+  const { mutate, isPending, isSuccess, error } = useSignUp();
   const [errors, setErrors] = useState<FieldErrors>({});
   const apiErrors = error ? parseApiError(error) : [];
   function submit(formData: FormData) {
@@ -43,20 +44,7 @@ export default function SignUp() {
     mutate(result.data);
   }
   if (isSuccess) {
-    return (
-      <AuthCard>
-        <h1 className="font-heading tracking-tight">Account created</h1>
-        <p className="text-center text-sm text-muted-foreground">
-          {data?.message ?? "Your account has been created."}
-        </p>
-        <Link
-          to="/login"
-          className="text-center text-sm font-medium text-primary hover:underline"
-        >
-          Sign in
-        </Link>
-      </AuthCard>
-    );
+    return <AccountCreated />;
   }
 
   return (
