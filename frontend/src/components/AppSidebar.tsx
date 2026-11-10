@@ -122,7 +122,7 @@ export function AppSidebar() {
         <SidebarTrigger className="z-50 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
       </SidebarHeader>
 
-      <SidebarContent className="gap-6 px-2 hidden md:block">
+      <SidebarContent className="gap-6 px-2">
         {groups.map((group) => (
           <SidebarGroup key={group.label} className="space-y-0.5">
             <SidebarGroupLabel className={groupLabelClass}>
