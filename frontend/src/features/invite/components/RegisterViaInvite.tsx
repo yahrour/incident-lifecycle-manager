@@ -19,6 +19,7 @@ import {
 } from "../schemas";
 import { parseApiError } from "@/utils/api";
 import { ErrorSection } from "@/components/ErrorSection";
+import { AccountCreated } from "@/components/AccountCreated";
 
 type RegisterViaInviteProps = {
   token: string;
@@ -39,18 +40,7 @@ export function RegisterViaInvite({ email, token }: RegisterViaInviteProps) {
 
   if (isSuccess) {
     return (
-      <AuthCard>
-        <h1 className="font-heading tracking-tight">Account created</h1>
-        <p className="text-center text-sm text-muted-foreground">
-          You've joined the team, sign in to continue.
-        </p>
-        <Link
-          to="/login"
-          className="text-center text-sm font-medium text-primary hover:underline"
-        >
-          Sign in
-        </Link>
-      </AuthCard>
+      <AccountCreated text="You've joined the team, sign in to continue." />
     );
   }
 

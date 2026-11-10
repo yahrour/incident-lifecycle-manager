@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import { CheckCircle } from "lucide-react";
 
-export function AccountCreated() {
+export function AccountCreated({ text }: { text: string }) {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-8 bg-background px-6 py-8">
       <p className="text-center font-serif text-base italic leading-relaxed text-foreground md:text-3xl">
@@ -15,9 +15,7 @@ export function AccountCreated() {
           Account created
         </h1>
 
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          Your account has been created. Sign in to continue.
-        </p>
+        <p className="text-sm leading-relaxed text-muted-foreground">{text}</p>
 
         <Link
           to="/login"

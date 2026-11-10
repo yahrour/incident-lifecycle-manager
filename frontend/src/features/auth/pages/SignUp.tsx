@@ -44,7 +44,9 @@ export default function SignUp() {
     mutate(result.data);
   }
   if (isSuccess) {
-    return <AccountCreated />;
+    return (
+      <AccountCreated text="Your account has been created. Sign in to continue." />
+    );
   }
 
   return (
