@@ -50,7 +50,14 @@ export default function SignUp() {
   }
 
   return (
-    <AuthCard>
+    <AuthCard
+      title={
+        <>
+          Every alert gets an <em>owner.</em>
+        </>
+      }
+      text="Create your account and join the rotation in under a minute."
+    >
       <h1 className="font-heading tracking-tight">Create an account</h1>
 
       <form action={submit} className="flex flex-col gap-5">
