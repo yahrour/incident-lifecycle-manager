@@ -11,8 +11,8 @@ export async function getMe(): Promise<User | null> {
 }
 
 export async function getSession(): Promise<User | null> {
-  const { data } = await apiClient.get<{ user: User | null }>("/auth/session");
-  return data.user;
+  const { data } = await apiClient.get<ApiResponse<User>>("/users/me");
+  return data.data;
 }
 
 export async function signIn({

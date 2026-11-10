@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -9,15 +8,13 @@ import {
   Res,
   UnauthorizedException,
 } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { SignUp } from "./dto/sign-up.dto";
 import { SignIn } from "./dto/sign-in.dto";
 import { AuthService } from "./auth.service";
 import type { Response, Request } from "express";
 import { Public } from "@/common/decorators/public.decorator";
-import {
-  ACCESS_COOKIE_OPTIONS,
-  REFRESH_COOKIE_OPTIONS,
-} from "./auth-cookie.constants";
+import { baseCookie, setAuthCookies } from "./auth-cookie.constants";
 import { apiResponse } from "@/common/utils/api-response";
 
 @Public()
@@ -26,7 +23,11 @@ import { apiResponse } from "@/common/utils/api-response";
   version: "1",
 })
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService
+  ) {}
+
   @Post("sign-up")
   signUp(@Body() signUp: SignUp) {
     return this.authService.signUp(signUp);
@@ -45,12 +46,7 @@ export class AuthController {
         message: "Invalid email or password",
       });
     }
-    response.cookie(
-      "refreshToken",
-      result.refreshToken,
-      REFRESH_COOKIE_OPTIONS
-    );
-    response.cookie("accessToken", result.accessToken, ACCESS_COOKIE_OPTIONS);
+    setAuthCookies(response, result, this.configService);
     return apiResponse({ success: true });
   }
 
@@ -65,37 +61,10 @@ export class AuthController {
       throw new UnauthorizedException("Invalid or expired session");
     }
 
-    const { accessToken, refreshToken } =
-      await this.authService.refrechTokens(oldRefreshToken);
-
-    response.cookie("refreshToken", refreshToken, REFRESH_COOKIE_OPTIONS);
-    response.cookie("accessToken", accessToken, ACCESS_COOKIE_OPTIONS);
+    const tokens = await this.authService.refrechTokens(oldRefreshToken);
+    setAuthCookies(response, tokens, this.configService);
 
     return { message: "Tokens refreshed" };
-  }
-
-  @Get("session")
-  async session(
-    @Req() request: Request,
-    @Res({ passthrough: true }) response: Response
-  ) {
-    const cookies = request.cookies as Record<string, string> | undefined;
-
-    const { user, tokens } = await this.authService.getSession(
-      cookies?.["accessToken"],
-      cookies?.["refreshToken"]
-    );
-
-    if (tokens) {
-      response.cookie(
-        "refreshToken",
-        tokens.refreshToken,
-        REFRESH_COOKIE_OPTIONS
-      );
-      response.cookie("accessToken", tokens.accessToken, ACCESS_COOKIE_OPTIONS);
-    }
-
-    return { user };
   }
 
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -106,7 +75,7 @@ export class AuthController {
   ) {
     const cookies = request.cookies as Record<string, string> | undefined;
     await this.authService.logout(cookies?.["refreshToken"]);
-    response.clearCookie("accessToken", ACCESS_COOKIE_OPTIONS);
-    response.clearCookie("refreshToken", REFRESH_COOKIE_OPTIONS);
+    response.clearCookie("accessToken", baseCookie);
+    response.clearCookie("refreshToken", baseCookie);
   }
 }
