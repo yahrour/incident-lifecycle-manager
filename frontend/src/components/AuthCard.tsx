@@ -3,8 +3,8 @@ import logo from "@/assets/favicon.ico";
 
 type AuthCardProps = {
   children: ReactNode;
-  title: ReactNode; // panel headline, wrap the accent word in <em>
-  text: string; // panel paragraph under the headline
+  title: ReactNode;
+  text: string;
 };
 
 const timeline = [
