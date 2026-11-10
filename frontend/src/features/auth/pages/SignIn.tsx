@@ -19,7 +19,14 @@ export default function SignIn() {
   const errors = error ? parseApiError(error) : [];
 
   return (
-    <AuthCard>
+    <AuthCard
+      title={
+        <>
+          Alerts in. <em>Calm</em> out.
+        </>
+      }
+      text="Sign in to see what is open, who owns it and how long it has been burning."
+    >
       <h1 className="font-heading tracking-tight">Sign in</h1>
       <form action={submit} className="flex flex-col gap-5">
         <FieldGroup className="gap-5">

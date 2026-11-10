@@ -45,7 +45,14 @@ export function RegisterViaInvite({ email, token }: RegisterViaInviteProps) {
   }
 
   return (
-    <AuthCard>
+    <AuthCard
+      title={
+        <>
+          Every alert gets an <em>owner.</em>
+        </>
+      }
+      text="Create your account and join the rotation in under a minute."
+    >
       <h1 className="font-heading tracking-tight">Join your team</h1>
 
       <form
