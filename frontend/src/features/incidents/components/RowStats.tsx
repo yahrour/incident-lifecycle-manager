@@ -10,8 +10,8 @@ export function RowStats({
   openIncidents: number | string;
   acknowledgedIncidents: number | string;
   resolvedIncidents: number | string;
-  totalTeam: number;
-  awayNowCount: number;
+  totalTeam: number | string;
+  awayNowCount: number | string;
 }) {
   return (
     <div className="flex flex-wrap w-full gap-px bg-border/50 border border-border/50 rounded-xl overflow-hidden *:basis-40 *:bg-card">

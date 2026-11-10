@@ -21,6 +21,8 @@ import { fetchIncidents } from "../api/incidents";
 import { INCIDENT_SEVERITIES, INCIDENT_STATUS } from "../types";
 import { IncidentsTable } from "./IncidentsTable";
 import { RowStats } from "./RowStats";
+import { teamKeys } from "@/features/organization";
+import { fetchMetrics } from "@/features/organization/teams";
 
 const createdConfig = {
   count: { label: "Incidents", color: "var(--chart-1)" },
@@ -115,21 +117,27 @@ function OpenBySeverityChart() {
 }
 
 export function IncidentsOverview() {
+  const { data } = useQuery({
+    queryKey: teamKeys.metrics(),
+    queryFn: fetchMetrics,
+  });
   const [open, acknowledged, resolved] = useQueries({
     queries: Object.values(INCIDENT_STATUS).map((status) => ({
       queryKey: ["incidents", status, "count"],
       queryFn: () => fetchIncidents(status, undefined, 1),
     })),
   });
+
   const total = open?.data?.meta?.total;
+  const teamsMetrics = data?.data?.organization;
   return (
     <div className="space-y-4">
       <RowStats
         openIncidents={total ?? "–"}
         acknowledgedIncidents={acknowledged?.data?.meta?.total ?? "–"}
         resolvedIncidents={resolved?.data?.meta?.total ?? "–"}
-        totalTeam={4}
-        awayNowCount={5}
+        totalTeam={teamsMetrics?.totalTeams ?? "-"}
+        awayNowCount={teamsMetrics?.activeUnavailabilities ?? "-"}
       />
 
       <div className="grid gap-4 lg:grid-cols-[2fr_1fr] *:min-w-0">
