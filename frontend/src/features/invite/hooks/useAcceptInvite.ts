@@ -9,7 +9,7 @@ export function useAcceptInvite() {
     mutationFn: acceptInvite,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["session"] });
-      await navigate("/team");
+      await navigate("/engineer/my-team");
     },
   });
 }
