@@ -3,8 +3,11 @@ set -eu
 
 INIT_FILE="/vault/runtime/init.json"
 TOKEN_FILE="/vault/runtime/backend-token"
+SECRETS_DIR="/vault/secrets"
+READY_FILE="$SECRETS_DIR/.ready"
 
-mkdir -p /vault/data /vault/runtime
+mkdir -p /vault/data /vault/runtime "$SECRETS_DIR"
+rm -f "$READY_FILE"
 
 echo "[Vault] Starting Vault server (production mode, file backend)..."
 vault server -config=/vault/config/config.hcl &
@@ -46,6 +49,19 @@ if ! vault secrets list -format=json | jq -e '."secret/"' >/dev/null 2>&1; then
     vault secrets enable -path=secret kv-v2 >/dev/null
 fi
 
+uri() { jq -rn --arg v "$1" '$v|@uri'; }
+
+echo "[Vault] Writing infrastructure secrets..."
+vault kv put secret/postgres \
+    POSTGRES_USER="${POSTGRES_USER}" \
+    POSTGRES_PASSWORD="${POSTGRES_PASSWORD}" \
+    POSTGRES_DB="${POSTGRES_DB}" >/dev/null
+vault kv put secret/grafana \
+    GRAFANA_ADMIN_USER="${GRAFANA_ADMIN_USER}" \
+    GRAFANA_ADMIN_PASSWORD="${GRAFANA_ADMIN_PASSWORD}" >/dev/null
+
+DATABASE_URL="postgresql://$(uri "$POSTGRES_USER"):$(uri "$POSTGRES_PASSWORD")@postgres:5432/$(uri "$POSTGRES_DB")"
+
 echo "[Vault] Writing application secrets..."
 vault kv put secret/incident-lifecycle-manager \
     DATABASE_URL="${DATABASE_URL}" \
@@ -68,5 +84,16 @@ BACKEND_TOKEN=$(vault token create \
 echo "$BACKEND_TOKEN" > "$TOKEN_FILE"
 chmod 600 "$TOKEN_FILE"
 
+# Write secrets to files for containers that read *_FILE variables.
+render() { v=$(vault kv get -field="$2" "secret/$1"); printf '%s' "$v" > "$SECRETS_DIR/$3"; }
+
+echo "[Vault] Rendering secret files..."
+render postgres POSTGRES_USER          postgres_user
+render postgres POSTGRES_PASSWORD      postgres_password
+render postgres POSTGRES_DB            postgres_db
+render grafana  GRAFANA_ADMIN_USER     grafana_user
+render grafana  GRAFANA_ADMIN_PASSWORD grafana_password
+
+touch "$READY_FILE"
 echo "[Vault] Ready."
 wait "$VAULT_PID"
