@@ -50,8 +50,6 @@ This project closes those gaps in one system. It ingests alerts from monitoring 
 - **Task tracking:** GitHub, with pull requests. [TODO — owner: unassigned — add Issues/Projects/board usage if any]
 - **Communication channel:** Discord.
 
-<!-- Mention branch naming and commit conventions if the team wants to (the repo uses commitlint with conventional commits). -->
-
 ---
 
 ## Technical Stack
@@ -150,7 +148,7 @@ The diagram was generated with [dbdiagram.io](https://dbdiagram.io). You can vie
 
 - **Team member(s) that worked on this module:** `yahrour`
 - **Module choice:** Incidents belong to teams that rotate responsibility, not to individuals. This layer decides who an incident reaches.
-- **Module implementation:** `teams`, `team_members` and `unavailabilities` with rotation period, index and escalation timeout. `OnCallService` returns a primary and secondary, skipping approved unavailability, and a cron rotates the index.
+- **Module implementation:** `teams`, `team_members` and `unavailabilities` with rotation period, index and escalation timeout, split into `teams`, `members` and `unavailability` services. Unavailability requests are approved or rejected by the owner with overlap and expiry validation. The on-call chain built on top of this data is claimed separately as a module of choice.
 
 #### Minor: Implement remote authentication with OAuth 2.0
 
@@ -198,14 +196,19 @@ The diagram was generated with [dbdiagram.io](https://dbdiagram.io). You can vie
 
 ### Modules of choice
 
-#### Major: Alert correlation and auto-escalation engine
+#### Minor: On-call scheduling
 
-- **Team member(s) that worked on this module:** `aaitabde`, `yahrour`
-- **Module choice:** Alert storms are the core problem of on-call: one outage fires dozens of alerts, which without correlation become dozens of incidents and pages. The other half is the incident nobody acknowledges.
-- **Technical challenges it addresses:** A deterministic fingerprint over normalized provider, service and title. Deduplication enforced by the `(team_id, open_fingerprint)` unique index rather than a read-then-write check, relying on PostgreSQL treating `NULL` as distinct so only open incidents are constrained. Upserts safe under simultaneous identical alerts. Escalation on a database-backed cron so restarts drop nothing and guarded writes stop two replicas escalating the same incident.
-- **How it adds value:** One incident per real problem, nothing lost when nobody is on call, and automatic escalation to the secondary or the team owner.
-- **Why it deserves Major status:** It combines concurrency, distributed scheduling, data-integrity design and on-call routing logic, and is covered by the service unit tests.
-- **Module implementation:** `incident-fingerprint.ts` hashes the identity; `createFromAlert` upserts by the composite key and links the alert; `escalateUnacknowledged` is the `@Cron(EVERY_MINUTE)` job assigning the primary and escalating to the secondary or owner.
+- **Team member that worked on this module:** `yahrour`
+- **Module choice:** An incident platform is only as good as its routing. An alert that reaches nobody, or reaches someone on holiday, is worse than no alert at all. Rotations kept by hand in a spreadsheet drift out of date and ignore absences. No listed module covers this, and it is the link between the organization system (who belongs to a team) and the incident lifecycle (who gets paged), so we built it as its own module.
+- **What technical challenges it addresses:**
+  - **Rotations that do not drift.** `processRotations` advances each team on its own `rotationPeriodDays` from a `rotationStartDate`, and computes the next boundary from the scheduled time rather than from when the job happened to run. Shifts stay on schedule even if the cron is late or the service restarts.
+  - **Safe with several instances.** The rotation write is a conditional `updateMany` that only applies if `lastRotatedAt` and `currentRotationIndex` still match what was read. If several instances run the same cron, a team still advances exactly once per period.
+  - **Absence-aware coverage.** `getTeamCurrentOnCall` skips members whose approved unavailability is active now and builds a two-level chain, PRIMARY then SECONDARY. A single available member fills both roles; if nobody is available the chain is empty rather than naming someone who is away.
+  - **Forecasting.** `getUpcomingRotations` projects the next shifts and checks each against future approved absences, so it shows who will actually cover a slot, not only who is scheduled.
+  - **Privacy by role.** Owners see full details in the forecast; teammates see only public fields, with no id, email or role.
+- **How it adds value:** On-call is what makes an incident land on a real person. The PRIMARY/SECONDARY chain decides who a new incident is assigned to, and supplies the escalation job (`escalateUnacknowledged`) with its next responder when an incident is not acknowledged within `escalationTimeoutMinutes`. Engineers see their current shift, when it ends, and their open incidents; owners see who covers now and next. Approved leave is respected automatically, so nobody is paged on holiday.
+- **Why it deserves Minor status:** It is one small, self-contained piece of the application rather than a whole feature area. Most of it only reads data that the organization module already stores: there are two endpoints, both read-only, and a single scheduled job that moves each team's rotation forward. What makes it hard is getting the timing right.
+- **Module implementation:** The logic lives in one service, `backend/src/modules/on-call/on-call.service.ts`, and it reads from two places. Each team stores its own schedule settings: how long a shift lasts, when the rotation started, who is currently up, when the last handover happened, and how long an incident may go unacknowledged before it escalates. Approved absences come from the `unavailabilities` table. Two read endpoints expose the result, one for who is on call right now and one for the upcoming shifts, and a scheduled job runs every minute to move any team whose shift has ended on to the next person.
 
 ---
 
@@ -218,14 +221,12 @@ The diagram was generated with [dbdiagram.io](https://dbdiagram.io). You can vie
 | Cybersecurity      | 1 Major                       |   2 pts    |
 | Devops             | 1 Major and 1 Minor           |   3 pts    |
 | Data and Analytics | 1 Minor                       |    1 pt    |
-| Modules of choice  | 1 Major                       |   2 pts    |
-| **Total**          | **7 Major(s) and 6 Minor(s)** | **20 pts** |
+| Modules of choice  | 1 Minor                       |    1 pt    |
+| **Total**          | **6 Major(s) and 7 Minor(s)** | **19 pts** |
 
-The subject requires a minimum of 14 points; this selection totals **20**.
+The subject requires a minimum of 14 points; this selection totals **19**.
 
 ## Individual Contributions
-
-<!-- Each member fills their own block. Describe actual work (features, modules, components), challenges and how they were overcome. Do not repeat the assigned role text from Team Information. -->
 
 ### asebban
 
@@ -366,15 +367,11 @@ The full procedure for restoring a database is in [`infra/database/DISASTER_RECO
 
 ### References
 
-<!-- TODO (owner: unassigned): list the documentation, articles and tutorials the team actually used. -->
-
 - [TODO — e.g. NestJS documentation]
 - [TODO — e.g. Prisma documentation]
 - [TODO — e.g. ModSecurity / OWASP CRS documentation]
 
 ### AI usage
-
-<!-- TODO: each member lists what they really used AI for. The subject requires the tasks and the project areas. Do not write generic claims. -->
 
 | Member | Task   | Project area | AI tool | What was done with the output                    |
 | ------ | ------ | ------------ | ------- | ------------------------------------------------ |
@@ -383,7 +380,5 @@ The full procedure for restoring a database is in [`infra/database/DISASTER_RECO
 ---
 
 ## Known Limitations
-
-<!-- TODO (owner: unassigned): list only real limitations found while testing. -->
 
 - [TODO]
