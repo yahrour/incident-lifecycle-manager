@@ -27,6 +27,8 @@ type RegisterViaInviteProps = {
 };
 
 export function RegisterViaInvite({ email, token }: RegisterViaInviteProps) {
+  const back = `/invite?token=${encodeURIComponent(token)}`;
+  const loginPath = `/login?redirect=${encodeURIComponent(back)}`;
   const { mutate, isPending, error, isSuccess } = useRegisterViaInvite();
   const errors = error ? parseApiError(error) : [];
   const form = useForm<RegisterViaInviteValues>({
@@ -184,7 +186,10 @@ export function RegisterViaInvite({ email, token }: RegisterViaInviteProps) {
 
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link to="/login" className="font-medium text-primary hover:underline">
+        <Link
+          to={loginPath}
+          className="font-medium text-primary hover:underline"
+        >
           Sign in
         </Link>
       </p>
