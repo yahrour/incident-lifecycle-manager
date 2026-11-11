@@ -77,9 +77,11 @@ This project closes those gaps in one system. It ingests alerts from monitoring 
 
 ## Database Schema
 
-[![Database schema diagram (click to zoom)](./docs/database-visualization.png)](./docs/database-visualization.png)
+[![Database Schema Overview](./docs/db-diagram.png)](./docs/db-diagram.png)
 
-The diagram was generated with [dbdiagram.io](https://dbdiagram.io). You can view and edit it [here](https://dbdiagram.io/d/6af3602b04c7e97b1d24f9ec).
+> **Note:** This diagram is a simplified overview. Audit columns, defaults, and indexes are omitted. For the detailed database visualization with all columns and constraints, visit the interactive diagram below.
+
+The diagram was generated with [dbdiagram.io](https://dbdiagram.io). You can view it [here](https://dbdiagram.io/d/6af3602b04c7e97b1d24f9ec).
 
 ## Features List
 
