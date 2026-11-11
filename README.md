@@ -180,9 +180,18 @@ The diagram was generated with [dbdiagram.io](https://dbdiagram.io). You can vie
 
 #### Minor: Health check and status page system with automated backups and disaster recovery procedures
 
-- **Team member(s) that worked on this module:** `yahrour`
+- **Team member(s) that worked on this module:** `yahrour`, `asebban`
 - **Module choice:** An incident tool that goes down silently is worse than useless.
 - **Module implementation:** `@nestjs/terminus` behind `GET /health`, polled by the status page every 30 seconds; a Compose service runs `pg_dump` on a schedule, with `db.restore.sh` and a documented recovery runbook.
+
+#### How the Devops work was split across the team
+
+| Team member | Devops work                                                                            |
+| ----------- | -------------------------------------------------------------------------------------- |
+| `yahrour`   | PostgreSQL backup and restore service, plus the recovery runbook                       |
+| `sait-nac`  | Prometheus, Grafana dashboards and alert rules, `postgres-exporter`                    |
+| `asebban`   | Vault and WAF containers, including their Dockerfiles and the nginx/ModSecurity config |
+| `aaitabde`  | A database migration service in Compose                                                |
 
 ---
 
@@ -193,6 +202,18 @@ The diagram was generated with [dbdiagram.io](https://dbdiagram.io). You can vie
 - **Team member(s) that worked on this module:** `yahrour`
 - **Module choice:** Team configuration is tedious to enter by hand, and teams want their data out rather than locked in.
 - **Module implementation:** `GET /teams/export` and `POST /teams/import`, serialising to JSON or CSV with `csv-stringify` and parsing uploads with `csv-parse` behind a `FileExtensionValidator` pipe.
+
+---
+
+### Accessibility and Internationalization
+
+#### Minor: Support for additional browsers
+
+- **Team member(s) that worked on this module:** `yahrour`, `asebban`, `aaitabde`, `sait-nac`
+- **Module choice:** The subject requires the site to work in the latest stable Chrome, but a tool used during an outage cannot assume the person responding has a choice of browser. Firefox and Edge are the two realistic alternatives on a work machine, so we supported those two in addition to Chrome rather than treating Chrome as the only target.
+- **Module implementation:** The application is built to a modern baseline rather than a Chrome-specific one. TypeScript compiles to `es2023` with the DOM library, so the emitted JavaScript stays within what current Firefox and Edge both support, and the code avoids APIs that are still Chrome-only. Styling is Tailwind CSS 4 compiled through the Vite plugin, which emits standard CSS rather than vendor-prefixed rules, and the interface relies on layout primitives (flexbox, grid, CSS custom properties) that all three engines implement identically. No browser-specific code paths or user-agent checks exist in the codebase.
+- **Browser-specific limitations:** None are known. The one behaviour that differs by browser is not a compatibility issue: the WAF terminates TLS with a self-signed certificate, so every browser shows a certificate warning on first visit until the certificate is trusted. Firefox and Edge each present this differently, but the application itself behaves the same once the warning is accepted.
+- **Testing:** Verified manually in Chrome, Firefox and Edge against the same flows: sign-in (password and Google), the incident list with filters and pagination, the incident detail page with acknowledge and resolve, team and member management, unavailability requests, and the overview dashboard. No layout or behavioural differences were found.
 
 ---
 
@@ -216,17 +237,18 @@ The diagram was generated with [dbdiagram.io](https://dbdiagram.io). You can vie
 
 ### Points
 
-| Category           | Modules                       |   Points   |
-| ------------------ | ----------------------------- | :--------: |
-| Web                | 2 Majors and 3 Minors         |   7 pts    |
-| User Management    | 2 Majors and 1 Minor          |   5 pts    |
-| Cybersecurity      | 1 Major                       |   2 pts    |
-| Devops             | 1 Major and 1 Minor           |   3 pts    |
-| Data and Analytics | 1 Minor                       |    1 pt    |
-| Modules of choice  | 1 Minor                       |    1 pt    |
-| **Total**          | **6 Major(s) and 7 Minor(s)** | **19 pts** |
+| Category                               | Modules                       |   Points   |
+| -------------------------------------- | ----------------------------- | :--------: |
+| Web                                    | 2 Majors and 3 Minors         |   7 pts    |
+| Accessibility and Internationalization | 1 Minor                       |    1 pt    |
+| User Management                        | 2 Majors and 1 Minor          |   5 pts    |
+| Cybersecurity                          | 1 Major                       |   2 pts    |
+| Devops                                 | 1 Major and 1 Minor           |   3 pts    |
+| Data and Analytics                     | 1 Minor                       |    1 pt    |
+| Modules of choice                      | 1 Minor                       |    1 pt    |
+| **Total**                              | **6 Major(s) and 8 Minor(s)** | **20 pts** |
 
-The subject requires a minimum of 14 points; this selection totals **19**.
+The subject requires a minimum of 14 points; this selection totals **20**.
 
 ## Individual Contributions
 
