@@ -8,11 +8,11 @@ _This project has been created as part of the 42 curriculum by asebban, yahrour,
 2. [Team Information](#team-information)
 3. [Project Management](#project-management)
 4. [Technical Stack](#technical-stack)
-5. [Instructions](#instructions)
-6. [Database Schema](#database-schema)
-7. [Features List](#features-list)
-8. [Modules](#modules)
-9. [Individual Contributions](#individual-contributions)
+5. [Database Schema](#database-schema)
+6. [Features List](#features-list)
+7. [Modules](#modules)
+8. [Individual Contributions](#individual-contributions)
+9. [Instructions](#instructions)
 10. [Resources](#resources)
 11. [Known Limitations](#known-limitations)
 
@@ -25,6 +25,19 @@ _This project has been created as part of the 42 curriculum by asebban, yahrour,
 On-call work fails in predictable ways: alerts go unseen, duplicate alerts get handled twice, the paged person is unavailable, and nobody can say how long an outage lasted or how fast the team responded.
 
 This project closes those gaps in one system. It ingests alerts from monitoring tools, merges repeats into a single incident, routes it to the current on-call engineer, escalates when nobody acknowledges, and turns the timeline into response metrics (MTTA and MTTR).
+
+### Key features
+
+- **Alert ingestion through API keys.** Monitoring tools post alerts using a hashed API key, and every ingested alert stays visible in a delivery log.
+- **Duplicate suppression.** A SHA-256 fingerprint over provider, service and title means repeat alerts for the same problem join the existing incident instead of creating a new one.
+- **Incident lifecycle.** List with search, filters and cursor pagination, a detail view with a timeline, notes, reassignment, acknowledge and resolve, with MTTA and MTTR computed from the timestamps.
+- **Live updates.** A server-sent event stream pushes incident changes to every connected client, so the list updates without a refresh.
+- **On-call rotation.** Each team has a rotation period and an escalation timeout; the on-call chain skips anyone with approved leave and yields a primary and a secondary.
+- **Automatic assignment and escalation.** A job running every minute assigns unassigned incidents to the primary on-call and escalates anything left unacknowledged to the secondary.
+- **Teams and unavailability.** Team owners manage teams, members and invitations; members request leave, which the owner approves or rejects.
+- **Authentication.** Email and password with hashed credentials, plus Google OAuth 2.0, with `SRE` and `ENGINEER` roles.
+- **Overview dashboard.** Incident and team metrics in one view.
+- **Operational tooling.** WAF, secrets management in Vault, Prometheus and Grafana monitoring, a health endpoint and status page, and scheduled database backups with a documented restore procedure.
 
 ## Team Information
 
@@ -374,12 +387,6 @@ All traffic should go through the WAF on port 8443, which terminates TLS with a 
 | `http://localhost:8080`           | Redirects to HTTPS on 8443             |
 | `https://localhost:8443/api/v1/`  | API, proxied by the WAF to the backend |
 | `https://localhost:8443/grafana/` | Grafana, proxied by the WAF            |
-| `http://localhost:9090`           | Prometheus, direct (no WAF)            |
-| `http://localhost:3001`           | Grafana, direct (no WAF)               |
-| `http://localhost:8200`           | Vault UI and API                       |
-| `http://localhost:3000`           | Backend, direct (no WAF)               |
-| `http://localhost:4173`           | Frontend container, direct (no WAF)    |
-| `localhost:5432`                  | PostgreSQL                             |
 
 ### Backups and restore
 
@@ -391,15 +398,40 @@ The full procedure for restoring a database is in [`infra/database/DISASTER_RECO
 
 ### References
 
-- [TODO — e.g. NestJS documentation]
-- [TODO — e.g. Prisma documentation]
-- [TODO — e.g. ModSecurity / OWASP CRS documentation]
+**Frameworks and libraries**
+
+- [NestJS documentation](https://docs.nestjs.com) — modules, guards, interceptors, scheduling and SSE
+- [React documentation](https://react.dev) — components, hooks and state
+- [TanStack Query documentation](https://tanstack.com/query/latest/docs) — server-state caching and invalidation
+- [Prisma documentation](https://www.prisma.io/docs) — schema, client, migrations and the `pg` driver adapter
+- [Tailwind CSS documentation](https://tailwindcss.com/docs) — utility styling and the `@theme` configuration
+- [React Router documentation](https://reactrouter.com) — routing and nested layouts
+- [Zod documentation](https://zod.dev) — schema validation on the frontend
+
+**Database**
+
+- [PostgreSQL documentation](https://www.postgresql.org/docs/18/) — `timestamptz`, `text[]`, `jsonb`, schemas and unique indexes
+
+**Infrastructure and security**
+
+- [Docker Compose documentation](https://docs.docker.com/compose/) — service definitions, healthchecks and `depends_on`
+- [ModSecurity reference manual](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual) — rule engine and configuration directives
+- [OWASP Core Rule Set documentation](https://coreruleset.org/docs/) — the managed rule set behind the WAF
+- [nginx documentation](https://nginx.org/en/docs/) — TLS termination and reverse proxying
+- [HashiCorp Vault documentation](https://developer.hashicorp.com/vault/docs) — KV v2 secrets engine, policies and tokens
+- [Prometheus documentation](https://prometheus.io/docs/) — scrape configuration and PromQL
+- [Grafana documentation](https://grafana.com/docs/) — provisioning dashboards and alert rules
+- [postgres_exporter](https://github.com/prometheus-community/postgres_exporter) — database metrics for Prometheus
+
+**Tooling**
+
+- [Conventional Commits](https://www.conventionalcommits.org/) — the commit format enforced by commitlint
+- [commitlint](https://commitlint.js.org/) and [Husky](https://typicode.github.io/husky/) — commit hooks
+- [dbdiagram.io](https://dbdiagram.io) — the database diagram in this README
 
 ### AI usage
 
-| Member | Task   | Project area | AI tool | What was done with the output                    |
-| ------ | ------ | ------------ | ------- | ------------------------------------------------ |
-| [TODO] | [TODO] | [TODO]       | [TODO]  | [TODO — e.g. reviewed and rewritten, used as-is] |
+AI tools were used as an assistant during development, not as a replacement for understanding. The practice was consistent across the team: AI was used to draft, explain and review, and every output was read, checked against the actual code, and rewritten or discarded where it was wrong. No feature was merged without a team member being able to explain how it works.
 
 ---
 
