@@ -28,16 +28,14 @@ This project closes those gaps in one system. It ingests alerts from monitoring 
 
 ### Key features
 
-- **Alert ingestion through API keys.** Monitoring tools post alerts using a hashed API key, and every ingested alert stays visible in a delivery log.
-- **Duplicate suppression.** A SHA-256 fingerprint over provider, service and title means repeat alerts for the same problem join the existing incident instead of creating a new one.
-- **Incident lifecycle.** List with search, filters and cursor pagination, a detail view with a timeline, notes, reassignment, acknowledge and resolve, with MTTA and MTTR computed from the timestamps.
-- **Live updates.** A server-sent event stream pushes incident changes to every connected client, so the list updates without a refresh.
-- **On-call rotation.** Each team has a rotation period and an escalation timeout; the on-call chain skips anyone with approved leave and yields a primary and a secondary.
-- **Automatic assignment and escalation.** A job running every minute assigns unassigned incidents to the primary on-call and escalates anything left unacknowledged to the secondary.
-- **Teams and unavailability.** Team owners manage teams, members and invitations; members request leave, which the owner approves or rejects.
-- **Authentication.** Email and password with hashed credentials, plus Google OAuth 2.0, with `SRE` and `ENGINEER` roles.
-- **Overview dashboard.** Incident and team metrics in one view.
-- **Operational tooling.** WAF, secrets management in Vault, Prometheus and Grafana monitoring, a health endpoint and status page, and scheduled database backups with a documented restore procedure.
+- **Alert ingestion.** Monitoring tools post alerts with an API key, and every ingested alert stays visible in a delivery log.
+- **Duplicate suppression.** Repeat alerts for the same problem join the existing incident instead of creating a new one.
+- **Incident lifecycle.** Search, filters and pagination, a detail view with a timeline, notes, reassignment, acknowledge and resolve.
+- **Response metrics.** MTTA and MTTR computed from the incident's own timestamps.
+- **Live updates.** Incident changes reach every connected client without a refresh.
+- **On-call rotation.** Per-team rotations that skip approved leave, with automatic assignment and escalation.
+- **Teams and access.** Team and member management, unavailability requests, and `SRE` / `ENGINEER` roles.
+- **Operational tooling.** WAF, secrets in Vault, Prometheus and Grafana, health and status page, scheduled backups.
 
 ## Team Information
 
@@ -243,7 +241,7 @@ The diagram was generated with [dbdiagram.io](https://dbdiagram.io). You can vie
   - **Forecasting.** `getUpcomingRotations` projects the next shifts and checks each against future approved absences, so it shows who will actually cover a slot, not only who is scheduled.
   - **Privacy by role.** Owners see full details in the forecast; teammates see only public fields, with no id, email or role.
 - **How it adds value:** On-call is what makes an incident land on a real person. The PRIMARY/SECONDARY chain decides who a new incident is assigned to, and supplies the escalation job (`escalateUnacknowledged`) with its next responder when an incident is not acknowledged within `escalationTimeoutMinutes`. Engineers see their current shift, when it ends, and their open incidents; owners see who covers now and next. Approved leave is respected automatically, so nobody is paged on holiday.
-- **Why it deserves Minor status:** It is one small, self-contained piece of the application rather than a whole feature area. Most of it only reads data that the organization module already stores: there are two endpoints, both read-only, and a single scheduled job that moves each team's rotation forward. What makes it hard is getting the timing right.
+- **Why it deserves Minor status:** It is one small, self-contained piece rather than a whole feature area. Most of it only reads data the organization module already stores, so what makes it hard is getting the timing right, not the amount of code.
 - **Module implementation:** The logic lives in one service, `backend/src/modules/on-call/on-call.service.ts`, and it reads from two places. Each team stores its own schedule settings: how long a shift lasts, when the rotation started, who is currently up, when the last handover happened, and how long an incident may go unacknowledged before it escalates. Approved absences come from the `unavailabilities` table. Two read endpoints expose the result, one for who is on call right now and one for the upcoming shifts, and a scheduled job runs every minute to move any team whose shift has ended on to the next person.
 
 ---
@@ -278,7 +276,7 @@ The subject requires a minimum of 14 points; this selection totals **20**.
 
 **Architecture.** Started the backend as a microservices skeleton, then led the migration to a modular monolith once it became clear the domain did not justify the operational cost of separate services. Reorganised the Prisma schema into one file per bounded context and moved modules to match those boundaries, so the code structure and the database schemas describe the same four domains.
 
-**Organization domain** (the largest single share of the codebase): team CRUD with services, rotation period, rotation index and escalation timeout; team members with pagination, sorting and search; the on-call rotation engine including the scheduled rotation job and the primary/secondary chain; unavailability requests with approval, rejection, overlap detection and expiry handling; team export and import in JSON and CSV; and the team metrics that feed the overview dashboard.
+**Organization domain** (the largest single share of the codebase): team CRUD with services, rotation period and escalation timeout; team members with pagination, sorting and search; unavailability requests with approval, rejection, overlap detection and expiry handling; team export and import in JSON and CSV; and the team metrics that feed the overview dashboard. The on-call rotation engine built on this data is described under [Modules of choice](#modules-of-choice).
 
 **Cross-cutting work.** The health endpoint and status page. The database backup and restore scripts with the disaster recovery documentation. Offset pagination and sortable columns across teams, members and unavailabilities. The frontend foundation: Vite and Tailwind setup, axios and TanStack Query, absolute imports, environment validation, the `Page` layout component and the colour theme.
 
