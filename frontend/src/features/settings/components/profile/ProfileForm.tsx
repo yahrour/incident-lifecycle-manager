@@ -19,23 +19,12 @@ import {
   FieldError,
 } from "@/components/ui/field";
 import { Controller, useForm } from "react-hook-form";
-
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-} from "@/components/ui/combobox";
-
 import { settingsSchema, type SettingsFormValues } from "../../schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { User } from "@/types";
 import useUpdateProfile from "../../hooks/useUpdateProfile";
 import { toast } from "@/components/ui/toast";
-
-const timezones = Intl.supportedValuesOf("timeZone");
+import { SelectTimezone } from "@/components/SelectTimezone";
 
 export function ProfileForm({ user }: { user: User }) {
   const { mutate: updateProfile, isPending } = useUpdateProfile();
@@ -146,29 +135,10 @@ export function ProfileForm({ user }: { user: User }) {
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel htmlFor="timezone">Timezone</FieldLabel>
-                      <Combobox
-                        items={timezones}
+                      <SelectTimezone
                         value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <ComboboxInput
-                          id="timezone"
-                          placeholder="Select timezone"
-                          className="w-full"
-                        />
-
-                        <ComboboxContent>
-                          <ComboboxEmpty>No timezone found.</ComboboxEmpty>
-
-                          <ComboboxList>
-                            {(tz: string) => (
-                              <ComboboxItem key={tz} value={tz}>
-                                {tz.replaceAll("_", " ")}
-                              </ComboboxItem>
-                            )}
-                          </ComboboxList>
-                        </ComboboxContent>
-                      </Combobox>
+                        onChange={field.onChange}
+                      />
                       {fieldState.invalid && (
                         <FieldError errors={[fieldState.error]} />
                       )}

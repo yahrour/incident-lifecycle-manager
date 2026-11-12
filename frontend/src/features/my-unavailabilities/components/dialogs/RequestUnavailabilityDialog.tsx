@@ -31,22 +31,14 @@ import {
 } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-} from "@/components/ui/combobox";
 import { requestUnavailability } from "../../api/unavailability";
 import { useMutation } from "@tanstack/react-query";
 import { Textarea } from "@/components/ui/textarea";
 import { unavailabilityKeys } from "../../constants";
 import { toZonedTime } from "date-fns-tz";
+import { SelectTimezone } from "@/components/SelectTimezone";
 
 type RequestUnavailabilitySchema = z.input<typeof requestUnavailabilitySchema>;
-const TIMEZONES = Intl.supportedValuesOf("timeZone");
 
 export function RequestUnavailabilityDialog({
   teamId,
@@ -222,28 +214,10 @@ export function RequestUnavailabilityDialog({
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel htmlFor="timezone">Timezone</FieldLabel>
-                  <Combobox
-                    items={TIMEZONES}
+                  <SelectTimezone
                     value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <ComboboxInput
-                      placeholder="Select timezone"
-                      className="w-full"
-                    />
-
-                    <ComboboxContent>
-                      <ComboboxEmpty>No timezone found.</ComboboxEmpty>
-
-                      <ComboboxList>
-                        {(tz: string) => (
-                          <ComboboxItem key={tz} value={tz}>
-                            {tz.replaceAll("_", " ")}
-                          </ComboboxItem>
-                        )}
-                      </ComboboxList>
-                    </ComboboxContent>
-                  </Combobox>
+                    onChange={field.onChange}
+                  />
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
                   )}

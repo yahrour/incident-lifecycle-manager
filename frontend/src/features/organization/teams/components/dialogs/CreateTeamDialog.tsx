@@ -27,14 +27,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-} from "@/components/ui/combobox";
 import { Calendar } from "@/components/ui/calendar";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
@@ -50,8 +42,7 @@ import {
 } from "../../constants";
 import { ErrorSection } from "@/components/ErrorSection";
 import { teamKeys } from "@/features/organization/shared/constants";
-
-const TIMEZONES = Intl.supportedValuesOf("timeZone");
+import { SelectTimezone } from "@/components/SelectTimezone";
 
 export function CreateTeamDialog() {
   type CreateTeamInput = z.input<typeof createTeamSchema>;
@@ -306,28 +297,10 @@ export function CreateTeamDialog() {
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor="timezone">Timezone</FieldLabel>
-                    <Combobox
-                      items={TIMEZONES}
+                    <SelectTimezone
                       value={field.value}
-                      onValueChange={field.onChange}
-                    >
-                      <ComboboxInput
-                        placeholder="Select timezone"
-                        className="w-full"
-                      />
-
-                      <ComboboxContent>
-                        <ComboboxEmpty>No timezone found.</ComboboxEmpty>
-
-                        <ComboboxList>
-                          {(tz: string) => (
-                            <ComboboxItem key={tz} value={tz}>
-                              {tz.replaceAll("_", " ")}
-                            </ComboboxItem>
-                          )}
-                        </ComboboxList>
-                      </ComboboxContent>
-                    </Combobox>
+                      onChange={field.onChange}
+                    />
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
