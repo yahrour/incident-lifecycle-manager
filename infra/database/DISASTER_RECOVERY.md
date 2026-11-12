@@ -23,7 +23,7 @@ ls -lt ./backups
 ## Step 3: Run the Restore Script
 
 ```bash
-bash ./infra/database/db.restore.sh ./infra/.env ./backups
+POSTGRES_SERVICE_NAME=<service> POSTGRES_USER=<user> POSTGRES_DB=<db> bash db.restore.sh ./backups
 ```
 
 ## Step 4: Start Services

@@ -11,10 +11,6 @@ interface AppSecrets {
   JWT_REFRESH_SECRET?: string;
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: string;
-  MAIL_USER?: string;
-  MAIL_PASS?: string;
-  DISCORD_CLIENT_ID?: string;
-  DISCORD_CLIENT_SECRET?: string;
 }
 
 const SECRET_KEYS: (keyof AppSecrets)[] = [
@@ -23,10 +19,6 @@ const SECRET_KEYS: (keyof AppSecrets)[] = [
   "JWT_REFRESH_SECRET",
   "GOOGLE_CLIENT_ID",
   "GOOGLE_CLIENT_SECRET",
-  "MAIL_USER",
-  "MAIL_PASS",
-  "DISCORD_CLIENT_ID",
-  "DISCORD_CLIENT_SECRET",
 ];
 
 const TOKEN_FILE = "/vault/runtime/backend-token";

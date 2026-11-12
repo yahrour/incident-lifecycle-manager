@@ -13,14 +13,20 @@ log_success() { echo -e "${GREEN}SUCCESS: $1${NC}"; }
 log_warn()    { echo -e "${YELLOW}WARNING: $1${NC}"; }
 log_error()   { echo -e "${RED}ERROR: $1${NC}"; }
 
-if [[ -z "$1" || -z "$2" ]]; then
-    log_error "Usage: $0 <env_file> <backup_dir>";
+require_var() {
+  [[ -n "${!1:-}" ]] || { log_error "Missing required environment variable: $1"; exit 1; }
+}
+
+if [[ -z "$1" ]]; then
+    log_error "Usage: $0 <backup_dir>";
     exit 1;
 fi
 
-source "$1"
+require_var POSTGRES_SERVICE_NAME
+require_var POSTGRES_USER
+require_var POSTGRES_DB
 
-BACKUP_DIR="${2}"
+BACKUP_DIR="${1}"
 BACKUP=$(ls -t "$BACKUP_DIR"/*.sql 2>/dev/null | head -n 1)
 if [ -z "$BACKUP" ]; then
   log_error "No .sql backup found in $BACKUP_DIR";
