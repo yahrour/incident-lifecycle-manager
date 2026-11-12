@@ -47,10 +47,9 @@ export function EditTeamDialog({ team }: { team: Team }) {
   const [open, setOpen] = useState(false);
   const [service, setService] = useState("");
 
-  type UpdateTeamInput = z.input<typeof updateTeamSchema>;
-  type UpdateTeamOutput = z.output<typeof updateTeamSchema>;
+  type UpdateTeamSchema = z.infer<typeof updateTeamSchema>;
 
-  const form = useForm<UpdateTeamInput, unknown, UpdateTeamOutput>({
+  const form = useForm<UpdateTeamSchema>({
     resolver: zodResolver(updateTeamSchema),
     values: {
       name: team.name,
@@ -67,6 +66,10 @@ export function EditTeamDialog({ team }: { team: Team }) {
 
   const onSubmit = (data: z.infer<typeof updateTeamSchema>) => {
     setErrors([]);
+
+    if (data.description === "") {
+      data.description = null;
+    }
 
     const dirtyFields = form.formState.dirtyFields;
     const changedData = Object.fromEntries(

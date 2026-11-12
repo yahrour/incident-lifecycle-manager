@@ -17,8 +17,7 @@ export const createTeamSchema = z
       .string()
       .trim()
       .max(255, "description must not exceed 255 characters")
-      .optional()
-      .transform((val) => (val === "" ? undefined : val)),
+      .optional(),
 
     rotationPeriodDays: z
       .number({ error: "Rotation period must be a number" })
@@ -34,8 +33,7 @@ export const createTeamSchema = z
       .refine((tz) => tz === "" || isValidTimeZone(tz), {
         error: "Invalid IANA timezone",
       })
-      .optional()
-      .transform((val) => (val?.trim() === "" ? undefined : val)),
+      .optional(),
 
     escalationTimeoutMinutes: z
       .number({ error: "Escalation timeout must be a number" })
@@ -90,8 +88,7 @@ export const updateTeamSchema = z
       .trim()
       .max(255, "Description must not exceed 255 characters")
       .optional()
-      .nullable()
-      .transform((val) => (val === "" ? null : val)),
+      .nullable(),
 
     services: servicesSchema.optional(),
 
