@@ -54,7 +54,7 @@ The system is a single Docker Compose deployment with a NestJS API, a React fron
 
 | Login    | Assigned role(s)                      | Responsibilities                                                                                                                                                                                                                                                                                                                                                                                     |
 | -------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| asebban  | [TODO — unassigned]                   | [TODO — brief description of responsibilities]                                                                                                                                                                                                                                                                                                                                                       |
+| asebban  | Developer                             | Owned alert ingestion (API keys, provider adapters, alert-to-incident creation, Integrations and Delivery Log pages) and the security layer of the deployment: the ModSecurity WAF with HTTPS termination and HashiCorp Vault as the source of truth for secrets. |
 | yahrour  | Technical Lead / Architect, Developer | Chose the tech stack (NestJS backend, React frontend) and built the project foundation: the monorepo layout, commitlint with Husky hooks to enforce conventional commits, and the ESLint/Prettier setup for consistent code style. Defined the GitHub workflow rules: pull requests required for `main` and `dev` with at least one teammate review, and squash-and-merge to keep the history clean. |
 | aaitabde | [TODO — unassigned]                   | [TODO — brief description of responsibilities]                                                                                                                                                                                                                                                                                                                                                       |
 | sait-nac | [TODO — unassigned]                   | [TODO — brief description of responsibilities]                                                                                                                                                                                                                                                                                                                                                       |
@@ -152,7 +152,8 @@ visit https://dbdiagram.io/d/6af3602b04c7e97b1d24f9ec for database visualization
 | Invitations                         | Invite users to a team by token and accept the invite                     | [TODO]         |
 | Incident management                 | List with search and filters, detail, notes, assign, acknowledge, resolve | [TODO]         |
 | Live incident events                | Server-sent event stream on incidents                                     | [TODO]         |
-| Alert ingestion                     | Providers post alerts using API keys; API key management                  | [TODO]         |
+| Alert ingestion                     | Providers post alerts using API keys; API key management                  | asebban        |
+| WAF and secrets management          | ModSecurity + OWASP CRS with HTTPS in front of the stack; Vault for secrets | asebban        |
 | Teams and members                   | Create, edit, delete teams; view and remove members; team stats           | [TODO]         |
 | On-call and unavailability          | Current/upcoming on-call, unavailability requests with approve/reject     | [TODO]         |
 | Team export / import                | Export and import team data                                               | [TODO]         |
@@ -263,8 +264,25 @@ The subject requires a minimum of 14 points; this selection totals **18**.
 
 ### asebban
 
-- **Contributions:** [TODO]
-- **Challenges and solutions:** [TODO]
+**Role:** Developer
+
+#### Contributions
+
+**Alert ingestion.** Built the `ingestion` module from scratch. API key endpoints generate a random key, show it once, and store only its SHA-256 hash with a prefix and an expiry date; expired keys are rejected. The alert endpoint authenticates the caller by hashed key, normalises the payload through a provider adapter, stores the alert with its raw JSON payload, and creates the incident from it. Added an endpoint to list ingested alerts with pagination.
+
+**Integrations and Delivery Log pages.** On the frontend, the Integrations page manages API keys: a table with status filter and sorting, a create dialog that shows the new key once, and a delete dialog. The Delivery Log page lists every ingested alert in a paginated table matching the incidents table.
+
+**WAF.** Added the ModSecurity + OWASP CRS container on nginx with `SecRuleEngine On`, HTTPS termination with a redirect from HTTP, and routing of the frontend, `/api/v1/` and Grafana through it. Fixed the rules that blocked `PUT`, `PATCH` and `DELETE`, and the healthcheck port.
+
+**Vault.** Added Vault to the Compose stack with a bootstrap script that initialises and unseals it, writes the secrets into KV v2, creates a scoped backend policy and token, and renders secret files for other containers. The backend loads its secrets from Vault at boot (`backend/src/vault/load-secrets.ts`), and Postgres, Grafana and the backup service read their credentials from Vault instead of `.env` files.
+
+**Other.** Dockerized the frontend.
+
+#### Challenges and solutions
+
+**Putting a WAF in front of the application without breaking it.** Adding ModSecurity with the OWASP Core Rule Set made the stack more secure, but its default rules are strict and some legitimate requests from our own application were blocked. Disabling the WAF or switching it to detection-only would have hidden the problem, so I kept the rule engine on and changed the configuration only where our application needed it, then tested the main flows again through the WAF.
+
+**Managing secrets with Vault.** Moving secrets out of `.env` files and into Vault meant every service had to get its credentials at startup, in the right order, before it could run. I learned how Vault works (initialisation, unsealing, policies, tokens and the KV store) and set up the stack so that Vault starts first and the other services wait for it to be ready.
 
 ### yahrour
 
