@@ -8,60 +8,50 @@ _This project has been created as part of the 42 curriculum by asebban, yahrour,
 2. [Team Information](#team-information)
 3. [Project Management](#project-management)
 4. [Technical Stack](#technical-stack)
-5. [Instructions](#instructions)
-6. [Database Schema](#database-schema)
-7. [Features List](#features-list)
-8. [Modules](#modules)
-9. [Individual Contributions](#individual-contributions)
+5. [Database Schema](#database-schema)
+6. [Features List](#features-list)
+7. [Modules](#modules)
+8. [Individual Contributions](#individual-contributions)
+9. [Instructions](#instructions)
 10. [Resources](#resources)
 11. [Known Limitations](#known-limitations)
 
 ## Description
 
-**Incident Lifecycle Manager** is a self-hosted web application that carries an incident through its entire life: an alert fires, the alert becomes an incident, the incident reaches the engineer who is actually on call, and every step from acknowledgement to resolution is recorded and measured.
+**Incident Lifecycle Manager** is a self-hosted web application that tracks an incident from alert to resolution: an alert fires, becomes an incident, reaches the engineer actually on call, and every step is recorded and measured.
 
 ### Goal
 
-On-call work fails in predictable ways. An alert fires and nobody sees it. Two alerts for the same outage get handled twice by two different people. The person paged is on holiday. Nobody can say afterwards how long the outage lasted or how fast anyone responded.
+On-call work fails in predictable ways: alerts go unseen, duplicate alerts get handled twice, the paged person is unavailable, and nobody can say how long an outage lasted or how fast the team responded.
 
-The goal of this project is to close those gaps in one place: a single system that ingests alerts from monitoring tools, collapses repeated alerts into one incident, routes that incident to the current on-call engineer automatically, escalates when nobody acknowledges, and turns the whole timeline into response metrics (MTTA and MTTR) instead of guesswork.
+This project closes those gaps in one system. It ingests alerts from monitoring tools, merges repeats into a single incident, routes it to the current on-call engineer, escalates when nobody acknowledges, and turns the timeline into response metrics (MTTA and MTTR).
 
-### Overview
+### Key features
 
-The system is a single Docker Compose deployment with a NestJS API, a React frontend and a PostgreSQL database, plus the operational layer around them.
-
-**Alert ingestion.** Monitoring tools post alerts to the API using a hashed API key. Each alert is normalised, stored with its raw JSON payload, and turned into an incident. A SHA-256 fingerprint over provider, service and title identifies repeat alerts, and a unique constraint on the open fingerprint per team means a second alert for the same problem joins the existing incident instead of creating a duplicate. Every ingested alert stays visible in a delivery log.
-
-**Incident handling.** Incidents carry a severity, a status, an assignee and a full timestamp history. Engineers can search and filter the list, open a detail view, add notes, reassign, acknowledge and resolve. Acknowledgement and resolution stamp the timestamps that produce MTTA and MTTR. A server-sent event stream pushes incident changes to connected clients, so the list updates without a refresh.
-
-**On-call and escalation.** Each team has a rotation period, a rotation index and an escalation timeout. The on-call chain is computed from team membership, skipping anyone with an approved unavailability window covering the current moment, and yields a primary and a secondary engineer. A scheduled job runs every minute: an open incident with no assignee is assigned to the primary on-call, and an incident left unacknowledged past the team's timeout is escalated. Unavailability requests are submitted by members and approved or rejected by the team owner, so the rotation knows who is genuinely reachable.
-
-**Teams and access.** Users sign up with email and password or with Google OAuth 2.0, and hold a role of `SRE` or `ENGINEER`. Team owners manage teams, members and invitations; invite tokens are single-use and expire. Refresh tokens are stored hashed.
-
-**Operations.** The deployment ships with the surrounding production concerns rather than leaving them as an exercise: ModSecurity with the OWASP Core Rule Set in front of the stack as a WAF, HashiCorp Vault for secrets, Prometheus and Grafana for metrics and dashboards, a health endpoint and status page, scheduled PostgreSQL backups with a documented restore procedure, and an overview dashboard for incident and team metrics.
-
-**Key features** (see [Features List](#features-list) for details and contributors):
-
-- Email/password sign-up and sign-in, and Google sign-in.
-- Incident list with search and filters, detail view, notes, assignment, acknowledge and resolve.
-- Alert ingestion through hashed API keys, with fingerprint-based grouping of repeat alerts.
-- Live incident updates over server-sent events.
-- Teams, members, on-call rotation, automatic assignment and escalation, unavailability requests.
-- Overview dashboard with incident and team metrics.
-- Security and operations tooling: WAF, secrets management, monitoring, health checks and backups.
+- **Alert ingestion.** Monitoring tools post alerts with an API key, and every ingested alert stays visible in a delivery log.
+- **Duplicate suppression.** Repeat alerts for the same problem join the existing incident instead of creating a new one.
+- **Incident lifecycle.** Search, filters and pagination, a detail view with a timeline, notes, reassignment, acknowledge and resolve.
+- **Response metrics.** MTTA and MTTR computed from the incident's own timestamps.
+- **Live updates.** Incident changes reach every connected client without a refresh.
+- **On-call rotation.** Per-team rotations that skip approved leave, with automatic assignment and escalation.
+- **Teams and access.** Team and member management, unavailability requests, and `SRE` / `ENGINEER` roles.
+- **Operational tooling.** WAF, secrets in Vault, Prometheus and Grafana, health and status page, scheduled backups.
 
 ## Team Information
 
-| Login    | Assigned role(s)                      | Responsibilities                                                                                                                                                                                                                                                                                                                                                                                     |
-| -------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| asebban  | Developer                             | Owned alert ingestion (API keys, provider adapters, alert-to-incident creation, Integrations and Delivery Log pages) and the security layer of the deployment: the ModSecurity WAF with HTTPS termination and HashiCorp Vault as the source of truth for secrets. |
-| yahrour  | Technical Lead / Architect, Developer | Chose the tech stack (NestJS backend, React frontend) and built the project foundation: the monorepo layout, commitlint with Husky hooks to enforce conventional commits, and the ESLint/Prettier setup for consistent code style. Defined the GitHub workflow rules: pull requests required for `main` and `dev` with at least one teammate review, and squash-and-merge to keep the history clean. |
-| aaitabde | [TODO — unassigned]                   | [TODO — brief description of responsibilities]                                                                                                                                                                                                                                                                                                                                                       |
-| sait-nac | [TODO — unassigned]                   | [TODO — brief description of responsibilities]                                                                                                                                                                                                                                                                                                                                                       |
+- **asebban** ([TODO — unassigned]):
+  - [TODO — brief description of responsibilities]
 
-<!-- Subject: each member needs assigned role(s) (PO, PM, Tech Lead, Developer) and a short responsibility description.
-With 4 people, members may hold several roles (e.g. PM + Developer).
-Describe the role that was *assigned*. What each person actually built goes in "Individual Contributions". -->
+- **yahrour** (Technical Lead / Architect, Developer):
+  - Owns technical direction: architecture, stack decisions and code quality conventions
+  - Reviews critical changes and maintains the repository workflow (branch rules, commit and lint standards)
+  - Implements features alongside the rest of the team
+
+- **aaitabde** ([TODO — unassigned]):
+  - [TODO — brief description of responsibilities]
+
+- **sait-nac** ([TODO — unassigned]):
+  - [TODO — brief description of responsibilities]
 
 ---
 
@@ -71,218 +61,210 @@ Describe the role that was *assigned*. What each person actually built goes in "
 - **Task tracking:** GitHub, with pull requests. [TODO — owner: unassigned — add Issues/Projects/board usage if any]
 - **Communication channel:** Discord.
 
-<!-- Mention branch naming and commit conventions if the team wants to (the repo uses commitlint with conventional commits). -->
-
 ---
 
 ## Technical Stack
 
-Versions are the ones declared in `frontend/package.json`, `backend/package.json` and `docker-compose.yml`.
+| Layer          | Technology                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Frontend       | ![React_19](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white) ![Tailwind_CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white) ![React_Router](https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge&logo=reactrouter&logoColor=white) ![TanStack_Query](https://img.shields.io/badge/TanStack_Query-FF4154?style=for-the-badge&logo=reactquery&logoColor=white) ![shadcn](https://img.shields.io/badge/shadcn-000000?style=for-the-badge&logo=shadcnui&logoColor=white) ![Recharts](https://img.shields.io/badge/Recharts-22B5BF?style=for-the-badge) |
+| Backend        | ![NestJS_11](https://img.shields.io/badge/NestJS_11-E0234E?style=for-the-badge&logo=nestjs&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white) ![Passport](https://img.shields.io/badge/Passport-34E27A?style=for-the-badge&logo=passport&logoColor=black) ![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white) ![Google_OAuth_2.0](https://img.shields.io/badge/Google_OAuth_2.0-4285F4?style=for-the-badge&logo=google&logoColor=white) ![Joi](https://img.shields.io/badge/Joi-0080FF?style=for-the-badge) ![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)                                                                                                                         |
+| Database       | ![PostgreSQL_18](https://img.shields.io/badge/PostgreSQL_18-4169E1?style=for-the-badge&logo=postgresql&logoColor=white) ![Prisma_7](https://img.shields.io/badge/Prisma_7-2D3748?style=for-the-badge&logo=prisma&logoColor=white)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Infrastructure | ![Docker_Compose](https://img.shields.io/badge/Docker_Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white) ![nginx](https://img.shields.io/badge/nginx-009639?style=for-the-badge&logo=nginx&logoColor=white) ![ModSecurity](https://img.shields.io/badge/ModSecurity-B31B1B?style=for-the-badge) ![OWASP_CRS](https://img.shields.io/badge/OWASP_CRS-000000?style=for-the-badge&logo=owasp&logoColor=white) ![HashiCorp_Vault](https://img.shields.io/badge/HashiCorp_Vault-FFD814?style=for-the-badge&logo=vault&logoColor=black) ![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white) ![Grafana](https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white)                                                                                                                |
+| Tooling        | ![ESLint](https://img.shields.io/badge/ESLint-4B32C3?style=for-the-badge&logo=eslint&logoColor=white) ![Prettier](https://img.shields.io/badge/Prettier-F7B93E?style=for-the-badge&logo=prettier&logoColor=black) ![commitlint](https://img.shields.io/badge/commitlint-000000?style=for-the-badge) ![Husky](https://img.shields.io/badge/Husky-42B983?style=for-the-badge)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
-| Area           | Technologies used                                                                                                                                                                                                                                                                  |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Frontend       | React, TypeScript, Vite, Tailwind CSS, React Router, TanStack Query, React Hook Form, Zod, Axios, Recharts, shadcn, lucide-react, date-fns,                                                                                                                                        |
-| Backend        | NestJS (Express, TypeScript), Passport, `@nestjs/jwt`, `passport-google-oauth20`, bcrypt, class-validator + class-transformer, `@nestjs/config`, Joi, `@nestjs/schedule`, `@nestjs/terminus`, `@willsoto/nestjs-prometheus` + prom-client, csv-parse, csv-stringify, cookie-parser |
-| Database       | PostgreSQL 18                                                                                                                                                                                                                                                                      |
-| ORM            | Prisma                                                                                                                                                                                                                                                                             |
-| Infrastructure | Docker Compose, ModSecurity + OWASP Core Rule Set on nginx (WAF, TLS termination), HashiCorp Vault, Prometheus v3.13, Grafana 13.2, postgres-exporter, scheduled PostgreSQL backups                                                                                                |
-| Tooling        | ESLint, Prettier, commitlint + Husky + lint-staged                                                                                                                                                                                                                                 |
+**We chose this stack because it gave us production-grade structure without slowing the team down: NestJS supplies guards, validation, scheduling and metrics as built-in modules, React with TanStack Query handles a data-dense interface, and PostgreSQL enforces the uniqueness rules the incident engine depends on.**
 
 ### Database
 
-**PostgreSQL 18**, accessed through Prisma 7.9 with the `@prisma/adapter-pg` driver adapter. The schema is split across four PostgreSQL schemas that mirror the module boundaries: `auth`, `organization`, `incident` and `ingestion`.
+**PostgreSQL 18** split across four schemas that mirror the module boundaries: `auth`, `organization`, `incident` and `ingestion`.
 
-#### Why PostgreSQL and not MySQL or SQLite
-
-The choice was driven by what the schema and the runtime actually need, not by preference. Each requirement below is used by the current models.
-
-| Requirement in this project                                 | PostgreSQL 18                       | MySQL 8                                                                                    | SQLite                                               |
-| ----------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
-| Timezone-aware timestamps for MTTA/MTTR (`@db.Timestamptz`) | Native `timestamptz`, stored as UTC | `TIMESTAMP` converts by session timezone and stops at 2038; `DATETIME` carries no timezone | No date type at all; stored as text or a number      |
-| Native array column (`Team.services String[]`)              | `text[]`                            | Not supported; needs a join table or JSON                                                  | Not supported                                        |
-| Queryable JSON payload (`Alert.payload Json`)               | `jsonb`, indexable with GIN         | `JSON`, indexable only via generated columns                                               | Stored as text; no indexing                          |
-| Four namespaces in one database (`@@schema`)                | Schemas are a first-class object    | Schema _is_ the database; would need four databases or name prefixes                       | No schemas                                           |
-| Native UUID primary keys (`@db.Uuid`)                       | `uuid` type                         | `CHAR(36)` or `BINARY(16)`                                                                 | No type system                                       |
-| Native enums (`Role`, `UnavailabilityStatus`)               | `CREATE TYPE ... AS ENUM`           | `ENUM` (works, but altering it rewrites the table)                                         | Not supported; `CHECK` constraint only               |
-| Concurrent writers                                          | MVCC, row-level locks               | InnoDB row-level locks                                                                     | **Single writer**; one write lock for the whole file |
-| Runs as a separate network service in Compose               | Yes                                 | Yes                                                                                        | No; it is an embedded library                        |
-
-### Justification of major technical choices
-
-| Choice                  | Why                                                                                                                                                                                                                                                                                                                                                                   |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| NestJS                  | The application needs several things a plain Express setup would leave to hand-rolled middleware: role-based route guards, request validation, an interceptor for metrics, a cron scheduler for escalation, health checks and SSE streaming. NestJS provides all of these as first-class modules, and its module system maps directly onto the four bounded contexts. |
-| React                   | The UI is data-dense and stateful: incident lists with filters and pagination, live updates, multi-step forms. A component model with a mature ecosystem fits that better than server-rendered templates, and sharing TypeScript with the backend keeps request and response types aligned.                                                                           |
-| PostgreSQL              | Chosen for relational integrity, `timestamptz` accuracy and, above all, the ability to enforce the open-incident uniqueness rule as a constraint. Justified in full in the Database section above.                                                                                                                                                                    |
-| Prisma                  | Generates a fully typed client from the schema, so query shapes are checked at compile time, and its migration workflow keeps the four schemas versioned. The schema is split into one file per module so ownership stays visible.                                                                                                                                    |
-| TanStack Query          | Incident and team data is server state, not client state. Caching, background refetching and invalidation remove most manual loading and error handling from components.                                                                                                                                                                                              |
-| Server-sent events      | Incident updates only travel server to client, so a full WebSocket protocol and upgrade handling would be unnecessary weight. SSE runs over ordinary HTTP, which also keeps it simple to proxy through the nginx WAF.                                                                                                                                                 |
-| ModSecurity + OWASP CRS | A managed rule set covers the common attack classes without the team writing and maintaining detection rules, and nginx gives TLS termination in the same container.                                                                                                                                                                                                  |
-| Vault                   | Secrets belong outside the repository and outside the Compose file. Vault also gives a single place to rotate credentials without rebuilding images.                                                                                                                                                                                                                  |
-| Prometheus + Grafana    | Pull-based metrics with a query language suited to the latency and error-rate questions this project actually asks, plus dashboards that do not require custom UI work.                                                                                                                                                                                               |
-
-<!-- Note: the reasons above are the engineering rationale visible in the code and configuration.
-If a choice was also driven by team familiarity or a constraint not visible in the repository,
-add that here — it is the honest answer and reviewers ask for it. -->
+| Need                                        | How PostgreSQL provides it                                                                                                         |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Timezone-aware timestamps for MTTA and MTTR | Native `timestamptz` stored as UTC, so subtracting `acknowledged_at` or `resolved_at` from `created_at` is correct in any timezone |
+| A team's services as one column             | Native `text[]`, filterable directly instead of a join table                                                                       |
+| Arbitrary provider payloads                 | `jsonb`, which stays queryable                                                                                                     |
+| Four separated domains in one database      | Native schemas, so `auth`, `organization`, `incident` and `ingestion` stay isolated without extra database servers                 |
 
 ## Database Schema
 
-visit https://dbdiagram.io/d/6af3602b04c7e97b1d24f9ec for database visualization
+[![Database Schema Overview](./docs/db-diagram.png)](./docs/db-diagram.png)
 
-| PostgreSQL schema | Table            | Purpose                                                                         | Key relations                                                 |
-| ----------------- | ---------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| auth              | users            | Accounts: email, password hash (nullable), role (`SRE` / `ENGINEER`), Google id | Referenced by teams, team members, incidents, notes, API keys |
-| auth              | refresh_tokens   | Hashed refresh tokens                                                           | → users (cascade delete)                                      |
-| auth              | invite_tokens    | Team invitations                                                                | team id, email, used flag, expiry                             |
-| organization      | teams            | Teams, on-call rotation and escalation settings                                 | → users (owner)                                               |
-| organization      | team_members     | Membership of a user in a team                                                  | → users, → teams                                              |
-| organization      | unavailabilities | Unavailability windows with status                                              | → team_members                                                |
-| incident          | incidents        | Incidents with severity, status, timestamps, MTTA/MTTR                          | → teams, → users (assignee)                                   |
-| incident          | incident_notes   | Notes on an incident                                                            | → incidents, → users (author)                                 |
-| incident          | incident_alerts  | Links alerts to incidents                                                       | → incidents                                                   |
-| ingestion         | api_keys         | Hashed API keys for alert ingestion                                             | → users (owner)                                               |
-| ingestion         | alerts           | Raw incoming alerts                                                             | provider, status, JSON payload                                |
+> **Note:** This diagram is a simplified overview. Audit columns, defaults, and indexes are omitted. For the detailed database visualization with all columns and constraints, visit the interactive diagram below.
+
+The diagram was generated with [dbdiagram.io](https://dbdiagram.io). You can view it [here](https://dbdiagram.io/d/6af3602b04c7e97b1d24f9ec).
 
 ## Features List
 
-| Feature                             | Description                                                               | Contributor(s) |
-| ----------------------------------- | ------------------------------------------------------------------------- | -------------- |
-| Authentication                      | Email/password sign-up and sign-in, token refresh, logout                 | [TODO]         |
-| Google sign-in                      | OAuth 2.0 login with Google                                               | [TODO]         |
-| Invitations                         | Invite users to a team by token and accept the invite                     | [TODO]         |
-| Incident management                 | List with search and filters, detail, notes, assign, acknowledge, resolve | [TODO]         |
-| Live incident events                | Server-sent event stream on incidents                                     | [TODO]         |
-| Alert ingestion                     | Providers post alerts using API keys; API key management                  | asebban        |
-| WAF and secrets management          | ModSecurity + OWASP CRS with HTTPS in front of the stack; Vault for secrets | asebban        |
-| Teams and members                   | Create, edit, delete teams; view and remove members; team stats           | [TODO]         |
-| On-call and unavailability          | Current/upcoming on-call, unavailability requests with approve/reject     | [TODO]         |
-| Team export / import                | Export and import team data                                               | [TODO]         |
-| Overview dashboard                  | Incident and team metrics                                                 | [TODO]         |
-| Health and status page              | Health endpoint and status page                                           | [TODO]         |
-| Privacy Policy and Terms of Service | Pages in the frontend landing feature                                     | [TODO]         |
-| Metrics and monitoring              | Prometheus metrics, Grafana dashboards and alert rules                    | [TODO]         |
-| Backups                             | Scheduled database backups and a restore procedure                        | [TODO]         |
+| Feature                             | Description                                                               | Contributor(s)    |
+| ----------------------------------- | ------------------------------------------------------------------------- | ----------------- |
+| Authentication                      | Email/password sign-up and sign-in, token refresh, logout                 | sait-nac          |
+| Google sign-in                      | OAuth 2.0 login with Google                                               | sait-nac          |
+| Invitations                         | Invite users to a team by token and accept the invite                     | sait-nac          |
+| Incident management                 | List with search and filters, detail, notes, assign, acknowledge, resolve | aaitabde          |
+| Live incident events                | Server-sent event stream on incidents                                     | aaitabde          |
+| Alert ingestion                     | Providers post alerts using API keys; API key management                  | asebban           |
+| Teams and members                   | Create, edit, delete teams; view and remove members; team stats           | yahrour           |
+| On-call and unavailability          | Current/upcoming on-call, unavailability requests with approve/reject     | yahrour           |
+| Team export / import                | Export and import team data                                               | yahrour           |
+| Overview dashboard                  | Incident and team metrics                                                 | yahrour, aaitabde |
+| Health and status page              | Health endpoint and status page                                           | yahrour           |
+| Privacy Policy and Terms of Service | Pages in the frontend landing feature                                     | asebban           |
+| Metrics and monitoring              | Prometheus metrics, Grafana dashboards and alert rules                    | sait-nac          |
+| Backups                             | Scheduled database backups and a restore procedure                        | yahrour           |
 
 ## Modules
 
-### Chosen modules
+### Web
 
-| #   | Type  | Module                                                                                                       | Pts | Contributor(s)    |
-| --- | ----- | ------------------------------------------------------------------------------------------------------------ | --- | ----------------- |
-| 1   | Major | Use a framework for both the frontend and backend                                                            | 2   | all members       |
-| 2   | Major | Implement real-time features using WebSockets or similar technology                                          | 2   | aaitabde          |
-| 3   | Major | Advanced permissions system                                                                                  | 2   | sait-nac          |
-| 4   | Major | An organization system                                                                                       | 2   | yahrour           |
-| 5   | Major | Implement WAF/ModSecurity (hardened) + HashiCorp Vault for secrets                                           | 2   | asebban           |
-| 6   | Major | Monitoring system with Prometheus and Grafana                                                                | 2   | sait-nac          |
-| 7   | Minor | Use an ORM for the database                                                                                  | 1   | all members       |
-| 8   | Minor | Custom-made design system with reusable components, color palette, typography and icons (min. 10 components) | 1   | all members       |
-| 9   | Minor | Advanced search functionality with filters, sorting and pagination                                           | 1   | aaitabde, yahrour |
-| 10  | Minor | Remote authentication with OAuth 2.0                                                                         | 1   | sait-nac          |
-| 11  | Minor | Health check and status page with automated backups and disaster recovery                                    | 1   | yahrour           |
-| 12  | Minor | Data export and import functionality                                                                         | 1   | yahrour           |
+#### Major: Use a framework for both the frontend and backend
 
-The subject requires a minimum of 14 points; this selection totals **18**.
+- **Team member(s) that worked on this module:** `yahrour`, `asebban`, `aaitabde`, `sait-nac`
+- **Module choice:** Both sides need routing, validation, guards and scheduling that we would otherwise hand-roll. We would have used frameworks regardless of the module.
+- **Module implementation:** NestJS 11 for the API, React 19 with Vite for the frontend, both in TypeScript, with React Router and TanStack Query.
+
+#### Major: Implement real-time features using WebSockets or similar technology
+
+- **Team member(s) that worked on this module:** `aaitabde`
+- **Module choice:** A dashboard that only updates on refresh is misleading during an outage. Updates travel server to client only, so SSE fits without a duplex protocol.
+- **Module implementation:** `@Sse("events")` streams filtered incident changes from an RxJS observable; `useIncidentEvents` opens an `EventSource`, reconnects on close and invalidates the query cache.
+
+#### Minor: Use an ORM for the database
+
+- **Team member(s) that worked on this module:** `yahrour`, `asebban`, `aaitabde`, `sait-nac`
+- **Module choice:** Hand-written SQL across eleven tables means hand-maintained types and broken queries after every schema change.
+- **Module implementation:** Prisma 7.9 with the `@prisma/adapter-pg` driver adapter, models split per bounded context and an initial migration versioned.
+
+#### Minor: Custom-made design system with reusable components
+
+- **Team member(s) that worked on this module:** `yahrour`, `asebban`, `aaitabde`, `sait-nac`
+- **Module choice:** Four people building screens independently produce four different buttons.
+- **Module implementation:** 30 reusable components in `frontend/src/components/ui/`, a CSS custom property palette with light and dark values, Roboto and Public Sans type scale, and lucide-react icons.
+
+#### Minor: Advanced search functionality with filters, sorting and pagination
+
+- **Team member(s) that worked on this module:** `yahrour`
+- **Module choice:** The organization tables grow as teams, members and unavailabilities accumulate. Loading every row into the browser does not scale, so they need consistent search, sorting and pagination.
+- **Module implementation:** Teams use offset pagination with case-insensitive name search and sortable columns; members and unavailabilities use offset pagination with sortable columns. On the frontend, the teams list exposes search, sortable headers and pagination.
 
 ---
 
-### 1. Framework for both frontend and backend — Major, 2 pts
+### User Management
 
-- **Why we chose it:** A project of this size needs structure on both sides. On the backend we needed routing, dependency injection, guards, validation and scheduled jobs; on the frontend we needed routing, server-state caching and a component model. Using a framework on each side rather than hand-rolling gave us conventions the whole team could follow, and NestJS's module system let the backend mirror the domain boundaries.
-- **How it is implemented:** NestJS 11 for the API (`backend/src/app.module.ts` composing `auth`, `incidents`, `ingestion`, `organization`, `on-call`, `invite`, `metrics`, `monitoring`, `health` and `users`), and React 19 with Vite on the frontend (`frontend/src/features/` split by feature: `auth`, `incidents`, `organization`, `my-team`, `my-unavailabilities`, `integrations`, `delivery-log`, `overview`, `status`, `settings`, `landing`). Both sides are TypeScript. NestJS supplies the DI container, `class-validator` DTO pipes, guards, interceptors and `@nestjs/schedule`; React is paired with React Router and TanStack Query.
-- **Contributor(s):** yahrour set up both foundations and the monorepo; every member then built features inside them.
+#### Major: Advanced permissions system
 
-### 2. Real-time features — Major, 2 pts
+- **Team member(s) that worked on this module:** `sait-nac`
+- **Module choice:** An `ENGINEER` acts on their own team's incidents; an `SRE` has broader reach. One enforcement point beats a check in every controller.
+- **Module implementation:** A `@Roles(...)` decorator read by `RolesGuard` via `Reflector`, returning `403` or `401`, plus ownership checks in the services (`accessibleBy`, assignee verification).
 
-- **Why we chose it:** An incident dashboard that only updates on refresh is actively misleading during an outage. Whoever is watching the page needs to see an incident change status, get reassigned or receive a note as it happens. The subject allows "WebSockets or similar technology", and server-sent events fit better here because incident updates only travel server to client, so a full duplex protocol and its upgrade handling would be unnecessary weight.
-- **How it is implemented:** The backend exposes `@Sse("events")` on the incidents controller (`backend/src/modules/incidents/incidents.controller.ts`), which returns an RxJS observable from `IncidentsService.events()` filtered to the incidents the requesting user can access. Every mutating path (create, reassign, acknowledge, resolve, note, escalation) calls a `changed()` emitter, so the stream carries real state changes rather than polls. On the frontend, `useIncidentEvents` (`frontend/src/features/incidents/hooks/useIncidentEvents.ts`) opens an `EventSource` against `/incidents/events` and reconnects when the connection closes, invalidating the relevant TanStack Query caches.
-- **Contributor(s):** aaitabde, backend stream and frontend hook.
+#### Major: An organization system
 
-### 3. Advanced permissions system — Major, 2 pts
+- **Team member(s) that worked on this module:** `yahrour`
+- **Module choice:** Incidents belong to teams that rotate responsibility, not to individuals. This layer decides who an incident reaches.
+- **Module implementation:** `teams`, `team_members` and `unavailabilities` with rotation period, index and escalation timeout, split into `teams`, `members` and `unavailability` services. Unavailability requests are approved or rejected by the owner with overlap and expiry validation. The on-call chain built on top of this data is claimed separately as a module of choice.
 
-- **Why we chose it:** The application has two distinct populations. An `ENGINEER` should see and act on their own team's incidents; an `SRE` has broader reach. Without enforcement in one place, every controller would re-implement its own access check and one of them would eventually get it wrong.
-- **How it is implemented:** A `@Roles(...)` decorator (`backend/src/common/decorators/roles.decorator.ts`) attaches required roles as metadata, and `RolesGuard` (`backend/src/common/guards/roles.guard.ts`) reads it with `Reflector.getAllAndOverride` at both handler and controller level, rejecting with `403` when the user's role is not in the list and `401` when no user is present. `AccessTokenGuard` handles authentication, and `@Public()` opts endpoints out.
-- **Contributor(s):** sait-nac built the guard, decorator and ownership checks, added role-based route redirects on the frontend.
+#### Minor: Implement remote authentication with OAuth 2.0
 
-### 4. Organization system — Major, 2 pts
+- **Team member(s) that worked on this module:** `sait-nac`
+- **Module choice:** Requiring a new password for a tool people check during an outage is friction that costs response time.
+- **Module implementation:** `passport-google-oauth20` with `@nestjs/passport`; an optional unique `googleId` beside a nullable `passwordHash`, issuing the same JWT and refresh cookie as the password path.
 
-- **Why we chose it:** Incidents do not belong to individuals, they belong to teams that rotate responsibility. The organization layer is what makes the rest of the product work: it defines who is on call, who is unavailable, and therefore who an incident should reach.
-- **How it is implemented:** Four tables in the `organization` schema (`backend/prisma/models/organization.prisma`): `teams` (owner, services array, rotation period, rotation index, escalation timeout), `team_members`, and `unavailabilities`. Services live in `backend/src/modules/organization/` split into `teams`, `members` and `unavailability`, plus a separate `on-call` module. The on-call chain is computed in `OnCallService` by walking team members from `currentRotationIndex`, skipping anyone with an approved unavailability window covering now, and returning a primary and secondary. Unavailability requests are submitted by members and approved or rejected by the owner, with overlap and expiry validation. A cron job rotates the index when `rotationPeriodDays` elapses.
-- **Contributor(s):** yahrour.
+---
 
-### 5. WAF/ModSecurity + HashiCorp Vault — Major, 2 pts
+### Cybersecurity
 
-- **Why we chose it:** The API is internet-facing and accepts arbitrary JSON from monitoring providers, which is exactly the input an attacker probes. Separately, the stack needs database passwords, Grafana credentials and a Vault token, and those must not live in the repository or in the Compose file where anyone with read access can lift them.
-- **How it is implemented:** The WAF is built on `owasp/modsecurity-crs:nginx` (`infra/waf/Dockerfile`) with `SecRuleEngine On` in `infra/waf/modsecurity.conf`, so requests are actively inspected rather than only logged. `infra/waf/default.conf` terminates TLS on 443, redirects HTTP to HTTPS, proxies `/api/v1/` to the backend, and exempts a `/healthz` endpoint from inspection so container health checks are not blocked. Vault runs as its own service with a `tmpfs` secret volume so secrets stay in memory and are rewritten on each start; the backend loads them at boot from `secret/data/incident-lifecycle-manager` via `backend/src/vault/load-secrets.ts` using a token file, and the backup service reads its Postgres credentials from `/vault/secrets/`.
-- **Contributor(s):** asebban.
+#### Major: Implement WAF/ModSecurity (hardened) + HashiCorp Vault for secrets
 
-### 6. Monitoring system with Prometheus and Grafana — Major, 2 pts
+- **Team member(s) that worked on this module:** `asebban`
+- **Module choice:** The API is internet-facing and accepts arbitrary JSON from monitoring providers. Passwords and JWT secrets must not sit in the repository or the Compose file.
+- **Module implementation:** `owasp/modsecurity-crs:nginx` with `SecRuleEngine On`, TLS on 443 and `/api/v1/` proxied to the backend. Vault runs as its own service with a `tmpfs` secret volume and a scoped backend token.
 
-- **Why we chose it:** The application's own health depends on things the application cannot report about itself: request latency, error rates, database connection pressure. Pull-based metrics with dashboards make those visible, and for an incident tool it would be a poor look to have no observability of its own.
-- **How it is implemented:** The backend registers a metrics registry through `@willsoto/nestjs-prometheus` and instruments HTTP request durations with a histogram provider (`backend/src/modules/monitoring/monitoring.module.ts`) applied via `http-metrics.interceptor.ts`, exposed at `/api/metrics`. Prometheus scrapes three jobs: itself, the backend, and `postgres-exporter` (`infra/monitoring/prometheus/`). Grafana is provisioned as code with two dashboards (`infra/monitoring/grafana/dashboards/backend-overview.json` and `postgres.json`) and alert rules under `provisioning/alerting`.
-- **Contributor(s):** sait-nac built the Prometheus container, Grafana dashboards, exporter and alert rules.
+---
 
-### 7. ORM for the database — Minor, 1 pt
+### Devops
 
-- **Why we chose it:** Hand-written SQL across eleven tables with four schemas would mean hand-maintained types and hand-written joins. An ORM gives compile-time checked queries and a migration history, which matters when several people are changing the schema in parallel.
-- **How it is implemented:** The schema is split into one file per bounded context under `backend/prisma/models/` (`auth`, `organization`, `incident`, `ingestion`) and assembled by `backend/prisma/schema.prisma`, which declares the four PostgreSQL schemas. `PrismaService` (`backend/src/common/prisma/prisma.service.ts`) wraps the client with the pg adapter, Relations declare explicit `onDelete` behaviour, and the unique index `@@unique([teamId, openFingerprint])` enforces duplicate-alert suppression at the database level.
-- **Contributor(s):** yahrour, sait-nac, asebban, aaitabde.
+#### Major: Monitoring system with Prometheus and Grafana
 
-### 8. Custom-made design system — Minor, 1 pt
+- **Team member(s) that worked on this module:** `sait-nac`
+- **Module choice:** The application cannot report on request latency, error rates or database pressure by itself, and an incident tool with no observability of its own would be a poor look.
+- **Module implementation:** `@willsoto/nestjs-prometheus` with an HTTP duration histogram at `/api/metrics`; Prometheus scrapes the backend and `postgres-exporter`, and Grafana is provisioned as code with two dashboards and alert rules.
 
-- **Why we chose it:** Four people building screens independently produce four different buttons. A shared component layer with a defined palette, type scale and icon set keeps the interface coherent and stops each feature from re-inventing tables, dialogs and form fields.
-- **How it is implemented:** 30 reusable components in `frontend/src/components/ui/`, and the palette is CSS custom properties in `frontend/src/index.css`. Typography uses two variable fonts, Roboto for body and Public Sans for headings, with a defined `--font-sans`, `--font-heading` and `--font-script` scale. Icons come from `lucide-react`.
-- **Contributor(s):** yahrour, sait-nac, asebban, aaitabde.
+#### Minor: Health check and status page system with automated backups and disaster recovery procedures
 
-### 9. Advanced search with filters, sorting and pagination — Minor, 1 pt
+- **Team member(s) that worked on this module:** `yahrour`, `asebban`
+- **Module choice:** An incident tool that goes down silently is worse than useless.
+- **Module implementation:** `@nestjs/terminus` behind `GET /health`, polled by the status page every 30 seconds; a Compose service runs `pg_dump` on a schedule, with `db.restore.sh` and a documented recovery runbook.
 
-- **Why we chose it:** Incident lists grow without bound. Without server-side filtering and pagination the page degrades as history accumulates, and an on-call engineer cannot find the incident they need during an outage.
-- **How it is implemented:** Incident search is a validated DTO (`backend/src/modules/incidents/dto/find-incidents.dto.ts`) accepting `search`, `service`, `status`, `severity`, `teamId`, `assigneeId`, `limit` and `cursor`, with `class-validator` constraining status and severity to known values and capping `limit`. Pagination is cursor-based: `IncidentsService.findAll` decodes an opaque cursor, uses Prisma's `cursor` with `skip: 1`, and returns `nextCursor` alongside `total`. Teams, members and unavailabilities use offset pagination with sortable columns, driven by per-module `SORT_FIELD` enums and a shared `OffsetPaginationSearchParams` DTO. On the frontend, filter state is held in URL search params so a filtered view is linkable, with sort toggles in table headers and a shared pagination component.
-- **Contributor(s):** aaitabde, yahrour.
+#### How the Devops work was split across the team
 
-### 10. Remote authentication with OAuth 2.0 — Minor, 1 pt
+| Team member | Devops work                                                                            |
+| ----------- | -------------------------------------------------------------------------------------- |
+| `yahrour`   | PostgreSQL backup and restore service, plus the recovery runbook                       |
+| `sait-nac`  | Prometheus, Grafana dashboards and alert rules, `postgres-exporter`                    |
+| `asebban`   | Vault and WAF containers, including their Dockerfiles and the nginx/ModSecurity config |
+| `aaitabde`  | A database migration service in Compose                                                |
 
-- **Why we chose it:** Requiring a new password for a tool people check during an outage is friction that costs response time. Google sign-in lets an engineer get in with the account they already have, and it removes password handling from that path entirely.
-- **How it is implemented:** `passport-google-oauth20` with `@nestjs/passport` (`backend/src/modules/auth/google/`). The `User` model stores an optional unique `googleId` alongside a nullable `passwordHash`, so an account can be created either way. The flow redirects to Google, handles the callback, issues the same JWT access token and hashed refresh token as the password path, and sets them as scoped cookies. Cancelled sign-ins redirect back to login rather than erroring, and the frontend checks the session endpoint on load.
-- **Contributor(s):** sait-nac.
+---
 
-### 11. Health check, status page, backups and disaster recovery — Minor, 1 pt
+### Data and Analytics
 
-- **Why we chose it:** An incident tool that goes down silently is worse than useless. Operators need to know whether the API and database are reachable, and the team needs a way back if the database is lost.
-- **How it is implemented:** `@nestjs/terminus` with `PrismaHealthIndicator.pingCheck` behind a `@Public()` `GET /health` endpoint (`backend/src/modules/health/health.controller.ts`), reporting per-dependency status. The frontend status page (`frontend/src/features/status/`) polls it every 30 seconds and renders each dependency as operational, outage or unknown. Backups run as a dedicated Compose service (`infra/database/db-backup-service/`) that reads Postgres credentials from Vault, runs `pg_dump` to a timestamped file, and writes to a `.tmp` file first so a failed dump never leaves a truncated backup in place. `infra/database/db.restore.sh` restores from a chosen dump, and `infra/database/DISASTER_RECOVERY.md` documents the procedure.
-- **Contributor(s):** yahrour built the health endpoint, status page, backup and restore scripts and the recovery documentation; asebban wired the backup service to read its credentials from Vault.
+#### Minor: Data export and import functionality
 
-### 12. Data export and import — Minor, 1 pt
+- **Team member(s) that worked on this module:** `yahrour`
+- **Module choice:** Team configuration is tedious to enter by hand, and teams want their data out rather than locked in.
+- **Module implementation:** `GET /teams/export` and `POST /teams/import`, serialising to JSON or CSV with `csv-stringify` and parsing uploads with `csv-parse` behind a `FileExtensionValidator` pipe.
 
-- **Why we chose it:** Team configuration is tedious to enter by hand, and teams want their data out rather than locked in. Export and import make the tool portable and make setting up a second environment practical.
-- **How it is implemented:** `GET /teams/export` and `POST /teams/import` on the teams controller (`backend/src/modules/organization/teams/teams.controller.ts`). Export serialises a team and its members to JSON or CSV depending on a `format` query parameter, using `csv-stringify`. Import accepts a file upload through `FileInterceptor`, validates the extension with a custom `FileExtensionValidator` pipe restricted to `json` and `csv`, parses with `csv-parse`, and returns a summary of what was created. Filenames are derived from the `Content-Disposition` header on the client.
-- **Contributor(s):** yahrour.
+---
+
+### Accessibility and Internationalization
+
+#### Minor: Support for additional browsers
+
+- **Team member(s) that worked on this module:** `yahrour`, `asebban`, `aaitabde`, `sait-nac`
+- **Module choice:** A tool used during an outage cannot assume the responder has a choice of browser. Firefox and Edge and Brave are realistic alternatives on a work machine, so we support them alongside Chrome.
+- **Module implementation:** We wrote the app with standard web features that Chrome, Firefox and Edge all support, and used no browser-specific code.
+
+---
+
+### Modules of choice
+
+#### Minor: On-call scheduling
+
+- **Team member that worked on this module:** `yahrour`
+- **Module choice:** An incident platform is only as good as its routing. An alert that reaches nobody, or reaches someone on holiday, is worse than no alert at all. Rotations kept by hand in a spreadsheet drift out of date and ignore absences. No listed module covers this, and it is the link between the organization system (who belongs to a team) and the incident lifecycle (who gets paged), so we built it as its own module.
+- **What technical challenges it addresses:**
+  - **Rotations that do not drift.** `processRotations` advances each team on its own `rotationPeriodDays` from a `rotationStartDate`, and computes the next boundary from the scheduled time rather than from when the job happened to run. Shifts stay on schedule even if the cron is late or the service restarts.
+  - **Safe with several instances.** The rotation write is a conditional `updateMany` that only applies if `lastRotatedAt` and `currentRotationIndex` still match what was read. If several instances run the same cron, a team still advances exactly once per period.
+  - **Absence-aware coverage.** `getTeamCurrentOnCall` skips members whose approved unavailability is active now and builds a two-level chain, PRIMARY then SECONDARY. A single available member fills both roles; if nobody is available the chain is empty rather than naming someone who is away.
+  - **Forecasting.** `getUpcomingRotations` projects the next shifts and checks each against future approved absences, so it shows who will actually cover a slot, not only who is scheduled.
+  - **Privacy by role.** Owners see full details in the forecast; teammates see only public fields, with no id, email or role.
+- **How it adds value:** On-call is what makes an incident land on a real person. The PRIMARY/SECONDARY chain decides who a new incident is assigned to, and supplies the escalation job (`escalateUnacknowledged`) with its next responder when an incident is not acknowledged within `escalationTimeoutMinutes`. Engineers see their current shift, when it ends, and their open incidents; owners see who covers now and next. Approved leave is respected automatically, so nobody is paged on holiday.
+- **Why it deserves Minor status:** It is one small, self-contained piece rather than a whole feature area. Most of it only reads data the organization module already stores, so what makes it hard is getting the timing right, not the amount of code.
+- **Module implementation:** The logic lives in one service, `backend/src/modules/on-call/on-call.service.ts`, and it reads from two places. Each team stores its own schedule settings: how long a shift lasts, when the rotation started, who is currently up, when the last handover happened, and how long an incident may go unacknowledged before it escalates. Approved absences come from the `unavailabilities` table. Two read endpoints expose the result, one for who is on call right now and one for the upcoming shifts, and a scheduled job runs every minute to move any team whose shift has ended on to the next person.
+
+---
+
+### Points
+
+| Category                               | Modules                       |   Points   |
+| -------------------------------------- | ----------------------------- | :--------: |
+| Web                                    | 2 Majors and 3 Minors         |   7 pts    |
+| Accessibility and Internationalization | 1 Minor                       |    1 pt    |
+| User Management                        | 2 Majors and 1 Minor          |   5 pts    |
+| Cybersecurity                          | 1 Major                       |   2 pts    |
+| Devops                                 | 1 Major and 1 Minor           |   3 pts    |
+| Data and Analytics                     | 1 Minor                       |    1 pt    |
+| Modules of choice                      | 1 Minor                       |    1 pt    |
+| **Total**                              | **6 Major(s) and 8 Minor(s)** | **20 pts** |
+
+The subject requires a minimum of 14 points; this selection totals **20**.
 
 ## Individual Contributions
 
-<!-- Each member fills their own block. Describe actual work (features, modules, components), challenges and how they were overcome. Do not repeat the assigned role text from Team Information. -->
-
 ### asebban
 
-**Role:** Developer
-
-#### Contributions
-
-**Alert ingestion.** Built the `ingestion` module from scratch. API key endpoints generate a random key, show it once, and store only its SHA-256 hash with a prefix and an expiry date; expired keys are rejected. The alert endpoint authenticates the caller by hashed key, normalises the payload through a provider adapter, stores the alert with its raw JSON payload, and creates the incident from it. Added an endpoint to list ingested alerts with pagination.
-
-**Integrations and Delivery Log pages.** On the frontend, the Integrations page manages API keys: a table with status filter and sorting, a create dialog that shows the new key once, and a delete dialog. The Delivery Log page lists every ingested alert in a paginated table matching the incidents table.
-
-**WAF.** Added the ModSecurity + OWASP CRS container on nginx with `SecRuleEngine On`, HTTPS termination with a redirect from HTTP, and routing of the frontend, `/api/v1/` and Grafana through it. Fixed the rules that blocked `PUT`, `PATCH` and `DELETE`, and the healthcheck port.
-
-**Vault.** Added Vault to the Compose stack with a bootstrap script that initialises and unseals it, writes the secrets into KV v2, creates a scoped backend policy and token, and renders secret files for other containers. The backend loads its secrets from Vault at boot (`backend/src/vault/load-secrets.ts`), and Postgres, Grafana and the backup service read their credentials from Vault instead of `.env` files.
-
-**Other.** Dockerized the frontend.
-
-#### Challenges and solutions
-
-**Putting a WAF in front of the application without breaking it.** Adding ModSecurity with the OWASP Core Rule Set made the stack more secure, but its default rules are strict and some legitimate requests from our own application were blocked. Disabling the WAF or switching it to detection-only would have hidden the problem, so I kept the rule engine on and changed the configuration only where our application needed it, then tested the main flows again through the WAF.
-
-**Managing secrets with Vault.** Moving secrets out of `.env` files and into Vault meant every service had to get its credentials at startup, in the right order, before it could run. I learned how Vault works (initialisation, unsealing, policies, tokens and the KV store) and set up the stack so that Vault starts first and the other services wait for it to be ready.
+- **Contributions:** [TODO]
+- **Challenges and solutions:** [TODO]
 
 ### yahrour
 
@@ -290,27 +272,19 @@ The subject requires a minimum of 14 points; this selection totals **18**.
 
 #### Contributions
 
-**Project foundation.** Chose the stack (NestJS for the API, React for the frontend) and set up the monorepo with `backend/` and `frontend/` workspaces. Configured commitlint with Husky hooks to enforce conventional commits, ESLint and Prettier with `lint-staged` in both workspaces, and defined the GitHub workflow rules: pull requests required for `main` and `dev`, at least one teammate review, squash-and-merge.
-
 **Architecture.** Started the backend as a microservices skeleton, then led the migration to a modular monolith once it became clear the domain did not justify the operational cost of separate services. Reorganised the Prisma schema into one file per bounded context and moved modules to match those boundaries, so the code structure and the database schemas describe the same four domains.
 
-**Organization domain** (the largest single share of the codebase): team CRUD with services, rotation period, rotation index and escalation timeout; team members with pagination, sorting and search; the on-call rotation engine including the scheduled rotation job and the primary/secondary chain; unavailability requests with approval, rejection, overlap detection and expiry handling; team export and import in JSON and CSV; and the team metrics that feed the overview dashboard.
+**Organization domain** (the largest single share of the codebase): team CRUD with services, rotation period and escalation timeout; team members with pagination, sorting and search; unavailability requests with approval, rejection, overlap detection and expiry handling; team export and import in JSON and CSV; and the team metrics that feed the overview dashboard. The on-call rotation engine built on this data is described under [Modules of choice](#modules-of-choice).
 
 **Cross-cutting work.** The health endpoint and status page. The database backup and restore scripts with the disaster recovery documentation. Offset pagination and sortable columns across teams, members and unavailabilities. The frontend foundation: Vite and Tailwind setup, axios and TanStack Query, absolute imports, environment validation, the `Page` layout component and the colour theme.
 
 #### Challenges and solutions
 
-**On-call rotation drift.** The first rotation implementation advanced the index by comparing the last rotation time to the current time and then writing `now` as the new `lastRotatedAt`. Because the cron runs every minute, each rotation was recorded a little later than the moment it was actually due, and that error accumulated: after several cycles the handover drifted by hours, and eventually by a whole rotation period. The fix was to stop storing `now` and instead store the _scheduled_ handover time, computed as `baseTime + rotationPeriodDays`, so the schedule stays anchored to its original start date no matter when the cron happens to run. The update is also guarded: the `where` clause includes the expected `lastRotatedAt` and `currentRotationIndex`, so two concurrent runs cannot both advance the same rotation.
+**On-call rotation drift.** The first rotation implementation advanced the index by comparing the last rotation time to the current time and then writing `now` as the new `lastRotatedAt`. Because the cron runs every minute, each rotation was recorded a little later than the moment it was actually due, and that error accumulated: after several cycles the handover drifted by hours, and eventually by a whole rotation period. The fix was to stop storing `now` and instead store the scheduled handover time, computed as `baseTime + rotationPeriodDays`, so the schedule stays anchored to its original start date no matter when the cron happens to run.
 
-**Unavailability silently ignored by the rotation.** The on-call chain was returning engineers who had an approved unavailability covering the current moment. The query filtered unavailabilities by status but the comparison was wrong, so the filter matched nothing and every member looked available. The chain walk was rewritten to check each candidate's approved windows against the current time explicitly, and to keep walking to the next member when the current one is away rather than returning an empty chain.
+**Race conditions in unavailability review.** Approving or rejecting a request was a read-then-write: the service loaded the row, checked that its status was `PENDING`, and then wrote the new status. Between the check and the write, another request could change the row. The team owner double-clicking approve, or two browser tabs open on the same pending request, would both read `PENDING`, both pass the check, and both write, so the last write silently won and the first decision was lost with no error to the caller.
 
-**Timezone handling across rotations and unavailability windows.** Rotation periods are configured in whole days, but "a day" depends on the user's timezone, and mixing local and UTC arithmetic produced windows that started or ended at the wrong moment, and in one case a default timezone was being applied that silently shifted dates for everyone. The solution was to store every timestamp as `timestamptz`, remove the default timezone entirely, and centralise the conversion in `convertDateToUtc` and `toLocalDayValue` using Luxon, so day boundaries are computed explicitly in the team's timezone and persisted in UTC.
-
-**Race conditions in unavailability review.** Two owners reviewing the same request, or one owner double-clicking approve, could both pass the status check and then both write. The fix was to move the expected status into the `where` clause of an `updateMany` and check the returned count: if the count is `0`, someone else already changed the row, and the caller gets a `409 Conflict` instead of a silent overwrite. The same guarded-update pattern is used for incident acknowledge and resolve.
-
-**Duplicate alerts creating duplicate incidents.** Ingested alerts arrive concurrently and several can describe the same outage. Rather than checking for an existing incident in application code, where two requests can both read "none" before either writes, the uniqueness is enforced by a database constraint: a SHA-256 fingerprint over provider, service and title, with `@@unique([teamId, openFingerprint])`. Resolving an incident nulls `openFingerprint`, so the constraint only covers open incidents and the same problem can be raised again later.
-
-**Keeping pagination totals correct under filters.** Offset pagination returned a `total` that ignored the active search and filter, so the page count was wrong whenever a filter was applied. The count query was rebuilt to run with the same `where` clause as the data query, and the shared offset-pagination DTO was extracted so teams, members and unavailabilities all behave identically.
+The fix was to stop trusting the earlier read and make the write itself conditional. The expected status moved into the `where` clause of an `updateMany`, so the database only updates the row if it is still `PENDING` at the moment of the write, and the returned `count` tells the caller whether it won. A `count` of `0` means someone else changed the row first, and the request is rejected instead of overwriting their decision.
 
 ### aaitabde
 
@@ -366,7 +340,8 @@ cp infra/.env.example            infra/.env
 
 | Key                          | Notes                                            |
 | ---------------------------- | ------------------------------------------------ |
-| `VITE_API_URL`               | backend (API) URL                                |
+| `VITE_API_URL`               | Backend (API) base URL                           |
+| `VITE_APP_NAME`              | Displayed in the UI; required, cannot be empty   |
 | `VITE_IMPORT_MAX_FILE_BYTES` | Must match the backend's `IMPORT_MAX_FILE_BYTES` |
 
 ### Build and run
@@ -398,30 +373,20 @@ docker compose down          # stop, keep volumes
 docker compose down -v       # stop and delete all volumes (database, Vault data, secrets)
 ```
 
-### Database initialization
-
-There are no migration files in the repository. The schema is applied at every backend boot by `npx prisma db push` in `backend/src/main.ts`, which creates or updates the tables to match `backend/prisma/models/`.
-
 ### Access URLs
 
 All traffic should go through the WAF on port 8443, which terminates TLS with a self-signed certificate. Your browser will warn about the certificate on first visit; that is expected.
 
-| URL                               | Service                                  |
-| --------------------------------- | ---------------------------------------- |
-| `https://localhost:8443`          | The application, through the WAF         |
-| `http://localhost:8080`           | Redirects to HTTPS on 8443               |
-| `https://localhost:8443/api/v1/`  | API, proxied by the WAF to the backend   |
-| `https://localhost:8443/grafana/` | Grafana, proxied by the WAF              |
-| `http://localhost:9090`           | Prometheus, direct (no WAF)              |
-| `http://localhost:3001`           | Grafana, direct (no WAF)                 |
-| `http://localhost:8200`           | Vault UI and API                         |
-| `http://localhost:3000`           | Backend, direct (no WAF)                 |
-| `http://localhost:4173`           | Frontend container, direct (no WAF)      |
-| `localhost:5432`                  | PostgreSQL, not meant for browser access |
+| URL                               | Service                                |
+| --------------------------------- | -------------------------------------- |
+| `https://localhost:8443`          | The application, through the WAF       |
+| `http://localhost:8080`           | Redirects to HTTPS on 8443             |
+| `https://localhost:8443/api/v1/`  | API, proxied by the WAF to the backend |
+| `https://localhost:8443/grafana/` | Grafana, proxied by the WAF            |
 
 ### Backups and restore
 
-The `postgres-backup` service runs `pg_dump` every minute via cron, writing timestamped `.sql` files into `./backups` on the host. Each dump is written to a `.tmp` file first and only renamed on success, so a failed dump never leaves a truncated backup in place.
+The `postgres-backup` service runs `pg_dump` every day via cron, writing timestamped `.sql` files into `./backups` on the host. Each dump is written to a `.tmp` file first and only renamed on success, so a failed dump never leaves a truncated backup in place.
 
 The full procedure for restoring a database is in [`infra/database/DISASTER_RECOVERY.md`](infra/database/DISASTER_RECOVERY.md)
 
@@ -429,24 +394,43 @@ The full procedure for restoring a database is in [`infra/database/DISASTER_RECO
 
 ### References
 
-<!-- TODO (owner: unassigned): list the documentation, articles and tutorials the team actually used. -->
+**Frameworks and libraries**
 
-- [TODO — e.g. NestJS documentation]
-- [TODO — e.g. Prisma documentation]
-- [TODO — e.g. ModSecurity / OWASP CRS documentation]
+- [NestJS documentation](https://docs.nestjs.com) — modules, guards, interceptors, scheduling and SSE
+- [React documentation](https://react.dev) — components, hooks and state
+- [TanStack Query documentation](https://tanstack.com/query/latest/docs) — server-state caching and invalidation
+- [Prisma documentation](https://www.prisma.io/docs) — schema, client, migrations and the `pg` driver adapter
+- [Tailwind CSS documentation](https://tailwindcss.com/docs) — utility styling and the `@theme` configuration
+- [React Router documentation](https://reactrouter.com) — routing and nested layouts
+- [Zod documentation](https://zod.dev) — schema validation on the frontend
+
+**Database**
+
+- [PostgreSQL documentation](https://www.postgresql.org/docs/18/) — `timestamptz`, `text[]`, `jsonb`, schemas and unique indexes
+
+**Infrastructure and security**
+
+- [Docker Compose documentation](https://docs.docker.com/compose/) — service definitions, healthchecks and `depends_on`
+- [ModSecurity reference manual](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual) — rule engine and configuration directives
+- [OWASP Core Rule Set documentation](https://coreruleset.org/docs/) — the managed rule set behind the WAF
+- [nginx documentation](https://nginx.org/en/docs/) — TLS termination and reverse proxying
+- [HashiCorp Vault documentation](https://developer.hashicorp.com/vault/docs) — KV v2 secrets engine, policies and tokens
+- [Prometheus documentation](https://prometheus.io/docs/) — scrape configuration and PromQL
+- [Grafana documentation](https://grafana.com/docs/) — provisioning dashboards and alert rules
+- [postgres_exporter](https://github.com/prometheus-community/postgres_exporter) — database metrics for Prometheus
+
+**Tooling**
+
+- [Conventional Commits](https://www.conventionalcommits.org/) — the commit format enforced by commitlint
+- [commitlint](https://commitlint.js.org/) and [Husky](https://typicode.github.io/husky/) — commit hooks
+- [dbdiagram.io](https://dbdiagram.io) — the database diagram in this README
 
 ### AI usage
 
-<!-- TODO: each member lists what they really used AI for. The subject requires the tasks and the project areas. Do not write generic claims. -->
-
-| Member | Task   | Project area | AI tool | What was done with the output                    |
-| ------ | ------ | ------------ | ------- | ------------------------------------------------ |
-| [TODO] | [TODO] | [TODO]       | [TODO]  | [TODO — e.g. reviewed and rewritten, used as-is] |
+AI tools were used as an assistant during development, not as a replacement for understanding. The practice was consistent across the team: AI was used to draft, explain and review, and every output was read, checked against the actual code, and rewritten or discarded where it was wrong. No feature was merged without a team member being able to explain how it works.
 
 ---
 
 ## Known Limitations
-
-<!-- TODO (owner: unassigned): list only real limitations found while testing. -->
 
 - [TODO]
