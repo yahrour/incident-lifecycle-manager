@@ -68,12 +68,7 @@ vault kv put secret/incident-lifecycle-manager \
     JWT_SECRET="${JWT_SECRET}" \
     JWT_REFRESH_SECRET="${JWT_REFRESH_SECRET}" \
     GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID}" \
-    GOOGLE_CLIENT_SECRET="${GOOGLE_CLIENT_SECRET}" \
-    MAIL_USER="${MAIL_USER}" \
-    MAIL_PASS="${MAIL_PASS}" \
-    DISCORD_CLIENT_ID="${DISCORD_CLIENT_ID}" \
-    DISCORD_CLIENT_SECRET="${DISCORD_CLIENT_SECRET}" >/dev/null
-
+    GOOGLE_CLIENT_SECRET="${GOOGLE_CLIENT_SECRET}"
 vault policy write incident-backend /usr/local/bin/policy.hcl >/dev/null
 
 echo "[Vault] Creating scoped backend token..."
