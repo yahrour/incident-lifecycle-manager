@@ -143,9 +143,9 @@ The diagram was generated with [dbdiagram.io](https://dbdiagram.io). You can vie
 
 #### Minor: Advanced search functionality with filters, sorting and pagination
 
-- **Team member(s) that worked on this module:** `aaitabde`, `yahrour`
-- **Module choice:** Incident lists grow without bound, and an on-call engineer cannot find what they need during an outage without server-side filtering.
-- **Module implementation:** A validated `FindIncidentsDto` with cursor pagination for incidents, offset pagination with sortable columns for teams, members and unavailabilities, and filter state in URL search params.
+- **Team member(s) that worked on this module:** `yahrour`
+- **Module choice:** The organization tables grow as teams, members and unavailabilities accumulate. Loading every row into the browser does not scale, so they need consistent search, sorting and pagination.
+- **Module implementation:** Teams use offset pagination with case-insensitive name search and sortable columns; members and unavailabilities use offset pagination with sortable columns. On the frontend, the teams list exposes search, sortable headers and pagination.
 
 ---
 
