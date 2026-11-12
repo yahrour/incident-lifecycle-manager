@@ -221,10 +221,8 @@ The diagram was generated with [dbdiagram.io](https://dbdiagram.io). You can vie
 #### Minor: Support for additional browsers
 
 - **Team member(s) that worked on this module:** `yahrour`, `asebban`, `aaitabde`, `sait-nac`
-- **Module choice:** The subject requires the site to work in the latest stable Chrome, but a tool used during an outage cannot assume the person responding has a choice of browser. Firefox and Edge are the two realistic alternatives on a work machine, so we supported those two in addition to Chrome rather than treating Chrome as the only target.
-- **Module implementation:** The application is built to a modern baseline rather than a Chrome-specific one. TypeScript compiles to `es2023` with the DOM library, so the emitted JavaScript stays within what current Firefox and Edge both support, and the code avoids APIs that are still Chrome-only. Styling is Tailwind CSS 4 compiled through the Vite plugin, which emits standard CSS rather than vendor-prefixed rules, and the interface relies on layout primitives (flexbox, grid, CSS custom properties) that all three engines implement identically. No browser-specific code paths or user-agent checks exist in the codebase.
-- **Browser-specific limitations:** None are known. The one behaviour that differs by browser is not a compatibility issue: the WAF terminates TLS with a self-signed certificate, so every browser shows a certificate warning on first visit until the certificate is trusted. Firefox and Edge each present this differently, but the application itself behaves the same once the warning is accepted.
-- **Testing:** Verified manually in Chrome, Firefox and Edge against the same flows: sign-in (password and Google), the incident list with filters and pagination, the incident detail page with acknowledge and resolve, team and member management, unavailability requests, and the overview dashboard. No layout or behavioural differences were found.
+- **Module choice:** A tool used during an outage cannot assume the responder has a choice of browser. Firefox and Edge and Brave are realistic alternatives on a work machine, so we support them alongside Chrome.
+- **Module implementation:** We wrote the app with standard web features that Chrome, Firefox and Edge all support, and used no browser-specific code.
 
 ---
 
