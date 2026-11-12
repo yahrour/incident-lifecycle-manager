@@ -54,10 +54,8 @@ import { teamKeys } from "@/features/organization/shared/constants";
 const TIMEZONES = Intl.supportedValuesOf("timeZone");
 
 export function CreateTeamDialog() {
-  type CreateTeamInput = z.input<typeof createTeamSchema>;
-  type CreateTeamOutput = z.output<typeof createTeamSchema>;
-
-  const form = useForm<CreateTeamInput, unknown, CreateTeamOutput>({
+  type CreateTeamSchema = z.infer<typeof createTeamSchema>;
+  const form = useForm<CreateTeamSchema>({
     resolver: zodResolver(createTeamSchema),
     defaultValues: {
       name: "",
@@ -81,6 +79,13 @@ export function CreateTeamDialog() {
   };
 
   const onSubmit = (data: z.infer<typeof createTeamSchema>) => {
+    if (data.description === "") {
+      data.description = undefined;
+    }
+    if (data.timezone === "") {
+      data.timezone = undefined;
+    }
+
     setErrors([]);
     mutate(data, {
       onSuccess: (createdTeam) => {
