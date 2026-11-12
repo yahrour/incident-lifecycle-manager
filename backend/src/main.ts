@@ -1,9 +1,9 @@
-import { NestFactory } from "@nestjs/core";
-import { ConfigService } from "@nestjs/config";
+import { loadSecretsFromVault } from "@/vault/load-secrets";
 import { ValidationPipe, VersioningType } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { NestFactory } from "@nestjs/core";
 import cookieParser from "cookie-parser";
 import { execSync } from "node:child_process";
-import { loadSecretsFromVault } from "@/vault/load-secrets";
 
 async function bootstrap() {
   await loadSecretsFromVault();
@@ -23,6 +23,7 @@ async function bootstrap() {
   app.setGlobalPrefix("/api");
   app.useGlobalPipes(
     new ValidationPipe({
+      whitelist: true,
       forbidNonWhitelisted: true,
       disableErrorMessages:
         configService.get<string>("NODE_ENV") === "production",
