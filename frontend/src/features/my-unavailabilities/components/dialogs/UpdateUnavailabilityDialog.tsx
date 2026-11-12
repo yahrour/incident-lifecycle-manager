@@ -31,23 +31,15 @@ import {
 } from "@/components/ui/popover";
 import { format, startOfDay } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-} from "@/components/ui/combobox";
 import { updateUnavailability } from "../../api/unavailability";
 import { useMutation } from "@tanstack/react-query";
 import { Textarea } from "@/components/ui/textarea";
 import { unavailabilityKeys } from "../../constants";
 import { toZonedTime } from "date-fns-tz";
 import type { Unavailability } from "@/types";
+import { SelectTimezone } from "@/components/SelectTimezone";
 
 type UpdateUnavailabilitySchema = z.input<typeof updateUnavailabilitySchema>;
-const TIMEZONES = Intl.supportedValuesOf("timeZone");
 
 const toLocalDay = (utcDay: string | Date) => {
   const d = new Date(utcDay);
@@ -236,28 +228,10 @@ export function UpdateUnavailabilityDialog({
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel htmlFor="timezone">Timezone</FieldLabel>
-                  <Combobox
-                    items={TIMEZONES}
+                  <SelectTimezone
                     value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <ComboboxInput
-                      placeholder="Select timezone"
-                      className="w-full"
-                    />
-
-                    <ComboboxContent>
-                      <ComboboxEmpty>No timezone found.</ComboboxEmpty>
-
-                      <ComboboxList>
-                        {(tz: string) => (
-                          <ComboboxItem key={tz} value={tz}>
-                            {tz.replaceAll("_", " ")}
-                          </ComboboxItem>
-                        )}
-                      </ComboboxList>
-                    </ComboboxContent>
-                  </Combobox>
+                    onChange={field.onChange}
+                  />
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
                   )}
