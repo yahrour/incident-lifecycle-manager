@@ -1,13 +1,13 @@
 FROM postgres:18-alpine
 
-RUN apk update
-RUN apk add bash
+RUN apk add --no-cache bash curl jq
 
 WORKDIR /scripts
 
-COPY ./db.backup.sh ./
-COPY ./entrypoint.sh ./
+COPY infra/vault/vault-fetch.sh /usr/local/bin/vault-fetch.sh
+COPY infra/database/db-backup-service/db.backup.sh ./
+COPY infra/database/db-backup-service/entrypoint.sh ./
 
-RUN chmod +x ./db.backup.sh ./entrypoint.sh
+RUN chmod +x ./db.backup.sh ./entrypoint.sh /usr/local/bin/vault-fetch.sh
 
 ENTRYPOINT ["/scripts/entrypoint.sh"]

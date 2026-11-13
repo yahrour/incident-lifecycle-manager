@@ -180,7 +180,7 @@ The diagram was generated with [dbdiagram.io](https://dbdiagram.io). You can vie
 
 - **Team member(s) that worked on this module:** `asebban`
 - **Module choice:** The API is internet-facing and accepts arbitrary JSON from monitoring providers. Passwords and JWT secrets must not sit in the repository or the Compose file.
-- **Module implementation:** `owasp/modsecurity-crs:nginx` with `SecRuleEngine On`, TLS on 443 and `/api/v1/` proxied to the backend. Vault runs as its own service with a `tmpfs` secret volume and a scoped backend token.
+- **Module implementation:** `owasp/modsecurity-crs:nginx` with `SecRuleEngine On`, TLS on 443 and `/api/v1/` proxied to the backend. Vault runs as its own service. Every consumer authenticates to the Vault API with its own token, scoped by its own policy to one KV path, and fetches its secrets at startup into process memory - no plaintext secret is written to any volume.
 
 ---
 
@@ -276,7 +276,7 @@ The subject requires a minimum of 14 points; this selection totals **20**.
 
 **WAF.** Added the ModSecurity + OWASP CRS container on nginx with `SecRuleEngine On`, HTTPS termination with a redirect from HTTP, and routing of the frontend, `/api/v1/` and Grafana through it. Fixed the rules that blocked `PUT`, `PATCH` and `DELETE`, and the healthcheck port.
 
-**Vault.** Added Vault to the Compose stack with a bootstrap script that initialises and unseals it, writes the secrets into KV v2, creates a scoped backend policy and token, and renders secret files for other containers. The backend loads its secrets from Vault at boot (`backend/src/vault/load-secrets.ts`), and Postgres, Grafana and the backup service read their credentials from Vault instead of `.env` files.
+**Vault.** Added Vault to the Compose stack with a bootstrap script that initialises and unseals it, writes the secrets into KV v2, then writes one policy per service and issues each service a token scoped to the single KV path it needs. Every consumer - the backend, Postgres, Grafana, postgres-exporter and the backup service - authenticates to the Vault API with its own token and fetches its credentials at startup (`backend/src/vault/load-secrets.ts`, `infra/vault/vault-fetch.sh`). Postgres, Grafana and the exporter ship no HTTP tooling, so each runs a thin entrypoint wrapper that calls Vault and then execs the stock entrypoint.
 
 #### Challenges and solutions
 
@@ -372,7 +372,7 @@ docker compose up --build
 
 First boot takes several minutes. The services start in dependency order and each waits on the one before it:
 
-1. **Vault** initialises itself. On first boot it runs `vault operator init`, unseals, enables KV v2 at `secret/`, writes the Postgres and Grafana secrets plus the application secrets, creates a scoped `incident-backend` policy and a 24-hour token, then renders the secret files that other containers read. It signals readiness by creating `/vault/secrets/.ready`. The unseal key and root token are written to the `vault_token` volume at `/vault/runtime/init.json`.
+1. **Vault** initialises itself. On first boot it runs `vault operator init`, unseals, enables KV v2 at `secret/`, and writes the Postgres and Grafana secrets plus the application secrets. It then writes one policy per service and issues each service its own token, scoped to the single KV path that service needs. It signals readiness by creating `/vault/init/.ready`. The unseal key and root token are written to the `vault_init` volume, which is mounted into Vault and into no other container.
 2. **Postgres** starts once Vault is healthy, reading its credentials from the rendered secret files.
 3. **Backend** starts once Postgres and Vault are healthy. It loads secrets from Vault, then applies the schema with `prisma db push`, then boots NestJS. Its healthcheck has a 300-second start period to allow for this.
 4. **Frontend** starts once the backend is healthy.

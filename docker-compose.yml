@@ -1,16 +1,17 @@
 services:
   postgres:
-    image: postgres:18
+    build:
+      context: .
+      dockerfile: infra/database/postgres/Dockerfile
     container_name: incident_postgres
     environment:
-      POSTGRES_USER_FILE: /vault/secrets/postgres_user
-      POSTGRES_PASSWORD_FILE: /vault/secrets/postgres_password
-      POSTGRES_DB_FILE: /vault/secrets/postgres_db
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN_FILE: /vault/token/token
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
-      - vault_secrets:/vault/secrets:ro
+      - vault_tok_postgres:/vault/token:ro
     networks:
       - incident_network
     depends_on:
@@ -23,15 +24,17 @@ services:
       retries: 20
   postgres-backup:
     build:
-      context: ./infra/database/db-backup-service
-      dockerfile: ./Dockerfile
+      context: .
+      dockerfile: infra/database/db-backup-service/Dockerfile
     container_name: incident_postgres_backup
     restart: always
     environment:
       POSTGRES_HOST: postgres
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN_FILE: /vault/token/token
     volumes:
       - ./backups:/backups
-      - vault_secrets:/vault/secrets:ro
+      - vault_tok_backup:/vault/token:ro
     networks:
       - incident_network
     depends_on:
@@ -47,13 +50,21 @@ services:
     cap_add:
       - IPC_LOCK
     volumes:
-      - vault_token:/vault/runtime
+      - vault_init:/vault/init
       - vault_data:/vault/data
-      - vault_secrets:/vault/secrets
+      - vault_tok_backend:/vault/tokens/backend
+      - vault_tok_postgres:/vault/tokens/postgres
+      - vault_tok_grafana:/vault/tokens/grafana
+      - vault_tok_exporter:/vault/tokens/exporter
+      - vault_tok_backup:/vault/tokens/backup
     env_file:
       - ./infra/vault/.env
     healthcheck:
-      test: ["CMD-SHELL", "test -f /vault/secrets/.ready"]
+      test:
+        [
+          "CMD-SHELL",
+          "test -f /vault/init/.ready && vault status -format=json | jq -e '.sealed == false' >/dev/null",
+        ]
       interval: 2s
       timeout: 2s
       retries: 60
@@ -81,10 +92,12 @@ services:
       context: ./backend
     env_file:
       - ./backend/.env
+    environment:
+      VAULT_TOKEN_FILE: /vault/token/token
     volumes:
       - ./backend/src:/app/src
       - ./backend/prisma:/app/prisma
-      - vault_token:/vault/runtime:ro
+      - vault_tok_backend:/vault/token:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -121,12 +134,14 @@ services:
       - incident_network
 
   grafana:
-    image: grafana/grafana:13.2.2
+    build:
+      context: .
+      dockerfile: infra/monitoring/grafana-image/Dockerfile
     container_name: grafana
     restart: unless-stopped
     environment:
-      GF_SECURITY_ADMIN_USER__FILE: /vault/secrets/grafana_user
-      GF_SECURITY_ADMIN_PASSWORD__FILE: /vault/secrets/grafana_password
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN_FILE: /vault/token/token
     ports:
       - "3001:3000"
     depends_on:
@@ -134,7 +149,7 @@ services:
         condition: service_healthy
     volumes:
       - grafana-data:/var/lib/grafana
-      - vault_secrets:/vault/secrets:ro
+      - vault_tok_grafana:/vault/token:ro
       - ./infra/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./infra/monitoring/grafana/dashboards:/etc/grafana/dashboards:ro
     networks:
@@ -165,13 +180,17 @@ services:
       - incident_network
 
   postgres-exporter:
-    image: quay.io/prometheuscommunity/postgres-exporter
+    build:
+      context: .
+      dockerfile: infra/monitoring/postgres-exporter/Dockerfile
     environment:
-      DATA_SOURCE_URI: "postgres:5432/postgres?sslmode=disable"
-      DATA_SOURCE_USER_FILE: /vault/secrets/postgres_user
-      DATA_SOURCE_PASS_FILE: /vault/secrets/postgres_password
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN_FILE: /vault/token/token
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_SCRAPE_DB: postgres
     volumes:
-      - vault_secrets:/vault/secrets:ro
+      - vault_tok_exporter:/vault/token:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -182,12 +201,13 @@ services:
 volumes:
   prometheus_data:
   postgres_data:
-  vault_token:
+  vault_init:
   vault_data:
-  vault_secrets: # tmpfs: secrets stay in memory, rewritten on every Vault start
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
+  vault_tok_backend:
+  vault_tok_postgres:
+  vault_tok_grafana:
+  vault_tok_exporter:
+  vault_tok_backup:
   grafana-data:
 
 networks:
