@@ -7,7 +7,7 @@ INIT_DIR="/vault/init"
 INIT_FILE="$INIT_DIR/init.json"
 READY_FILE="$INIT_DIR/.ready"
 TOKENS_DIR="/vault/tokens"
-SERVICES="backend postgres grafana exporter backup"
+SERVICES="backend postgres grafana exporter backup migrate"
 TOKEN_PERIOD="720h"
 
 mkdir -p /vault/data "$INIT_DIR" "$TOKENS_DIR"
