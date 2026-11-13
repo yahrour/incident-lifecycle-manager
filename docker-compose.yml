@@ -57,6 +57,7 @@ services:
       - vault_tok_grafana:/vault/tokens/grafana
       - vault_tok_exporter:/vault/tokens/exporter
       - vault_tok_backup:/vault/tokens/backup
+      - vault_tok_migrate:/vault/tokens/migrate
     env_file:
       - ./infra/vault/.env
     healthcheck:
@@ -209,6 +210,8 @@ volumes:
   vault_tok_exporter:
   vault_tok_backup:
   grafana-data:
+  vault_tok_migrate:
+
 
 networks:
   incident_network:
