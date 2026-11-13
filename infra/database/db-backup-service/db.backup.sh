@@ -11,9 +11,15 @@ log_info()    { echo -e "${BLUE}INFO: $1${NC}"; }
 log_success() { echo -e "${GREEN}SUCCESS: $1${NC}"; }
 log_error()   { echo -e "${RED}ERROR: $1${NC}"; }
 
-POSTGRES_USER=$(cat /vault/secrets/postgres_user)
-POSTGRES_PASSWORD=$(cat /vault/secrets/postgres_password)
-POSTGRES_DB=$(cat /vault/secrets/postgres_db)
+source /usr/local/bin/vault-fetch.sh
+
+vault_wait
+
+SECRETS=$(vault_read postgres)
+POSTGRES_USER=$(vault_field "$SECRETS" POSTGRES_USER)
+POSTGRES_PASSWORD=$(vault_field "$SECRETS" POSTGRES_PASSWORD)
+POSTGRES_DB=$(vault_field "$SECRETS" POSTGRES_DB)
+SECRETS=
 
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 BACKUP_PATH="/backups/backup_$TIMESTAMP.sql"

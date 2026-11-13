@@ -21,7 +21,7 @@ const SECRET_KEYS: (keyof AppSecrets)[] = [
   "GOOGLE_CLIENT_SECRET",
 ];
 
-const TOKEN_FILE = "/vault/runtime/backend-token";
+const TOKEN_FILE = process.env.VAULT_TOKEN_FILE ?? "/vault/token/token";
 const RETRY_MAX = 60;
 const RETRY_DELAY_MS = 1000;
 
@@ -46,12 +46,20 @@ export async function loadSecretsFromVault(): Promise<void> {
           `${vaultAddr}/v1/secret/data/incident-lifecycle-manager`,
           { headers: { "X-Vault-Token": token }, timeout: 3000 }
         );
+        const missing: string[] = [];
         for (const key of SECRET_KEYS) {
           const value = data.data.data[key];
           if (value) process.env[key] = value;
+          else missing.push(key);
+        }
+        if (missing.length > 0) {
+          throw new Error(
+            `[Vault] Secret payload is missing: ${missing.join(", ")}`
+          );
         }
         console.log("[Vault] App secrets loaded into process.env.");
         return;
+
       } catch (err) {
         if (attempt === RETRY_MAX) {
           const msg = err instanceof Error ? err.message : String(err);
