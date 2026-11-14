@@ -1,3 +1,7 @@
+import { FullPageSpinner } from "@/components/FullPageSpinner";
+import { StatusDot } from "@/components/StatusDot";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -7,51 +11,68 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/features/auth/context/AuthContext";
 import { useQuery } from "@tanstack/react-query";
+import { format, formatDistanceToNow } from "date-fns";
 import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { fetchIncident } from "../api/incidents";
-import { IncidentsTable } from "../components/IncidentsTable";
 import { AddNoteForm, IncidentActions } from "../components/IncidentActions";
-import { INCIDENT_STATUS, type IncidentStatus } from "../types";
-import { FullPageSpinner } from "@/components/FullPageSpinner";
-import { StatusDot } from "@/components/StatusDot";
+import { IncidentsTable } from "../components/IncidentsTable";
 import { severityColor, statusColor, timelineColor } from "../constants";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { format, formatDistanceToNow } from "date-fns";
-import { formatMetricDuration } from "../utils";
 import { useIncidentEvents } from "../hooks/useIncidentEvents";
+import { INCIDENT_STATUS, type IncidentStatus } from "../types";
+import { formatMetricDuration } from "../utils";
 
 export function Incidents() {
   useIncidentEvents();
+  const { user } = useAuth();
   const [status, setStatus] = useState<IncidentStatus | "all">("all");
+  const [scope, setScope] = useState<"all" | "mine">("all");
   return (
     <>
       <div className="bg-card flex items-center gap-2 px-4 py-3 border-b">
         <h1 className="font-medium text-sm">Incidents</h1>
       </div>
       <div className="p-6 space-y-6">
-        <Tabs
-          value={status}
-          onValueChange={(value) => setStatus(value as IncidentStatus | "all")}
-        >
-          <TabsList aria-label="Filter incidents by status">
-            <TabsTrigger value="all">All</TabsTrigger>
-            {Object.values(INCIDENT_STATUS).map((value) => (
-              <TabsTrigger
-                key={value}
-                value={value}
-                className="capitalize cursor-pointer"
-              >
-                {value}
+        <div className="flex flex-wrap gap-2">
+          <Tabs
+            value={scope}
+            onValueChange={(value) => setScope(value as "all" | "mine")}
+          >
+            <TabsList aria-label="Filter incidents by assignee">
+              <TabsTrigger value="all" className="cursor-pointer">
+                All
               </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+              <TabsTrigger value="mine" className="cursor-pointer">
+                Assigned to me
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <Tabs
+            value={status}
+            onValueChange={(value) =>
+              setStatus(value as IncidentStatus | "all")
+            }
+          >
+            <TabsList aria-label="Filter incidents by status">
+              <TabsTrigger value="all">All</TabsTrigger>
+              {Object.values(INCIDENT_STATUS).map((value) => (
+                <TabsTrigger
+                  key={value}
+                  value={value}
+                  className="capitalize cursor-pointer"
+                >
+                  {value}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </div>
         <IncidentsTable
-          key={status}
+          key={`${status}-${scope}`}
           status={status === "all" ? undefined : status}
+          assigneeId={scope === "mine" ? user?.id : undefined}
         />
       </div>
     </>

@@ -11,10 +11,11 @@ export async function fetchIncidents(
   status?: IncidentStatus,
   cursor?: string,
   limit = 10,
-  severity?: IncidentSeverity
+  severity?: IncidentSeverity,
+  assigneeId?: string
 ) {
   const response = await apiClient.get<ApiResponse<Incident[]>>("/incidents", {
-    params: { status, cursor, limit, severity },
+    params: { status, cursor, limit, severity, assigneeId },
   });
 
   return response.data;

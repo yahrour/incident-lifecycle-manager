@@ -23,9 +23,11 @@ import { formatMetricDuration } from "../utils";
 export function IncidentsTable({
   status,
   compact,
+  assigneeId,
 }: {
   status?: IncidentStatus;
   compact?: boolean;
+  assigneeId?: string;
 }) {
   const [cursors, setCursors] = useState<(string | undefined)[]>([undefined]);
   const cursor = cursors[cursors.length - 1];
@@ -34,8 +36,8 @@ export function IncidentsTable({
   const limit = compact ? 5 : 10;
 
   const { data, isError, isPending, isFetching } = useQuery({
-    queryKey: ["incidents", status, cursor, limit],
-    queryFn: () => fetchIncidents(status, cursor, limit),
+    queryKey: ["incidents", status, cursor, limit, assigneeId],
+    queryFn: () => fetchIncidents(status, cursor, limit, undefined, assigneeId),
     placeholderData: keepPreviousData,
   });
   useErrorToast(isError, "something went wrong fetching the incidents");
