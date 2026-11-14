@@ -11,7 +11,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
-      - vault_tok_postgres:/vault/token:ro
+      - vault_tok_postgres:/vault/token
     networks:
       - incident_network
     depends_on:
