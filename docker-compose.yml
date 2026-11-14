@@ -34,7 +34,7 @@ services:
       VAULT_TOKEN_FILE: /vault/token/token
     volumes:
       - ./backups:/backups
-      - vault_tok_backup:/vault/token:ro
+      - vault_tok_backup:/vault/token
     networks:
       - incident_network
     depends_on:
@@ -49,7 +49,7 @@ services:
       VAULT_ADDR: http://vault:8200
       VAULT_TOKEN_FILE: /vault/token/token
     volumes:
-      - vault_tok_migrate:/vault/token:ro
+      - vault_tok_migrate:/vault/token
     networks:
       - incident_network
     depends_on:
@@ -99,7 +99,7 @@ services:
       - --storage.tsdb.retention.time=15d
       - --storage.tsdb.retention.size=2GB
     volumes:
-      - ./infra/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infra/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     ports:
       - "9090:9090"
@@ -116,7 +116,7 @@ services:
     volumes:
       - ./backend/src:/app/src
       - ./backend/prisma:/app/prisma
-      - vault_tok_backend:/vault/token:ro
+      - vault_tok_backend:/vault/token
     depends_on:
       postgres:
         condition: service_healthy
@@ -170,9 +170,9 @@ services:
         condition: service_healthy
     volumes:
       - grafana-data:/var/lib/grafana
-      - vault_tok_grafana:/vault/token:ro
-      - ./infra/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./infra/monitoring/grafana/dashboards:/etc/grafana/dashboards:ro
+      - vault_tok_grafana:/vault/token
+      - ./infra/monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./infra/monitoring/grafana/dashboards:/etc/grafana/dashboards
     networks:
       - incident_network
 
@@ -211,7 +211,7 @@ services:
       POSTGRES_PORT: "5432"
       POSTGRES_SCRAPE_DB: postgres
     volumes:
-      - vault_tok_exporter:/vault/token:ro
+      - vault_tok_exporter:/vault/token
     depends_on:
       postgres:
         condition: service_healthy
