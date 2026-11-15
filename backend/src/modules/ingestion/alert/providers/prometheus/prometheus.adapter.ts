@@ -22,7 +22,6 @@ export class PrometheusAdapter extends AlertAdapter<PrometheusAlertmanagerPayloa
         "Prometheus alert",
       severity: this.mapSeverity(labels.severity),
       occurredAt: this.mapOccurredAt(alert?.startsAt),
-      team: labels.team,
       status: alert?.status ?? payload.status,
     };
   }
