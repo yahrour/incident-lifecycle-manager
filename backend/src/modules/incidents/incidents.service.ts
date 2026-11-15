@@ -10,6 +10,7 @@ import { Cron, CronExpression } from "@nestjs/schedule";
 import { filter, from, map, Subject, switchMap } from "rxjs";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { Prisma } from "@/generated/prisma/client";
+import { Role } from "@/generated/prisma/enums";
 import { OnCallService } from "@/modules/on-call/on-call.service";
 import { FindIncidentsDto } from "./dto/find-incidents.dto";
 import { INCIDENT_STATUS } from "./constants";
@@ -466,7 +467,7 @@ export class IncidentsService {
     const openIncidents = await this.prisma.incident.findMany({
       where: {
         status: INCIDENT_STATUS.OPEN,
-        escalatedAt: null,
+        OR: [{ escalatedAt: null }, { assignedTo: { role: Role.ENGINEER } }],
       },
       include: { team: true },
       orderBy: { createdAt: "asc" },
@@ -478,7 +479,8 @@ export class IncidentsService {
         continue;
       }
       try {
-        const waited = Date.now() - incident.createdAt.getTime();
+        const waitingSince = incident.escalatedAt ?? incident.createdAt;
+        const waited = Date.now() - waitingSince.getTime();
         const escalationTimeout =
           incident.team.escalationTimeoutMinutes * 60 * 1000;
         if (incident.assignedToId && waited < escalationTimeout) {
@@ -514,9 +516,12 @@ export class IncidentsService {
           return engineer.position === "SECONDARY";
         });
         const escalateToId =
-          secondary && secondary.id !== incident.assignedToId
+          !incident.escalatedAt &&
+          secondary &&
+          secondary.id !== incident.assignedToId
             ? secondary.id
             : incident.team.ownerId;
+        if (escalateToId === incident.assignedToId) continue;
 
         const { count } = await this.prisma.incident.updateMany({
           where: {
