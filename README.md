@@ -52,16 +52,19 @@ This project closes those gaps in one system. It ingests alerts from monitoring 
 - **aaitabde** ([TODO — unassigned]):
   - [TODO — brief description of responsibilities]
 
-- **sait-nac** ([TODO — unassigned]):
-  - [TODO — brief description of responsibilities]
+- **sait-nac** (Project Manager, Scrum Master, Developer):
+  - Planned weekly development priorities and organized the work into 3-day sprint cycles.
+  - Coordinated task distribution and followed up with team members to keep the project moving.
+  - Contributed to the codebase as a developer across application features and improvements.
 
 ---
 
 ## Project Management
 
-- **Work organization (task distribution, meetings):** [TODO — owner: unassigned — how tasks were split, meeting frequency, review process]
-- **Task tracking:** GitHub, with pull requests. [TODO — owner: unassigned — add Issues/Projects/board usage if any]
-- **Communication channel:** Discord.
+- **Work organization:** Work was planned in weekly priorities and split into 3-day sprint goals.
+- **Meetings:** Regular meetings were held to track progress, discuss blockers, and plan next steps.
+- **Task tracking:** GitHub was used for branches, pull requests, and code review.
+- **Communication channel:** Discord was used for team communication and blocker resolution.
 
 ---
 
@@ -311,8 +314,25 @@ The fix was to stop trusting the earlier read and make the write itself conditio
 
 ### sait-nac
 
-- **Contributions:** [TODO]
-- **Challenges and solutions:** [TODO]
+**Roles:** Project Manager / Scrum Master, Developer
+
+#### Contributions
+
+**Project management.** Organized weekly priorities into 3-day sprint goals, managed team meetings, followed up on progress, and helped unblock team members when they were stuck.
+
+**Authentication module.** Implemented the main authentication flow, including user registration, login, refresh token handling, session flow, and protected user access.
+
+**Google OAuth.** Built the Google authentication flow using Passport.js, including OAuth strategy setup, user lookup/linking, token generation, and redirect handling.
+
+**Invite onboarding.** Implemented the invite-based registration flow, allowing invited engineers to join through a secure invite link instead of normal signup.
+
+**Monitoring.** Set up Prometheus and Grafana monitoring for the application, including service health, database/exporter monitoring, dashboards, and alerts.
+
+#### Challenges and solutions
+
+**Refresh token integration.** Connecting refresh tokens between the frontend and backend was challenging because the session needed to stay secure while still allowing automatic token renewal. This was handled by using cookie-based refresh tokens and updating the frontend request flow to retry after refresh when needed.
+
+**Invite flow complexity.** The invite system added extra rules compared to normal signup, such as validating invite tokens, preserving the invited email, and registering users into the correct team. The flow was separated from normal registration so invited users could be handled safely and clearly.
 
 ## Instructions
 
