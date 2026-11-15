@@ -103,8 +103,6 @@ export class IncidentsService {
         this.accessibleBy(userId),
         ...(query.status ? [{ status: query.status }] : []),
         ...(query.severity ? [{ severity: query.severity }] : []),
-        ...(query.teamId ? [{ teamId: query.teamId }] : []),
-        ...(query.service ? [{ service: query.service }] : []),
         ...(query.assigneeId ? [{ assignedToId: query.assigneeId }] : []),
         ...(query.search
           ? [
