@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,34 +14,21 @@ import { GoogleButton } from "../components/GoogleButton";
 import { parseApiError } from "@/utils/api";
 import { ErrorSection } from "@/components/ErrorSection";
 import { AccountCreated } from "@/components/AccountCreated";
-
-type FieldErrors = Partial<Record<keyof SignUpCredentials, string>>;
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 export default function SignUp() {
   const { mutate, isPending, isSuccess, error } = useSignUp();
-  const [errors, setErrors] = useState<FieldErrors>({});
-  const apiErrors = error ? parseApiError(error) : [];
-  function submit(formData: FormData) {
-    const result = signUpSchema.safeParse({
-      firstName: formData.get("firstName"),
-      lastName: formData.get("lastName"),
-      email: formData.get("email"),
-      password: formData.get("password"),
-    });
+  const errors = error ? parseApiError(error) : [];
+  const form = useForm<SignUpCredentials>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: { firstName: "", lastName: "", password: "", email: "" },
+  });
 
-    if (!result.success) {
-      const fieldErrors: FieldErrors = {};
-      for (const issue of result.error.issues) {
-        const key = issue.path[0] as keyof SignUpCredentials;
-        if (!fieldErrors[key]) fieldErrors[key] = issue.message;
-      }
-      setErrors(fieldErrors);
-      return;
-    }
-
-    setErrors({});
-    mutate(result.data);
+  function onSubmit(value: SignUpCredentials) {
+    mutate(value);
   }
+
   if (isSuccess) {
     return (
       <AccountCreated text="Your account has been created. Sign in to continue." />
@@ -60,80 +46,106 @@ export default function SignUp() {
     >
       <h1 className="font-heading tracking-tight">Create an account</h1>
 
-      <form action={submit} className="flex flex-col gap-5">
+      <form
+        onSubmit={(e) => void form.handleSubmit(onSubmit)(e)}
+        noValidate
+        className="flex flex-col gap-5"
+      >
         <FieldGroup className="gap-5">
-          <Field>
-            <FieldLabel htmlFor="firstName" className="text-foreground">
-              First name
-            </FieldLabel>
-            <Input
-              id="firstName"
-              name="firstName"
-              autoComplete="given-name"
-              aria-invalid={!!errors.firstName}
-            />
-            {errors.firstName && (
-              <FieldError className="flex items-center gap-1.5">
-                {errors.firstName}
-              </FieldError>
+          <Controller
+            name="firstName"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="firstName" className="text-foreground">
+                  First name
+                </FieldLabel>
+                <Input
+                  {...field}
+                  id="firstName"
+                  autoComplete="given-name"
+                  aria-invalid={fieldState.invalid}
+                />
+                {fieldState.error && (
+                  <FieldError className="flex items-center gap-1.5">
+                    {fieldState.error.message}
+                  </FieldError>
+                )}
+              </Field>
             )}
-          </Field>
+          />
+          <Controller
+            name="lastName"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="lastName" className="text-foreground">
+                  Last name
+                </FieldLabel>
+                <Input
+                  {...field}
+                  id="lastName"
+                  autoComplete="family-name"
+                  aria-invalid={fieldState.invalid}
+                />
+                {fieldState.error && (
+                  <FieldError className="flex items-center gap-1.5">
+                    {fieldState.error.message}
+                  </FieldError>
+                )}
+              </Field>
+            )}
+          />
 
-          <Field>
-            <FieldLabel htmlFor="lastName" className="text-foreground">
-              Last name
-            </FieldLabel>
-            <Input
-              id="lastName"
-              name="lastName"
-              autoComplete="family-name"
-              aria-invalid={!!errors.lastName}
-            />
-            {errors.lastName && (
-              <FieldError className="flex items-center gap-1.5">
-                {errors.lastName}
-              </FieldError>
+          <Controller
+            name="email"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="email" className="text-foreground">
+                  Work email
+                </FieldLabel>
+                <Input
+                  {...field}
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  aria-invalid={fieldState.invalid}
+                />
+                {fieldState.error && (
+                  <FieldError className="flex items-center gap-1.5">
+                    {fieldState.error.message}
+                  </FieldError>
+                )}
+              </Field>
             )}
-          </Field>
-
-          <Field>
-            <FieldLabel htmlFor="email" className="text-foreground">
-              Work email
-            </FieldLabel>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              aria-invalid={!!errors.email}
-            />
-            {errors.email && (
-              <FieldError className="flex items-center gap-1.5">
-                {errors.email}
-              </FieldError>
+          />
+          <Controller
+            name="password"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="password" className="text-foreground">
+                  Password
+                </FieldLabel>
+                <Input
+                  {...field}
+                  id="password"
+                  type="password"
+                  autoComplete="new-password"
+                  aria-invalid={fieldState.invalid}
+                />
+                {fieldState.error && (
+                  <FieldError className="flex items-center gap-1.5">
+                    {fieldState.error.message}
+                  </FieldError>
+                )}
+              </Field>
             )}
-          </Field>
-
-          <Field data-invalid={!!errors.password}>
-            <FieldLabel htmlFor="password" className="text-foreground">
-              Password
-            </FieldLabel>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              aria-invalid={!!errors.password}
-            />
-            {errors.password && (
-              <FieldError className="flex items-center gap-1.5">
-                {errors.password}
-              </FieldError>
-            )}
-          </Field>
+          />
         </FieldGroup>
 
-        {apiErrors.length > 0 && <ErrorSection errors={apiErrors} />}
+        {errors.length > 0 && <ErrorSection errors={errors} />}
 
         <Button type="submit" className="w-full" disabled={isPending}>
           {isPending ? "Creating account..." : "Create account"}
