@@ -104,26 +104,6 @@ export class IncidentsService {
         ...(query.status ? [{ status: query.status }] : []),
         ...(query.severity ? [{ severity: query.severity }] : []),
         ...(query.assigneeId ? [{ assignedToId: query.assigneeId }] : []),
-        ...(query.search
-          ? [
-              {
-                OR: [
-                  {
-                    title: {
-                      contains: query.search,
-                      mode: "insensitive" as const,
-                    },
-                  },
-                  {
-                    service: {
-                      contains: query.search,
-                      mode: "insensitive" as const,
-                    },
-                  },
-                ],
-              },
-            ]
-          : []),
       ],
     };
 

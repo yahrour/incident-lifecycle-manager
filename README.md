@@ -108,7 +108,7 @@ The diagram was generated with [dbdiagram.io](https://dbdiagram.io). You can vie
 | Authentication                      | Email/password sign-up and sign-in, token refresh, logout                   | sait-nac          |
 | Google sign-in                      | OAuth 2.0 login with Google                                                 | sait-nac          |
 | Invitations                         | Invite users to a team by token and accept the invite                       | sait-nac          |
-| Incident management                 | List with search and filters, detail, notes, assign, acknowledge, resolve   | aaitabde          |
+| Incident management                 | List with filters, detail, notes, assign, acknowledge, resolve              | aaitabde          |
 | Live incident events                | Server-sent event stream on incidents                                       | aaitabde          |
 | Alert ingestion                     | Providers post alerts using API keys; API key management                    | asebban           |
 | Teams and members                   | Create, edit, delete teams; view and remove members; team stats             | yahrour           |
@@ -336,7 +336,7 @@ The fix was to stop trusting the earlier read and make the write itself conditio
 
 **Escalation.** A cron job runs every minute. It assigns unassigned open incidents to the PRIMARY on-call engineer. When an assigned incident goes unacknowledged for longer than the team's `escalationTimeoutMinutes`, the job escalates it to the SECONDARY engineer, and after another full timeout to the team owner. Each step's timeout starts at the previous handover, and the owner is the last step.
 
-**Incidents list.** The list endpoint supports a case-insensitive search on incident titles and services, and filters by status, severity and assignee. The Incidents page uses the status and assignee filters, as status tabs and an "Assigned to me" tab. The Overview counts use the severity filter. Pagination uses a cursor: a `base64url` token holding the last incident's id. The server validates the token and fetches `limit + 1` rows to know whether another page exists. Incidents are listed newest first, so new incidents land on the first page and the pages after it do not shift while someone is paging through.
+**Incidents list.** The list endpoint filters by status, severity and assignee. The Incidents page uses the status and assignee filters, as status tabs and an "Assigned to me" tab. The Overview counts use the severity filter. Pagination uses a cursor: a `base64url` token holding the last incident's id. The server validates the token and fetches `limit + 1` rows to know whether another page exists. Incidents are listed newest first, so new incidents land on the first page and the pages after it do not shift while someone is paging through.
 
 **Live updates.** Built the `/incidents/events` SSE endpoint and the `useIncidentEvents` hook. When an incident changes, the hook invalidates the TanStack Query cache, so lists and detail views refresh without a reload. How the stream is limited to each user is described under Challenges.
 
