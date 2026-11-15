@@ -755,7 +755,10 @@ describe("IncidentsService", () => {
 
     expect(findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { status: "open", escalatedAt: null },
+        where: {
+          status: "open",
+          OR: [{ escalatedAt: null }, { assignedTo: { role: "ENGINEER" } }],
+        },
       })
     );
     expect(getCurrentOnCall).toHaveBeenCalledWith("owner-id", "team-id");
@@ -769,6 +772,70 @@ describe("IncidentsService", () => {
     });
     expect(updateMany).toHaveBeenCalledWith({
       where: { id: "no-backup", status: "open", assignedToId: "secondary-id" },
+      data: {
+        assignedToId: "owner-id",
+        escalatedAt: expect.any(Date) as Date,
+      },
+    });
+  });
+
+  it("escalates a second time from the secondary to the team owner, then stops", async () => {
+    const team = {
+      id: "team-id",
+      ownerId: "owner-id",
+      escalationTimeoutMinutes: 5,
+    };
+    const minutesAgo = (minutes: number) =>
+      new Date(Date.now() - minutes * 60 * 1000);
+    const findMany = jest.fn().mockResolvedValue([
+      {
+        // Escalated 6 minutes ago and still unacknowledged: owner is next.
+        id: "second-step",
+        assignedToId: "secondary-id",
+        createdAt: minutesAgo(20),
+        escalatedAt: minutesAgo(6),
+        team,
+      },
+      {
+        // Created long ago, but escalated 2 minutes ago: the secondary
+        // still has time.
+        id: "just-escalated",
+        assignedToId: "secondary-id",
+        createdAt: minutesAgo(20),
+        escalatedAt: minutesAgo(2),
+        team,
+      },
+      {
+        // Already with the owner: nowhere left to go.
+        id: "at-owner",
+        assignedToId: "owner-id",
+        createdAt: minutesAgo(30),
+        escalatedAt: minutesAgo(20),
+        team,
+      },
+    ]);
+    const updateMany = jest.fn().mockResolvedValue({ count: 1 });
+    const prisma = {
+      incident: { findMany, updateMany },
+    } as unknown as PrismaService;
+    const service = new IncidentsService(prisma, {
+      getCurrentOnCall: jest.fn().mockResolvedValue({
+        chain: [
+          { position: "PRIMARY", id: "primary-id" },
+          { position: "SECONDARY", id: "secondary-id" },
+        ],
+      }),
+    } as unknown as OnCallService);
+
+    await service.escalateUnacknowledged();
+
+    expect(updateMany).toHaveBeenCalledTimes(1);
+    expect(updateMany).toHaveBeenCalledWith({
+      where: {
+        id: "second-step",
+        status: "open",
+        assignedToId: "secondary-id",
+      },
       data: {
         assignedToId: "owner-id",
         escalatedAt: expect.any(Date) as Date,
