@@ -252,6 +252,14 @@ export class IncidentsService {
     return note;
   }
 
+  private getTeamFromServiceName(ownerId: string, service?: string) {
+    if (!service) return null;
+    return this.prisma.team.findFirst({
+      where: { ownerId, services: { has: service } },
+      select: { id: true },
+    });
+  }
+
   async create(ownerId: string, createIncidentDto: CreateIncidentDto) {
     const onCall = await this.onCallService.getCurrentOnCall(
       ownerId,
@@ -289,18 +297,12 @@ export class IncidentsService {
       serviceName?: string;
       severity: string;
       status?: string;
-      team?: string;
     }
   ) {
-    const team =
-      alert.team &&
-      (await this.prisma.team.findFirst({
-        where: { ownerId, name: alert.team },
-        select: { id: true },
-      }));
+    const team = await this.getTeamFromServiceName(ownerId, alert.serviceName);
     if (!team) {
       this.logger.warn(
-        `Alert ${alertId} has dropped, no such team "${alert.team ?? ""}"`
+        `Alert ${alertId} has dropped, no team owns service "${alert.serviceName ?? ""}"`
       );
       return null;
     }
