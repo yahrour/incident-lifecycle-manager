@@ -49,8 +49,10 @@ This project closes those gaps in one system. It ingests alerts from monitoring 
   - Reviews critical changes and maintains the repository workflow (branch rules, commit and lint standards)
   - Implements features alongside the rest of the team
 
-- **aaitabde** ([TODO — unassigned]):
-  - [TODO — brief description of responsibilities]
+- **aaitabde** (Developer):
+  - Owns the incident lifecycle: the `incidents` module from alert correlation to resolution, with escalation and response metrics
+  - Builds the Incidents list, Incident detail and Overview pages, and the live updates that keep them current
+  - Added the database migration service to the Compose stack
 
 - **sait-nac** ([TODO — unassigned]):
   - [TODO — brief description of responsibilities]
@@ -231,6 +233,21 @@ The diagram was generated with [dbdiagram.io](https://dbdiagram.io). You can vie
 
 ### Modules of choice
 
+#### Major: Incident correlation and escalation engine
+
+- **Team member that worked on this module:** `aaitabde`
+- **Module choice:** An incident tool only works if every alert ends with someone handling it. Without an engine in between, a noisy monitor that fires the same alert fifty times creates fifty incidents. Nobody knows which one to work on, and an incident whose engineer never answers just stays open. No listed module covers what happens between "an alert arrived" and "a person is handling it", so we built that as its own module.
+- **What technical challenges it addresses:**
+  - **Deduplication that holds under concurrency.** Each alert gets a fingerprint: a SHA-256 hash of its provider, service and title, normalised first. Repeats join the open incident instead of creating a new one. A unique index on `(teamId, openFingerprint)`, used through an `upsert`, leaves that decision to the database. Two copies of an alert that arrive in the same instant still produce one incident.
+  - **Resolved incidents drop out of the index.** Resolving an incident sets `openFingerprint` to `NULL`, which PostgreSQL leaves out of uniqueness checks. A team can keep any number of resolved incidents with the same fingerprint, and the next alert for a problem that comes back opens a new incident instead of reviving a closed one.
+  - **Automatic routing.** A new incident goes to the team's PRIMARY on-call engineer, taken from the absence-aware chain the On-call module provides. If nobody is on call when the alert arrives, the incident stays unassigned until the escalation job picks it up.
+  - **Automatic escalation.** A scheduled job runs every minute. It assigns waiting unassigned incidents to the PRIMARY. When an assigned incident stays unacknowledged longer than the team's `escalationTimeoutMinutes`, the job moves it to the SECONDARY, or to the team owner if there is no distinct SECONDARY. `escalatedAt` records that this happened, so an incident never escalates twice.
+  - **Race-safe state machine.** `open` → `acknowledged` → `resolved` transitions, reassignment and escalation can all hit the same incident at the same moment. Each one is an `updateMany` that includes the expected status and assignee in its `where` clause, so the database applies only the first. The loser is told about it, with a `409 Conflict` for a user or a skip for the job, instead of silently overwriting the other. This also stays correct if several backend instances run the cron.
+  - **Metrics recorded when they happen.** MTTA and MTTR are calculated and saved during the acknowledge and resolve transitions. Dashboards read stored numbers and never have to rebuild them from history.
+- **How it adds value:** The ingestion module delivers a raw stream of alerts; this engine reduces it to a small set of incidents, each with a clear owner. An unanswered incident moves up the on-call chain without anyone stepping in, and the acknowledge and resolve steps produce the MTTA and MTTR figures on the Overview page. Every incident change also goes into the real-time stream, so a deduplicated alert or an escalation shows up on screen right away.
+- **Why it deserves Major status:** It spans the database design (the `(teamId, openFingerprint)` unique index and the alert–incident link table), a background scheduler, a state machine with concurrency guarantees, and integration with three other modules: ingestion, on-call and real-time. Most of the difficulty is correctness under concurrency: duplicate alerts, a cron racing a human, and several instances running the same job. `incidents.service.spec.ts` tests the fingerprinting, repeats attaching to the open incident, an acknowledge that loses the race, and both escalation paths.
+- **Module implementation:** Everything lives in `backend/src/modules/incidents/`. `utils/incident-fingerprint.ts` builds the fingerprint. In `incidents.service.ts`, `createFromAlert` does correlation and routing, `acknowledge`, `resolve` and `reassign` implement the guarded transitions, and `escalateUnacknowledged` is the `@Cron(EVERY_MINUTE)` escalation job. The schema adds `fingerprint`, `openFingerprint`, `escalatedAt`, `mttaSeconds` and `mttrSeconds` to `incidents`, the `unique_team_open_fingerprint` index, and the `incident_alerts` table that links each alert to its incident.
+
 #### Minor: On-call scheduling
 
 - **Team member that worked on this module:** `yahrour`
@@ -257,10 +274,10 @@ The diagram was generated with [dbdiagram.io](https://dbdiagram.io). You can vie
 | Cybersecurity                          | 1 Major                       |   2 pts    |
 | Devops                                 | 1 Major and 1 Minor           |   3 pts    |
 | Data and Analytics                     | 1 Minor                       |    1 pt    |
-| Modules of choice                      | 1 Minor                       |    1 pt    |
-| **Total**                              | **6 Major(s) and 8 Minor(s)** | **20 pts** |
+| Modules of choice                      | 1 Major and 1 Minor           |   3 pts    |
+| **Total**                              | **7 Major(s) and 8 Minor(s)** | **22 pts** |
 
-The subject requires a minimum of 14 points; this selection totals **20**.
+The subject requires a minimum of 14 points; this selection totals **22**.
 
 ## Individual Contributions
 
@@ -306,8 +323,31 @@ The fix was to stop trusting the earlier read and make the write itself conditio
 
 ### aaitabde
 
-- **Contributions:** [TODO]
-- **Challenges and solutions:** [TODO]
+**Roles:** Developer
+
+#### Contributions
+
+**Incident lifecycle.** Built the `incidents` module. An incident moves from `open` to `acknowledged` to `resolved`. Only the assigned engineer can acknowledge or resolve it, and it must be acknowledged before it can be resolved. MTTA and MTTR are calculated when each transition happens and saved on the incident, so the metrics never have to be rebuilt from history. A user sees an incident if it is assigned to them, or if it belongs to a team they own or are a member of. Team owners can reassign an incident to another member of the same team, and an optional note is saved in the same transaction. Any engineer who can see an incident can add notes to it.
+
+**Alert-to-incident correlation.** `createFromAlert` turns an ingested alert into an incident. Each alert gets a fingerprint: a SHA-256 hash of its provider, service and title, trimmed and lowercased. If the team already has an open incident with that fingerprint, the alert is attached to it. Otherwise a new incident is created and assigned to the PRIMARY on-call engineer. Every alert is linked to its incident through the `incident_alerts` table. Resolving an incident clears its `openFingerprint`, so the next alert for the same problem opens a new incident instead of reopening the old one.
+
+**Escalation.** A cron job runs every minute. It assigns unassigned open incidents to the PRIMARY on-call engineer. When an assigned incident goes unacknowledged for longer than the team's `escalationTimeoutMinutes`, the job escalates it to the SECONDARY engineer, or to the team owner if there is no SECONDARY. Each incident escalates at most once.
+
+**Incidents list.** The list endpoint supports a case-insensitive search on incident titles and services, and filters by status, severity and assignee. The Incidents page uses the status and assignee filters, as status tabs and an "Assigned to me" tab. The Overview counts use the severity filter. Pagination uses a cursor: a `base64url` token holding the last incident's id. The server validates the token and fetches `limit + 1` rows to know whether another page exists. Incidents are listed newest first, so new incidents land on the first page and the pages after it do not shift while someone is paging through.
+
+**Live updates.** Built the `/incidents/events` SSE endpoint and the `useIncidentEvents` hook. When an incident changes, the hook invalidates the TanStack Query cache, so lists and detail views refresh without a reload. How the stream is limited to each user is described under Challenges.
+
+**Frontend.** The Incidents list page with filters and cursor pagination. The Incident detail page, which uses a two-column layout with the timeline and notes, and buttons to acknowledge, resolve, reassign and add a note. The Overview page, with real incident counts in the stats row and a responsive layout with compact tables. I also made the `StatusDot` and `SeverityCell` components shared, and they are now used in other tables.
+
+**Migration service.** Added a `migrate` service to Compose. It gets the database credentials from Vault and applies the Prisma schema before the backend starts. The backend waits for it with `service_completed_successfully`. This removed `prisma db push` from backend startup, so the backend no longer changes the schema when it boots.
+
+#### Challenges and solutions
+
+**Duplicate incidents from simultaneous alerts.** Monitoring tools often send the same alert several times within a second. If two copies arrived together, both could check for an open incident, find none, and each create one. The fix moved the decision into the database: a unique index on `(teamId, openFingerprint)` allows at most one open incident per fingerprint per team, and the create runs as an `upsert` on that index. Resolved incidents set `openFingerprint` to `NULL`, which PostgreSQL leaves out of uniqueness checks. A team can therefore keep any number of resolved incidents with the same fingerprint and still have only one open.
+
+**Acknowledging while escalation runs.** The escalation job and the engineer can act on the same incident at the same moment. For example, the job decides to escalate while the engineer is clicking acknowledge. A read-then-write would let one action silently overwrite the other. Every transition is instead an `updateMany` that includes the expected state in its `where` clause: the current status, and for acknowledge and resolve, the current assignee. The returned `count` shows whether the write applied. Escalation skips an incident that someone else changed first. Acknowledge and resolve return `409 Conflict` instead of overwriting the other decision.
+
+**Live updates.** Every incident change goes into a single RxJS `Subject`, but a user must only receive changes for incidents they are allowed to see. When a client opens the `/incidents/events` SSE stream, the server looks up that user's teams once, then filters the shared stream down to incidents on those teams or assigned to the user. Only the incident id is sent. The client refetches the incident through the normal API, so the stream reveals nothing beyond an id and the usual access rules decide what the user sees. Live updates use Server-Sent Events because they only flow from the server to the client. An SSE stream is an ordinary `GET` request, so the existing JWT guard, cookies and CORS settings apply unchanged.
 
 ### sait-nac
 
