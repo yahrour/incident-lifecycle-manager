@@ -439,7 +439,6 @@ describe("IncidentsService", () => {
       serviceName: "checkout-api",
       severity: "critical" as const,
       status: "firing" as const,
-      team: "frontend",
       occurredAt: new Date(),
     };
     const findUnique = jest.fn().mockResolvedValue(null);
@@ -485,9 +484,45 @@ describe("IncidentsService", () => {
       })
     ).resolves.toBeNull();
     await expect(
-      service.createFromAlert("owner-id", "a4", { ...alert, team: undefined })
+      service.createFromAlert("owner-id", "a4", {
+        ...alert,
+        serviceName: undefined,
+      })
     ).resolves.toBeNull();
     expect(upsert).toHaveBeenCalledTimes(1);
+  });
+
+  it("routes an alert to the team owning its service", async () => {
+    const findFirst = jest.fn().mockResolvedValue({ id: "billing-team-id" });
+    const upsert = jest.fn().mockResolvedValue({ id: "incident-id" });
+    const prisma = {
+      team: { findFirst },
+      incident: { findUnique: jest.fn().mockResolvedValue(null), upsert },
+      incidentAlert: { create: jest.fn() },
+    } as unknown as PrismaService;
+    const service = new IncidentsService(prisma, {
+      getCurrentOnCall: jest.fn().mockResolvedValue({ chain: [] }),
+    } as unknown as OnCallService);
+
+    await service.createFromAlert("owner-id", "a1", {
+      provider: "prometheus",
+      title: "HighErrorRate",
+      serviceName: "payments",
+      severity: "critical",
+    });
+
+    expect(findFirst).toHaveBeenCalledTimes(1);
+    expect(findFirst).toHaveBeenCalledWith({
+      where: { ownerId: "owner-id", services: { has: "payments" } },
+      select: { id: true },
+    });
+    expect(upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({
+          teamId: "billing-team-id",
+        }) as unknown,
+      })
+    );
   });
 
   it("filters incidents by exact service for related incidents", async () => {
