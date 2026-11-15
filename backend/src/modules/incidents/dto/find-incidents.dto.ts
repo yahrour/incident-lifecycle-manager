@@ -17,20 +17,12 @@ export class FindIncidentsDto {
   search?: string;
 
   @IsOptional()
-  @IsString()
-  service?: string;
-
-  @IsOptional()
   @IsIn(Object.values(INCIDENT_STATUS))
   status?: string;
 
   @IsOptional()
   @IsIn(INCIDENT_SEVERITIES)
   severity?: string;
-
-  @IsOptional()
-  @IsUUID()
-  teamId?: string;
 
   @IsOptional()
   @IsUUID()

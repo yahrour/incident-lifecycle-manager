@@ -490,27 +490,6 @@ describe("IncidentsService", () => {
     expect(upsert).toHaveBeenCalledTimes(1);
   });
 
-  it("filters incidents by exact service for related incidents", async () => {
-    const findMany = jest.fn().mockResolvedValue([]);
-    const count = jest.fn().mockResolvedValue(0);
-    const prisma = {
-      incident: { findMany, count },
-    } as unknown as PrismaService;
-    const service = new IncidentsService(prisma, {} as OnCallService);
-
-    await service.findAll("viewer-id", {
-      service: "checkout-api",
-      limit: 10,
-    } as never);
-
-    const where = (
-      findMany.mock.calls as unknown as Array<[{ where: { AND: unknown[] } }]>
-    )[0]?.[0]?.where;
-    expect(where?.AND).toEqual(
-      expect.arrayContaining([{ service: "checkout-api" }])
-    );
-  });
-
   it("adds notes to the timeline in chronological order", async () => {
     const createdAt = new Date("2026-01-01T00:00:00.000Z");
     const noteAt = new Date("2026-01-01T00:02:00.000Z");
