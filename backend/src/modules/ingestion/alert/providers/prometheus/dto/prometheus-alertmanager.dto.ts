@@ -15,11 +15,6 @@ export class PrometheusAlertLabel {
   @IsString()
   @IsNotEmpty()
   service?: string;
-
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  team?: string;
 }
 
 export class PrometheusAlertAnnotation {
