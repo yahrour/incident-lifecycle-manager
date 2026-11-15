@@ -99,7 +99,7 @@ export class IncidentsController {
   }
 
   @Post(":id/acknowledge")
-  @Roles(Role.ENGINEER)
+  @Roles(Role.SRE, Role.ENGINEER)
   async acknowledge(
     @Param("id", ParseUUIDPipe) id: string,
     @Req() { user }: AuthRequest
@@ -109,7 +109,7 @@ export class IncidentsController {
   }
 
   @Post(":id/resolve")
-  @Roles(Role.ENGINEER)
+  @Roles(Role.SRE, Role.ENGINEER)
   async resolve(
     @Param("id", ParseUUIDPipe) id: string,
     @Req() { user }: AuthRequest
