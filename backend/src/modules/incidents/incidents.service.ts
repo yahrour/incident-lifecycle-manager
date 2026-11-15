@@ -11,7 +11,6 @@ import { filter, from, map, Subject, switchMap } from "rxjs";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { Prisma } from "@/generated/prisma/client";
 import { OnCallService } from "@/modules/on-call/on-call.service";
-import { CreateIncidentDto } from "./dto/create-incident.dto";
 import { FindIncidentsDto } from "./dto/find-incidents.dto";
 import { INCIDENT_STATUS } from "./constants";
 import { createIncidentFingerprint } from "./utils/incident-fingerprint";
@@ -258,34 +257,6 @@ export class IncidentsService {
       where: { ownerId, services: { has: service } },
       select: { id: true },
     });
-  }
-
-  async create(ownerId: string, createIncidentDto: CreateIncidentDto) {
-    const onCall = await this.onCallService.getCurrentOnCall(
-      ownerId,
-      createIncidentDto.teamId
-    );
-    const assigneeUserId = onCall?.chain.find(
-      ({ position }) => position === "PRIMARY"
-    )?.id;
-
-    if (!assigneeUserId) {
-      throw new ConflictException("No on-call engineer available");
-    }
-
-    const incident = await this.prisma.incident.create({
-      data: {
-        ...createIncidentDto,
-        fingerprint: createIncidentFingerprint(
-          "manual",
-          createIncidentDto.service,
-          createIncidentDto.title
-        ),
-        assignedToId: assigneeUserId,
-      },
-    });
-    this.changed(incident);
-    return incident;
   }
 
   async createFromAlert(

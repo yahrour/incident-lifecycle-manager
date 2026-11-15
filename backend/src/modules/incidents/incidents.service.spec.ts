@@ -12,13 +12,6 @@ import type { OnCallService } from "@/modules/on-call/on-call.service";
 import { createIncidentFingerprint } from "./utils/incident-fingerprint";
 
 describe("IncidentsService", () => {
-  const incident = {
-    teamId: "22222222-2222-4222-8222-222222222222",
-    title: "API errors",
-    service: "api",
-    severity: "high" as const,
-  };
-
   it("creates the same fingerprint for normalized incident identity", () => {
     expect(
       createIncidentFingerprint(
@@ -59,40 +52,6 @@ describe("IncidentsService", () => {
     expect(fingerprint).toHaveLength(64);
   });
 
-  it("assigns a new incident to the primary on-call engineer", async () => {
-    const create = jest.fn().mockResolvedValue(incident);
-    const prisma = { incident: { create } } as unknown as PrismaService;
-    const getCurrentOnCall = jest.fn().mockResolvedValue({
-      chain: [
-        { position: "PRIMARY", id: "11111111-1111-4111-8111-111111111111" },
-      ],
-    });
-    const onCall = { getCurrentOnCall } as unknown as OnCallService;
-    const service = new IncidentsService(prisma, onCall);
-
-    await service.create("owner-id", incident);
-
-    const createCall = (
-      create.mock.calls as unknown as Array<
-        [
-          {
-            data: typeof incident & {
-              fingerprint: string;
-              assignedToId: string;
-            };
-          },
-        ]
-      >
-    )[0]?.[0];
-
-    expect(createCall?.data).toEqual({
-      ...incident,
-      fingerprint: createCall?.data.fingerprint,
-      assignedToId: "11111111-1111-4111-8111-111111111111",
-    });
-    expect(typeof createCall?.data.fingerprint).toBe("string");
-  });
-
   it("filters incidents by assignee while preserving access rules", async () => {
     const findMany = jest.fn().mockResolvedValue([]);
     const count = jest.fn().mockResolvedValue(0);
@@ -125,22 +84,6 @@ describe("IncidentsService", () => {
     );
     expect(count).toHaveBeenCalledWith({ where });
   });
-
-  it.each([null, { chain: [] }])(
-    "throws ConflictException when no primary on-call engineer is available (%p)",
-    async (onCallResult) => {
-      const create = jest.fn();
-      const prisma = { incident: { create } } as unknown as PrismaService;
-      const getCurrentOnCall = jest.fn().mockResolvedValue(onCallResult);
-      const onCall = { getCurrentOnCall } as unknown as OnCallService;
-      const service = new IncidentsService(prisma, onCall);
-
-      await expect(service.create("owner-id", incident)).rejects.toBeInstanceOf(
-        ConflictException
-      );
-      expect(create).not.toHaveBeenCalled();
-    }
-  );
 
   it("reassigns an incident to a member of its team", async () => {
     const findIncident = jest
