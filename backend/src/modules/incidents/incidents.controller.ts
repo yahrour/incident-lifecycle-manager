@@ -14,7 +14,6 @@ import { Role } from "@/generated/prisma/enums";
 import { Roles } from "@/common/decorators/roles.decorator";
 import type { AuthRequest } from "@/common/interfaces/active-user.interface";
 import { apiResponse } from "@/common/utils/api-response";
-import { CreateIncidentDto } from "./dto/create-incident.dto";
 import { FindIncidentsDto } from "./dto/find-incidents.dto";
 import { CreateIncidentNoteDto } from "./dto/create-incident-note.dto";
 import { IncidentsService } from "./incidents.service";
@@ -67,19 +66,6 @@ export class IncidentsController {
       createIncidentNoteDto.content
     );
     return apiResponse(note);
-  }
-
-  @Post()
-  @Roles(Role.SRE)
-  async create(
-    @Body() createIncidentDto: CreateIncidentDto,
-    @Req() { user }: AuthRequest
-  ) {
-    const incident = await this.incidentsService.create(
-      user.sub,
-      createIncidentDto
-    );
-    return apiResponse(incident);
   }
 
   @Patch(":id/assignee")

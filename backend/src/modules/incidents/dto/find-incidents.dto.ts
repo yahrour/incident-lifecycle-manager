@@ -13,10 +13,6 @@ import { INCIDENT_SEVERITIES, INCIDENT_STATUS } from "../constants";
 
 export class FindIncidentsDto {
   @IsOptional()
-  @IsString()
-  search?: string;
-
-  @IsOptional()
   @IsIn(Object.values(INCIDENT_STATUS))
   status?: string;
 
