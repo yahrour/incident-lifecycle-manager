@@ -49,12 +49,12 @@ This project closes those gaps in one system. It ingests alerts from monitoring 
   - Reviews critical changes and maintains the repository workflow (branch rules, commit standards)
   - Implements features alongside the rest of the team
 
-- **aaitabde** (Developer):
+- **aaitabde** (Product Owner, Developer):
   - Owns the incident lifecycle: the `incidents` module from alert correlation to resolution, with escalation and response metrics
   - Builds the Incidents list, Incident detail and Overview pages, and the live updates that keep them current
   - Added the database migration service to the Compose stack
 
-- **sait-nac** (Project Manager, Scrum Master, Developer):
+- **sait-nac** (Project Manager /Scrum Master, Developer):
   - Planned weekly development priorities and organized the work into 3-day sprint cycles.
   - Coordinated task distribution and followed up with team members to keep the project moving.
   - Contributed to the codebase as a developer across application features and improvements.
@@ -147,7 +147,7 @@ The diagram was generated with [dbdiagram.io](https://dbdiagram.io). You can vie
 
 - **Team member(s) that worked on this module:** `yahrour`, `asebban`, `aaitabde`, `sait-nac`
 - **Module choice:** Four people building screens independently produce four different buttons.
-- **Module implementation:** 30 reusable components in `frontend/src/components/ui/`, a CSS custom property palette with light and dark values, Roboto and Public Sans type scale, and lucide-react icons.
+- **Module implementation:** 10+ reusable components, a CSS custom palette, Roboto and Public Sans type scale, and lucide-react icons.
 
 #### Minor: Advanced search functionality with filters, sorting and pagination
 
@@ -248,7 +248,7 @@ The diagram was generated with [dbdiagram.io](https://dbdiagram.io). You can vie
   - **Race-safe state machine.** `open` → `acknowledged` → `resolved` transitions, reassignment and escalation can all hit the same incident at the same moment. Each one is an `updateMany` that includes the expected status and assignee in its `where` clause, so the database applies only the first. The loser is told about it, with a `409 Conflict` for a user or a skip for the job, instead of silently overwriting the other. This also stays correct if several backend instances run the cron.
   - **Metrics recorded when they happen.** MTTA and MTTR are calculated and saved during the acknowledge and resolve transitions. Dashboards read stored numbers and never have to rebuild them from history.
 - **How it adds value:** The ingestion module delivers a raw stream of alerts; this engine reduces it to a small set of incidents, each with a clear owner. An unanswered incident moves up the on-call chain without anyone stepping in, and the acknowledge and resolve steps produce the MTTA and MTTR figures on the Overview page. Every incident change also goes into the real-time stream, so a deduplicated alert or an escalation shows up on screen right away.
-- **Why it deserves Major status:** It spans the database design (the `(teamId, openFingerprint)` unique index and the alert–incident link table), a background scheduler, a state machine with concurrency guarantees, and integration with three other modules: ingestion, on-call and real-time. Most of the difficulty is correctness under concurrency: duplicate alerts, a cron racing a human, and several instances running the same job. `incidents.service.spec.ts` tests the fingerprinting, repeats attaching to the open incident, an acknowledge that loses the race, and both escalation paths.
+- **Why it deserves Major status:** It spans the database design (the `(teamId, openFingerprint)` unique index and the alert–incident link table), a background scheduler, a state machine with concurrency guarantees, and integration with three other modules: ingestion, on-call and real-time. Most of the difficulty is correctness under concurrency: duplicate alerts, a cron racing a human, and several instances running the same job.
 - **Module implementation:** Everything lives in `backend/src/modules/incidents/`. `utils/incident-fingerprint.ts` builds the fingerprint. In `incidents.service.ts`, `createFromAlert` does correlation and routing, `acknowledge`, `resolve` and `reassign` implement the guarded transitions, and `escalateUnacknowledged` is the `@Cron(EVERY_MINUTE)` escalation job. The schema adds `fingerprint`, `openFingerprint`, `escalatedAt`, `mttaSeconds` and `mttrSeconds` to `incidents`, the `unique_team_open_fingerprint` index, and the `incident_alerts` table that links each alert to its incident.
 
 #### Minor: On-call scheduling
@@ -388,7 +388,6 @@ The stack reads configuration from four `.env` files. Each has a committed `.env
 cp infra/vault/.env.example      infra/vault/.env
 cp backend/.env.example          backend/.env
 cp frontend/.env.example         frontend/.env
-cp infra/.env.example            infra/.env
 ```
 
 **`infra/vault/.env`** — the source of truth for secrets. Vault reads this on first boot and writes the values into its KV store. Required keys:
@@ -419,7 +418,6 @@ cp infra/.env.example            infra/.env
 | Key                          | Notes                                            |
 | ---------------------------- | ------------------------------------------------ |
 | `VITE_API_URL`               | Backend (API) base URL                           |
-| `VITE_APP_NAME`              | Displayed in the UI; required, cannot be empty   |
 | `VITE_IMPORT_MAX_FILE_BYTES` | Must match the backend's `IMPORT_MAX_FILE_BYTES` |
 
 ### Build and run
