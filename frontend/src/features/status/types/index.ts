@@ -1,8 +1,7 @@
-type IndicatorStatus = { status: "up" | "down"; message?: string };
+export type Status = "up" | "down";
+type IndicatorStatus = { status: Status; message?: string };
 
 export type HealthResponse = {
   status: "ok" | "error";
   details: Record<string, IndicatorStatus>;
 };
-
-export type Status = "operational" | "outage" | "unknown";

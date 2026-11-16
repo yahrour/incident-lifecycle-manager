@@ -73,7 +73,9 @@ export function DeliveryLogTable({
         <TableBody>
           {alerts.map((alert) => (
             <TableRow key={alert.id}>
-              <SeverityCell className={cn(severityColor[alert.severity], "w-[100px]")}>
+              <SeverityCell
+                className={cn(severityColor[alert.severity], "w-[100px]")}
+              >
                 {alert.severity}
               </SeverityCell>
               <TableCell>

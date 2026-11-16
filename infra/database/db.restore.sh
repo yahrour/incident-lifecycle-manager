@@ -17,20 +17,22 @@ require_var() {
   [[ -n "${!1:-}" ]] || { log_error "Missing required environment variable: $1"; exit 1; }
 }
 
-if [[ -z "$1" ]]; then
-    log_error "Usage: $0 <backup_dir>";
-    exit 1;
+if [[ $# -lt 1 || $# -gt 2 ]]; then
+  log_error "Usage: $0 <backup_dir> [backup_file]"
+  exit 1
 fi
 
 require_var POSTGRES_SERVICE_NAME
 require_var POSTGRES_USER
 require_var POSTGRES_DB
 
-BACKUP_DIR="${1}"
-BACKUP=$(ls -t "$BACKUP_DIR"/*.sql 2>/dev/null | head -n 1)
-if [ -z "$BACKUP" ]; then
-  log_error "No .sql backup found in $BACKUP_DIR";
-  exit 1;
+BACKUP_DIR="${1%/}"
+BACKUP="${2:-$(ls -t "$BACKUP_DIR"/*.sql 2>/dev/null | head -n 1)}"
+
+
+if [[ ! -f "$BACKUP" || "$BACKUP" != *.sql ]]; then
+  log_error "Backup not found or invalid: ${2:-$BACKUP}"
+  exit 1
 fi
 
 TMP_DB="${POSTGRES_DB}_tmp"

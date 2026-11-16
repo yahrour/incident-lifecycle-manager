@@ -4,7 +4,6 @@ import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { getDashboardPath } from "@/lib/redirect";
 
-
 export default function NotFoundPage() {
   const { user } = useAuth();
   const homePath = user ? getDashboardPath(user.role) : "/";

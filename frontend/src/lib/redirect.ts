@@ -1,4 +1,4 @@
-import type {Role} from "@/types";
+import type { Role } from "@/types";
 
 export function getSafeRedirect(value: string | null): string | null {
   if (
@@ -12,9 +12,7 @@ export function getSafeRedirect(value: string | null): string | null {
   return value;
 }
 
-
-export function getDashboardPath(role: Role) : string
-{
+export function getDashboardPath(role: Role): string {
   switch (role) {
     case "SRE":
       return "/manager/teams";

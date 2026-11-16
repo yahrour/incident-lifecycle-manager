@@ -59,7 +59,6 @@ export async function loadSecretsFromVault(): Promise<void> {
         }
         console.log("[Vault] App secrets loaded into process.env.");
         return;
-
       } catch (err) {
         if (attempt === RETRY_MAX) {
           const msg = err instanceof Error ? err.message : String(err);

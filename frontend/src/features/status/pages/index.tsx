@@ -16,14 +16,9 @@ export function StatusPage() {
     return <FullPageSpinner />;
   }
 
-  const apiStatus: Status = isError ? "outage" : "operational";
-  const database = data?.details?.database;
+  const apiStatus: Status = isError ? "down" : "up";
   const dbStatus: Status =
-    isError || !database
-      ? "unknown"
-      : database.status === "up"
-        ? "operational"
-        : "outage";
+    !isError && data?.details?.database?.status === "up" ? "up" : "down";
 
   return (
     <div className="flex min-h-screen flex-col bg-background px-4 py-10">
