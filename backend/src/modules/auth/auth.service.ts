@@ -108,8 +108,6 @@ export class AuthService {
         ...payload,
       },
       {
-        audience: this.configService.get("JWT_AUDIENCE"),
-        issuer: this.configService.get("JWT_ISSUER"),
         secret,
         expiresIn,
       }
@@ -122,8 +120,6 @@ export class AuthService {
         Pick<ActiveUserData, "sub">
       >(refrechToken, {
         secret: this.configService.getOrThrow<string>("JWT_REFRESH_SECRET"),
-        audience: this.configService.getOrThrow<string>("JWT_AUDIENCE"),
-        issuer: this.configService.getOrThrow<string>("JWT_ISSUER"),
       });
 
       const stored = await this.prisma.refreshToken.findUnique({

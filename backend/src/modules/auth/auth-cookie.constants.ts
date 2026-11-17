@@ -1,7 +1,6 @@
 export const baseCookie = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const,
 };
 
 export const accessCookieOptions = (ttlSeconds: number) => ({
@@ -13,6 +12,7 @@ export const refreshCookieOptions = (ttlSeconds: number) => ({
   ...baseCookie,
   maxAge: ttlSeconds * 1000,
 });
+
 import type { Response } from "express";
 import type { ConfigService } from "@nestjs/config";
 
