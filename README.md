@@ -482,7 +482,7 @@ The full procedure for restoring a database is in [`infra/database/DISASTER_RECO
 
 **Database**
 
-- [PostgreSQL documentation](https://www.postgresql.org/docs/18/) — `timestamptz`, `text[]`, `jsonb`, schemas and unique indexes
+- [PostgreSQL documentation](https://www.postgresql.org/docs/18/) — `timestamptz`, `text[]`, schemas and unique indexes
 
 **Infrastructure and security**
 
