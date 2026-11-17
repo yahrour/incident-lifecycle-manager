@@ -15,14 +15,13 @@ export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    // 1. Check for required roles on the handler (or controller class)
     const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
     if (!requiredRoles) {
-      return true; // No roles required, let them pass
+      return true;
     }
 
     const request = context
@@ -30,7 +29,6 @@ export class RolesGuard implements CanActivate {
       .getRequest<{ user: ActiveUserData }>();
     const user = request.user;
 
-    // 2. If the user object is missing entirely (failsafe check)
     if (!user) {
       throw new UnauthorizedException(
         "Authentication required to access this resource"

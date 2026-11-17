@@ -1,4 +1,3 @@
-import { Transform } from "class-transformer";
 import {
   IsEmail,
   IsEnum,
@@ -9,6 +8,7 @@ import {
   MinLength,
 } from "class-validator";
 import { Role } from "@/generated/prisma/client";
+import { NormalizeEmail } from "@/common/transformers/normalize-email";
 
 export class CreateUserDto {
   @IsString()
@@ -19,11 +19,9 @@ export class CreateUserDto {
   @IsNotEmpty()
   lastName: string;
 
+  @NormalizeEmail()
   @IsNotEmpty()
   @IsEmail({}, { message: "Invalid email address format" })
-  @Transform(({ value }: { value: unknown }) =>
-    typeof value === "string" ? value.trim().toLowerCase() : value
-  )
   email: string;
 
   @IsString()

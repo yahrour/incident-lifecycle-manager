@@ -11,8 +11,6 @@ export const validationSchema = Joi.object({
   JWT_REFRESH_SECRET: Joi.string().required(),
   JWT_ACCESS_TOKEN_TTL: Joi.number().default(3600),
   JWT_REFRESH_TOKEN_TTL: Joi.number().default(604800),
-  JWT_AUDIENCE: Joi.string().required(),
-  JWT_ISSUER: Joi.string().required(),
   GOOGLE_CLIENT_ID: Joi.string().required(),
   GOOGLE_CLIENT_SECRET: Joi.string().required(),
   GOOGLE_CALLBACK_URL: Joi.string().uri().required(),
