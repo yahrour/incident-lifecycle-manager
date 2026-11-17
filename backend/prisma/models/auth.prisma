@@ -20,6 +20,7 @@ model User {
   timezone     String?  @default("UTC") @map("timezone")
 
   apiKeys           ApiKey[]
+  alerts            Alert[]
   refreshTokens     RefreshToken[]
   ownedTeams        Team[]
   teamMembers       TeamMember[]

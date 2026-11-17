@@ -39,6 +39,7 @@ export class AlertService {
     const normalized = this.normalizeAlert(provider, payload);
     const alert = await this.prisma.alert.create({
       data: {
+        ownerId,
         provider: normalized.provider,
         title: normalized.title,
         service: normalized.serviceName,
@@ -64,15 +65,16 @@ export class AlertService {
     };
   }
 
-  async findAll(query: FindAlertsDto) {
+  async findAll(ownerId: string, query: FindAlertsDto) {
     const [alerts, total] = await Promise.all([
       this.prisma.alert.findMany({
+        where: { ownerId },
         skip: query.offset,
         take: query.limit,
         orderBy: { receivedAt: "desc" },
         omit: { payload: true },
       }),
-      this.prisma.alert.count(),
+      this.prisma.alert.count({ where: { ownerId } }),
     ]);
 
     return { alerts, total };
