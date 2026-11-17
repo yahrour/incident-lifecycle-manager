@@ -9,10 +9,15 @@ export const apiClient = axios.create({
 
 // Refresh rotates the token, so concurrent 401s must share one call
 let refreshPromise: Promise<unknown> | null = null;
-const refreshSession = () =>
-  (refreshPromise ??= apiClient
-    .post("/auth/refresh-tokens")
-    .finally(() => (refreshPromise = null)));
+
+const refreshSession = () => {
+  if (refreshPromise === null || refreshPromise === undefined) {
+    refreshPromise = apiClient.post("/auth/refresh-tokens").finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
+};
 
 type RetryableConfig = InternalAxiosRequestConfig & { _retried?: boolean };
 
