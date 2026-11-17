@@ -14,4 +14,4 @@ SECRETS=
 
 echo "[grafana] admin credentials loaded from Vault"
 
-exec /run.sh "$@"
+exec /run.sh
