@@ -8,6 +8,5 @@ COPY infra/vault/vault-fetch.sh /usr/local/bin/vault-fetch.sh
 COPY infra/monitoring/postgres-exporter/entrypoint.sh /usr/local/bin/vault-entrypoint.sh
 RUN chmod +x /usr/local/bin/vault-entrypoint.sh /usr/local/bin/vault-fetch.sh
 
-EXPOSE 9187
 USER 65534:65534
 ENTRYPOINT ["/usr/local/bin/vault-entrypoint.sh"]

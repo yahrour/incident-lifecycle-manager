@@ -91,18 +91,16 @@ services:
       - incident_network
 
   prometheus:
-    image: prom/prometheus:v3.13.0
+    image: prom/prometheus:v3.13.5
     restart: unless-stopped
     command:
-      - --config.file=/etc/prometheus/prometheus.yml
+      - --config.file=/etc/prometheus/prometheus.yml:ro
       - --storage.tsdb.path=/prometheus
       - --storage.tsdb.retention.time=15d
       - --storage.tsdb.retention.size=2GB
     volumes:
       - ./infra/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
-    ports:
-      - "9090:9090"
     networks:
       - incident_network
 
@@ -163,8 +161,6 @@ services:
     environment:
       VAULT_ADDR: http://vault:8200
       VAULT_TOKEN_FILE: /vault/token/token
-    ports:
-      - "3001:3000"
     depends_on:
       vault:
         condition: service_healthy
@@ -231,7 +227,6 @@ volumes:
   vault_tok_backup:
   grafana-data:
   vault_tok_migrate:
-
 
 networks:
   incident_network:
