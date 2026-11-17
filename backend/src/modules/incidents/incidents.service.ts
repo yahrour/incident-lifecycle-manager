@@ -7,7 +7,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
-import { filter, from, map, Subject, switchMap } from "rxjs";
+import { filter, from, interval, map, merge, Subject, switchMap } from "rxjs";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { Prisma } from "@/generated/prisma/client";
 import { Role } from "@/generated/prisma/enums";
@@ -33,7 +33,7 @@ export class IncidentsService {
   ) {}
 
   events(userId: string) {
-    return from(
+    const data = from(
       this.prisma.team.findMany({
         where: {
           OR: [{ ownerId: userId }, { teamMembers: { some: { userId } } }],
@@ -52,6 +52,12 @@ export class IncidentsService {
       }),
       map(({ id }) => ({ data: { id } }))
     );
+
+    const heartbeat = interval(30000).pipe(
+      map(() => ({ data: { type: "ping" } }))
+    );
+
+    return merge(data, heartbeat);
   }
 
   private changed({ id, teamId, assignedToId }: IncidentChange) {
