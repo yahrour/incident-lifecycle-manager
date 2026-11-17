@@ -1,6 +1,5 @@
-import { Req, Controller, Post, Body, Get, Patch } from "@nestjs/common";
+import { Req, Controller, Body, Get, Patch } from "@nestjs/common";
 import { UsersService } from "./users.service";
-import { CreateUserDto } from "./dto/create-user.dto";
 import type { AuthRequest } from "@/common/interfaces/active-user.interface";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { apiResponse } from "@/common/utils/api-response";
@@ -13,11 +12,6 @@ import { Role } from "@/generated/prisma/enums";
 })
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
-
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
-  }
 
   @Get("me")
   async getProfile(@Req() { user }: AuthRequest) {
