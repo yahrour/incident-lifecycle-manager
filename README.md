@@ -507,4 +507,8 @@ AI tools were used as an assistant during development, not as a replacement for 
 
 ## Known Limitations
 
-- [TODO]
+Things we know about and chose to leave for later:
+
+- 🔕 **No paging.** No email, SMS or Slack, and invite links are shared by hand.
+- 🔒 **Self-signed HTTPS.** Your browser will complain once. Click through.
+- 📡 **One backend only.** Live updates live in memory, so scaling to multiple replicas needs Redis.
