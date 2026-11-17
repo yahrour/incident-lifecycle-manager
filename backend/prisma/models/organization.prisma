@@ -52,7 +52,7 @@ model Unavailability {
   createdAt  DateTime             @default(now()) @map("created_at") @db.Timestamptz
   status     UnavailabilityStatus @default(PENDING)
 
-  @@unique([memberId, startDate, endDate], name: "unique_unavailability_window")
+  @@unique([memberId, startDate, endDate])
   @@map("unavailabilities")
   @@schema("organization")
 }

@@ -9,7 +9,7 @@ model ApiKey {
   enabled   Boolean  @default(true)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  @@unique([ownerId, name], name: "unique_owner_name")
+  @@unique([ownerId, name])
   @@map("api_keys")
   @@schema("ingestion")
 }
@@ -28,8 +28,6 @@ model Alert {
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  @@index([provider, status])
-  @@index([service])
   @@map("alerts")
   @@schema("ingestion")
 }
