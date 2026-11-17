@@ -472,6 +472,7 @@ async function main() {
       const alertId = uuid("a", ++alertN);
       alerts.push({
         id: alertId,
+        ownerId: team.ownerId,
         provider: pick(PROVIDERS),
         title,
         service,
@@ -510,6 +511,7 @@ async function main() {
     const occurredAt = ago(int(1, 30 * 24) * HOUR);
     alerts.push({
       id: uuid("a", ++alertN),
+      ownerId: team.ownerId,
       provider: pick(PROVIDERS),
       title,
       service,
