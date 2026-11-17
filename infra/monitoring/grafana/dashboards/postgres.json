@@ -788,10 +788,10 @@
         "1d"
       ],
       "fiscalYearStartMonth": 0,
-      "from": "2026-09-05T13:23:19.028Z",
+      "from": "now-1h",
       "hideTimepicker": false,
       "timezone": "browser",
-      "to": "2026-10-05T07:28:18.760Z"
+      "to": "now"
     },
     "title": "PostgreSQL Status",
     "variables": []
