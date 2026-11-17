@@ -6,8 +6,10 @@ import {
   Param,
   Post,
   Query,
+  Req,
   UnauthorizedException,
 } from "@nestjs/common";
+import type { AuthRequest } from "@/common/interfaces/active-user.interface";
 import { Public } from "@/common/decorators/public.decorator";
 import { AlertService } from "./alert.service";
 import { Roles } from "@/common/decorators/roles.decorator";
@@ -38,8 +40,8 @@ export class AlertController {
 
   @Get()
   @Roles(Role.SRE)
-  async findAll(@Query() query: FindAlertsDto) {
-    const { alerts, total } = await this.alert.findAll(query);
+  async findAll(@Req() { user }: AuthRequest, @Query() query: FindAlertsDto) {
+    const { alerts, total } = await this.alert.findAll(user.sub, query);
     return apiResponse(alerts, { total });
   }
 }

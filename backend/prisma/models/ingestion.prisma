@@ -16,6 +16,8 @@ model ApiKey {
 
 model Alert {
   id         String   @id @default(uuid()) @db.Uuid
+  ownerId    String?  @map("owner_id") @db.Uuid
+  owner      User?    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   provider   String
   title      String
   service    String?
